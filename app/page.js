@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabase";
+
 function IconPin({ className = "w-4 h-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -84,22 +86,23 @@ const categories = [
   { label: "Noite", bg: "bg-[#e4d4f0]", text: "text-[#5c4a6e]", Icon: IconMoon },
 ];
 
-const nearbyPlaces = [
-  {
-    name: "Praia do Rosa",
-    tag: "Praia",
-    distance: "2.3km",
-    image: "https://picsum.photos/seed/rosa/120/120",
-  },
-  {
-    name: "Mercado Municipal",
-    tag: "Gastronomia",
-    distance: "1.1km",
-    image: "https://picsum.photos/seed/mercado/120/120",
-  },
-];
+export default async function Home() {
+  const [{ data: destaque }, { data: pertoDeVoce }] = await Promise.all([
+    supabase
+      .from("lugares")
+      .select("*")
+      .eq("destaque", true)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("lugares")
+      .select("*")
+      .eq("destaque", false)
+      .limit(3),
+  ]);
 
-export default function Home() {
+  const lugaresProximos = pertoDeVoce ?? [];
+
   return (
     <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-28 pt-6">
@@ -136,12 +139,13 @@ export default function Home() {
         </div>
 
         {/* Featured card */}
-        <article className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm">
+        {destaque && (
+          <article className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://picsum.photos/400/200"
-              alt="Praia Da Vila"
+              src={destaque.imagem_url}
+              alt={destaque.nome}
               className="h-44 w-full object-cover"
             />
             <button
@@ -156,18 +160,20 @@ export default function Home() {
             <p className="text-xs font-semibold uppercase tracking-wider text-[#9aa8a3]">
               Destaque da semana
             </p>
-            <h2 className="mt-1 text-xl font-bold text-[#1a2e28]">Da Vila</h2>
+            <h2 className="mt-1 text-xl font-bold text-[#1a2e28]">
+              {destaque.nome}
+            </h2>
             <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
-              Uma das praias mais exuberantes em beleza natural
+              {destaque.descricao}
             </p>
             <div className="mt-3 flex flex-wrap gap-4 text-sm text-[#5a6b66]">
               <span className="flex items-center gap-1.5">
                 <IconSun className="w-4 h-4 text-[#e8a838]" />
-                Praia
+                {destaque.categoria}
               </span>
               <span className="flex items-center gap-1.5">
                 <IconPin className="w-4 h-4 text-[#1a4a3a]" />
-                0km de você
+                {destaque.distancia}
               </span>
             </div>
             <button
@@ -178,32 +184,33 @@ export default function Home() {
             </button>
           </div>
         </article>
+        )}
 
         {/* Near you */}
         <section>
           <h2 className="mb-4 text-lg font-bold text-[#1a2e28]">Perto de você</h2>
           <div className="flex flex-col gap-3">
-            {nearbyPlaces.map((place) => (
+            {lugaresProximos.map((lugar) => (
               <article
-                key={place.name}
+                key={lugar.id}
                 className="flex gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={place.image}
-                  alt={place.name}
+                  src={lugar.imagem_url}
+                  alt={lugar.nome}
                   className="h-20 w-20 shrink-0 rounded-lg object-cover"
                 />
                 <div className="flex min-w-0 flex-1 flex-col justify-center">
-                  <h3 className="font-semibold text-[#1a2e28]">{place.name}</h3>
+                  <h3 className="font-semibold text-[#1a2e28]">{lugar.nome}</h3>
                   <div className="mt-1 flex flex-wrap gap-3 text-xs text-[#5a6b66]">
                     <span className="flex items-center gap-1">
                       <IconSun className="w-3.5 h-3.5 text-[#e8a838]" />
-                      {place.tag}
+                      {lugar.categoria}
                     </span>
                     <span className="flex items-center gap-1">
                       <IconPin className="w-3.5 h-3.5 text-[#1a4a3a]" />
-                      {place.distance} de você
+                      {lugar.distancia}
                     </span>
                   </div>
                 </div>
