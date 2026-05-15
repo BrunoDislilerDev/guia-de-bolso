@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 function IconPin({ className = "w-4 h-4" }) {
@@ -81,27 +84,77 @@ function IconPerson({ className = "w-6 h-6" }) {
 }
 
 const categories = [
-  { label: "Natureza", bg: "bg-[#b8e6d4]", text: "text-[#1a4a3a]", Icon: IconLeaf },
-  { label: "Gastronomia", bg: "bg-[#f0e4d4]", text: "text-[#6b5344]", Icon: IconUtensils },
-  { label: "Noite", bg: "bg-[#e4d4f0]", text: "text-[#5c4a6e]", Icon: IconMoon },
+  {
+    label: "Natureza",
+    bg: "bg-[#b8e6d4]",
+    activeBg: "bg-[#7fd4ae]",
+    text: "text-[#1a4a3a]",
+    border: "border-[#1a4a3a]",
+    Icon: IconLeaf,
+  },
+  {
+    label: "Gastronomia",
+    bg: "bg-[#f0e4d4]",
+    activeBg: "bg-[#e0cbb0]",
+    text: "text-[#6b5344]",
+    border: "border-[#6b5344]",
+    Icon: IconUtensils,
+  },
+  {
+    label: "Noite",
+    bg: "bg-[#e4d4f0]",
+    activeBg: "bg-[#cbb8e0]",
+    text: "text-[#5c4a6e]",
+    border: "border-[#5c4a6e]",
+    Icon: IconMoon,
+  },
 ];
 
-export default async function Home() {
-  const [{ data: destaque }, { data: pertoDeVoce }] = await Promise.all([
+async function fetchLugaresProximos(categoria) {
+  let query = supabase
+    .from("lugares")
+    .select("*")
+    .eq("destaque", false)
+    .limit(3);
+
+  if (categoria) {
+    query = query.eq("categoria", categoria);
+  }
+
+  const { data } = await query;
+  return data ?? [];
+}
+
+export default function Home() {
+  const [destaque, setDestaque] = useState(null);
+  const [lugaresProximos, setLugaresProximos] = useState([]);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
+
+  useEffect(() => {
     supabase
       .from("lugares")
       .select("*")
       .eq("destaque", true)
       .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("lugares")
-      .select("*")
-      .eq("destaque", false)
-      .limit(3),
-  ]);
+      .maybeSingle()
+      .then(({ data }) => setDestaque(data));
+  }, []);
 
-  const lugaresProximos = pertoDeVoce ?? [];
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchLugaresProximos(categoriaSelecionada).then((data) => {
+      if (!cancelled) setLugaresProximos(data);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoriaSelecionada]);
+
+  function handleCategoriaClick(label) {
+    setCategoriaSelecionada((atual) => (atual === label ? null : label));
+  }
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
@@ -126,64 +179,71 @@ export default async function Home() {
 
         {/* Categories */}
         <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
-          {categories.map(({ label, bg, text, Icon }) => (
-            <button
-              key={label}
-              type="button"
-              className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75 ${bg} ${text}`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
+          {categories.map(({ label, bg, activeBg, text, border, Icon }) => {
+            const isSelected = categoriaSelecionada === label;
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => handleCategoriaClick(label)}
+                aria-pressed={isSelected}
+                className={`flex shrink-0 items-center gap-2 rounded-full border-2 px-4 py-2.5 text-sm font-medium transition-all hover:opacity-90 active:opacity-75 ${text} ${
+                  isSelected ? `${activeBg} ${border}` : `${bg} border-transparent`
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Featured card */}
         {destaque && (
           <article className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm">
-          <div className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={destaque.imagem_url}
-              alt={destaque.nome}
-              className="h-44 w-full object-cover"
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#1a4a3a] shadow-sm backdrop-blur-sm"
-              aria-label="Favoritar"
-            >
-              <IconHeart />
-            </button>
-          </div>
-          <div className="p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#9aa8a3]">
-              Destaque da semana
-            </p>
-            <h2 className="mt-1 text-xl font-bold text-[#1a2e28]">
-              {destaque.nome}
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
-              {destaque.descricao}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-4 text-sm text-[#5a6b66]">
-              <span className="flex items-center gap-1.5">
-                <IconSun className="w-4 h-4 text-[#e8a838]" />
-                {destaque.categoria}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <IconPin className="w-4 h-4 text-[#1a4a3a]" />
-                {destaque.distancia}
-              </span>
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={destaque.imagem_url}
+                alt={destaque.nome}
+                className="h-44 w-full object-cover"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#1a4a3a] shadow-sm backdrop-blur-sm"
+                aria-label="Favoritar"
+              >
+                <IconHeart />
+              </button>
             </div>
-            <button
-              type="button"
-              className="mt-4 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
-            >
-              Explorar Rota →
-            </button>
-          </div>
-        </article>
+            <div className="p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#9aa8a3]">
+                Destaque da semana
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-[#1a2e28]">
+                {destaque.nome}
+              </h2>
+              <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
+                {destaque.descricao}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-4 text-sm text-[#5a6b66]">
+                <span className="flex items-center gap-1.5">
+                  <IconSun className="w-4 h-4 text-[#e8a838]" />
+                  {destaque.categoria}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <IconPin className="w-4 h-4 text-[#1a4a3a]" />
+                  {destaque.distancia}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="mt-4 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
+              >
+                Explorar Rota →
+              </button>
+            </div>
+          </article>
         )}
 
         {/* Near you */}
