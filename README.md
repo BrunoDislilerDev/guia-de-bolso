@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Guia de Bolso 🌿
 
-## Getting Started
+App de descoberta local para Garopaba e Imbituba — Santa Catarina, Brasil.
 
-First, run the development server:
+Permite que moradores e turistas encontrem praias, restaurantes e atrações da região com uma experiência mobile-first, limpa e intuitiva.
+
+---
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Frontend | Next.js 16 (App Router) |
+| Estilização | Tailwind CSS |
+| Banco de dados | Supabase (PostgreSQL) |
+| Deploy | Vercel |
+| Editor | Cursor |
+| Controle de versão | Git + GitHub |
+
+---
+
+## Como rodar localmente
+
+**Pré-requisitos:** Node.js, Git
 
 ```bash
+# 1. Clonar o repositório
+git clone https://github.com/BrunoDislilerDev/guia-de-bolso.git
+cd guia-de-bolso
+
+# 2. Instalar dependências
+npm install
+
+# 3. Configurar variáveis de ambiente
+# Crie um arquivo .env.local na raiz com:
+NEXT_PUBLIC_SUPABASE_URL=sua_url_aqui
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_aqui
+
+# 4. Rodar em desenvolvimento
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acessa em `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Banco de dados
 
-## Learn More
+Projeto usa Supabase com a seguinte tabela principal:
 
-To learn more about Next.js, take a look at the following resources:
+**Tabela: `lugares`**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Campo | Tipo | Descrição |
+|---|---|---|
+| id | uuid | Chave primária automática |
+| nome | text | Nome do lugar |
+| descricao | text | Descrição curta |
+| categoria | text | Natureza, Gastronomia, Noite |
+| distancia | text | Ex: "2.3km de você" |
+| imagem_url | text | URL da imagem |
+| destaque | bool | Aparece como destaque da semana |
+| created_at | timestamp | Automático |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## O que já foi construído
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [x] Setup completo do ambiente (Node, Git, Cursor)
+- [x] Projeto Next.js com Tailwind CSS
+- [x] Home page mobile-first com layout fiel ao design original
+- [x] Chips de categoria (Natureza, Gastronomia, Noite)
+- [x] Card de destaque da semana
+- [x] Seção "Perto de você" com cards horizontais
+- [x] Bottom navigation bar
+- [x] Integração com Supabase
+- [x] Dados sendo buscados dinamicamente do banco
+- [x] Deploy automático na Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Próximos passos
+
+- [ ] Filtro por categoria (clicar no chip filtra os lugares)
+- [ ] Página de detalhe de cada lugar
+- [ ] Busca por linguagem natural com Claude API
+- [ ] Autenticação com Google
+- [ ] Upload de imagens reais via Supabase Storage
+- [ ] Geolocalização real para calcular distâncias
+
+---
+
+## Fluxo de desenvolvimento
+
+```
+Edita no Cursor → git push → Vercel atualiza automaticamente
+```
+
+Variáveis de ambiente precisam estar configuradas tanto no `.env.local` (local) quanto nas Environment Variables da Vercel (produção).
+
+---
+
+## Autor
+
+Bruno Disliler — [brunodisliler.com](https://brunodisliler.com)
