@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -236,12 +237,12 @@ export default function Home() {
                   {destaque.distancia}
                 </span>
               </div>
-              <button
-                type="button"
-                className="mt-4 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
+              <Link
+                href={`/lugares/${destaque.id}`}
+                className="mt-4 block w-full rounded-xl bg-[#1a4a3a] py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
               >
                 Explorar Rota →
-              </button>
+              </Link>
             </div>
           </article>
         )}
@@ -251,9 +252,10 @@ export default function Home() {
           <h2 className="mb-4 text-lg font-bold text-[#1a2e28]">Perto de você</h2>
           <div className="flex flex-col gap-3">
             {lugaresProximos.map((lugar) => (
-              <article
+              <Link
                 key={lugar.id}
-                className="flex gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm"
+                href={`/lugares/${lugar.id}`}
+                className="flex gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -274,7 +276,7 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </section>
