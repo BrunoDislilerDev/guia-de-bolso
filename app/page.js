@@ -12,6 +12,14 @@ function IconPin({ className = "w-4 h-4" }) {
   );
 }
 
+function IconSearch({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16 6.5 6.5 0 0016 9.5c0 1.61-.59 3.09-1.57 4.23l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+    </svg>
+  );
+}
+
 function IconCloud({ className = "w-4 h-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -126,10 +134,43 @@ async function fetchLugaresProximos(categoria) {
   return data ?? [];
 }
 
+function LugarCard({ lugar }) {
+  return (
+    <Link
+      href={`/lugares/${lugar.id}`}
+      className="flex gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={lugar.imagem_url}
+        alt={lugar.nome}
+        className="h-20 w-20 shrink-0 rounded-lg object-cover"
+      />
+      <div className="flex min-w-0 flex-1 flex-col justify-center">
+        <h3 className="font-semibold text-[#1a2e28]">{lugar.nome}</h3>
+        <div className="mt-1 flex flex-wrap gap-3 text-xs text-[#5a6b66]">
+          <span className="flex items-center gap-1">
+            <IconSun className="w-3.5 h-3.5 text-[#e8a838]" />
+            {lugar.categoria}
+          </span>
+          <span className="flex items-center gap-1">
+            <IconPin className="w-3.5 h-3.5 text-[#1a4a3a]" />
+            {lugar.distancia}
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function Home() {
   const [destaque, setDestaque] = useState(null);
   const [lugaresProximos, setLugaresProximos] = useState([]);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
+  const [termoBusca, setTermoBusca] = useState("");
+  const [buscaAtiva, setBuscaAtiva] = useState(false);
+  const [resultadosBusca, setResultadosBusca] = useState([]);
+  const [loadingBusca, setLoadingBusca] = useState(false);
 
   useEffect(() => {
     supabase
@@ -142,6 +183,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (buscaAtiva) return;
+
     let cancelled = false;
 
     fetchLugaresProximos(categoriaSelecionada).then((data) => {
@@ -151,11 +194,59 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [categoriaSelecionada]);
+  }, [categoriaSelecionada, buscaAtiva]);
 
   function handleCategoriaClick(label) {
+    setBuscaAtiva(false);
+    setResultadosBusca([]);
+    setTermoBusca("");
     setCategoriaSelecionada((atual) => (atual === label ? null : label));
   }
+
+  async function handleBuscar(event) {
+    event.preventDefault();
+    const query = termoBusca.trim();
+    if (!query) return;
+
+    setLoadingBusca(true);
+    setBuscaAtiva(true);
+
+    try {
+      const response = await fetch("/api/buscar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Erro na busca");
+      }
+
+      setResultadosBusca(data.lugares ?? []);
+    } catch {
+      setResultadosBusca([]);
+    } finally {
+      setLoadingBusca(false);
+    }
+  }
+
+  function handleLimparBusca() {
+    setBuscaAtiva(false);
+    setResultadosBusca([]);
+    setLoadingBusca(false);
+  }
+
+  function handleTermoBuscaChange(value) {
+    setTermoBusca(value);
+
+    if (!value.trim()) {
+      handleLimparBusca();
+    }
+  }
+
+  const lugaresExibidos = buscaAtiva ? resultadosBusca : lugaresProximos;
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
@@ -177,6 +268,20 @@ export default function Home() {
             18.3°
           </div>
         </header>
+
+        {/* Search */}
+        <form onSubmit={handleBuscar} className="mb-4">
+          <div className="relative">
+            <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9aa8a3]" />
+            <input
+              type="search"
+              value={termoBusca}
+              onChange={(e) => handleTermoBuscaChange(e.target.value)}
+              placeholder="O que você procura? Ex: quero comer peixe fresco..."
+              className="w-full rounded-xl border-0 bg-white py-3 pl-10 pr-4 text-sm text-[#1a2e28] shadow-sm placeholder:text-[#9aa8a3] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30"
+            />
+          </div>
+        </form>
 
         {/* Categories */}
         <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
@@ -247,37 +352,41 @@ export default function Home() {
           </article>
         )}
 
-        {/* Near you */}
+        {/* Near you / Search results */}
         <section>
-          <h2 className="mb-4 text-lg font-bold text-[#1a2e28]">Perto de você</h2>
-          <div className="flex flex-col gap-3">
-            {lugaresProximos.map((lugar) => (
-              <Link
-                key={lugar.id}
-                href={`/lugares/${lugar.id}`}
-                className="flex gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-[#1a2e28]">
+              {buscaAtiva ? "Resultados da busca" : "Perto de você"}
+            </h2>
+            {buscaAtiva && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTermoBusca("");
+                  handleLimparBusca();
+                }}
+                className="shrink-0 text-sm font-medium text-[#1a4a3a] transition-opacity hover:opacity-80"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={lugar.imagem_url}
-                  alt={lugar.nome}
-                  className="h-20 w-20 shrink-0 rounded-lg object-cover"
-                />
-                <div className="flex min-w-0 flex-1 flex-col justify-center">
-                  <h3 className="font-semibold text-[#1a2e28]">{lugar.nome}</h3>
-                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-[#5a6b66]">
-                    <span className="flex items-center gap-1">
-                      <IconSun className="w-3.5 h-3.5 text-[#e8a838]" />
-                      {lugar.categoria}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <IconPin className="w-3.5 h-3.5 text-[#1a4a3a]" />
-                      {lugar.distancia}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                × Limpar busca
+              </button>
+            )}
+          </div>
+          <div className="flex flex-col gap-3">
+            {loadingBusca ? (
+              <p className="py-6 text-center text-sm text-[#5a6b66]">
+                Buscando com IA...
+              </p>
+            ) : lugaresExibidos.length === 0 ? (
+              <p className="py-6 text-center text-sm text-[#5a6b66]">
+                {buscaAtiva
+                  ? "Nenhum lugar encontrado para essa busca."
+                  : "Nenhum lugar por perto no momento."}
+              </p>
+            ) : (
+              lugaresExibidos.map((lugar) => (
+                <LugarCard key={lugar.id} lugar={lugar} />
+              ))
+            )}
           </div>
         </section>
       </div>
