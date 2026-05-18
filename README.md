@@ -12,7 +12,8 @@ Permite que moradores e turistas encontrem praias, restaurantes e atrações da 
 |---|---|
 | Frontend | Next.js 16 (App Router) |
 | Estilização | Tailwind CSS |
-| Banco de dados | Supabase (PostgreSQL) |
+| Banco de dados | Supabase (PostgreSQL + Storage) |
+| IA | Claude API (Anthropic) |
 | Deploy | Vercel |
 | Editor | Cursor |
 | Controle de versão | Git + GitHub |
@@ -35,6 +36,8 @@ npm install
 # Crie um arquivo .env.local na raiz com:
 NEXT_PUBLIC_SUPABASE_URL=sua_url_aqui
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_aqui
+ANTHROPIC_API_KEY=sua_chave_aqui
+ANTHROPIC_MODEL=claude-sonnet-4-5
 
 # 4. Rodar em desenvolvimento
 npm run dev
@@ -55,7 +58,7 @@ Projeto usa Supabase com a seguinte tabela principal:
 | id | uuid | Chave primária automática |
 | nome | text | Nome do lugar |
 | descricao | text | Descrição curta |
-| categoria | text | Natureza, Gastronomia, Noite |
+| categoria | text | Natureza, Gastronomia, Noite, Serviços, Hospedagem |
 | distancia | text | Ex: "2.3km de você" |
 | imagem_url | text | URL da imagem |
 | destaque | bool | Aparece como destaque da semana |
@@ -68,24 +71,28 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Setup completo do ambiente (Node, Git, Cursor)
 - [x] Projeto Next.js com Tailwind CSS
 - [x] Home page mobile-first com layout fiel ao design original
-- [x] Chips de categoria (Natureza, Gastronomia, Noite)
+- [x] Chips de categoria com scroll horizontal (Natureza, Gastronomia, Noite, Serviços, Hospedagem)
 - [x] Card de destaque da semana
 - [x] Seção "Perto de você" com cards horizontais
 - [x] Bottom navigation bar
 - [x] Integração com Supabase
 - [x] Dados sendo buscados dinamicamente do banco
+- [x] Filtro por categoria funcional
+- [x] Página de detalhe de cada lugar (`/lugares/[id]`)
+- [x] Busca por linguagem natural com Claude API
+- [x] 25 lugares cadastrados em 5 categorias
+- [x] Imagens reais via Supabase Storage
 - [x] Deploy automático na Vercel
 
 ---
 
 ## Próximos passos
 
-- [ ] Filtro por categoria (clicar no chip filtra os lugares)
-- [ ] Página de detalhe de cada lugar
-- [ ] Busca por linguagem natural com Claude API
-- [ ] Autenticação com Google
-- [ ] Upload de imagens reais via Supabase Storage
+- [ ] Autenticação com Google via Supabase Auth
+- [ ] Favoritos por usuário
+- [ ] Temperatura real via API de clima
 - [ ] Geolocalização real para calcular distâncias
+- [ ] Imagens reais para todos os lugares
 
 ---
 
