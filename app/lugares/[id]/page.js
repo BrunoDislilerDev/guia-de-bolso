@@ -76,6 +76,25 @@ function FavoriteIcon({ active, className = "w-5 h-5" }) {
   );
 }
 
+function ShareIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7" />
+      <path d="M16 6l-4-4-4 4" />
+      <path d="M12 2v14" />
+    </svg>
+  );
+}
+
 function Stars({ value, className = "text-lg" }) {
   const rounded = Math.round(Number(value) || 0);
   return (
@@ -223,6 +242,8 @@ export default function LugarPage() {
   const [toast, setToast] = useState("");
   const [motivoModal, setMotivoModal] = useState("favoritar");
   const [localizacao, setLocalizacao] = useState(null);
+  const [subcategoria, setSubcategoria] = useState(null);
+  const [tags, setTags] = useState([]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -281,7 +302,34 @@ export default function LugarPage() {
       .eq("lugar_id", id)
       .maybeSingle()
       .then(({ data }) => setLocalizacao(data));
+
+    supabase
+      .from("lugares_tags")
+      .select("tags(*)")
+      .eq("lugar_id", id)
+      .then(({ data }) => {
+        setTags((data ?? []).map((item) => item.tags).filter(Boolean));
+      });
   }, [id]);
+
+  useEffect(() => {
+    if (!lugar?.categoria || !lugar?.subcategoria) {
+      const timer = setTimeout(() => {
+        setSubcategoria(null);
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }
+
+    const supabase = createClient();
+    supabase
+      .from("subcategorias")
+      .select("*")
+      .eq("categoria", lugar.categoria)
+      .eq("nome", lugar.subcategoria)
+      .maybeSingle()
+      .then(({ data }) => setSubcategoria(data));
+  }, [lugar]);
 
   useEffect(() => {
     if (!user || !lugar) return;
@@ -501,6 +549,27 @@ export default function LugarPage() {
     window.open(urls[selected], "_blank", "noopener,noreferrer");
   }
 
+  async function handleShare() {
+    const shareData = {
+      title: lugar.nome,
+      text: lugar.descricao,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      await navigator.clipboard.writeText(window.location.href);
+      setToast("Link copiado!");
+      setTimeout(() => setToast(""), 2500);
+    } catch {
+      // O usuario pode cancelar o share nativo; nesse caso nao exibimos erro.
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#f0f4f3] pb-24 font-sans text-[#1a2e28]">
       {toast && (
@@ -543,6 +612,14 @@ export default function LugarPage() {
           >
             <FavoriteIcon active={isFavorito} />
           </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="absolute right-[4.5rem] top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-md"
+            aria-label="Compartilhar lugar"
+          >
+            <ShareIcon />
+          </button>
 
           {imagens.length > 1 && (
             <div className="absolute bottom-4 right-4 rounded-full bg-black/55 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
@@ -569,6 +646,12 @@ export default function LugarPage() {
               <h1 className="mt-3 text-2xl font-bold tracking-tight text-[#1a2e28]">
                 {lugar.nome}
               </h1>
+              {lugar.subcategoria && (
+                <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-600">
+                  {subcategoria?.icone && <span>{subcategoria.icone}</span>}
+                  {lugar.subcategoria}
+                </span>
+              )}
             </div>
 
             <span
@@ -586,6 +669,20 @@ export default function LugarPage() {
             <ActionButton href={lugar.cardapio_url} label="Cardápio" Icon={IconUtensils} />
             <ActionButton href={lugar.site_url} label="Site" Icon={IconGlobe} />
           </div>
+
+          {tags.length > 0 && (
+            <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+              {tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="shrink-0 rounded-full bg-[#d4ede8] px-3 py-1.5 text-xs font-semibold text-[#1a4a3a]"
+                >
+                  {tag.icone && <span className="mr-1">{tag.icone}</span>}
+                  {tag.nome}
+                </span>
+              ))}
+            </div>
+          )}
 
           <section className="mt-7 rounded-3xl bg-[#f7faf9] p-4">
             <div className="flex items-center justify-between gap-3">

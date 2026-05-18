@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { getStatusFuncionamento } from "@/lib/horarios";
+import { getTagsFromLugar } from "@/lib/tags";
 
 function IconPin({ className = "h-4 w-4" }) {
   return (
@@ -29,6 +30,7 @@ function FavoriteIcon({ active, className = "h-5 w-5" }) {
 export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
   const status = getStatusFuncionamento(lugar.horarios);
   const distancia = lugar.distancia_calculada || lugar.distancia;
+  const tags = getTagsFromLugar(lugar).slice(0, 2);
 
   return (
     <article className="relative min-h-[380px] overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md">
@@ -62,6 +64,19 @@ export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
           <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/80">
             {lugar.descricao}
           </p>
+          {tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#1a2e28] shadow-sm"
+                >
+                  {tag.icone && <span className="mr-1">{tag.icone}</span>}
+                  {tag.nome}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-white">
             <IconPin className="h-4 w-4 text-white" />
             {distancia}

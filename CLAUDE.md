@@ -224,6 +224,10 @@ guia-de-bolso/
 - [x] Fluxo de verificação com contador de reenvio e tratamento de erros
 - [x] Carrossel de destaques na home com auto-scroll e dots
 - [x] Sistema de planos (Básico, Padrão, Premium) com badges visuais
+- [x] Temperatura real via OpenWeatherMap API
+- [x] Geolocalização dinâmica com distância real calculada
+- [x] Endereço estruturado com Google Places Autocomplete no admin
+- [x] Tabela localizacoes separada com lat/lng
 - [x] Cards com gradiente e altura mínima de 380px
 - [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
 - [x] Status aberto/fechado em tempo real
@@ -238,6 +242,7 @@ guia-de-bolso/
 - [x] Bottom nav com navegação ativa por rota
 - [x] Página de perfil com foto, nome, email e estatísticas
 - [x] Editar perfil com upload de foto para Supabase Storage
+- [x] Upload de foto de perfil funcionando
 - [x] Tela de perfil sem login com benefícios e opções de entrada
 - [x] Logout com confirmação
 - [x] Excluir conta com confirmação estilo Apple/Google
@@ -253,6 +258,7 @@ guia-de-bolso/
 - [x] Gestão de usuários
 - [x] Sistema de logs (login, logout, favoritos, IR AGORA, acesso ao app)
 - [x] Sistema de avaliações com moderação
+- [x] Editor de horários com time picker (toggles Fechado/24h)
 - [x] Página de categorias (`/categorias`)
 - [x] Tabela perfis com roles (user/admin)
 - [x] Deploy automático na Vercel
@@ -262,8 +268,6 @@ guia-de-bolso/
 ## Próximos passos 🗺️
 
 - [ ] Rotas com etapas e fotos
-- [ ] Temperatura real via API de clima
-- [ ] Geolocalização real
 - [ ] WhatsApp Auth (pós aprovação Meta)
 - [ ] Apple Sign In (pós Apple Developer Program)
 

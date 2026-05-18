@@ -74,6 +74,14 @@ function IconLodging({ className = "w-4 h-4" }) {
   );
 }
 
+function EmojiIcon({ emoji, className = "w-4 h-4" }) {
+  return (
+    <span className={`inline-flex items-center justify-center ${className}`} aria-hidden>
+      {emoji}
+    </span>
+  );
+}
+
 function FavoriteIcon({ active, className = "w-5 h-5" }) {
   return (
     <svg
@@ -138,6 +146,38 @@ const categories = [
     border: "border-[#a8892a]",
     Icon: IconLodging,
   },
+  {
+    label: "Cultura",
+    bg: "bg-[#e9d5ff]",
+    activeBg: "bg-[#d8b4fe]",
+    text: "text-[#5b21b6]",
+    border: "border-[#7c3aed]",
+    Icon: (props) => <EmojiIcon emoji="🏛️" {...props} />,
+  },
+  {
+    label: "Aventura",
+    bg: "bg-[#fed7aa]",
+    activeBg: "bg-[#fdba74]",
+    text: "text-[#9a3412]",
+    border: "border-[#ea580c]",
+    Icon: (props) => <EmojiIcon emoji="🧗" {...props} />,
+  },
+  {
+    label: "Bem-estar",
+    bg: "bg-[#fbcfe8]",
+    activeBg: "bg-[#f9a8d4]",
+    text: "text-[#9d174d]",
+    border: "border-[#db2777]",
+    Icon: (props) => <EmojiIcon emoji="🧘" {...props} />,
+  },
+  {
+    label: "Compras",
+    bg: "bg-[#bfdbfe]",
+    activeBg: "bg-[#93c5fd]",
+    text: "text-[#1d4ed8]",
+    border: "border-[#2563eb]",
+    Icon: (props) => <EmojiIcon emoji="🛍️" {...props} />,
+  },
 ];
 
 const planoStyles = {
@@ -201,7 +241,7 @@ async function fetchLugaresProximos(categoria) {
   const supabase = createClient();
   let query = supabase
     .from("lugares")
-    .select("*, localizacoes(*)")
+    .select("*, localizacoes(*), lugares_tags(tags(*))")
     .eq("destaque", false)
     .eq("status", "ativo")
     .limit(3);
@@ -220,7 +260,7 @@ async function fetchDestaquesHome() {
 
   const { data: destaquesAtivos } = await supabase
     .from("destaques")
-    .select("id,lugar_id,plano_id,data_inicio,data_fim,ativo,lugares(*, localizacoes(*)),planos(*)")
+    .select("id,lugar_id,plano_id,data_inicio,data_fim,ativo,lugares(*, localizacoes(*), lugares_tags(tags(*))),planos(*)")
     .eq("ativo", true)
     .lte("data_inicio", today)
     .gte("data_fim", today)
@@ -235,7 +275,7 @@ async function fetchDestaquesHome() {
 
   const { data: destaqueLegado } = await supabase
     .from("lugares")
-    .select("*, localizacoes(*)")
+    .select("*, localizacoes(*), lugares_tags(tags(*))")
     .eq("destaque", true)
     .eq("status", "ativo")
     .limit(1);
@@ -246,7 +286,7 @@ async function fetchDestaquesHome() {
 
   const { data: qualquerLugar } = await supabase
     .from("lugares")
-    .select("*, localizacoes(*)")
+    .select("*, localizacoes(*), lugares_tags(tags(*))")
     .eq("status", "ativo")
     .limit(1);
 

@@ -31,6 +31,26 @@ const categorias = [
     icone: "🏠",
     descricao: "Pousadas e hostels para sua estadia perfeita",
   },
+  {
+    nome: "Cultura",
+    icone: "🏛️",
+    descricao: "História, arte, eventos e experiências culturais da região",
+  },
+  {
+    nome: "Aventura",
+    icone: "🧗",
+    descricao: "Atividades ao ar livre, esportes e experiências com adrenalina",
+  },
+  {
+    nome: "Bem-estar",
+    icone: "🧘",
+    descricao: "Spas, yoga, terapias e lugares para desacelerar",
+  },
+  {
+    nome: "Compras",
+    icone: "🛍️",
+    descricao: "Lojas, mercados, feiras e achados locais",
+  },
 ];
 
 export default function CategoriasPage() {

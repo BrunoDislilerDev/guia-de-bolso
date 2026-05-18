@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getTagsFromLugar } from "@/lib/tags";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
@@ -51,7 +52,7 @@ export async function POST(request) {
 
     const { data: lugares, error } = await supabase
       .from("lugares")
-      .select("*, localizacoes(*)")
+      .select("*, localizacoes(*), lugares_tags(tags(*))")
       .eq("status", "ativo");
 
     if (error) {
@@ -59,12 +60,15 @@ export async function POST(request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const lugaresResumo = (lugares ?? []).map((l) => ({
-      id: l.id,
-      nome: l.nome,
-      descricao: l.descricao,
-      categoria: l.categoria,
-    }));
+    const lugaresResumo = (lugares ?? []).map((l) => {
+      const tags = getTagsFromLugar(l).map((tag) => tag.nome);
+      return {
+        id: l.id,
+        contexto: `${l.nome}${l.subcategoria ? ` (${l.subcategoria})` : ""} - tags: ${
+          tags.length > 0 ? tags.join(", ") : "sem tags"
+        } - ${l.descricao} - categoria: ${l.categoria}`,
+      };
+    });
 
     const requestBody = {
       model: process.env.ANTHROPIC_MODEL ?? CLAUDE_MODEL,

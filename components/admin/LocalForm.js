@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EnderecoAutocomplete from "@/components/EnderecoAutocomplete";
 import HorarioEditor from "@/components/admin/HorarioEditor";
 import { createClient } from "@/lib/supabase";
+import { getTagIds } from "@/lib/tags";
 
 const emptyHorario = {
   dom: "fechado",
@@ -20,6 +21,7 @@ export const emptyLocalForm = {
   nome: "",
   descricao: "",
   categoria: "Natureza",
+  subcategoria: "",
   distancia: "",
   imagem_url: "",
   destaque: false,
@@ -32,6 +34,18 @@ export const emptyLocalForm = {
   status: "ativo",
   horarios: emptyHorario,
 };
+
+const categorias = [
+  "Natureza",
+  "Gastronomia",
+  "Noite",
+  "Serviços",
+  "Hospedagem",
+  "Cultura",
+  "Aventura",
+  "Bem-estar",
+  "Compras",
+];
 
 function Input({ label, ...props }) {
   return (
@@ -48,16 +62,56 @@ function Input({ label, ...props }) {
 export default function LocalForm({
   initialData = emptyLocalForm,
   initialLocalizacao = null,
+  initialTags = [],
   editingId = null,
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [localizacao, setLocalizacao] = useState(initialLocalizacao);
+  const [subcategorias, setSubcategorias] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState(getTagIds(initialTags));
   const [form, setForm] = useState({
     ...emptyLocalForm,
     ...initialData,
     horarios: initialData?.horarios || emptyHorario,
   });
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase
+      .from("tags")
+      .select("*")
+      .order("nome")
+      .then(({ data }) => setTags(data ?? []));
+  }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase
+      .from("subcategorias")
+      .select("*")
+      .eq("categoria", form.categoria)
+      .order("nome")
+      .then(({ data }) => {
+        const items = data ?? [];
+        setSubcategorias(items);
+
+        if (form.subcategoria && !items.some((item) => item.nome === form.subcategoria)) {
+          setForm((current) => ({ ...current, subcategoria: "" }));
+        }
+      });
+  }, [form.categoria, form.subcategoria]);
+
+  function toggleTag(tagId) {
+    setSelectedTagIds((current) =>
+      current.includes(tagId)
+        ? current.filter((id) => id !== tagId)
+        : [...current, tagId]
+    );
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -101,6 +155,19 @@ export default function LocalForm({
       );
     }
 
+    if (lugarId) {
+      await supabase.from("lugares_tags").delete().eq("lugar_id", lugarId);
+
+      if (selectedTagIds.length > 0) {
+        await supabase.from("lugares_tags").insert(
+          selectedTagIds.map((tagId) => ({
+            lugar_id: lugarId,
+            tag_id: Number(tagId),
+          }))
+        );
+      }
+    }
+
     router.push("/admin/locais");
   }
 
@@ -110,8 +177,28 @@ export default function LocalForm({
         <Input label="Nome" value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
         <label className="block text-sm font-semibold text-[#1a2e28]">
           Categoria
-          <select value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })} className="mt-1 w-full rounded-xl bg-[#f0f4f3] px-3 py-2 text-sm font-normal outline-none">
-            {["Natureza", "Gastronomia", "Noite", "Serviços", "Hospedagem"].map((cat) => <option key={cat}>{cat}</option>)}
+          <select
+            value={form.categoria}
+            onChange={(e) => setForm({ ...form, categoria: e.target.value, subcategoria: "" })}
+            className="mt-1 w-full rounded-xl bg-[#f0f4f3] px-3 py-2 text-sm font-normal outline-none"
+          >
+            {categorias.map((cat) => <option key={cat}>{cat}</option>)}
+          </select>
+        </label>
+        <label className="block text-sm font-semibold text-[#1a2e28]">
+          Subcategoria
+          <select
+            value={form.subcategoria || ""}
+            onChange={(e) => setForm({ ...form, subcategoria: e.target.value })}
+            className="mt-1 w-full rounded-xl bg-[#f0f4f3] px-3 py-2 text-sm font-normal outline-none"
+          >
+            <option value="">Sem subcategoria</option>
+            {subcategorias.map((subcategoria) => (
+              <option key={subcategoria.id} value={subcategoria.nome}>
+                {subcategoria.icone ? `${subcategoria.icone} ` : ""}
+                {subcategoria.nome}
+              </option>
+            ))}
           </select>
         </label>
         <label className="block text-sm font-semibold text-[#1a2e28]">
@@ -132,6 +219,33 @@ export default function LocalForm({
           <input type="checkbox" checked={Boolean(form.destaque)} onChange={(e) => setForm({ ...form, destaque: e.target.checked })} />
           Destaque
         </label>
+      </div>
+
+      <div className="mt-4">
+        <p className="mb-2 text-sm font-semibold text-[#1a2e28]">Tags</p>
+        <div className="grid gap-2 rounded-2xl bg-[#f7faf9] p-3 md:grid-cols-3">
+          {tags.length === 0 ? (
+            <p className="text-sm text-[#5a6b66]">Nenhuma tag cadastrada.</p>
+          ) : (
+            tags.map((tag) => {
+              const tagId = String(tag.id);
+              return (
+                <label
+                  key={tag.id}
+                  className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-[#1a2e28]"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTagIds.includes(tagId)}
+                    onChange={() => toggleTag(tagId)}
+                  />
+                  <span>{tag.icone}</span>
+                  {tag.nome}
+                </label>
+              );
+            })
+          )}
+        </div>
       </div>
 
       <div className="mt-4">

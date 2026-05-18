@@ -12,6 +12,7 @@ export default function EditarLocalPage() {
   const { id } = useParams();
   const [local, setLocal] = useState(null);
   const [localizacao, setLocalizacao] = useState(null);
+  const [tags, setTags] = useState([]);
   const [loadingLocal, setLoadingLocal] = useState(true);
 
   useEffect(() => {
@@ -28,9 +29,14 @@ export default function EditarLocalPage() {
         .select("*")
         .eq("lugar_id", id)
         .maybeSingle(),
-    ]).then(([localRes, localizacaoRes]) => {
+      supabase
+        .from("lugares_tags")
+        .select("tags(*)")
+        .eq("lugar_id", id),
+    ]).then(([localRes, localizacaoRes, tagsRes]) => {
       setLocal(localRes.data);
       setLocalizacao(localizacaoRes.data);
+      setTags((tagsRes.data ?? []).map((item) => item.tags).filter(Boolean));
       setLoadingLocal(false);
     });
   }, [loading, id]);
@@ -48,6 +54,7 @@ export default function EditarLocalPage() {
         <LocalForm
           initialData={local}
           initialLocalizacao={localizacao}
+          initialTags={tags}
           editingId={local.id}
         />
       ) : (
