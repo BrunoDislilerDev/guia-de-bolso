@@ -85,7 +85,7 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Avatar do usuário logado no header
 - [x] Cards com gradiente e altura mínima de 380px
 - [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
-- [x] Status aberto/fechado em tempo real baseado em horários
+- [x] Status aberto/fechado em tempo real
 - [x] Carrossel de fotos na página de detalhe com chip 1/N
 - [x] Ações rápidas no detalhe (Ligar, Instagram, Cardápio, Site)
 - [x] Horários de funcionamento com bottom sheet completo
@@ -93,6 +93,14 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Seção Sobre com "Leia mais"
 - [x] Botão IR AGORA com escolha de app (Google Maps, Apple Maps, Waze)
 - [x] Favoritos reais salvos no Supabase
+- [x] Página de favoritos com remoção de favoritos
+- [x] Bottom nav com navegação ativa por rota
+- [x] Página de perfil com foto, nome, email e estatísticas
+- [x] Editar perfil com upload de foto para Supabase Storage
+- [x] Tela de perfil sem login com benefícios e opções de entrada
+- [x] Logout com confirmação
+- [x] Excluir conta com confirmação estilo Apple/Google
+- [x] Preferência de app de navegação salva no localStorage
 - [x] Bottom sheet de login para conteúdo restrito
 - [x] Onboarding com 3 telas
 - [x] 25 lugares cadastrados em 5 categorias

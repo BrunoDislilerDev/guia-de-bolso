@@ -19,6 +19,17 @@ function IconHeart({ className = "h-6 w-6", active = false }) {
   );
 }
 
+function IconGrid({ className = "h-6 w-6", active = false }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M4 4h6v6H4V4z" />
+      <path d="M14 4h6v6h-6V4z" />
+      <path d="M4 14h6v6H4v-6z" />
+      <path d="M14 14h6v6h-6v-6z" />
+    </svg>
+  );
+}
+
 function IconPerson({ className = "h-6 w-6", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -30,6 +41,7 @@ function IconPerson({ className = "h-6 w-6", active = false }) {
 
 const items = [
   { href: "/", label: "Início", Icon: IconHome },
+  { href: "/categorias", label: "Categorias", Icon: IconGrid },
   { href: "/favoritos", label: "Favoritos", Icon: IconHeart },
   { href: "/perfil", label: "Perfil", Icon: IconPerson },
 ];
@@ -38,7 +50,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-md border-t border-black/5 bg-white px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_rgba(26,74,58,0.10)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-md border-t border-black/5 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_rgba(26,74,58,0.10)]">
       <div className="flex items-center justify-around">
         {items.map(({ href, label, Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);

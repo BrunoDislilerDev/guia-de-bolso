@@ -216,6 +216,26 @@ guia-de-bolso/
 - [x] Autenticação com Apple via Supabase Auth
 - [x] Página de login com redirecionamento automático
 - [x] Avatar do usuário logado no header
+- [x] Cards com gradiente e altura mínima de 380px
+- [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
+- [x] Status aberto/fechado em tempo real
+- [x] Carrossel de fotos na página de detalhe com chip 1/N
+- [x] Ações rápidas no detalhe (Ligar, Instagram, Cardápio, Site)
+- [x] Horários de funcionamento com bottom sheet completo
+- [x] Seção Localização com link para Google Maps
+- [x] Seção Sobre com "Leia mais"
+- [x] Botão IR AGORA com escolha de app (Google Maps, Apple Maps, Waze)
+- [x] Favoritos reais salvos no Supabase
+- [x] Página de favoritos com remoção de favoritos
+- [x] Bottom nav com navegação ativa por rota
+- [x] Página de perfil com foto, nome, email e estatísticas
+- [x] Editar perfil com upload de foto para Supabase Storage
+- [x] Tela de perfil sem login com benefícios e opções de entrada
+- [x] Logout com confirmação
+- [x] Excluir conta com confirmação estilo Apple/Google
+- [x] Preferência de app de navegação salva no localStorage
+- [x] Bottom sheet de login para conteúdo restrito
+- [x] Onboarding com 3 telas
 - [x] Deploy automático na Vercel
 
 ---
@@ -224,18 +244,8 @@ guia-de-bolso/
 
 ### Semana 1
 - [ ] Login via SMS (Twilio + Supabase Auth)
-- [ ] Onboarding (3-4 telas na primeira abertura)
-- [ ] Acesso público sem login (ver lugares, ver destaques)
-- [ ] Modal de login para conteúdo restrito (favoritar, avaliar, rotas)
-
-### Semana 2
-- [ ] Perfil do usuário (/perfil)
-- [ ] Configurações de perfil (nome, foto, notificações, deletar conta)
-- [ ] Preferência de app de navegação (Google Maps, Apple Maps, Waze)
-- [ ] Botão "IR AGORA" em cada lugar e rota
 
 ### Semana 3
-- [ ] Página de categorias com grid visual (/categorias)
 - [ ] Subcategorias (Natureza → Praias, Trilhas, Cachoeiras)
 - [ ] Filtro por subcategoria
 
@@ -253,7 +263,6 @@ guia-de-bolso/
 ### Semana 6
 - [ ] Destaques como carrossel na home
 - [ ] Lógica de planos (Básico 2x/semana, Padrão diário, Premium diário destacado)
-- [ ] Favoritos por usuário autenticado
 
 ### Semana 7 — Painel Admin (/admin)
 - [ ] Rota protegida (role = admin no perfil)
