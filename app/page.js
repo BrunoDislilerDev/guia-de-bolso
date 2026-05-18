@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
@@ -139,6 +139,32 @@ const categories = [
   },
 ];
 
+const planoStyles = {
+  "Básico": "bg-zinc-200 text-zinc-700",
+  "Padrão": "bg-[#b8e6d4] text-[#1a4a3a]",
+  Premium: "bg-[#f5d76e] text-[#6b4e00]",
+};
+
+function getBrazilDate() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function normalizeDestaque(row) {
+  const lugar = row?.lugares ?? row;
+  if (!lugar) return null;
+
+  return {
+    ...lugar,
+    destaque_id: row?.id ?? `fallback-${lugar.id}`,
+    plano: row?.planos ?? null,
+  };
+}
+
 async function fetchLugaresProximos(categoria) {
   const supabase = createClient();
   let query = supabase
@@ -156,6 +182,45 @@ async function fetchLugaresProximos(categoria) {
   return data ?? [];
 }
 
+async function fetchDestaquesHome() {
+  const supabase = createClient();
+  const today = getBrazilDate();
+
+  const { data: destaquesAtivos } = await supabase
+    .from("destaques")
+    .select("id,lugar_id,plano_id,data_inicio,data_fim,ativo,lugares(*),planos(*)")
+    .eq("ativo", true)
+    .lte("data_inicio", today)
+    .gte("data_fim", today)
+    .order("data_inicio", { ascending: false });
+
+  const destaques = (destaquesAtivos ?? [])
+    .map(normalizeDestaque)
+    .filter(Boolean)
+    .filter((lugar) => lugar.status === "ativo");
+
+  if (destaques.length > 0) return destaques;
+
+  const { data: destaqueLegado } = await supabase
+    .from("lugares")
+    .select("*")
+    .eq("destaque", true)
+    .eq("status", "ativo")
+    .limit(1);
+
+  if (destaqueLegado?.length) {
+    return destaqueLegado.map((lugar) => ({ ...lugar, plano: null }));
+  }
+
+  const { data: qualquerLugar } = await supabase
+    .from("lugares")
+    .select("*")
+    .eq("status", "ativo")
+    .limit(1);
+
+  return (qualquerLugar ?? []).map((lugar) => ({ ...lugar, plano: null }));
+}
+
 function getUserInitial(user) {
   const name =
     user.user_metadata?.full_name ||
@@ -165,12 +230,173 @@ function getUserInitial(user) {
   return name.charAt(0).toUpperCase();
 }
 
+function DestaquesCarousel({ destaques, favoritos, onFavoritar }) {
+  const scrollerRef = useRef(null);
+  const resumeTimerRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (destaques.length <= 1 || paused) return undefined;
+
+    const interval = setInterval(() => {
+      setActiveIndex((current) => {
+        const next = (current + 1) % destaques.length;
+        scrollerRef.current?.scrollTo({
+          left: next * scrollerRef.current.clientWidth,
+          behavior: "smooth",
+        });
+        return next;
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [destaques.length, paused]);
+
+  useEffect(() => {
+    return () => clearTimeout(resumeTimerRef.current);
+  }, []);
+
+  function pauseTemporarily() {
+    setPaused(true);
+    clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      setPaused(false);
+    }, 6000);
+  }
+
+  function handleScroll() {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    const nextIndex = Math.round(scroller.scrollLeft / scroller.clientWidth);
+    setActiveIndex(Math.min(Math.max(nextIndex, 0), destaques.length - 1));
+  }
+
+  function isFavorito(lugar) {
+    return favoritos.includes(String(lugar.id));
+  }
+
+  return (
+    <section className="mb-8">
+      <div
+        ref={scrollerRef}
+        onScroll={handleScroll}
+        onPointerDown={pauseTemporarily}
+        className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {destaques.map((lugar, index) => {
+          const planoNome = lugar.plano?.nome || "Destaque";
+          const destaqueLabel =
+            planoNome === "Premium" ? "DESTAQUE DO DIA" : "DESTAQUE DA SEMANA";
+
+          return (
+            <article
+              key={`${lugar.destaque_id}-${lugar.id}`}
+              className="relative min-h-[420px] w-full shrink-0 snap-start overflow-hidden rounded-2xl shadow-sm"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={lugar.imagem_url}
+                alt={lugar.nome}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/45" />
+
+              <div className="absolute left-4 right-4 top-4 flex items-start justify-between gap-3">
+                <div className="flex flex-col items-start gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${
+                      planoStyles[planoNome] || "bg-white/85 text-[#1a4a3a]"
+                    }`}
+                  >
+                    {planoNome}
+                  </span>
+                  <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold tracking-[0.16em] text-white backdrop-blur-md">
+                    {destaqueLabel}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onFavoritar(lugar)}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-white shadow-sm backdrop-blur-md"
+                  aria-label={
+                    isFavorito(lugar)
+                      ? "Remover dos favoritos"
+                      : "Adicionar aos favoritos"
+                  }
+                >
+                  <FavoriteIcon active={isFavorito(lugar)} />
+                </button>
+              </div>
+
+              <div className="absolute inset-x-0 bottom-0 p-5 pb-12">
+                <h2 className="text-3xl font-extrabold leading-tight text-white">
+                  {lugar.nome}
+                </h2>
+                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/80">
+                  {lugar.descricao}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-4 text-sm font-medium text-white">
+                  <span className="flex items-center gap-1.5">
+                    <IconSun className="w-4 h-4 text-[#f5d76e]" />
+                    {lugar.categoria}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <IconPin className="w-4 h-4 text-[#b8e6d4]" />
+                    {lugar.distancia}
+                  </span>
+                </div>
+                <Link
+                  href={`/lugares/${lugar.id}`}
+                  className="mt-4 block w-full rounded-xl bg-[#1a4a3a] py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
+                >
+                  Explorar Rota →
+                </Link>
+              </div>
+
+              <span className="absolute bottom-3 right-3 rounded-full bg-black/35 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
+                {index + 1} / {destaques.length}
+              </span>
+            </article>
+          );
+        })}
+      </div>
+
+      {destaques.length > 1 && (
+        <div className="mt-4 flex justify-center gap-2">
+          {destaques.map((lugar, index) => (
+            <button
+              key={`dot-${lugar.destaque_id}-${lugar.id}`}
+              type="button"
+              onClick={() => {
+                pauseTemporarily();
+                scrollerRef.current?.scrollTo({
+                  left: index * scrollerRef.current.clientWidth,
+                  behavior: "smooth",
+                });
+                setActiveIndex(index);
+              }}
+              className={`h-2 rounded-full transition-all ${
+                activeIndex === index
+                  ? "w-6 bg-[#1a4a3a]"
+                  : "w-2 bg-[#c7d1cc]"
+              }`}
+              aria-label={`Ir para destaque ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [destaque, setDestaque] = useState(null);
+  const [destaques, setDestaques] = useState([]);
   const [lugaresProximos, setLugaresProximos] = useState([]);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
   const [termoBusca, setTermoBusca] = useState("");
@@ -182,8 +408,12 @@ export default function Home() {
   const [motivoModal, setMotivoModal] = useState("favoritar");
 
   useEffect(() => {
-    setShowOnboarding(!localStorage.getItem("onboarding_visto"));
-    setOnboardingChecked(true);
+    const timer = setTimeout(() => {
+      setShowOnboarding(!localStorage.getItem("onboarding_visto"));
+      setOnboardingChecked(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -191,6 +421,7 @@ export default function Home() {
 
     supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       setUser(currentUser);
+      if (!currentUser) setFavoritos([]);
       setAuthLoading(false);
       registrarLog(supabase, currentUser, "acessou_app");
     });
@@ -199,6 +430,7 @@ export default function Home() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) setFavoritos([]);
       setAuthLoading(false);
     });
 
@@ -208,15 +440,15 @@ export default function Home() {
   useEffect(() => {
     if (authLoading) return;
 
-    const supabase = createClient();
-    supabase
-      .from("lugares")
-      .select("*")
-      .eq("destaque", true)
-      .eq("status", "ativo")
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => setDestaque(data));
+    let cancelled = false;
+
+    fetchDestaquesHome().then((data) => {
+      if (!cancelled) setDestaques(data);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading]);
 
   useEffect(() => {
@@ -234,10 +466,7 @@ export default function Home() {
   }, [categoriaSelecionada, buscaAtiva, authLoading]);
 
   useEffect(() => {
-    if (!user) {
-      setFavoritos([]);
-      return;
-    }
+    if (!user) return;
 
     const supabase = createClient();
 
@@ -255,6 +484,7 @@ export default function Home() {
     await registrarLog(supabase, user, "logout");
     await supabase.auth.signOut();
     setUser(null);
+    setFavoritos([]);
   }
 
   async function handleFavoritar(lugar) {
@@ -446,57 +676,12 @@ export default function Home() {
           })}
         </div>
 
-        {/* Featured card */}
-        {destaque && (
-          <article className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm">
-            <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={destaque.imagem_url}
-                alt={destaque.nome}
-                className="h-44 w-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => handleFavoritar(destaque)}
-                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#1a4a3a] shadow-sm backdrop-blur-sm"
-                aria-label={
-                  isFavorito(destaque)
-                    ? "Remover dos favoritos"
-                    : "Adicionar aos favoritos"
-                }
-              >
-                <FavoriteIcon active={isFavorito(destaque)} />
-              </button>
-            </div>
-            <div className="p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#9aa8a3]">
-                Destaque da semana
-              </p>
-              <h2 className="mt-1 text-xl font-bold text-[#1a2e28]">
-                {destaque.nome}
-              </h2>
-              <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
-                {destaque.descricao}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-4 text-sm text-[#5a6b66]">
-                <span className="flex items-center gap-1.5">
-                  <IconSun className="w-4 h-4 text-[#e8a838]" />
-                  {destaque.categoria}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <IconPin className="w-4 h-4 text-[#1a4a3a]" />
-                  {destaque.distancia}
-                </span>
-              </div>
-              <Link
-                href={`/lugares/${destaque.id}`}
-                className="mt-4 block w-full rounded-xl bg-[#1a4a3a] py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
-              >
-                Explorar Rota →
-              </Link>
-            </div>
-          </article>
+        {destaques.length > 0 && (
+          <DestaquesCarousel
+            destaques={destaques}
+            favoritos={favoritos}
+            onFavoritar={handleFavoritar}
+          />
         )}
 
         {/* Near you / Search results */}

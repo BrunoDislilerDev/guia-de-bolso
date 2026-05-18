@@ -23,7 +23,7 @@ Este arquivo fornece contexto completo do projeto para o agente de IA. Leia ante
 | Banco de dados | Supabase (PostgreSQL) |
 | Autenticação | Supabase Auth |
 | IA | Claude API (claude-sonnet-4-20250514) |
-| SMS Auth | Twilio (a implementar) |
+| SMS Auth | Twilio + Supabase OTP |
 | Deploy | Vercel |
 | Editor | Cursor |
 | Linguagem | JavaScript (sem TypeScript) |
@@ -52,7 +52,7 @@ guia-de-bolso/
 │   ├── page.js                  # Home page (Client Component)
 │   ├── layout.js                # Layout global
 │   ├── login/
-│   │   └── page.js              # Tela de login (Google + Apple + SMS)
+│   │   └── page.js              # Tela de login (Google + SMS)
 │   ├── auth/
 │   │   └── callback/
 │   │       └── route.js         # Callback OAuth do Supabase
@@ -81,7 +81,7 @@ guia-de-bolso/
 │   └── supabase.js              # Cliente Supabase (SSR)
 ├── components/
 │   ├── Onboarding.js            # Telas de onboarding (3-4 slides)
-│   ├── LoginModal.js            # Modal de login para conteúdo restrito
+│   ├── LoginModal.js            # Bottom sheet de login para conteúdo restrito
 │   ├── DestaqueCarrossel.js     # Carrossel de destaques da semana
 │   ├── BotaoIrAgora.js          # Botão que abre Maps preferido
 │   └── AvaliacaoCard.js         # Card de avaliação de um lugar
@@ -213,9 +213,12 @@ guia-de-bolso/
 - [x] 25 lugares cadastrados em 5 categorias
 - [x] Imagem real da Praia da Vila via Supabase Storage
 - [x] Autenticação com Google via Supabase Auth
-- [x] Autenticação com Apple via Supabase Auth
 - [x] Página de login com redirecionamento automático
 - [x] Avatar do usuário logado no header
+- [x] Login via SMS com Twilio (OTP de 6 dígitos)
+- [x] Novo visual da página de login (foto de fundo, painel verde escuro)
+- [x] Removido Apple Sign In (pendente Apple Developer Program)
+- [x] Fluxo de verificação com contador de reenvio e tratamento de erros
 - [x] Cards com gradiente e altura mínima de 380px
 - [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
 - [x] Status aberto/fechado em tempo real
@@ -252,7 +255,6 @@ guia-de-bolso/
 
 ## Próximos passos 🗺️
 
-- [ ] Login via SMS (Twilio)
 - [ ] Rotas com etapas e fotos
 - [ ] Carrossel de destaques com lógica de planos
 - [ ] Temperatura real via API de clima
@@ -317,7 +319,7 @@ Edita no Cursor → git add . → git commit -m "mensagem" → git push → Verc
 - A busca por IA usa **todos os lugares do banco** como contexto para a Claude decidir quais retornar
 - O campo `distancia` é texto estático por enquanto — geolocalização real vem depois
 - O campo `destaque` na tabela lugares é legado — a lógica de destaques migrará para a tabela `destaques`
-- O Apple Sign-In pode precisar de ajustes no Apple Developer Console
+- O Apple Sign-In foi removido até aprovação/configuração no Apple Developer Program
 - A Vercel precisa ter todas as env vars configuradas em Production
 - O painel Admin deve ser protegido por role = 'admin' no perfil do usuário
 - Avaliações só aparecem para o usuário após aprovação pelo admin

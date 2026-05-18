@@ -80,9 +80,13 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Filtro por categoria funcional
 - [x] Página de detalhe de cada lugar (`/lugares/[id]`)
 - [x] Busca por linguagem natural com Claude API
-- [x] Autenticação com Google e Apple via Supabase Auth
+- [x] Autenticação com Google via Supabase Auth
 - [x] Página de login com redirecionamento automático
 - [x] Avatar do usuário logado no header
+- [x] Login via SMS com Twilio (OTP de 6 dígitos)
+- [x] Novo visual da página de login (foto de fundo, painel verde escuro)
+- [x] Removido Apple Sign In (pendente Apple Developer Program)
+- [x] Fluxo de verificação com contador de reenvio e tratamento de erros
 - [x] Cards com gradiente e altura mínima de 380px
 - [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
 - [x] Status aberto/fechado em tempo real
@@ -121,7 +125,6 @@ Projeto usa Supabase com a seguinte tabela principal:
 
 ## Próximos passos
 
-- [ ] Login via SMS (Twilio)
 - [ ] Rotas com etapas e fotos
 - [ ] Carrossel de destaques com lógica de planos
 - [ ] Temperatura real via API de clima
