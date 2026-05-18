@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
 import PlaceCard from "@/components/PlaceCard";
@@ -90,30 +91,6 @@ function IconSun({ className = "w-4 h-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z" />
-    </svg>
-  );
-}
-
-function IconHome({ className = "w-6 h-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-    </svg>
-  );
-}
-
-function IconHeartFilled({ className = "w-6 h-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-    </svg>
-  );
-}
-
-function IconPerson({ className = "w-6 h-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
     </svg>
   );
 }
@@ -551,33 +528,7 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-md bg-[#1a4a3a] px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="flex items-center justify-around">
-          <button
-            type="button"
-            className="flex flex-col items-center gap-1 text-white"
-            aria-current="page"
-          >
-            <IconHome />
-            <span className="text-xs font-medium">Início</span>
-          </button>
-          <button
-            type="button"
-            className="flex flex-col items-center gap-1 text-white/50 transition-colors hover:text-white/70"
-          >
-            <IconHeartFilled />
-            <span className="text-xs font-medium">Favoritos</span>
-          </button>
-          <button
-            type="button"
-            className="flex flex-col items-center gap-1 text-white/50 transition-colors hover:text-white/70"
-          >
-            <IconPerson />
-            <span className="text-xs font-medium">Perfil</span>
-          </button>
-        </div>
-      </nav>
+      <BottomNav />
 
       <LoginModal
         isOpen={isModalOpen}

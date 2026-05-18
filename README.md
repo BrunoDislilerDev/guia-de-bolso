@@ -83,6 +83,18 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Autenticação com Google e Apple via Supabase Auth
 - [x] Página de login com redirecionamento automático
 - [x] Avatar do usuário logado no header
+- [x] Cards com gradiente e altura mínima de 380px
+- [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
+- [x] Status aberto/fechado em tempo real baseado em horários
+- [x] Carrossel de fotos na página de detalhe com chip 1/N
+- [x] Ações rápidas no detalhe (Ligar, Instagram, Cardápio, Site)
+- [x] Horários de funcionamento com bottom sheet completo
+- [x] Seção Localização com link para Google Maps
+- [x] Seção Sobre com "Leia mais"
+- [x] Botão IR AGORA com escolha de app (Google Maps, Apple Maps, Waze)
+- [x] Favoritos reais salvos no Supabase
+- [x] Bottom sheet de login para conteúdo restrito
+- [x] Onboarding com 3 telas
 - [x] 25 lugares cadastrados em 5 categorias
 - [x] Imagens reais via Supabase Storage
 - [x] Deploy automático na Vercel
@@ -92,7 +104,6 @@ Projeto usa Supabase com a seguinte tabela principal:
 ## Próximos passos
 
 - [ ] Login via SMS (Twilio)
-- [ ] Favoritos por usuário autenticado
 - [ ] Temperatura real via API de clima
 - [ ] Geolocalização real para calcular distâncias
 - [ ] Imagens reais para todos os lugares
