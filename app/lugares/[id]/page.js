@@ -198,7 +198,7 @@ function BottomSheet({ isOpen, onClose, title, children }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end bg-black/55 font-sans backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -479,7 +479,7 @@ export default function LugarPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] font-sans text-[#5a6b66]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando...
       </div>
     );
@@ -487,7 +487,7 @@ export default function LugarPage() {
 
   if (!lugar) {
     return (
-      <div className="min-h-screen bg-[#f0f4f3] px-4 py-6 font-sans text-[#1a2e28]">
+      <div className="min-h-screen bg-[#f0f4f3] px-4 py-6 text-[#1a2e28]">
         <div className="mx-auto max-w-md">
           <Link
             href="/"
@@ -571,7 +571,7 @@ export default function LugarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] pb-24 font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] pb-24 text-[#1a2e28]">
       {toast && (
         <div className="fixed left-4 right-4 top-4 z-[60] mx-auto max-w-md rounded-2xl bg-[#1a4a3a] px-4 py-3 text-center text-sm font-semibold text-white shadow-lg">
           {toast}

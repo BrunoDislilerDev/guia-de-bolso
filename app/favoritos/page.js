@@ -36,6 +36,7 @@ export default function FavoritosPage() {
 
     supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       setUser(currentUser);
+      if (!currentUser) setLugares([]);
       setAuthLoading(false);
     });
 
@@ -43,6 +44,7 @@ export default function FavoritosPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) setLugares([]);
       setAuthLoading(false);
     });
 
@@ -50,14 +52,13 @@ export default function FavoritosPage() {
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      setLugares([]);
-      return;
-    }
+    if (!user) return;
 
     let cancelled = false;
     const supabase = createClient();
-    setLoadingFavoritos(true);
+    const loadingTimer = setTimeout(() => {
+      if (!cancelled) setLoadingFavoritos(true);
+    }, 0);
 
     supabase
       .from("favoritos")
@@ -98,6 +99,7 @@ export default function FavoritosPage() {
 
     return () => {
       cancelled = true;
+      clearTimeout(loadingTimer);
     };
   }, [user]);
 
@@ -131,7 +133,7 @@ export default function FavoritosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-28 pt-6">
         <header className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight text-[#1a2e28]">

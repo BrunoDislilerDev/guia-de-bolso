@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
+import LugaresGridPage from "@/components/admin/LugaresGridPage";
 
-export default function AdminLugaresRedirect() {
-  redirect("/admin/locais");
-}
+export default LugaresGridPage;

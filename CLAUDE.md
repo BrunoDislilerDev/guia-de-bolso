@@ -200,6 +200,63 @@ guia-de-bolso/
 
 ---
 
+## Modelo de Negócio
+
+### Planos disponíveis
+
+**Gratuito — R$ 0**
+- Cadastro no guia oficial
+- Aparece nas buscas e categorias
+- Recebe avaliações de turistas
+- Informações básicas (nome, endereço, horário, telefone)
+
+**Estabelecido — R$ 99/mês**
+- Tudo do gratuito
+- Galeria de até 10 fotos
+- Link para Instagram, cardápio, site
+- Descrição completa
+- Badge "Estabelecimento verificado ✓"
+- Aparece nas seções de categoria da home
+- Estatísticas básicas de visualizações
+
+**Destaque — R$ 149/mês**
+- Tudo do Estabelecido
+- Aparece no carrossel de destaques (3x por semana)
+- Aparece primeiro nas buscas da categoria
+- Badge "Destaque da semana"
+- Estatísticas completas
+- Resposta às avaliações
+- Fotos ilimitadas
+
+**Parceiro Oficial — R$ 229/mês**
+- Tudo do Destaque
+- Prioridade máxima no carrossel (diário, sempre primeiro)
+- Badge dourado "Parceiro Oficial"
+- Aparece nas rotas sugeridas pela IA
+- Link direto para reserva/WhatsApp no card
+- Relatório mensal de desempenho
+- QR Code personalizado do estabelecimento
+- Menção nas redes sociais do guia
+
+### Contexto estratégico
+
+- Parceria com prefeitura de Imbituba/Garopaba como guia turístico oficial
+- Plano gratuito garante adesão em massa de todos os estabelecimentos
+- Planos pagos vendem ferramentas de gestão e visibilidade
+- Cobrança futura via Asaas (plataforma brasileira de pagamentos)
+- Estabelecimento terá acesso próprio ao admin para gerenciar perfil e pagamentos
+- QR Code do Parceiro Oficial para colocar no estabelecimento físico
+
+### Features de pagamento (futuras)
+
+- [ ] Portal do estabelecimento (login separado do usuário comum)
+- [ ] Gestão de plano e upgrade/downgrade
+- [ ] Pagamento recorrente via Asaas (PIX, boleto, cartão)
+- [ ] Emissão de invoices/notas
+- [ ] Relatório mensal automático por email
+
+---
+
 ## Features implementadas ✅
 
 - [x] Home page mobile-first com layout fiel ao design original
@@ -228,10 +285,15 @@ guia-de-bolso/
 - [x] Geolocalização dinâmica com distância real calculada
 - [x] Endereço estruturado com Google Places Autocomplete no admin
 - [x] Tabela localizacoes separada com lat/lng
+- [x] Subcategorias por categoria
+- [x] Tags nos lugares com chips visuais
+- [x] Tags incluídas no contexto da busca por IA
 - [x] Cards com gradiente e altura mínima de 380px
 - [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
+- [x] Filtro por subcategoria na página de categoria
 - [x] Status aberto/fechado em tempo real
 - [x] Carrossel de fotos na página de detalhe com chip 1/N
+- [x] Botão de compartilhar no detalhe do lugar
 - [x] Ações rápidas no detalhe (Ligar, Instagram, Cardápio, Site)
 - [x] Horários de funcionamento com bottom sheet completo
 - [x] Seção Localização com link para Google Maps
@@ -252,6 +314,7 @@ guia-de-bolso/
 - [x] Painel admin completo (`/admin`)
 - [x] Dashboard com analytics e logs em tempo real
 - [x] Gestão de locais com status (ativo, desativado, em_analise)
+- [x] Admin com seleção de subcategoria e tags
 - [x] Moderação de avaliações (aprovar/rejeitar)
 - [x] Gestão de destaques e planos
 - [x] Gestão de destaques no painel admin
@@ -260,6 +323,7 @@ guia-de-bolso/
 - [x] Sistema de avaliações com moderação
 - [x] Editor de horários com time picker (toggles Fechado/24h)
 - [x] Página de categorias (`/categorias`)
+- [x] Novas categorias: Cultura, Aventura, Bem-estar, Compras
 - [x] Tabela perfis com roles (user/admin)
 - [x] Deploy automático na Vercel
 

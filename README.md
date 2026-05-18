@@ -96,10 +96,15 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Geolocalização dinâmica com distância real calculada
 - [x] Endereço estruturado com Google Places Autocomplete no admin
 - [x] Tabela localizacoes separada com lat/lng
+- [x] Subcategorias por categoria
+- [x] Tags nos lugares com chips visuais
+- [x] Tags incluídas no contexto da busca por IA
 - [x] Cards com gradiente e altura mínima de 380px
 - [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
+- [x] Filtro por subcategoria na página de categoria
 - [x] Status aberto/fechado em tempo real
 - [x] Carrossel de fotos na página de detalhe com chip 1/N
+- [x] Botão de compartilhar no detalhe do lugar
 - [x] Ações rápidas no detalhe (Ligar, Instagram, Cardápio, Site)
 - [x] Horários de funcionamento com bottom sheet completo
 - [x] Seção Localização com link para Google Maps
@@ -120,6 +125,7 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Painel admin completo (`/admin`)
 - [x] Dashboard com analytics e logs em tempo real
 - [x] Gestão de locais com status (ativo, desativado, em_analise)
+- [x] Admin com seleção de subcategoria e tags
 - [x] Moderação de avaliações (aprovar/rejeitar)
 - [x] Gestão de destaques e planos
 - [x] Gestão de destaques no painel admin
@@ -128,6 +134,7 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Sistema de avaliações com moderação
 - [x] Editor de horários com time picker (toggles Fechado/24h)
 - [x] Página de categorias (`/categorias`)
+- [x] Novas categorias: Cultura, Aventura, Bem-estar, Compras
 - [x] Tabela perfis com roles (user/admin)
 - [x] 25 lugares cadastrados em 5 categorias
 - [x] Imagens reais via Supabase Storage

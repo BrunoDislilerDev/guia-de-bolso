@@ -143,7 +143,7 @@ export default function Onboarding({ onComplete }) {
   }
 
   return (
-    <section className="fixed inset-0 z-50 overflow-hidden bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <section className="fixed inset-0 z-50 overflow-hidden bg-[#f0f4f3] text-[#1a2e28]">
       <style>{`
         @keyframes onboardingSlide {
           from {

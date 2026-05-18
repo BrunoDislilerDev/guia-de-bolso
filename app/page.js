@@ -34,6 +34,15 @@ function IconCloud({ className = "w-4 h-4" }) {
   );
 }
 
+function IconPerson({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <path d="M12 11a4 4 0 100-8 4 4 0 000 8z" />
+    </svg>
+  );
+}
+
 function IconLeaf({ className = "w-4 h-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -244,13 +253,25 @@ async function fetchLugaresProximos(categoria) {
     .select("*, localizacoes(*), lugares_tags(tags(*))")
     .eq("destaque", false)
     .eq("status", "ativo")
-    .limit(3);
+    .limit(4);
 
   if (categoria) {
     query = query.eq("categoria", categoria);
   }
 
   const { data } = await query;
+  return data ?? [];
+}
+
+async function fetchLugaresCategoria(categoria) {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("lugares")
+    .select("*, localizacoes(*), lugares_tags(tags(*))")
+    .eq("categoria", categoria)
+    .eq("status", "ativo")
+    .limit(4);
+
   return data ?? [];
 }
 
@@ -403,7 +424,7 @@ function DestaquesCarousel({ destaques, favoritos, onFavoritar }) {
                 </button>
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 p-5 pb-12">
+              <div className="absolute inset-x-0 bottom-0 p-4 pb-12">
                 <h2 className="text-3xl font-extrabold leading-tight text-white">
                   {lugar.nome}
                 </h2>
@@ -464,6 +485,50 @@ function DestaquesCarousel({ destaques, favoritos, onFavoritar }) {
   );
 }
 
+function WeatherBadge({ weather }) {
+  return (
+    <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#1a4a3a] shadow-sm">
+      {weather.icon ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+          alt=""
+          className="h-5 w-5"
+        />
+      ) : (
+        <IconCloud className="w-4 h-4 text-[#6b8f9e]" />
+      )}
+      {weather.loading && weather.temperature === null
+        ? "..."
+        : Number.isFinite(weather.temperature)
+          ? `${weather.temperature.toFixed(1)}°`
+          : "--°"}
+    </span>
+  );
+}
+
+function HorizontalSection({ title, href, lugares, userPosition }) {
+  if (!lugares.length) return null;
+
+  return (
+    <section className="mt-8">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-[#1a2e28]">{title}</h2>
+        <Link href={href} className="shrink-0 text-sm font-semibold text-[#1a4a3a]">
+          Ver todos →
+        </Link>
+      </div>
+      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+        {lugares.map((lugar) => (
+          <div key={lugar.id} className="w-[285px] shrink-0">
+            <PlaceCard lugar={withDistanciaDinamica(lugar, userPosition)} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -478,6 +543,11 @@ export default function Home() {
   const [loadingBusca, setLoadingBusca] = useState(false);
   const [favoritos, setFavoritos] = useState([]);
   const [userPosition, setUserPosition] = useState(null);
+  const [categoriaSections, setCategoriaSections] = useState({
+    Gastronomia: [],
+    Natureza: [],
+    Noite: [],
+  });
   const [weather, setWeather] = useState({
     loading: true,
     temperature: null,
@@ -596,6 +666,29 @@ export default function Home() {
   }, [categoriaSelecionada, buscaAtiva, authLoading]);
 
   useEffect(() => {
+    if (authLoading) return;
+
+    let cancelled = false;
+
+    Promise.all([
+      fetchLugaresCategoria("Gastronomia"),
+      fetchLugaresCategoria("Natureza"),
+      fetchLugaresCategoria("Noite"),
+    ]).then(([gastronomia, natureza, noite]) => {
+      if (cancelled) return;
+      setCategoriaSections({
+        Gastronomia: gastronomia,
+        Natureza: natureza,
+        Noite: noite,
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading]);
+
+  useEffect(() => {
     if (!user) return;
 
     const supabase = createClient();
@@ -710,7 +803,7 @@ export default function Home() {
 
   if (!onboardingChecked || authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] font-sans text-[#5a6b66]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando...
       </div>
     );
@@ -724,59 +817,43 @@ export default function Home() {
     user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-28 pt-6">
         {/* Header */}
-        <header className="mb-6 flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#1a2e28]">
+        <header className="mb-6 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-[#1a2e28]">
               Guia de{" "}
               <span className="text-[#1a4a3a]">bolso.</span>
             </h1>
-            <p className="mt-1 flex items-center gap-1 text-sm text-[#5a6b66]">
-              <IconPin className="w-3.5 h-3.5 text-[#1a4a3a]" />
-              Explore Imbituba
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-col items-center gap-2">
-            {user && (
-              <Link
-                href="/perfil"
-                className="flex h-9 w-9 items-center justify-center rounded-full"
-                aria-label="Abrir perfil"
-              >
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={avatarUrl}
-                    alt=""
-                    className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                  />
-                ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1a4a3a] text-sm font-semibold text-white ring-2 ring-white">
-                    {getUserInitial(user)}
-                  </div>
-                )}
-              </Link>
-            )}
-            <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#1a4a3a] shadow-sm">
-              {weather.icon ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
-                  alt=""
-                  className="h-5 w-5"
-                />
-              ) : (
-                <IconCloud className="w-4 h-4 text-[#6b8f9e]" />
-              )}
-              {weather.loading && weather.temperature === null
-                ? "..."
-                : Number.isFinite(weather.temperature)
-                  ? `${weather.temperature.toFixed(1)}°`
-                  : "--°"}
+            <div className="mt-1 flex items-center gap-2">
+              <p className="flex min-w-0 items-center gap-1 text-sm text-[#5a6b66]">
+                <IconPin className="w-3.5 h-3.5 shrink-0 text-[#1a4a3a]" />
+                <span className="truncate">Explore Imbituba</span>
+              </p>
+              <WeatherBadge weather={weather} />
             </div>
           </div>
+          <Link
+            href={user ? "/perfil" : "/login"}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-sm ring-2 ring-white"
+            aria-label={user ? "Abrir perfil" : "Entrar"}
+          >
+            {user && avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="h-full w-full rounded-full object-cover"
+                />
+            ) : user ? (
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-[#1a4a3a] text-sm font-semibold text-white">
+                {getUserInitial(user)}
+              </div>
+              ) : (
+              <IconPerson />
+            )}
+          </Link>
         </header>
 
         {/* Search */}
@@ -794,7 +871,7 @@ export default function Home() {
         </form>
 
         {/* Categories */}
-        <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+        <div className="mb-6 flex gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
           {categories.map(({ label, bg, activeBg, text, border, Icon }) => {
             const isSelected = categoriaSelecionada === label;
             return (
@@ -821,8 +898,7 @@ export default function Home() {
           />
         )}
 
-        {/* Near you / Search results */}
-        <section>
+        <section className="mt-2">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-[#1a2e28]">
               {buscaAtiva ? "Resultados da busca" : "Perto de você"}
@@ -840,7 +916,28 @@ export default function Home() {
               </button>
             )}
           </div>
-          <div className="flex flex-col gap-3">
+          {!user && !buscaAtiva ? (
+            <div className="rounded-3xl bg-[#d4ede8] p-4 text-[#1a4a3a] shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70">
+                  <IconPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold">Faça login para ver lugares perto de você</h3>
+                  <p className="mt-1 text-sm text-[#1a4a3a]/75">
+                    Use sua localização em tempo real para descobrir o que está mais próximo.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/login"
+                className="mt-4 block rounded-xl bg-[#1a4a3a] py-3 text-center text-sm font-semibold text-white"
+              >
+                Entrar
+              </Link>
+            </div>
+          ) : (
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
             {loadingBusca ? (
               <p className="py-6 text-center text-sm text-[#5a6b66]">
                 Buscando com IA...
@@ -853,16 +950,37 @@ export default function Home() {
               </p>
             ) : (
               lugaresExibidos.map((lugar) => (
-                <PlaceCard
-                  key={lugar.id}
-                  lugar={lugar}
-                  isFavorito={isFavorito(lugar)}
-                  onFavoritar={handleFavoritar}
-                />
+                <div key={lugar.id} className="w-[285px] shrink-0">
+                  <PlaceCard
+                    lugar={lugar}
+                    isFavorito={isFavorito(lugar)}
+                    onFavoritar={handleFavoritar}
+                  />
+                </div>
               ))
             )}
           </div>
+          )}
         </section>
+
+        <HorizontalSection
+          title="Gastronomia 🍽️"
+          href="/categoria/Gastronomia"
+          lugares={categoriaSections.Gastronomia}
+          userPosition={userPosition}
+        />
+        <HorizontalSection
+          title="Natureza 🌿"
+          href="/categoria/Natureza"
+          lugares={categoriaSections.Natureza}
+          userPosition={userPosition}
+        />
+        <HorizontalSection
+          title="Noite 🌙"
+          href="/categoria/Noite"
+          lugares={categoriaSections.Noite}
+          userPosition={userPosition}
+        />
       </div>
 
       <BottomNav />

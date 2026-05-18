@@ -30,6 +30,16 @@ function IconGrid({ className = "h-6 w-6", active = false }) {
   );
 }
 
+function IconMap({ className = "h-6 w-6", active = false }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" />
+      <path d="M9 3v15" />
+      <path d="M15 6v15" />
+    </svg>
+  );
+}
+
 function IconPerson({ className = "h-6 w-6", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -42,6 +52,7 @@ function IconPerson({ className = "h-6 w-6", active = false }) {
 const items = [
   { href: "/", label: "Início", Icon: IconHome },
   { href: "/categorias", label: "Categorias", Icon: IconGrid },
+  { href: "/rotas", label: "Rotas", Icon: IconMap },
   { href: "/favoritos", label: "Favoritos", Icon: IconHeart },
   { href: "/perfil", label: "Perfil", Icon: IconPerson },
 ];
@@ -50,8 +61,8 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-md border-t border-black/5 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_rgba(26,74,58,0.10)]">
-      <div className="flex items-center justify-around">
+    <nav className="fixed bottom-2 left-2 right-2 z-40 mx-auto max-w-md rounded-full bg-[#0B1A1A] px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_14px_35px_rgba(11,26,26,0.28)]">
+      <div className="flex items-center justify-around gap-1">
         {items.map(({ href, label, Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
@@ -59,8 +70,8 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-1 transition-colors ${
-                active ? "text-[#1a4a3a]" : "text-[#9aa8a3]"
+              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-full px-2 py-2 transition-colors ${
+                active ? "bg-white !text-[#0B1A1A]" : "text-white"
               }`}
               aria-current={active ? "page" : undefined}
             >

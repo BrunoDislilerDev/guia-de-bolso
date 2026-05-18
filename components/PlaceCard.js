@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { getStatusFuncionamento } from "@/lib/horarios";
+import { createClient } from "@/lib/supabase";
 import { getTagsFromLugar } from "@/lib/tags";
 
 function IconPin({ className = "h-4 w-4" }) {
@@ -31,6 +33,33 @@ export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
   const status = getStatusFuncionamento(lugar.horarios);
   const distancia = lugar.distancia_calculada || lugar.distancia;
   const tags = getTagsFromLugar(lugar).slice(0, 2);
+  const [rating, setRating] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+
+    supabase
+      .from("avaliacoes")
+      .select("nota")
+      .eq("lugar_id", lugar.id)
+      .eq("status", "aprovada")
+      .then(({ data }) => {
+        if (cancelled) return;
+
+        if (!data?.length) {
+          setRating(null);
+          return;
+        }
+
+        const total = data.reduce((sum, avaliacao) => sum + Number(avaliacao.nota || 0), 0);
+        setRating(total / data.length);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lugar.id]);
 
   return (
     <article className="relative min-h-[380px] overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md">
@@ -42,11 +71,18 @@ export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
 
-      <span className="absolute left-3 top-3 rounded-full bg-[#d4ede8] px-3 py-1 text-xs font-semibold text-[#1a4a3a]">
-        {lugar.categoria}
-      </span>
+      <div className="absolute left-4 top-4 flex flex-col items-start gap-2">
+        {rating && (
+          <span className="rounded-full bg-black/55 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+            ⭐ {rating.toFixed(1)}
+          </span>
+        )}
+        <span className="rounded-full bg-[#d4ede8] px-3 py-1 text-xs font-semibold text-[#1a4a3a]">
+          {lugar.categoria}
+        </span>
+      </div>
       <span
-        className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold text-white ${
+        className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
           status.aberto ? "bg-[#1a4a3a]" : "bg-[#d9534f]"
         }`}
       >
@@ -55,7 +91,7 @@ export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
 
       <Link
         href={`/lugares/${lugar.id}`}
-        className="absolute inset-0 flex flex-col justify-end p-5 pr-16"
+        className="absolute inset-0 flex flex-col justify-end p-4 pr-16"
       >
         <div>
           <h3 className="text-2xl font-bold leading-tight text-white">

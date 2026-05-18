@@ -75,7 +75,7 @@ export default function CategoriasPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-28 pt-6">
         <header className="mb-6 flex items-start gap-3">
           <Link

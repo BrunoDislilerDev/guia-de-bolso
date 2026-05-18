@@ -34,7 +34,7 @@ export default function LoginModal({ isOpen, onClose, motivo = "favoritar" }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end bg-black/55 font-sans backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm"
       onClick={onClose}
       style={{
         animation: "loginOverlayIn 220ms ease-out forwards",

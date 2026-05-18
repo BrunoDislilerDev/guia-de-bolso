@@ -6,11 +6,12 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 
 const links = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/locais", label: "Locais" },
-  { href: "/admin/avaliacoes", label: "Avaliações" },
-  { href: "/admin/destaques", label: "Destaques" },
-  { href: "/admin/usuarios", label: "Usuários" },
+  { href: "/admin", label: "Dashboard", icon: "📊" },
+  { href: "/admin/locais", label: "Locais", icon: "📍" },
+  { href: "/admin/rotas", label: "Rotas", icon: "🗺️" },
+  { href: "/admin/avaliacoes", label: "Avaliações", icon: "⭐" },
+  { href: "/admin/destaques", label: "Destaques", icon: "✨" },
+  { href: "/admin/usuarios", label: "Usuários", icon: "👥" },
 ];
 
 export function useAdminAuth() {
@@ -71,7 +72,7 @@ export default function AdminShell({ title, children }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="flex min-h-screen">
         <aside className="hidden w-64 shrink-0 border-r border-black/5 bg-[#1a4a3a] p-6 text-white md:block">
           <Link href="/" className="block text-2xl font-bold">
@@ -93,6 +94,7 @@ export default function AdminShell({ title, children }) {
                     active ? "bg-white text-[#1a4a3a]" : "text-white/75 hover:bg-white/10"
                   }`}
                 >
+                  <span className="mr-2">{link.icon}</span>
                   {link.label}
                 </Link>
               );
@@ -115,6 +117,7 @@ export default function AdminShell({ title, children }) {
                   href={link.href}
                   className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#1a4a3a] shadow-sm"
                 >
+                  <span className="mr-1">{link.icon}</span>
                   {link.label}
                 </Link>
               ))}

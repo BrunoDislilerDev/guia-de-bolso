@@ -68,7 +68,7 @@ export default function CategoriaPage() {
       : lugares.filter((lugar) => lugar.subcategoria === subcategoriaSelecionada);
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-10 pt-6">
         <header className="mb-6 flex items-center gap-3">
           <Link
@@ -89,7 +89,7 @@ export default function CategoriaPage() {
         </header>
 
         {subcategorias.length > 0 && (
-          <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
+          <div className="mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
             {[
               { id: "todos", nome: "Todos", icone: "" },
               ...subcategorias,

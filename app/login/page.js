@@ -31,14 +31,14 @@ export default function LoginPage() {
 
   if (checkingSession) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] font-sans text-[#5a6b66]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1a4a3a] font-sans text-white">
+    <div className="min-h-screen bg-[#1a4a3a] text-white">
       <div className="mx-auto flex min-h-screen max-w-[430px] flex-col overflow-hidden bg-[#1a4a3a]">
         <section className="relative min-h-[50vh] overflow-hidden">
           <div

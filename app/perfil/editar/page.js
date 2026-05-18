@@ -177,7 +177,7 @@ export default function EditarPerfilPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] font-sans text-[#5a6b66]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando...
       </div>
     );
@@ -186,7 +186,7 @@ export default function EditarPerfilPage() {
   const avatarUrl = previewUrl || fotoUrl;
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-10 pt-6">
         <header className="mb-6 flex items-center gap-3">
           <Link

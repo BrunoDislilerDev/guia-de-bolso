@@ -46,7 +46,7 @@ function BottomSheet({ isOpen, onClose, title, children }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end bg-black/55 font-sans backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -166,7 +166,7 @@ export default function PerfilPage() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] font-sans text-[#5a6b66]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando...
       </div>
     );
@@ -174,7 +174,7 @@ export default function PerfilPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+      <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
         <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 pb-28 text-center">
           <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[#d4ede8] text-[#1a4a3a]">
             <IconPerson />
@@ -186,6 +186,7 @@ export default function PerfilPage() {
           <div className="mt-7 grid gap-3 text-left">
             {[
               ["❤️", "Salve seus lugares favoritos"],
+              ["📍", "Veja lugares perto de você em tempo real"],
               ["⭐", "Avalie e compartilhe experiências"],
               ["🗺️", "Acesse rotas exclusivas"],
             ].map(([icon, text]) => (
@@ -221,7 +222,7 @@ export default function PerfilPage() {
   const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] font-sans text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-28 pt-6">
         <header className="rounded-3xl bg-white p-5 shadow-sm">
           <div className="flex items-center gap-4">
