@@ -75,6 +75,16 @@ function FavoriteIcon({ active, className = "w-5 h-5" }) {
   );
 }
 
+function Stars({ value, className = "text-lg" }) {
+  const rounded = Math.round(Number(value) || 0);
+  return (
+    <span className={`tracking-tight text-[#e8a838] ${className}`}>
+      {"★".repeat(rounded)}
+      <span className="text-[#d8dfdc]">{"★".repeat(5 - rounded)}</span>
+    </span>
+  );
+}
+
 const categoriaStyles = {
   Natureza: "bg-[#b8e6d4] text-[#1a4a3a]",
   Gastronomia: "bg-[#f0e4d4] text-[#6b5344]",
@@ -129,6 +139,26 @@ function ActionButton({ href, label, Icon }) {
   );
 }
 
+function getReviewerName(avaliacao) {
+  return (
+    avaliacao.profiles?.full_name ||
+    avaliacao.profiles?.nome ||
+    avaliacao.perfis?.nome ||
+    "Usuário anônimo"
+  );
+}
+
+function formatReviewDate(value) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+    .format(new Date(value))
+    .replace(".", "");
+}
+
 function BottomSheet({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
@@ -169,6 +199,14 @@ export default function LugarPage() {
   const [showHorarios, setShowHorarios] = useState(false);
   const [showRotas, setShowRotas] = useState(false);
   const [sobreExpandido, setSobreExpandido] = useState(false);
+  const [avaliacoes, setAvaliacoes] = useState([]);
+  const [jaAvaliou, setJaAvaliou] = useState(false);
+  const [showAvaliacao, setShowAvaliacao] = useState(false);
+  const [nota, setNota] = useState(0);
+  const [comentario, setComentario] = useState("");
+  const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
+  const [toast, setToast] = useState("");
+  const [motivoModal, setMotivoModal] = useState("favoritar");
 
   useEffect(() => {
     const supabase = createClient();
@@ -219,6 +257,7 @@ export default function LugarPage() {
   useEffect(() => {
     if (!user || !lugar) {
       setIsFavorito(false);
+      setJaAvaliou(false);
       return;
     }
 
@@ -233,10 +272,49 @@ export default function LugarPage() {
       .then(({ data }) => {
         setIsFavorito(Boolean(data));
       });
+
+    supabase
+      .from("avaliacoes")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("lugar_id", lugar.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setJaAvaliou(Boolean(data));
+      });
   }, [user, lugar]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const supabase = createClient();
+
+    supabase
+      .from("avaliacoes")
+      .select("*, profiles:user_id(full_name,nome)")
+      .eq("lugar_id", id)
+      .eq("status", "aprovada")
+      .order("created_at", { ascending: false })
+      .then(async ({ data, error }) => {
+        if (!error) {
+          setAvaliacoes(data ?? []);
+          return;
+        }
+
+        const { data: fallbackData } = await supabase
+          .from("avaliacoes")
+          .select("*")
+          .eq("lugar_id", id)
+          .eq("status", "aprovada")
+          .order("created_at", { ascending: false });
+
+        setAvaliacoes(fallbackData ?? []);
+      });
+  }, [id]);
 
   async function handleFavoritar() {
     if (!user) {
+      setMotivoModal("favoritar");
       setIsModalOpen(true);
       return;
     }
@@ -261,6 +339,55 @@ export default function LugarPage() {
       .insert({ user_id: user.id, lugar_id: lugar.id });
 
     if (error) setIsFavorito(false);
+  }
+
+  async function handleOpenAvaliacao() {
+    if (!user) {
+      setMotivoModal("avaliar");
+      setIsModalOpen(true);
+      return;
+    }
+
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("avaliacoes")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("lugar_id", lugar.id)
+      .maybeSingle();
+
+    if (data) {
+      setJaAvaliou(true);
+      return;
+    }
+
+    setShowAvaliacao(true);
+  }
+
+  async function handleEnviarAvaliacao() {
+    if (!user || !lugar || nota === 0) return;
+
+    setEnviandoAvaliacao(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.from("avaliacoes").insert({
+      lugar_id: lugar.id,
+      user_id: user.id,
+      nota,
+      comentario: comentario.trim(),
+      status: "pendente",
+    });
+
+    setEnviandoAvaliacao(false);
+
+    if (error) return;
+
+    setShowAvaliacao(false);
+    setJaAvaliou(true);
+    setNota(0);
+    setComentario("");
+    setToast("Avaliação enviada! Aparecerá após aprovação.");
+    setTimeout(() => setToast(""), 3500);
   }
 
   if (loading) {
@@ -294,6 +421,12 @@ export default function LugarPage() {
   const diaAtual = getDiaAtualKey();
   const endereco = lugar.endereco || "Endereço não informado";
   const descricaoLonga = lugar.descricao_longa || lugar.descricao;
+  const totalAvaliacoes = avaliacoes.length;
+  const mediaAvaliacoes =
+    totalAvaliacoes > 0
+      ? avaliacoes.reduce((sum, avaliacao) => sum + Number(avaliacao.nota || 0), 0) /
+        totalAvaliacoes
+      : 0;
 
   function handleCarouselScroll() {
     const carousel = carouselRef.current;
@@ -325,6 +458,11 @@ export default function LugarPage() {
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] pb-24 font-sans text-[#1a2e28]">
+      {toast && (
+        <div className="fixed left-4 right-4 top-4 z-[60] mx-auto max-w-md rounded-2xl bg-[#1a4a3a] px-4 py-3 text-center text-sm font-semibold text-white shadow-lg">
+          {toast}
+        </div>
+      )}
       <div className="mx-auto max-w-md">
         <div className="relative h-[280px] overflow-hidden bg-[#1a4a3a]">
           <div
@@ -467,6 +605,78 @@ export default function LugarPage() {
               </button>
             )}
           </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="font-bold text-[#1a2e28]">Avaliações</h2>
+              {totalAvaliacoes > 0 && (
+                <span className="text-sm font-semibold text-[#1a4a3a]">
+                  {mediaAvaliacoes.toFixed(1)}
+                </span>
+              )}
+            </div>
+
+            <div className="rounded-3xl bg-[#f7faf9] p-4">
+              {totalAvaliacoes > 0 ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Stars value={mediaAvaliacoes} />
+                    <span className="text-sm text-[#5a6b66]">
+                      {totalAvaliacoes} avaliações
+                    </span>
+                  </div>
+
+                  <div className="mt-5 grid gap-4">
+                    {avaliacoes.slice(0, 3).map((avaliacao) => {
+                      const name = getReviewerName(avaliacao);
+                      return (
+                        <article key={avaliacao.id} className="border-t border-[#e8eeee] pt-4">
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d4ede8] text-sm font-bold text-[#1a4a3a]">
+                              {name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h3 className="text-sm font-bold text-[#1a2e28]">
+                                    {name}
+                                  </h3>
+                                  <Stars value={avaliacao.nota} className="text-sm" />
+                                </div>
+                                <span className="shrink-0 text-xs text-[#9aa8a3]">
+                                  {formatReviewDate(avaliacao.created_at)}
+                                </span>
+                              </div>
+                              {avaliacao.comentario && (
+                                <p className="mt-2 text-sm leading-relaxed text-[#5a6b66]">
+                                  {avaliacao.comentario}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-[#5a6b66]">Seja o primeiro a avaliar</p>
+              )}
+
+              <button
+                type="button"
+                onClick={handleOpenAvaliacao}
+                disabled={jaAvaliou}
+                className={`mt-5 w-full rounded-xl py-3.5 text-sm font-semibold transition-colors ${
+                  jaAvaliou
+                    ? "bg-zinc-200 text-zinc-500"
+                    : "bg-[#1a4a3a] text-white hover:bg-[#153d30] active:bg-[#123528]"
+                }`}
+              >
+                {jaAvaliou ? "Você já avaliou este lugar" : "Avaliar este lugar"}
+              </button>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -531,9 +741,47 @@ export default function LugarPage() {
         </div>
       </BottomSheet>
 
+      <BottomSheet
+        isOpen={showAvaliacao}
+        onClose={() => setShowAvaliacao(false)}
+        title="Sua avaliação"
+      >
+        <div className="flex justify-center gap-1">
+          {[1, 2, 3, 4, 5].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setNota(value)}
+              className={`text-4xl ${
+                value <= nota ? "text-[#e8a838]" : "text-[#d8dfdc]"
+              }`}
+              aria-label={`${value} estrelas`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          value={comentario}
+          onChange={(event) => setComentario(event.target.value)}
+          placeholder="Conte sua experiência..."
+          className="mt-5 min-h-28 w-full rounded-2xl bg-[#f0f4f3] p-4 text-sm text-[#1a2e28] placeholder:text-[#9aa8a3] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30"
+        />
+
+        <button
+          type="button"
+          onClick={handleEnviarAvaliacao}
+          disabled={nota === 0 || enviandoAvaliacao}
+          className="mt-4 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528] disabled:opacity-60"
+        >
+          {enviandoAvaliacao ? "Enviando..." : "Enviar avaliação"}
+        </button>
+      </BottomSheet>
+
       <LoginModal
         isOpen={isModalOpen}
-        motivo="favoritar"
+        motivo={motivoModal}
         onClose={() => setIsModalOpen(false)}
       />
     </div>
