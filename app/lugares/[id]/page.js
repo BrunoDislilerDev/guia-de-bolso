@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 function IconPin({ className = "w-4 h-4" }) {
   return (
@@ -26,6 +26,7 @@ function googleMapsUrl(lugar) {
 export default async function LugarPage({ params }) {
   const { id } = await params;
 
+  const supabase = await createClient();
   const { data: lugar } = await supabase
     .from("lugares")
     .select("*")
