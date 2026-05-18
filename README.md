@@ -84,9 +84,14 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Página de login com redirecionamento automático
 - [x] Avatar do usuário logado no header
 - [x] Login via SMS com Twilio (OTP de 6 dígitos)
+- [x] Login via SMS com Twilio funcionando
 - [x] Novo visual da página de login (foto de fundo, painel verde escuro)
+- [x] Novo visual da página de login com foto de fundo
 - [x] Removido Apple Sign In (pendente Apple Developer Program)
+- [x] Apple Sign In removido (pendente Apple Developer Program)
 - [x] Fluxo de verificação com contador de reenvio e tratamento de erros
+- [x] Carrossel de destaques na home com auto-scroll e dots
+- [x] Sistema de planos (Básico, Padrão, Premium) com badges visuais
 - [x] Cards com gradiente e altura mínima de 380px
 - [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
 - [x] Status aberto/fechado em tempo real
@@ -112,6 +117,7 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Gestão de locais com status (ativo, desativado, em_analise)
 - [x] Moderação de avaliações (aprovar/rejeitar)
 - [x] Gestão de destaques e planos
+- [x] Gestão de destaques no painel admin
 - [x] Gestão de usuários
 - [x] Sistema de logs (login, logout, favoritos, IR AGORA, acesso ao app)
 - [x] Sistema de avaliações com moderação
@@ -126,10 +132,10 @@ Projeto usa Supabase com a seguinte tabela principal:
 ## Próximos passos
 
 - [ ] Rotas com etapas e fotos
-- [ ] Carrossel de destaques com lógica de planos
 - [ ] Temperatura real via API de clima
 - [ ] Geolocalização real
 - [ ] WhatsApp Auth (pós aprovação Meta)
+- [ ] Apple Sign In (pós Apple Developer Program)
 
 ---
 

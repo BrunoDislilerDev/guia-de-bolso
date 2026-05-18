@@ -8,6 +8,7 @@ import Onboarding from "@/components/Onboarding";
 import PlaceCard from "@/components/PlaceCard";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
+import { withDistanciaDinamica } from "@/lib/localizacao";
 
 function IconPin({ className = "w-4 h-4" }) {
   return (
@@ -169,7 +170,7 @@ async function fetchLugaresProximos(categoria) {
   const supabase = createClient();
   let query = supabase
     .from("lugares")
-    .select("*")
+    .select("*, localizacoes(*)")
     .eq("destaque", false)
     .eq("status", "ativo")
     .limit(3);
@@ -188,7 +189,7 @@ async function fetchDestaquesHome() {
 
   const { data: destaquesAtivos } = await supabase
     .from("destaques")
-    .select("id,lugar_id,plano_id,data_inicio,data_fim,ativo,lugares(*),planos(*)")
+    .select("id,lugar_id,plano_id,data_inicio,data_fim,ativo,lugares(*, localizacoes(*)),planos(*)")
     .eq("ativo", true)
     .lte("data_inicio", today)
     .gte("data_fim", today)
@@ -203,7 +204,7 @@ async function fetchDestaquesHome() {
 
   const { data: destaqueLegado } = await supabase
     .from("lugares")
-    .select("*")
+    .select("*, localizacoes(*)")
     .eq("destaque", true)
     .eq("status", "ativo")
     .limit(1);
@@ -214,7 +215,7 @@ async function fetchDestaquesHome() {
 
   const { data: qualquerLugar } = await supabase
     .from("lugares")
-    .select("*")
+    .select("*, localizacoes(*)")
     .eq("status", "ativo")
     .limit(1);
 
@@ -289,6 +290,7 @@ function DestaquesCarousel({ destaques, favoritos, onFavoritar }) {
           const planoNome = lugar.plano?.nome || "Destaque";
           const destaqueLabel =
             planoNome === "Premium" ? "DESTAQUE DO DIA" : "DESTAQUE DA SEMANA";
+          const distancia = lugar.distancia_calculada || lugar.distancia;
 
           return (
             <article
@@ -344,7 +346,7 @@ function DestaquesCarousel({ destaques, favoritos, onFavoritar }) {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <IconPin className="w-4 h-4 text-[#b8e6d4]" />
-                    {lugar.distancia}
+                    {distancia}
                   </span>
                 </div>
                 <Link
@@ -404,6 +406,7 @@ export default function Home() {
   const [resultadosBusca, setResultadosBusca] = useState([]);
   const [loadingBusca, setLoadingBusca] = useState(false);
   const [favoritos, setFavoritos] = useState([]);
+  const [userPosition, setUserPosition] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [motivoModal, setMotivoModal] = useState("favoritar");
 
@@ -414,6 +417,21 @@ export default function Home() {
     }, 0);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserPosition({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      () => undefined,
+      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 }
+    );
   }, []);
 
   useEffect(() => {
@@ -578,7 +596,12 @@ export default function Home() {
     }
   }
 
-  const lugaresExibidos = buscaAtiva ? resultadosBusca : lugaresProximos;
+  const lugaresExibidos = (buscaAtiva ? resultadosBusca : lugaresProximos).map(
+    (lugar) => withDistanciaDinamica(lugar, userPosition)
+  );
+  const destaquesExibidos = destaques.map((lugar) =>
+    withDistanciaDinamica(lugar, userPosition)
+  );
   const isFavorito = (lugar) => favoritos.includes(String(lugar.id));
 
   if (!onboardingChecked || authLoading) {
@@ -676,9 +699,9 @@ export default function Home() {
           })}
         </div>
 
-        {destaques.length > 0 && (
+        {destaquesExibidos.length > 0 && (
           <DestaquesCarousel
-            destaques={destaques}
+            destaques={destaquesExibidos}
             favoritos={favoritos}
             onFavoritar={handleFavoritar}
           />

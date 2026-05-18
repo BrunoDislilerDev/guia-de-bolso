@@ -11,20 +11,28 @@ export default function EditarLocalPage() {
   const { loading } = useAdminAuth();
   const { id } = useParams();
   const [local, setLocal] = useState(null);
+  const [localizacao, setLocalizacao] = useState(null);
   const [loadingLocal, setLoadingLocal] = useState(true);
 
   useEffect(() => {
     if (loading || !id) return;
     const supabase = createClient();
-    supabase
-      .from("lugares")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setLocal(data);
-        setLoadingLocal(false);
-      });
+    Promise.all([
+      supabase
+        .from("lugares")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle(),
+      supabase
+        .from("localizacoes")
+        .select("*")
+        .eq("lugar_id", id)
+        .maybeSingle(),
+    ]).then(([localRes, localizacaoRes]) => {
+      setLocal(localRes.data);
+      setLocalizacao(localizacaoRes.data);
+      setLoadingLocal(false);
+    });
   }, [loading, id]);
 
   if (loading || loadingLocal) {
@@ -37,7 +45,11 @@ export default function EditarLocalPage() {
         ← Voltar para Locais
       </Link>
       {local ? (
-        <LocalForm initialData={local} editingId={local.id} />
+        <LocalForm
+          initialData={local}
+          initialLocalizacao={localizacao}
+          editingId={local.id}
+        />
       ) : (
         <p className="rounded-2xl bg-white p-5 text-sm text-[#5a6b66] shadow-sm">
           Local não encontrado.

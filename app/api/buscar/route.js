@@ -51,7 +51,7 @@ export async function POST(request) {
 
     const { data: lugares, error } = await supabase
       .from("lugares")
-      .select("*")
+      .select("*, localizacoes(*)")
       .eq("status", "ativo");
 
     if (error) {

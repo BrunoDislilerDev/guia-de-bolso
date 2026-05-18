@@ -94,21 +94,35 @@ const categoriaStyles = {
   Hospedagem: "bg-[#f5e6b8] text-[#7a6520]",
 };
 
-function googleMapsUrl(lugar) {
-  const query = encodeURIComponent(lugar.endereco || `${lugar.nome} Imbituba Santa Catarina`);
+function getRouteQuery(lugar, localizacao) {
+  const latitude = Number(localizacao?.latitude);
+  const longitude = Number(localizacao?.longitude);
+
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    return `${latitude},${longitude}`;
+  }
+
+  return localizacao?.endereco_completo || lugar.endereco || `${lugar.nome} Imbituba Santa Catarina`;
+}
+
+function googleMapsUrl(lugar, localizacao) {
+  const query = encodeURIComponent(getRouteQuery(lugar, localizacao));
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
-function appleMapsUrl(lugar) {
-  return `https://maps.apple.com/?q=${encodeURIComponent(
-    lugar.endereco || lugar.nome
-  )}`;
+function appleMapsUrl(lugar, localizacao) {
+  return `https://maps.apple.com/?q=${encodeURIComponent(getRouteQuery(lugar, localizacao))}`;
 }
 
-function wazeUrl(lugar) {
-  return `https://waze.com/ul?q=${encodeURIComponent(
-    lugar.endereco || lugar.nome
-  )}&navigate=yes`;
+function wazeUrl(lugar, localizacao) {
+  const latitude = Number(localizacao?.latitude);
+  const longitude = Number(localizacao?.longitude);
+
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    return `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`;
+  }
+
+  return `https://waze.com/ul?q=${encodeURIComponent(getRouteQuery(lugar, localizacao))}&navigate=yes`;
 }
 
 function instagramUrl(value) {
@@ -208,18 +222,27 @@ export default function LugarPage() {
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
   const [toast, setToast] = useState("");
   const [motivoModal, setMotivoModal] = useState("favoritar");
+  const [localizacao, setLocalizacao] = useState(null);
 
   useEffect(() => {
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       setUser(currentUser);
+      if (!currentUser) {
+        setIsFavorito(false);
+        setJaAvaliou(false);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) {
+        setIsFavorito(false);
+        setJaAvaliou(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -251,14 +274,17 @@ export default function LugarPage() {
           .filter(Boolean);
         setFotos(urls);
       });
+
+    supabase
+      .from("localizacoes")
+      .select("*")
+      .eq("lugar_id", id)
+      .maybeSingle()
+      .then(({ data }) => setLocalizacao(data));
   }, [id]);
 
   useEffect(() => {
-    if (!user || !lugar) {
-      setIsFavorito(false);
-      setJaAvaliou(false);
-      return;
-    }
+    if (!user || !lugar) return;
 
     const supabase = createClient();
 
@@ -432,7 +458,8 @@ export default function LugarPage() {
   const imagens = fotos.length > 0 ? fotos : [lugar.imagem_url];
   const status = getStatusFuncionamento(lugar.horarios);
   const diaAtual = getDiaAtualKey();
-  const endereco = lugar.endereco || "Endereço não informado";
+  const endereco =
+    localizacao?.endereco_completo || lugar.endereco || "Endereço não informado";
   const descricaoLonga = lugar.descricao_longa || lugar.descricao;
   const totalAvaliacoes = avaliacoes.length;
   const mediaAvaliacoes =
@@ -466,9 +493,9 @@ export default function LugarPage() {
     });
 
     const urls = {
-      google: googleMapsUrl(lugar),
-      apple: appleMapsUrl(lugar),
-      waze: wazeUrl(lugar),
+      google: googleMapsUrl(lugar, localizacao),
+      apple: appleMapsUrl(lugar, localizacao),
+      waze: wazeUrl(lugar, localizacao),
     };
 
     window.open(urls[selected], "_blank", "noopener,noreferrer");
@@ -589,7 +616,7 @@ export default function LugarPage() {
           <section className="mt-5">
             <h2 className="mb-3 font-bold text-[#1a2e28]">Localização</h2>
             <a
-              href={googleMapsUrl(lugar)}
+              href={googleMapsUrl(lugar, localizacao)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-3xl bg-[#f7faf9] p-4"

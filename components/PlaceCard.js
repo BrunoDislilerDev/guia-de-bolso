@@ -28,6 +28,7 @@ function FavoriteIcon({ active, className = "h-5 w-5" }) {
 
 export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
   const status = getStatusFuncionamento(lugar.horarios);
+  const distancia = lugar.distancia_calculada || lugar.distancia;
 
   return (
     <article className="relative min-h-[380px] overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md">
@@ -63,7 +64,7 @@ export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
           </p>
           <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-white">
             <IconPin className="h-4 w-4 text-white" />
-            {lugar.distancia}
+            {distancia}
           </p>
         </div>
       </Link>

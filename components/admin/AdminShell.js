@@ -35,11 +35,15 @@ export function useAdminAuth() {
         return;
       }
 
-      const { data: perfilData } = await supabase
+      const { data: perfilData, error: perfilError } = await supabase
         .from("perfis")
         .select("*")
         .eq("id", currentUser.id)
         .maybeSingle();
+
+      console.log("user id:", currentUser?.id);
+      console.log("perfil data:", perfilData);
+      console.log("perfil error:", perfilError);
 
       if (cancelled) return;
 

@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import EnderecoAutocomplete from "@/components/EnderecoAutocomplete";
+import HorarioEditor from "@/components/admin/HorarioEditor";
 import { createClient } from "@/lib/supabase";
 
 const emptyHorario = {
@@ -31,16 +33,6 @@ export const emptyLocalForm = {
   horarios: emptyHorario,
 };
 
-const dias = [
-  ["dom", "Domingo"],
-  ["seg", "Segunda"],
-  ["ter", "Terça"],
-  ["qua", "Quarta"],
-  ["qui", "Quinta"],
-  ["sex", "Sexta"],
-  ["sab", "Sábado"],
-];
-
 function Input({ label, ...props }) {
   return (
     <label className="block text-sm font-semibold text-[#1a2e28]">
@@ -53,9 +45,14 @@ function Input({ label, ...props }) {
   );
 }
 
-export default function LocalForm({ initialData = emptyLocalForm, editingId = null }) {
+export default function LocalForm({
+  initialData = emptyLocalForm,
+  initialLocalizacao = null,
+  editingId = null,
+}) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [localizacao, setLocalizacao] = useState(initialLocalizacao);
   const [form, setForm] = useState({
     ...emptyLocalForm,
     ...initialData,
@@ -68,14 +65,40 @@ export default function LocalForm({ initialData = emptyLocalForm, editingId = nu
     const supabase = createClient();
     const payload = {
       ...form,
+      endereco: localizacao?.endereco_completo || form.endereco || "",
       destaque: Boolean(form.destaque),
       horarios: form.horarios,
     };
+    let lugarId = editingId;
 
     if (editingId) {
       await supabase.from("lugares").update(payload).eq("id", editingId);
     } else {
-      await supabase.from("lugares").insert(payload);
+      const { data } = await supabase
+        .from("lugares")
+        .insert(payload)
+        .select("id")
+        .single();
+      lugarId = data?.id;
+    }
+
+    if (lugarId && localizacao?.endereco_completo) {
+      await supabase.from("localizacoes").upsert(
+        {
+          lugar_id: lugarId,
+          rua: localizacao.rua || null,
+          numero: localizacao.numero || null,
+          bairro: localizacao.bairro || null,
+          cidade: localizacao.cidade || null,
+          estado: localizacao.estado || null,
+          cep: localizacao.cep || null,
+          pais: localizacao.pais || "Brasil",
+          endereco_completo: localizacao.endereco_completo,
+          latitude: localizacao.latitude,
+          longitude: localizacao.longitude,
+        },
+        { onConflict: "lugar_id" }
+      );
     }
 
     router.push("/admin/locais");
@@ -105,11 +128,20 @@ export default function LocalForm({ initialData = emptyLocalForm, editingId = nu
         <Input label="Instagram" value={form.instagram || ""} onChange={(e) => setForm({ ...form, instagram: e.target.value })} />
         <Input label="Cardápio URL" value={form.cardapio_url || ""} onChange={(e) => setForm({ ...form, cardapio_url: e.target.value })} />
         <Input label="Site URL" value={form.site_url || ""} onChange={(e) => setForm({ ...form, site_url: e.target.value })} />
-        <Input label="Endereço" value={form.endereco || ""} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
         <label className="flex items-center gap-2 text-sm font-semibold text-[#1a2e28]">
           <input type="checkbox" checked={Boolean(form.destaque)} onChange={(e) => setForm({ ...form, destaque: e.target.checked })} />
           Destaque
         </label>
+      </div>
+
+      <div className="mt-4">
+        <p className="mb-2 text-sm font-semibold text-[#1a2e28]">
+          Endereço estruturado
+        </p>
+        <EnderecoAutocomplete
+          initialValue={localizacao}
+          onSave={(value) => setLocalizacao(value)}
+        />
       </div>
 
       <label className="mt-4 block text-sm font-semibold text-[#1a2e28]">
@@ -124,15 +156,11 @@ export default function LocalForm({ initialData = emptyLocalForm, editingId = nu
 
       <div className="mt-4">
         <p className="text-sm font-semibold text-[#1a2e28]">Horários</p>
-        <div className="mt-2 grid gap-2 md:grid-cols-2">
-          {dias.map(([key, label]) => (
-            <Input
-              key={key}
-              label={label}
-              value={form.horarios?.[key] || "fechado"}
-              onChange={(e) => setForm({ ...form, horarios: { ...form.horarios, [key]: e.target.value } })}
-            />
-          ))}
+        <div className="mt-2">
+          <HorarioEditor
+            horarios={form.horarios}
+            onChange={(horarios) => setForm({ ...form, horarios })}
+          />
         </div>
       </div>
 

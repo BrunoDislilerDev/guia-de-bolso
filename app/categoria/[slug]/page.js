@@ -5,12 +5,29 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import PlaceCard from "@/components/PlaceCard";
 import { createClient } from "@/lib/supabase";
+import { withDistanciaDinamica } from "@/lib/localizacao";
 
 export default function CategoriaPage() {
   const { slug } = useParams();
   const categoria = decodeURIComponent(String(slug ?? ""));
   const [lugares, setLugares] = useState([]);
+  const [userPosition, setUserPosition] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserPosition({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      () => undefined,
+      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 }
+    );
+  }, []);
 
   useEffect(() => {
     if (!categoria) return;
@@ -19,7 +36,7 @@ export default function CategoriaPage() {
 
     supabase
       .from("lugares")
-      .select("*")
+      .select("*, localizacoes(*)")
       .eq("categoria", categoria)
       .eq("status", "ativo")
       .then(({ data }) => {
@@ -59,7 +76,12 @@ export default function CategoriaPage() {
               Nenhum local encontrado nessa categoria.
             </p>
           ) : (
-            lugares.map((lugar) => <PlaceCard key={lugar.id} lugar={lugar} />)
+            lugares.map((lugar) => (
+              <PlaceCard
+                key={lugar.id}
+                lugar={withDistanciaDinamica(lugar, userPosition)}
+              />
+            ))
           )}
         </div>
       </div>
