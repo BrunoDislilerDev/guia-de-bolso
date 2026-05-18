@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Onboarding from "@/components/Onboarding";
 import { createClient } from "@/lib/supabase/client";
 
 function IconPin({ className = "w-4 h-4" }) {
@@ -207,9 +207,10 @@ function getUserInitial(user) {
 }
 
 export default function Home() {
-  const router = useRouter();
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [destaque, setDestaque] = useState(null);
   const [lugaresProximos, setLugaresProximos] = useState([]);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
@@ -219,13 +220,14 @@ export default function Home() {
   const [loadingBusca, setLoadingBusca] = useState(false);
 
   useEffect(() => {
+    setShowOnboarding(!localStorage.getItem("onboarding_visto"));
+    setOnboardingChecked(true);
+  }, []);
+
+  useEffect(() => {
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
-      if (!currentUser) {
-        router.replace("/login");
-        return;
-      }
       setUser(currentUser);
       setAuthLoading(false);
     });
@@ -233,16 +235,12 @@ export default function Home() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) {
-        router.replace("/login");
-      } else {
-        setUser(session.user);
-        setAuthLoading(false);
-      }
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -274,7 +272,7 @@ export default function Home() {
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.replace("/login");
+    setUser(null);
   }
 
   function handleCategoriaClick(label) {
@@ -329,12 +327,16 @@ export default function Home() {
 
   const lugaresExibidos = buscaAtiva ? resultadosBusca : lugaresProximos;
 
-  if (authLoading) {
+  if (!onboardingChecked || authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] font-sans text-[#5a6b66]">
         Carregando...
       </div>
     );
+  }
+
+  if (showOnboarding) {
+    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
   }
 
   const avatarUrl =
@@ -356,27 +358,29 @@ export default function Home() {
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
-            <div className="flex items-center gap-2">
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={avatarUrl}
-                  alt=""
-                  className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                />
-              ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1a4a3a] text-sm font-semibold text-white ring-2 ring-white">
-                  {getUserInitial(user)}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-lg px-2 py-1 text-xs font-medium text-[#1a4a3a] transition-colors hover:bg-white/60"
-              >
-                Sair
-              </button>
-            </div>
+            {user && (
+              <div className="flex items-center gap-2">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
+                  />
+                ) : (
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1a4a3a] text-sm font-semibold text-white ring-2 ring-white">
+                    {getUserInitial(user)}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-[#1a4a3a] transition-colors hover:bg-white/60"
+                >
+                  Sair
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#1a4a3a] shadow-sm">
               <IconCloud className="w-4 h-4 text-[#6b8f9e]" />
               18.3°
