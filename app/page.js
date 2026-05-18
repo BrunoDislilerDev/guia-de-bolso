@@ -7,6 +7,7 @@ import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
 import PlaceCard from "@/components/PlaceCard";
 import { createClient } from "@/lib/supabase";
+import { registrarLog } from "@/lib/logs";
 
 function IconPin({ className = "w-4 h-4" }) {
   return (
@@ -144,6 +145,7 @@ async function fetchLugaresProximos(categoria) {
     .from("lugares")
     .select("*")
     .eq("destaque", false)
+    .eq("status", "ativo")
     .limit(3);
 
   if (categoria) {
@@ -190,6 +192,7 @@ export default function Home() {
     supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       setUser(currentUser);
       setAuthLoading(false);
+      registrarLog(supabase, currentUser, "acessou_app");
     });
 
     const {
@@ -210,6 +213,7 @@ export default function Home() {
       .from("lugares")
       .select("*")
       .eq("destaque", true)
+      .eq("status", "ativo")
       .limit(1)
       .maybeSingle()
       .then(({ data }) => setDestaque(data));
@@ -248,6 +252,7 @@ export default function Home() {
 
   async function handleLogout() {
     const supabase = createClient();
+    await registrarLog(supabase, user, "logout");
     await supabase.auth.signOut();
     setUser(null);
   }
@@ -274,6 +279,11 @@ export default function Home() {
 
       if (error) {
         setFavoritos((atuais) => [...atuais, lugarId]);
+      } else {
+        await registrarLog(supabase, user, "desfavoritou", {
+          lugar_id: lugar.id,
+          lugar_nome: lugar.nome,
+        });
       }
 
       return;
@@ -287,6 +297,11 @@ export default function Home() {
 
     if (error) {
       setFavoritos((atuais) => atuais.filter((id) => id !== lugarId));
+    } else {
+      await registrarLog(supabase, user, "favoritou", {
+        lugar_id: lugar.id,
+        lugar_nome: lugar.nome,
+      });
     }
   }
 

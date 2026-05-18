@@ -6,6 +6,7 @@ import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import PlaceCard from "@/components/PlaceCard";
 import { createClient } from "@/lib/supabase";
+import { registrarLog } from "@/lib/logs";
 
 function EmptyIllustration() {
   return (
@@ -60,8 +61,9 @@ export default function FavoritosPage() {
 
     supabase
       .from("favoritos")
-      .select("id,lugar_id,lugares(*)")
+      .select("id,lugar_id,lugares!inner(*)")
       .eq("user_id", user.id)
+      .eq("lugares.status", "ativo")
       .then(async ({ data, error }) => {
         if (cancelled) return;
 
@@ -87,7 +89,8 @@ export default function FavoritosPage() {
         const { data: lugaresData } = await supabase
           .from("lugares")
           .select("*")
-          .in("id", ids);
+          .in("id", ids)
+          .eq("status", "ativo");
 
         setLugares(lugaresData ?? []);
         setLoadingFavoritos(false);
@@ -119,6 +122,11 @@ export default function FavoritosPage() {
 
     if (error) {
       setLugares(anteriores);
+    } else {
+      await registrarLog(supabase, user, "desfavoritou", {
+        lugar_id: lugar.id,
+        lugar_nome: lugar.nome,
+      });
     }
   }
 

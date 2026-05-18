@@ -21,6 +21,7 @@ export default function CategoriaPage() {
       .from("lugares")
       .select("*")
       .eq("categoria", categoria)
+      .eq("status", "ativo")
       .then(({ data }) => {
         setLugares(data ?? []);
         setLoading(false);

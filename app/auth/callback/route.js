@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { registrarLog } from "@/lib/logs";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -11,6 +12,12 @@ export async function GET(request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      await registrarLog(supabase, user, "login", {
+        provider: user?.app_metadata?.provider,
+      });
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

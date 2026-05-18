@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import LoginModal from "@/components/LoginModal";
 import { createClient } from "@/lib/supabase";
+import { registrarLog } from "@/lib/logs";
 import {
   formatHorario,
   getDiaAtualKey,
@@ -233,12 +234,10 @@ export default function LugarPage() {
       .from("lugares")
       .select("*")
       .eq("id", id)
+      .eq("status", "ativo")
       .maybeSingle()
       .then(({ data }) => {
         setLugar(data);
-        console.log('horarios do banco:', data?.horarios)
-        console.log('dia atual:', getDiaAtualKey())
-        console.log('status:', getStatusFuncionamento(data?.horarios))
         setLoading(false);
       });
 
@@ -330,7 +329,14 @@ export default function LugarPage() {
         .eq("user_id", user.id)
         .eq("lugar_id", lugar.id);
 
-      if (error) setIsFavorito(true);
+      if (error) {
+        setIsFavorito(true);
+      } else {
+        await registrarLog(supabase, user, "desfavoritou", {
+          lugar_id: lugar.id,
+          lugar_nome: lugar.nome,
+        });
+      }
       return;
     }
 
@@ -338,7 +344,14 @@ export default function LugarPage() {
       .from("favoritos")
       .insert({ user_id: user.id, lugar_id: lugar.id });
 
-    if (error) setIsFavorito(false);
+    if (error) {
+      setIsFavorito(false);
+    } else {
+      await registrarLog(supabase, user, "favoritou", {
+        lugar_id: lugar.id,
+        lugar_nome: lugar.nome,
+      });
+    }
   }
 
   async function handleOpenAvaliacao() {
@@ -446,6 +459,11 @@ export default function LugarPage() {
 
     localStorage.setItem("map_app_preferido", selected);
     setShowRotas(false);
+    registrarLog(createClient(), user, "ir_agora", {
+      lugar_id: lugar.id,
+      lugar_nome: lugar.nome,
+      app: selected,
+    });
 
     const urls = {
       google: googleMapsUrl(lugar),

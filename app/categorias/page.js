@@ -44,7 +44,8 @@ export default function CategoriasPage() {
         const { count } = await supabase
           .from("lugares")
           .select("id", { count: "exact", head: true })
-          .eq("categoria", nome);
+          .eq("categoria", nome)
+          .eq("status", "ativo");
 
         return [nome, count ?? 0];
       })

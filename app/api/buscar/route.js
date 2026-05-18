@@ -49,7 +49,10 @@ export async function POST(request) {
       );
     }
 
-    const { data: lugares, error } = await supabase.from("lugares").select("*");
+    const { data: lugares, error } = await supabase
+      .from("lugares")
+      .select("*")
+      .eq("status", "ativo");
 
     if (error) {
       console.error("Supabase error:", error);

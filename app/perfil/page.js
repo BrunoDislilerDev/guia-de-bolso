@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import { createClient } from "@/lib/supabase";
+import { registrarLog } from "@/lib/logs";
 
 function IconPerson({ className = "h-16 w-16" }) {
   return (
@@ -172,6 +173,7 @@ export default function PerfilPage() {
 
   async function handleLogout() {
     const supabase = createClient();
+    await registrarLog(supabase, user, "logout");
     await supabase.auth.signOut();
     setUser(null);
     router.push("/");
@@ -179,6 +181,7 @@ export default function PerfilPage() {
 
   async function handleDeleteAccountRequest() {
     const supabase = createClient();
+    await registrarLog(supabase, user, "deletou_conta");
     await supabase.auth.signOut();
     setUser(null);
     setDeleteMessage("Exclusão solicitada. Saímos da sua conta por segurança.");
