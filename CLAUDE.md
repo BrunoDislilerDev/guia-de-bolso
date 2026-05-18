@@ -236,49 +236,28 @@ guia-de-bolso/
 - [x] Preferência de app de navegação salva no localStorage
 - [x] Bottom sheet de login para conteúdo restrito
 - [x] Onboarding com 3 telas
+- [x] Painel admin completo (`/admin`)
+- [x] Dashboard com analytics e logs em tempo real
+- [x] Gestão de locais com status (ativo, desativado, em_analise)
+- [x] Moderação de avaliações (aprovar/rejeitar)
+- [x] Gestão de destaques e planos
+- [x] Gestão de usuários
+- [x] Sistema de logs (login, logout, favoritos, IR AGORA, acesso ao app)
+- [x] Sistema de avaliações com moderação
+- [x] Página de categorias (`/categorias`)
+- [x] Tabela perfis com roles (user/admin)
 - [x] Deploy automático na Vercel
 
 ---
 
-## Roadmap completo 🗺️
+## Próximos passos 🗺️
 
-### Semana 1
-- [ ] Login via SMS (Twilio + Supabase Auth)
-
-### Semana 3
-- [ ] Subcategorias (Natureza → Praias, Trilhas, Cachoeiras)
-- [ ] Filtro por subcategoria
-
-### Semana 4
-- [ ] Avaliações com nota (1-5 estrelas) e comentário
-- [ ] Usuário autenticado avalia uma vez por lugar
-- [ ] Status de moderação (pendente → aprovada/rejeitada)
-- [ ] Exibir apenas avaliações aprovadas nos lugares
-
-### Semana 5
-- [ ] Seção Rotas (/rotas) — requer login
-- [ ] Detalhe de cada rota com etapas e fotos (/rotas/[id])
-- [ ] Upload de fotos por etapa via Supabase Storage
-
-### Semana 6
-- [ ] Destaques como carrossel na home
-- [ ] Lógica de planos (Básico 2x/semana, Padrão diário, Premium diário destacado)
-
-### Semana 7 — Painel Admin (/admin)
-- [ ] Rota protegida (role = admin no perfil)
-- [ ] Dashboard com analytics (lugares mais vistos, avaliações pendentes, usuários)
-- [ ] CRUD completo de lugares com upload de imagem
-- [ ] Moderação de avaliações (aprovar/rejeitar)
-- [ ] Gestão de rotas e etapas
-- [ ] Gestão de destaques e planos
-- [ ] Lista e gestão de usuários
-
-### Semana 8 — Polish
-- [ ] Temperatura real via API de clima (OpenWeatherMap)
-- [ ] Geolocalização real para calcular distâncias
-- [ ] Imagens reais para todos os lugares
-- [ ] SEO e meta tags por página
-- [ ] WhatsApp Auth via Twilio (requer aprovação Meta)
+- [ ] Login via SMS (Twilio)
+- [ ] Rotas com etapas e fotos
+- [ ] Carrossel de destaques com lógica de planos
+- [ ] Temperatura real via API de clima
+- [ ] Geolocalização real
+- [ ] WhatsApp Auth (pós aprovação Meta)
 
 ---
 

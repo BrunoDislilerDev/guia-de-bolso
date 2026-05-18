@@ -103,6 +103,16 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Preferência de app de navegação salva no localStorage
 - [x] Bottom sheet de login para conteúdo restrito
 - [x] Onboarding com 3 telas
+- [x] Painel admin completo (`/admin`)
+- [x] Dashboard com analytics e logs em tempo real
+- [x] Gestão de locais com status (ativo, desativado, em_analise)
+- [x] Moderação de avaliações (aprovar/rejeitar)
+- [x] Gestão de destaques e planos
+- [x] Gestão de usuários
+- [x] Sistema de logs (login, logout, favoritos, IR AGORA, acesso ao app)
+- [x] Sistema de avaliações com moderação
+- [x] Página de categorias (`/categorias`)
+- [x] Tabela perfis com roles (user/admin)
 - [x] 25 lugares cadastrados em 5 categorias
 - [x] Imagens reais via Supabase Storage
 - [x] Deploy automático na Vercel
@@ -112,9 +122,11 @@ Projeto usa Supabase com a seguinte tabela principal:
 ## Próximos passos
 
 - [ ] Login via SMS (Twilio)
+- [ ] Rotas com etapas e fotos
+- [ ] Carrossel de destaques com lógica de planos
 - [ ] Temperatura real via API de clima
-- [ ] Geolocalização real para calcular distâncias
-- [ ] Imagens reais para todos os lugares
+- [ ] Geolocalização real
+- [ ] WhatsApp Auth (pós aprovação Meta)
 
 ---
 
