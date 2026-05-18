@@ -80,6 +80,9 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Filtro por categoria funcional
 - [x] Página de detalhe de cada lugar (`/lugares/[id]`)
 - [x] Busca por linguagem natural com Claude API
+- [x] Autenticação com Google e Apple via Supabase Auth
+- [x] Página de login com redirecionamento automático
+- [x] Avatar do usuário logado no header
 - [x] 25 lugares cadastrados em 5 categorias
 - [x] Imagens reais via Supabase Storage
 - [x] Deploy automático na Vercel
@@ -88,8 +91,8 @@ Projeto usa Supabase com a seguinte tabela principal:
 
 ## Próximos passos
 
-- [ ] Autenticação com Google via Supabase Auth
-- [ ] Favoritos por usuário
+- [ ] Login via SMS (Twilio)
+- [ ] Favoritos por usuário autenticado
 - [ ] Temperatura real via API de clima
 - [ ] Geolocalização real para calcular distâncias
 - [ ] Imagens reais para todos os lugares
