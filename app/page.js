@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
-import { createClient } from "@/lib/supabase/client";
+import PlaceCard from "@/components/PlaceCard";
+import { createClient } from "@/lib/supabase";
 
 function IconPin({ className = "w-4 h-4" }) {
   return (
@@ -69,9 +71,16 @@ function IconLodging({ className = "w-4 h-4" }) {
   );
 }
 
-function IconHeart({ className = "w-5 h-5" }) {
+function FavoriteIcon({ active, className = "w-5 h-5" }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill={active ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
     </svg>
   );
@@ -168,35 +177,6 @@ async function fetchLugaresProximos(categoria) {
   return data ?? [];
 }
 
-function LugarCard({ lugar }) {
-  return (
-    <Link
-      href={`/lugares/${lugar.id}`}
-      className="flex gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={lugar.imagem_url}
-        alt={lugar.nome}
-        className="h-20 w-20 shrink-0 rounded-lg object-cover"
-      />
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
-        <h3 className="font-semibold text-[#1a2e28]">{lugar.nome}</h3>
-        <div className="mt-1 flex flex-wrap gap-3 text-xs text-[#5a6b66]">
-          <span className="flex items-center gap-1">
-            <IconSun className="w-3.5 h-3.5 text-[#e8a838]" />
-            {lugar.categoria}
-          </span>
-          <span className="flex items-center gap-1">
-            <IconPin className="w-3.5 h-3.5 text-[#1a4a3a]" />
-            {lugar.distancia}
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 function getUserInitial(user) {
   const name =
     user.user_metadata?.full_name ||
@@ -218,6 +198,9 @@ export default function Home() {
   const [buscaAtiva, setBuscaAtiva] = useState(false);
   const [resultadosBusca, setResultadosBusca] = useState([]);
   const [loadingBusca, setLoadingBusca] = useState(false);
+  const [favoritos, setFavoritos] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [motivoModal, setMotivoModal] = useState("favoritar");
 
   useEffect(() => {
     setShowOnboarding(!localStorage.getItem("onboarding_visto"));
@@ -269,17 +252,65 @@ export default function Home() {
     };
   }, [categoriaSelecionada, buscaAtiva, authLoading]);
 
+  useEffect(() => {
+    if (!user) {
+      setFavoritos([]);
+      return;
+    }
+
+    const supabase = createClient();
+
+    supabase
+      .from("favoritos")
+      .select("lugar_id")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        setFavoritos((data ?? []).map((favorito) => String(favorito.lugar_id)));
+      });
+  }, [user]);
+
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
     setUser(null);
   }
 
-  function handleCategoriaClick(label) {
-    setBuscaAtiva(false);
-    setResultadosBusca([]);
-    setTermoBusca("");
-    setCategoriaSelecionada((atual) => (atual === label ? null : label));
+  async function handleFavoritar(lugar) {
+    if (!user) {
+      setMotivoModal("favoritar");
+      setIsModalOpen(true);
+      return;
+    }
+
+    const supabase = createClient();
+    const lugarId = String(lugar.id);
+    const jaFavorito = favoritos.includes(lugarId);
+
+    if (jaFavorito) {
+      setFavoritos((atuais) => atuais.filter((id) => id !== lugarId));
+
+      const { error } = await supabase
+        .from("favoritos")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("lugar_id", lugar.id);
+
+      if (error) {
+        setFavoritos((atuais) => [...atuais, lugarId]);
+      }
+
+      return;
+    }
+
+    setFavoritos((atuais) => [...atuais, lugarId]);
+
+    const { error } = await supabase
+      .from("favoritos")
+      .insert({ user_id: user.id, lugar_id: lugar.id });
+
+    if (error) {
+      setFavoritos((atuais) => atuais.filter((id) => id !== lugarId));
+    }
   }
 
   async function handleBuscar(event) {
@@ -326,6 +357,7 @@ export default function Home() {
   }
 
   const lugaresExibidos = buscaAtiva ? resultadosBusca : lugaresProximos;
+  const isFavorito = (lugar) => favoritos.includes(String(lugar.id));
 
   if (!onboardingChecked || authLoading) {
     return (
@@ -407,10 +439,9 @@ export default function Home() {
           {categories.map(({ label, bg, activeBg, text, border, Icon }) => {
             const isSelected = categoriaSelecionada === label;
             return (
-              <button
+              <Link
                 key={label}
-                type="button"
-                onClick={() => handleCategoriaClick(label)}
+                href={`/categoria/${encodeURIComponent(label)}`}
                 aria-pressed={isSelected}
                 className={`flex shrink-0 items-center gap-2 rounded-full border-2 px-4 py-2.5 text-sm font-medium transition-all hover:opacity-90 active:opacity-75 ${text} ${
                   isSelected ? `${activeBg} ${border}` : `${bg} border-transparent`
@@ -418,7 +449,7 @@ export default function Home() {
               >
                 <Icon className="w-4 h-4" />
                 {label}
-              </button>
+              </Link>
             );
           })}
         </div>
@@ -435,10 +466,15 @@ export default function Home() {
               />
               <button
                 type="button"
+                onClick={() => handleFavoritar(destaque)}
                 className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#1a4a3a] shadow-sm backdrop-blur-sm"
-                aria-label="Favoritar"
+                aria-label={
+                  isFavorito(destaque)
+                    ? "Remover dos favoritos"
+                    : "Adicionar aos favoritos"
+                }
               >
-                <IconHeart />
+                <FavoriteIcon active={isFavorito(destaque)} />
               </button>
             </div>
             <div className="p-4">
@@ -503,7 +539,12 @@ export default function Home() {
               </p>
             ) : (
               lugaresExibidos.map((lugar) => (
-                <LugarCard key={lugar.id} lugar={lugar} />
+                <PlaceCard
+                  key={lugar.id}
+                  lugar={lugar}
+                  isFavorito={isFavorito(lugar)}
+                  onFavoritar={handleFavoritar}
+                />
               ))
             )}
           </div>
@@ -537,6 +578,12 @@ export default function Home() {
           </button>
         </div>
       </nav>
+
+      <LoginModal
+        isOpen={isModalOpen}
+        motivo={motivoModal}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
