@@ -14,6 +14,8 @@ const categoriaStyles = {
   Natureza: "bg-[#b8e6d4] text-[#1a4a3a]",
   Gastronomia: "bg-[#f0e4d4] text-[#6b5344]",
   Noite: "bg-[#e4d4f0] text-[#5c4a6e]",
+  Serviços: "bg-[#c5dff5] text-[#2a5a7a]",
+  Hospedagem: "bg-[#f5e6b8] text-[#7a6520]",
 };
 
 function googleMapsUrl(lugar) {

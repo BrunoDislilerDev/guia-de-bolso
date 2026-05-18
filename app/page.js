@@ -52,6 +52,22 @@ function IconMoon({ className = "w-4 h-4" }) {
   );
 }
 
+function IconWrench({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1 0-1.4z" />
+    </svg>
+  );
+}
+
+function IconLodging({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+    </svg>
+  );
+}
+
 function IconHeart({ className = "w-5 h-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -116,6 +132,22 @@ const categories = [
     text: "text-[#5c4a6e]",
     border: "border-[#5c4a6e]",
     Icon: IconMoon,
+  },
+  {
+    label: "Serviços",
+    bg: "bg-[#c5dff5]",
+    activeBg: "bg-[#9ec9ef]",
+    text: "text-[#2a5a7a]",
+    border: "border-[#2a5a7a]",
+    Icon: IconWrench,
+  },
+  {
+    label: "Hospedagem",
+    bg: "bg-[#f5e6b8]",
+    activeBg: "bg-[#e8d48a]",
+    text: "text-[#7a6520]",
+    border: "border-[#a8892a]",
+    Icon: IconLodging,
   },
 ];
 
