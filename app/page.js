@@ -146,6 +146,37 @@ const planoStyles = {
   Premium: "bg-[#f5d76e] text-[#6b4e00]",
 };
 
+const imbitubaCoords = {
+  latitude: -28.2342,
+  longitude: -48.6612,
+};
+
+async function fetchWeather(position) {
+  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+  if (!apiKey) throw new Error("NEXT_PUBLIC_OPENWEATHER_API_KEY não configurada");
+
+  const params = new URLSearchParams({
+    lat: String(position.latitude),
+    lon: String(position.longitude),
+    appid: apiKey,
+    units: "metric",
+    lang: "pt_br",
+  });
+
+  const response = await fetch(
+    `https://api.openweathermap.org/data/2.5/weather?${params.toString()}`
+  );
+
+  if (!response.ok) throw new Error("Erro ao buscar clima");
+
+  const data = await response.json();
+
+  return {
+    temperature: Number(data.main?.temp),
+    icon: data.weather?.[0]?.icon ?? null,
+  };
+}
+
 function getBrazilDate() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -407,6 +438,11 @@ export default function Home() {
   const [loadingBusca, setLoadingBusca] = useState(false);
   const [favoritos, setFavoritos] = useState([]);
   const [userPosition, setUserPosition] = useState(null);
+  const [weather, setWeather] = useState({
+    loading: true,
+    temperature: null,
+    icon: null,
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [motivoModal, setMotivoModal] = useState("favoritar");
 
@@ -433,6 +469,42 @@ export default function Home() {
       { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 }
     );
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const position = userPosition || imbitubaCoords;
+
+    async function loadWeather() {
+      setWeather((current) => ({ ...current, loading: true }));
+
+      try {
+        const nextWeather = await fetchWeather(position);
+        if (cancelled) return;
+
+        setWeather({
+          loading: false,
+          temperature: nextWeather.temperature,
+          icon: nextWeather.icon,
+        });
+      } catch {
+        if (cancelled) return;
+
+        setWeather((current) => ({
+          ...current,
+          loading: false,
+          temperature: current.temperature,
+        }));
+      }
+    }
+
+    loadWeather();
+    const interval = setInterval(loadWeather, 30 * 60 * 1000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [userPosition]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -496,14 +568,6 @@ export default function Home() {
         setFavoritos((data ?? []).map((favorito) => String(favorito.lugar_id)));
       });
   }, [user]);
-
-  async function handleLogout() {
-    const supabase = createClient();
-    await registrarLog(supabase, user, "logout");
-    await supabase.auth.signOut();
-    setUser(null);
-    setFavoritos([]);
-  }
 
   async function handleFavoritar(lugar) {
     if (!user) {
@@ -634,9 +698,13 @@ export default function Home() {
               Explore Imbituba
             </p>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-2">
+          <div className="flex shrink-0 flex-col items-center gap-2">
             {user && (
-              <div className="flex items-center gap-2">
+              <Link
+                href="/perfil"
+                className="flex h-9 w-9 items-center justify-center rounded-full"
+                aria-label="Abrir perfil"
+              >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -649,18 +717,24 @@ export default function Home() {
                     {getUserInitial(user)}
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="rounded-lg px-2 py-1 text-xs font-medium text-[#1a4a3a] transition-colors hover:bg-white/60"
-                >
-                  Sair
-                </button>
-              </div>
+              </Link>
             )}
             <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#1a4a3a] shadow-sm">
-              <IconCloud className="w-4 h-4 text-[#6b8f9e]" />
-              18.3°
+              {weather.icon ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+                  alt=""
+                  className="h-5 w-5"
+                />
+              ) : (
+                <IconCloud className="w-4 h-4 text-[#6b8f9e]" />
+              )}
+              {weather.loading && weather.temperature === null
+                ? "..."
+                : Number.isFinite(weather.temperature)
+                  ? `${weather.temperature.toFixed(1)}°`
+                  : "--°"}
             </div>
           </div>
         </header>

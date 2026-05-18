@@ -78,27 +78,61 @@ export default function EditarPerfilPage() {
     setMessage("");
 
     const supabase = createClient();
+    const bucketName = "Guia de Bolso - Imagens";
     const filePath = `avatars/${user.id}/avatar.jpg`;
 
-    const { error } = await supabase.storage
-      .from("imagens")
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucketName)
       .upload(filePath, file, {
         cacheControl: "3600",
         upsert: true,
-        contentType: file.type,
+        contentType: file.type || "image/jpeg",
       });
 
-    if (error) {
+    console.log("upload data:", uploadData);
+    console.log("upload error:", uploadError);
+    console.log("upload error message:", uploadError?.message);
+    console.log("upload error details:", JSON.stringify(uploadError));
+    console.log("bucket:", bucketName);
+    console.log("path:", filePath);
+    console.log("user id:", user.id);
+
+    if (uploadError) {
       setMessage("Não foi possível enviar a foto. Tente novamente.");
       setUploading(false);
       return;
     }
 
-    const { data } = supabase.storage.from("imagens").getPublicUrl(filePath);
-    const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+    const publicUrl = data.publicUrl;
+    const previewPublicUrl = `${publicUrl}?v=${Date.now()}`;
+
+    const { error: perfilError } = await supabase.from("perfis").upsert(
+      {
+        id: user.id,
+        nome: nome.trim() || getUserName(user),
+        foto_url: publicUrl,
+      },
+      { onConflict: "id" }
+    );
+
+    if (perfilError) {
+      console.log("erro ao salvar foto_url no perfil:", perfilError);
+      setMessage("Foto enviada, mas não foi possível salvar no perfil.");
+      setUploading(false);
+      return;
+    }
+
+    await supabase.auth.updateUser({
+      data: {
+        avatar_url: publicUrl,
+        picture: publicUrl,
+      },
+    });
 
     setFotoUrl(publicUrl);
-    setPreviewUrl(publicUrl);
+    setPreviewUrl(previewPublicUrl);
+    setMessage("Foto atualizada!");
     setUploading(false);
   }
 
