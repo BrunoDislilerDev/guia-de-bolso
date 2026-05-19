@@ -6,6 +6,7 @@ import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
 import PlaceCard from "@/components/PlaceCard";
+import ClimaCard from "@/components/ClimaCard";
 import SearchBrowsePanel from "@/components/home/SearchBrowsePanel";
 import SearchResultsPanel from "@/components/home/SearchResultsPanel";
 import { getCapaFromLugar } from "@/lib/fotos";
@@ -1049,6 +1050,8 @@ export default function Home() {
             onFavoritar={handleFavoritar}
           />
         )}
+
+        <ClimaCard />
 
         <section className="mt-2">
           <div className="mb-4 flex items-center justify-between gap-2">
