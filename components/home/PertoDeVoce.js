@@ -3,6 +3,15 @@
 import Link from "next/link";
 import PlaceCard from "@/components/PlaceCard";
 
+/**
+ * PertoDeVoce - Nearby places carousel or login prompt for geolocation.
+ * @param {object} props
+ * @param {object|null} props.user - Authenticated Supabase user, or null.
+ * @param {object[]} [props.lugares] - Nearby place records sorted by distance.
+ * @param {(lugar: object) => boolean} props.isFavorito - Returns whether a place is favorited.
+ * @param {(lugar: object) => void} props.onFavoritar - Favorite toggle handler.
+ * @returns {import('react').ReactElement}
+ */
 export default function PertoDeVoce({
   user,
   lugares = [],
@@ -44,12 +53,13 @@ export default function PertoDeVoce({
         </p>
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
-          {lugares.map((lugar) => (
+          {lugares.map((lugar, index) => (
             <div key={lugar.id} className="w-[285px] shrink-0">
               <PlaceCard
                 lugar={lugar}
                 isFavorito={isFavorito(lugar)}
                 onFavoritar={onFavoritar}
+                priority={index === 0}
               />
             </div>
           ))}

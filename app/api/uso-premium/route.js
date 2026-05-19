@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import { createDefaultUsage } from "@/lib/premium";
 import { getAuthUser, getPerfilUsage } from "@/lib/premiumServer";
 
+/**
+ * Returns premium feature usage counters for the current session user.
+ * @returns {Promise<import("next/server").NextResponse>} `{ loggedIn, usage }` payload.
+ */
 export async function GET() {
   try {
     const { user } = await getAuthUser();
@@ -13,12 +16,7 @@ export async function GET() {
       });
     }
 
-    let usage;
-    try {
-      usage = await getPerfilUsage(user.id);
-    } catch {
-      usage = createDefaultUsage();
-    }
+    const usage = await getPerfilUsage(user.id);
 
     return NextResponse.json({
       loggedIn: true,

@@ -31,6 +31,11 @@ Use EXATAMENTE este formato markdown:
 
 Repita para cada dia. Tom amigável, emojis, português do Brasil. Não invente lugares.`;
 
+/**
+ * Generates a personalized multi-day itinerary via Claude from active places.
+ * @param {import("next/server").NextRequest} request - JSON body: `{ dias, perfil, interesses }`.
+ * @returns {Promise<import("next/server").NextResponse>} Markdown itinerary and usage metadata.
+ */
 export async function POST(request) {
   try {
     const { dias, perfil, interesses } = await request.json();

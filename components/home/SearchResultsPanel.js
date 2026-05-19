@@ -3,6 +3,12 @@
 import PlaceCard from "@/components/PlaceCard";
 import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
 
+/**
+ * IconSearchLarge - Large search icon for empty results state.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconSearchLarge({ className = "h-16 w-16" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -13,6 +19,18 @@ function IconSearchLarge({ className = "h-16 w-16" }) {
 
 const SUGESTOES = ["Praias", "Restaurantes", "Trilhas"];
 
+/**
+ * SearchResultsPanel - AI search results with loading, empty, and card states.
+ * @param {object} props
+ * @param {string} props.termo - Search query displayed in the header.
+ * @param {boolean} props.loading - Whether results are loading.
+ * @param {object[]} [props.resultados] - Matching place records.
+ * @param {string} [props.erro] - Optional error message to display.
+ * @param {(sugestao: string) => void} props.onSugestaoClick - Called when an empty-state suggestion is tapped.
+ * @param {(lugar: object) => boolean} props.isFavorito - Returns whether a place is favorited.
+ * @param {(lugar: object) => void} props.onFavoritar - Favorite toggle handler.
+ * @returns {import('react').ReactElement}
+ */
 export default function SearchResultsPanel({
   termo,
   loading,

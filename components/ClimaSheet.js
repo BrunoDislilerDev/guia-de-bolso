@@ -6,6 +6,11 @@ import {
   getWaveBarColor,
 } from "@/lib/clima";
 
+/**
+ * Returns Tailwind background class for the UV index bar segment.
+ * @param {string} level - UV level key (low, moderate, high, etc.).
+ * @returns {string} CSS class string.
+ */
 function uvBarClass(level) {
   if (level === "low") return "bg-emerald-500";
   if (level === "moderate") return "bg-yellow-400";
@@ -15,6 +20,13 @@ function uvBarClass(level) {
   return "bg-gray-300";
 }
 
+/**
+ * MetricRow - Label/value row for climate metrics.
+ * @param {object} props
+ * @param {string} props.label - Metric label.
+ * @param {string} props.value - Formatted metric value.
+ * @returns {import('react').ReactElement}
+ */
 function MetricRow({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-gray-100 py-3 last:border-0">
@@ -24,6 +36,15 @@ function MetricRow({ label, value }) {
   );
 }
 
+/**
+ * ClimaSheet - Bottom sheet with full beach weather and sea conditions.
+ * @param {object} props
+ * @param {boolean} props.isOpen - Whether the sheet is visible.
+ * @param {() => void} props.onClose - Called when the user dismisses the sheet.
+ * @param {object|null} props.praia - Selected beach place record.
+ * @param {object|null} props.clima - Normalized climate data from APIs.
+ * @returns {import('react').ReactElement|null}
+ */
 export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
   if (!isOpen) return null;
 

@@ -17,11 +17,23 @@ const initialLocalizacao = {
   longitude: null,
 };
 
+/**
+ * Extracts a single address component from Google Places results.
+ * @param {object[]} components - Google address_components array.
+ * @param {string} type - Component type to find.
+ * @param {boolean} [shortName] - Use short_name instead of long_name.
+ * @returns {string} Component value or empty string.
+ */
 function getAddressPart(components, type, shortName = false) {
   const component = components.find((item) => item.types.includes(type));
   return shortName ? component?.short_name ?? "" : component?.long_name ?? "";
 }
 
+/**
+ * Maps a Google Geocoder place result to localizacao fields.
+ * @param {object} place - Google Geocoder place object.
+ * @returns {object} Parsed localization object.
+ */
 function parsePlace(place) {
   const components = place.address_components ?? [];
   const geometryLocation = place.geometry?.location;
@@ -49,6 +61,11 @@ function parsePlace(place) {
   };
 }
 
+/**
+ * Builds a human-readable full address from structured fields.
+ * @param {object} localizacao - Structured address fields.
+ * @returns {string} Formatted full address.
+ */
 function buildEnderecoCompleto(localizacao) {
   const ruaNumero = [localizacao.rua, localizacao.numero].filter(Boolean).join(", ");
   return [
@@ -62,6 +79,14 @@ function buildEnderecoCompleto(localizacao) {
     .join(" - ");
 }
 
+/**
+ * Field - Labeled text input for address form fields.
+ * @param {object} props
+ * @param {string} props.label - Field label.
+ * @param {string} props.value - Current value.
+ * @param {(value: string) => void} props.onChange - Called when the value changes.
+ * @returns {import('react').ReactElement}
+ */
 function Field({ label, value, onChange }) {
   return (
     <label className="block text-sm font-semibold text-[#1a2e28]">
@@ -75,6 +100,13 @@ function Field({ label, value, onChange }) {
   );
 }
 
+/**
+ * EnderecoAutocomplete - Google Places autocomplete with manual fields and map picker.
+ * @param {object} props
+ * @param {object} [props.initialValue] - Initial localization values.
+ * @param {(localizacao: object) => void} [props.onSave] - Called when address data changes.
+ * @returns {import('react').ReactElement}
+ */
 export default function EnderecoAutocomplete({ initialValue, onSave }) {
   const [googleReady, setGoogleReady] = useState(false);
   const [query, setQuery] = useState(initialValue?.endereco_completo ?? "");
@@ -133,6 +165,11 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
 
   const canUseAutocomplete = useMemo(() => googleReady && !error, [googleReady, error]);
 
+  /**
+   * Normalizes and emits the updated localization to the parent.
+   * @param {object} next - Partial or full localization object.
+   * @returns {void}
+   */
   function emit(next) {
     const enderecoCompleto = next.endereco_completo || buildEnderecoCompleto(next);
     const value = { ...next, endereco_completo: enderecoCompleto };
@@ -140,10 +177,22 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
     onSave?.(value);
   }
 
+  /**
+   * Updates a single address field and notifies the parent.
+   * @param {string} field - Field key on localizacao.
+   * @param {string} value - New field value.
+   * @returns {void}
+   */
   function updateField(field, value) {
     emit({ ...localizacao, [field]: value, endereco_completo: "" });
   }
 
+  /**
+   * Updates latitude and longitude from the map picker.
+   * @param {number} lat - Latitude.
+   * @param {number} lng - Longitude.
+   * @returns {void}
+   */
   function handleCoordinatesChange(lat, lng) {
     emit({
       ...localizacao,
@@ -152,6 +201,11 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
     });
   }
 
+  /**
+   * Geocodes a Places prediction and fills structured address fields.
+   * @param {object} prediction - Google Places prediction object.
+   * @returns {void}
+   */
   function handleSelect(prediction) {
     if (!geocoderRef.current) return;
 
@@ -207,7 +261,7 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
 
       {!canUseAutocomplete && (
         <p className="mt-2 text-xs text-[#d9534f]">
-          {error || "Carregando Google Places..."}
+          {error || "Carregando endereços..."}
         </p>
       )}
 

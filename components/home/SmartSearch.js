@@ -3,6 +3,12 @@
 import { memo, useCallback, useState } from "react";
 import { QUICK_SEARCH_CHIPS } from "@/lib/homeContext";
 
+/**
+ * IconSparkle - Sparkle icon for AI search branding.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconSparkle({ className = "h-4 w-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -11,6 +17,12 @@ function IconSparkle({ className = "h-4 w-4" }) {
   );
 }
 
+/**
+ * IconSend - Send/submit icon for the search button.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconSend({ className = "h-4 w-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -19,6 +31,12 @@ function IconSend({ className = "h-4 w-4" }) {
   );
 }
 
+/**
+ * IconClose - Close icon for exiting search mode.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconClose({ className = "h-3.5 w-3.5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -27,6 +45,13 @@ function IconClose({ className = "h-3.5 w-3.5" }) {
   );
 }
 
+/**
+ * QuickChip - Suggested quick-search chip button.
+ * @param {object} props
+ * @param {object} props.chip - Chip config with id, label, and emoji.
+ * @param {(chip: object) => void} props.onClick - Called when the chip is pressed.
+ * @returns {import('react').ReactElement}
+ */
 const QuickChip = memo(function QuickChip({ chip, onClick }) {
   return (
     <button
@@ -42,6 +67,22 @@ const QuickChip = memo(function QuickChip({ chip, onClick }) {
   );
 });
 
+/**
+ * SmartSearch - AI-powered search input with quick suggestion chips.
+ * @param {object} props
+ * @param {import('react').RefObject<HTMLFormElement>} props.searchContainerRef - Ref for the search form.
+ * @param {import('react').RefObject<HTMLInputElement>} props.searchInputRef - Ref for the search input.
+ * @param {string} props.termoBusca - Current search query value.
+ * @param {boolean} props.searchMode - Whether expanded search mode is active.
+ * @param {(e: import('react').FormEvent) => void} props.onSubmit - Form submit handler.
+ * @param {(e: import('react').FocusEvent) => void} [props.onFocus] - Input focus handler.
+ * @param {(e: import('react').FocusEvent) => void} [props.onBlur] - Input blur handler.
+ * @param {(value: string) => void} props.onChange - Query change handler.
+ * @param {() => void} props.onClose - Closes search mode.
+ * @param {(chip: object) => void} props.onChipClick - Quick chip click handler.
+ * @param {boolean} [props.showChips] - Whether to show quick suggestion chips.
+ * @returns {import('react').ReactElement}
+ */
 function SmartSearch({
   searchContainerRef,
   searchInputRef,
@@ -56,8 +97,19 @@ function SmartSearch({
   showChips = true,
 }) {
   const [focused, setFocused] = useState(false);
+
+  /**
+   * Forwards quick chip selection to the parent handler.
+   * @param {object} chip - Quick search chip config.
+   * @returns {void}
+   */
   const handleChip = useCallback((chip) => onChipClick(chip), [onChipClick]);
 
+  /**
+   * Marks the search field as focused and forwards the focus event.
+   * @param {import('react').FocusEvent} e - Focus event.
+   * @returns {void}
+   */
   const handleFocus = useCallback(
     (e) => {
       setFocused(true);
@@ -66,6 +118,11 @@ function SmartSearch({
     [onFocus]
   );
 
+  /**
+   * Marks the search field as blurred and forwards the blur event.
+   * @param {import('react').FocusEvent} e - Blur event.
+   * @returns {void}
+   */
   const handleBlur = useCallback(
     (e) => {
       setFocused(false);
@@ -132,7 +189,7 @@ function SmartSearch({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="absolute right-0 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[#5a6b66] transition-colors active:bg-[#eef3f1]"
+                    className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-[#5a6b66] transition-colors active:bg-[#eef3f1]"
                     aria-label="Fechar busca"
                   >
                     <IconClose />
@@ -142,8 +199,8 @@ function SmartSearch({
 
               <button
                 type="submit"
-                aria-label="Buscar com IA"
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200 active:scale-95 ${
+                aria-label="Buscar"
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-200 active:scale-95 ${
                   hasQuery || active
                     ? "bg-[#1a4a3a] text-white shadow-md shadow-[#1a4a3a]/25"
                     : "bg-[#e8f0ec] text-[#9aa8a3]"

@@ -5,6 +5,11 @@ import { useCallback, useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * Formats route duration in minutes for admin list.
+ * @param {number|null|undefined} minutos - Duration in minutes.
+ * @returns {string} Formatted duration or em dash.
+ */
 function formatDuracao(minutos) {
   if (minutos === null || minutos === undefined) return "—";
   const total = Number(minutos);
@@ -14,10 +19,19 @@ function formatDuracao(minutos) {
   return horas > 0 ? `${horas}h ${mins > 0 ? `${mins}m` : ""}`.trim() : `${mins}m`;
 }
 
+/**
+ * Badge classes for active vs inactive route status.
+ * @param {boolean} ativa - Whether the route is active.
+ * @returns {string} Tailwind classes.
+ */
 function statusStyle(ativa) {
   return ativa ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-500";
 }
 
+/**
+ * Admin route list: feature toggle, soft delete, and links to edit.
+ * @returns {import("react").ReactElement}
+ */
 export default function AdminRotasPage() {
   const { loading } = useAdminAuth();
   const [rotas, setRotas] = useState([]);
@@ -46,6 +60,11 @@ export default function AdminRotasPage() {
     return () => clearTimeout(timer);
   }, [loading, loadRotas]);
 
+  /**
+   * Sets a single route as featured (`destaque`) and clears others.
+   * @param {object} rota - Route row.
+   * @returns {Promise<void>}
+   */
   async function toggleDestaque(rota) {
     const supabase = createClient();
     setRotas((items) =>
@@ -56,6 +75,11 @@ export default function AdminRotasPage() {
     await supabase.from("rotas").update({ destaque: true }).eq("id", rota.id);
   }
 
+  /**
+   * Deactivates a route (`ativa: false`) after confirmation.
+   * @param {object} rota - Route row.
+   * @returns {Promise<void>}
+   */
   async function softDelete(rota) {
     const confirmed = window.confirm(`Desativar a rota "${rota.nome || rota.titulo}"?`);
     if (!confirmed) return;

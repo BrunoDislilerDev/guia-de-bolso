@@ -53,25 +53,28 @@ const categorias = [
   },
 ];
 
+/**
+ * Browse-all-categories page with live place counts per category.
+ * @returns {import("react").ReactElement}
+ */
 export default function CategoriasPage() {
   const [counts, setCounts] = useState({});
 
   useEffect(() => {
     const supabase = createClient();
 
-    Promise.all(
-      categorias.map(async ({ nome }) => {
-        const { count } = await supabase
-          .from("lugares")
-          .select("id", { count: "exact", head: true })
-          .eq("categoria", nome)
-          .eq("status", "ativo");
-
-        return [nome, count ?? 0];
-      })
-    ).then((entries) => {
-      setCounts(Object.fromEntries(entries));
-    });
+    supabase
+      .from("lugares")
+      .select("categoria")
+      .eq("status", "ativo")
+      .then(({ data }) => {
+        const totals = {};
+        (data ?? []).forEach(({ categoria }) => {
+          if (!categoria) return;
+          totals[categoria] = (totals[categoria] || 0) + 1;
+        });
+        setCounts(totals);
+      });
   }, []);
 
   return (

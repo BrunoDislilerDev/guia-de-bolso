@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+/**
+ * Persists a generated itinerary for the authenticated user.
+ * @param {import("next/server").NextRequest} request - JSON body with titulo, dias, perfil, interesses, conteudo.
+ * @returns {Promise<import("next/server").NextResponse>} Saved roteiro or error.
+ */
 export async function POST(request) {
   try {
     const supabase = await createClient();

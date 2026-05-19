@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { hasValidCoordinates, loadGoogleMaps } from "@/lib/googleMaps";
 
+/**
+ * EnderecoMapPicker - Google Map with draggable marker for fine-tuning coordinates.
+ * @param {object} props
+ * @param {number|null} props.latitude
+ * @param {number|null} props.longitude
+ * @param {(lat: number, lng: number) => void} props.onCoordinatesChange - Called after marker drag.
+ * @returns {import('react').ReactElement|null}
+ */
 export default function EnderecoMapPicker({
   latitude,
   longitude,
@@ -12,6 +20,7 @@ export default function EnderecoMapPicker({
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
   const onChangeRef = useRef(onCoordinatesChange);
+  const [mapUnavailable, setMapUnavailable] = useState(false);
 
   onChangeRef.current = onCoordinatesChange;
 
@@ -21,10 +30,12 @@ export default function EnderecoMapPicker({
     if (!hasCoords || !mapRef.current) return undefined;
 
     let cancelled = false;
+    setMapUnavailable(false);
 
     loadGoogleMaps()
       .then((google) => {
         if (cancelled || !mapRef.current || mapInstanceRef.current) return;
+        setMapUnavailable(false);
 
         const position = {
           lat: Number(latitude),
@@ -51,7 +62,9 @@ export default function EnderecoMapPicker({
           onChangeRef.current?.(pos.lat(), pos.lng());
         });
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setMapUnavailable(true);
+      });
 
     return () => {
       cancelled = true;
@@ -82,6 +95,9 @@ export default function EnderecoMapPicker({
         className="h-[350px] w-full overflow-hidden rounded-2xl border border-[#e3e9e6]"
         aria-label="Mapa da localização"
       />
+      {mapUnavailable && (
+        <p className="mt-2 text-sm text-gray-400">Mapa indisponível no momento</p>
+      )}
     </div>
   );
 }

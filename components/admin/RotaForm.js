@@ -29,6 +29,13 @@ const emptyForm = {
   ativa: true,
 };
 
+/**
+ * Wrapper de campo com label para o formulário de rota.
+ * @param {object} props
+ * @param {string} props.label - Texto do label.
+ * @param {import("react").ReactNode} props.children - Input ou select filho.
+ * @returns {import("react").JSX.Element}
+ */
 function Field({ label, children }) {
   return (
     <label className="block text-sm font-semibold text-[#1a2e28]">
@@ -38,10 +45,19 @@ function Field({ label, children }) {
   );
 }
 
+/**
+ * Classes Tailwind padrão dos inputs do formulário de rota.
+ * @returns {string}
+ */
 function inputClass() {
   return "mt-1 w-full rounded-xl bg-[#f0f4f3] px-3 py-2 text-sm font-normal outline-none ring-[#1a4a3a]/20 focus:ring-2";
 }
 
+/**
+ * Mescla dados da rota do banco com o estado inicial do formulário.
+ * @param {object|null|undefined} rota - Registro de `rotas` ou null para novo.
+ * @returns {typeof emptyForm & object}
+ */
 function normalizeRota(rota) {
   return {
     ...emptyForm,
@@ -53,6 +69,14 @@ function normalizeRota(rota) {
   };
 }
 
+/**
+ * Formulário admin de criação/edição de rota turística com fotos e pontos do percurso.
+ * @param {object} props
+ * @param {object|null} [props.initialData] - Dados da rota em edição.
+ * @param {Array<{ nome?: string, titulo?: string, descricao?: string, ordem?: number }>} [props.initialPontos] - Pontos de `rota_pontos`.
+ * @param {string|null} [props.editingId] - UUID da rota; null para criar.
+ * @returns {import("react").JSX.Element}
+ */
 export default function RotaForm({
   initialData = null,
   initialPontos = [],
@@ -60,6 +84,7 @@ export default function RotaForm({
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [photoError, setPhotoError] = useState("");
   const [form, setForm] = useState(normalizeRota(initialData));
   const [photoItems, setPhotoItems] = useState(() =>
@@ -74,6 +99,10 @@ export default function RotaForm({
   );
   const [novoPonto, setNovoPonto] = useState({ nome: "", descricao: "" });
 
+  /**
+   * Adiciona arquivos de capa/galeria à fila de upload da rota.
+   * @param {File[]} files - Imagens aceitas (JPG, PNG, WebP).
+   */
   function addPhotoFiles(files) {
     setPhotoError("");
     setPhotoItems((current) => [
@@ -82,6 +111,10 @@ export default function RotaForm({
     ]);
   }
 
+  /**
+   * Remove foto da lista e libera URL de preview temporária.
+   * @param {string} id - ID do item em `photoItems`.
+   */
   function removePhotoItem(id) {
     setPhotoItems((current) => {
       const item = current.find((entry) => entry.id === id);
@@ -90,6 +123,7 @@ export default function RotaForm({
     });
   }
 
+  /** Adiciona o ponto digitado em `novoPonto` à lista com ordem sequencial. */
   function addPonto() {
     if (!novoPonto.nome.trim()) return;
 
@@ -104,6 +138,10 @@ export default function RotaForm({
     setNovoPonto({ nome: "", descricao: "" });
   }
 
+  /**
+   * Remove ponto pelo índice e renumera `ordem`.
+   * @param {number} index - Índice na lista `pontos`.
+   */
   function removePonto(index) {
     setPontos((current) =>
       current
@@ -112,6 +150,11 @@ export default function RotaForm({
     );
   }
 
+  /**
+   * Troca a posição de um ponto com o vizinho e atualiza `ordem`.
+   * @param {number} index - Índice do ponto a mover.
+   * @param {number} direction - -1 sobe, +1 desce.
+   */
   function movePonto(index, direction) {
     setPontos((current) => {
       const nextIndex = index + direction;
@@ -123,9 +166,14 @@ export default function RotaForm({
     });
   }
 
+  /**
+   * Salva rota, fotos, capa e pontos no Supabase; redireciona com query de sucesso.
+   * @param {import("react").FormEvent<HTMLFormElement>} event - Evento de submit.
+   */
   async function handleSubmit(event) {
     event.preventDefault();
     setSaving(true);
+    setSaveError("");
     setPhotoError("");
 
     const supabase = createClient();
@@ -200,8 +248,8 @@ export default function RotaForm({
       }
     } catch (error) {
       console.error(error);
-      setPhotoError(
-        error?.message || "Não foi possível salvar as fotos. Tente novamente."
+      setSaveError(
+        error?.message || "Não foi possível salvar a rota. Tente novamente."
       );
       setSaving(false);
       return;
@@ -212,6 +260,27 @@ export default function RotaForm({
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-5 shadow-sm">
+      {saveError && (
+        <div
+          className="mb-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          role="alert"
+        >
+          <svg
+            className="h-5 w-5 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <p className="min-w-0 flex-1">{saveError}</p>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Nome">
           <input

@@ -11,12 +11,21 @@ import {
 import { canViewClimaDetalhes } from "@/lib/premium";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * Returns Tailwind classes for the sea-bathing status badge.
+ * @param {'good'|'rough'|string} tone - Bathing condition tone key.
+ * @returns {string} CSS class string.
+ */
 function bathBadgeClass(tone) {
   if (tone === "good") return "bg-emerald-100 text-emerald-800";
   if (tone === "rough") return "bg-red-100 text-red-800";
   return "bg-amber-100 text-amber-800";
 }
 
+/**
+ * ClimaCardSkeleton - Loading placeholder for the beach weather card.
+ * @returns {import('react').ReactElement}
+ */
 function ClimaCardSkeleton() {
   return (
     <section className="mb-6 animate-pulse rounded-2xl bg-white p-4 shadow-sm">
@@ -36,6 +45,16 @@ function ClimaCardSkeleton() {
   );
 }
 
+/**
+ * ClimaCard - Beach weather summary with beach selector and premium detail gate.
+ * @param {object} props
+ * @param {object|null} props.user - Authenticated Supabase user, or null.
+ * @param {object|null} props.usage - Premium usage limits from the API.
+ * @param {boolean} [props.usageLoading] - Whether usage data is still loading.
+ * @param {() => void} [props.onLoginRequired] - Called when login is required.
+ * @param {() => void} [props.onPremiumRequired] - Called when premium is required.
+ * @returns {import('react').ReactElement|null}
+ */
 export default function ClimaCard({
   user,
   usage,
@@ -54,6 +73,10 @@ export default function ClimaCard({
   useEffect(() => {
     let cancelled = false;
 
+    /**
+     * Fetches active beach places from Supabase.
+     * @returns {Promise<void>}
+     */
     async function loadPraias() {
       setLoadingPraias(true);
       const supabase = createClient();
@@ -92,6 +115,10 @@ export default function ClimaCard({
 
     let cancelled = false;
 
+    /**
+     * Loads weather data for the selected beach.
+     * @returns {Promise<void>}
+     */
     async function loadClima() {
       setLoadingClima(true);
       setErro(false);
@@ -125,6 +152,10 @@ export default function ClimaCard({
     };
   }, [praiaSelecionada]);
 
+  /**
+   * Opens the detail sheet or triggers login/premium callbacks as needed.
+   * @returns {void}
+   */
   function handleVerDetalhes() {
     if (!user) {
       onLoginRequired?.();

@@ -6,6 +6,11 @@ import { createClient } from "@/lib/supabase";
 
 const tabs = ["pendente", "aprovada", "rejeitada"];
 
+/**
+ * Renders filled and empty star characters for a rating.
+ * @param {number|string} value - Star count 0–5.
+ * @returns {import("react").ReactElement}
+ */
 function Stars({ value }) {
   const nota = Number(value) || 0;
   return (
@@ -16,6 +21,11 @@ function Stars({ value }) {
   );
 }
 
+/**
+ * Formats an ISO date for display in pt-BR.
+ * @param {string} [value] - ISO timestamp.
+ * @returns {string} Formatted date or empty string.
+ */
 function formatDate(value) {
   if (!value) return "";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -25,6 +35,10 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+/**
+ * Admin moderation UI for reviews by status tab.
+ * @returns {import("react").ReactElement}
+ */
 export default function AdminAvaliacoesPage() {
   const { loading } = useAdminAuth();
   const [activeTab, setActiveTab] = useState("pendente");
@@ -34,6 +48,11 @@ export default function AdminAvaliacoesPage() {
     if (!loading) loadAvaliacoes(activeTab);
   }, [loading, activeTab]);
 
+  /**
+   * Loads reviews for the given moderation status.
+   * @param {string} status - `pendente`, `aprovada`, or `rejeitada`.
+   * @returns {Promise<void>}
+   */
   async function loadAvaliacoes(status) {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -55,6 +74,12 @@ export default function AdminAvaliacoesPage() {
     setAvaliacoes(fallback.data ?? []);
   }
 
+  /**
+   * Updates review status and removes it from the current list.
+   * @param {string} id - Review id.
+   * @param {string} status - New status.
+   * @returns {Promise<void>}
+   */
   async function updateStatus(id, status) {
     const supabase = createClient();
     await supabase.from("avaliacoes").update({ status }).eq("id", id);

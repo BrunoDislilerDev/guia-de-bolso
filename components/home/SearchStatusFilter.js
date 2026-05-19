@@ -8,6 +8,13 @@ const OPCOES = [
   { id: FILTRO_STATUS_BUSCA.FECHADOS, label: "Fechados" },
 ];
 
+/**
+ * SearchStatusFilter - Chip filter for open/closed status on search results.
+ * @param {object} props
+ * @param {string} props.value - Active filter id from FILTRO_STATUS_BUSCA.
+ * @param {(id: string) => void} props.onChange - Called when a filter chip is selected.
+ * @returns {import('react').ReactElement}
+ */
 export default function SearchStatusFilter({ value, onChange }) {
   return (
     <div className="mb-2 flex gap-1.5">

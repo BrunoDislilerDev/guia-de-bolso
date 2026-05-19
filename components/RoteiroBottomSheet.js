@@ -29,6 +29,10 @@ const LOADING_MESSAGES = [
   "Quase pronto...",
 ];
 
+/**
+ * Spinner - Loading indicator for AI itinerary generation.
+ * @returns {import('react').ReactElement}
+ */
 function Spinner() {
   return (
     <div
@@ -38,6 +42,18 @@ function Spinner() {
   );
 }
 
+/**
+ * RoteiroBottomSheet - Multi-step bottom sheet to create and save AI itineraries.
+ * @param {object} props
+ * @param {boolean} props.isOpen - Whether the sheet is visible.
+ * @param {() => void} props.onClose - Called when the sheet is dismissed.
+ * @param {boolean} props.isLoggedIn - Whether the user is authenticated.
+ * @param {() => void} [props.onLoginRequired] - Called when login is required.
+ * @param {() => void} [props.onLimitReached] - Called when free tier limit is reached.
+ * @param {(usage: object|null) => void} [props.onUsageRefresh] - Called after generation with updated usage.
+ * @param {(roteiro: object) => void} [props.onRoteiroSalvo] - Called after a successful save.
+ * @returns {import('react').ReactElement|null}
+ */
 export default function RoteiroBottomSheet({
   isOpen,
   onClose,
@@ -84,6 +100,10 @@ export default function RoteiroBottomSheet({
     return () => clearInterval(interval);
   }, [view]);
 
+  /**
+   * Clears form state and returns to the form view.
+   * @returns {void}
+   */
   function resetFormulario() {
     setDias("");
     setPerfil("");
@@ -95,18 +115,31 @@ export default function RoteiroBottomSheet({
     setView("form");
   }
 
+  /**
+   * Closes the sheet and resets the form when not loading or saving.
+   * @returns {void}
+   */
   function handleClose() {
     if (loading || salvando) return;
     resetFormulario();
     onClose();
   }
 
+  /**
+   * Toggles an interest chip in the selection list.
+   * @param {string} item - Interest label.
+   * @returns {void}
+   */
   function toggleInteresse(item) {
     setInteresses((atual) =>
       atual.includes(item) ? atual.filter((i) => i !== item) : [...atual, item]
     );
   }
 
+  /**
+   * Submits the form to the AI itinerary API and shows the result.
+   * @returns {Promise<void>}
+   */
   async function handleGerar() {
     if (!formularioCompleto || loading) return;
 
@@ -156,6 +189,10 @@ export default function RoteiroBottomSheet({
     }
   }
 
+  /**
+   * Persists the generated itinerary via the save API.
+   * @returns {Promise<void>}
+   */
   async function handleSalvar() {
     if (!isLoggedIn) {
       onLoginRequired?.();

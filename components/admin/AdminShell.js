@@ -15,6 +15,10 @@ const links = [
   { href: "/admin/usuarios", label: "Usuários", icon: "👥" },
 ];
 
+/**
+ * Hook que valida sessão Supabase e role admin; redireciona para home se não autorizado.
+ * @returns {{ loading: boolean, user: import("@supabase/supabase-js").User|null, perfil: object|null }}
+ */
 export function useAdminAuth() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -25,6 +29,7 @@ export function useAdminAuth() {
     let cancelled = false;
     const supabase = createClient();
 
+    /** Carrega usuário e perfil; redireciona se não autenticado ou sem permissão admin. */
     async function checkAdmin() {
       const {
         data: { user: currentUser },
@@ -65,6 +70,16 @@ export function useAdminAuth() {
   return { loading, user, perfil };
 }
 
+/**
+ * Layout do painel admin com sidebar (desktop), chips de navegação (mobile) e área de conteúdo.
+ * @param {object} props
+ * @param {string} props.title - Título da página no header.
+ * @param {string} [props.subtitle] - Subtítulo opcional abaixo do título.
+ * @param {import("react").ReactNode} [props.headerAction] - Ação extra alinhada à direita do header.
+ * @param {string} [props.contentClassName] - Classes extras no `<main>`.
+ * @param {import("react").ReactNode} props.children - Conteúdo da página.
+ * @returns {import("react").JSX.Element}
+ */
 export default function AdminShell({
   title,
   subtitle,

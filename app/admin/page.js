@@ -8,12 +8,24 @@ import {
   getLogAcaoBadge,
 } from "@/lib/logs";
 
+/**
+ * ISO timestamp for metrics comparison N days ago.
+ * @param {number} days - Days to subtract from today.
+ * @returns {string} ISO date string.
+ */
 function getCutoffIso(days) {
   const date = new Date();
   date.setDate(date.getDate() - days);
   return date.toISOString();
 }
 
+/**
+ * Computes period-over-period percent change label and color class.
+ * @param {number} total - Count in current period.
+ * @param {number} past - Count before cutoff.
+ * @param {string} periodLabel - Label suffix (e.g. "esta semana").
+ * @returns {{ text: string, className: string }} Variation display props.
+ */
 function calcVariation(total, past, periodLabel) {
   if (past === 0) {
     if (total === 0) {
@@ -45,6 +57,13 @@ function calcVariation(total, past, periodLabel) {
   };
 }
 
+/**
+ * Fetches total and past-period row counts for dashboard metrics.
+ * @param {import("@supabase/supabase-js").SupabaseClient} supabase - Supabase client.
+ * @param {string} table - Table name.
+ * @param {{ eq?: { field: string, value: unknown }, ltCreatedAt?: string }} [options] - Filters.
+ * @returns {Promise<{ total: number, past: number }>} Counts.
+ */
 async function fetchCount(supabase, table, options = {}) {
   const { eq, ltCreatedAt } = options;
 
@@ -68,6 +87,11 @@ async function fetchCount(supabase, table, options = {}) {
   };
 }
 
+/**
+ * Pin icon for dashboard metric cards.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconPin({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -76,6 +100,11 @@ function IconPin({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * User icon for dashboard metric cards.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconUser({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -84,6 +113,11 @@ function IconUser({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * Star icon for dashboard metric cards.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconStar({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -92,6 +126,11 @@ function IconStar({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * Heart icon for favorites metric card.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconHeart({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -100,6 +139,11 @@ function IconHeart({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * Dashboard KPI card with icon and period variation.
+ * @param {{ label: string, value: number, icon: (props: { className?: string }) => import("react").ReactElement, iconWrap: string, iconColor: string, variation: { text: string, className: string } }} props
+ * @returns {import("react").ReactElement}
+ */
 function MetricCard({ label, value, icon: Icon, iconWrap, iconColor, variation }) {
   return (
     <article className="rounded-2xl bg-white p-6 shadow-sm">
@@ -119,6 +163,11 @@ function MetricCard({ label, value, icon: Icon, iconWrap, iconColor, variation }
   );
 }
 
+/**
+ * Renders filled and empty star characters for a rating.
+ * @param {number|string} value - Star count 0–5.
+ * @returns {import("react").ReactElement}
+ */
 function Stars({ value }) {
   return (
     <span className="text-[#e8a838]">
@@ -128,6 +177,11 @@ function Stars({ value }) {
   );
 }
 
+/**
+ * Week vs month toggle for dashboard metrics period.
+ * @param {{ period: string, onChange: (period: string) => void }} props
+ * @returns {import("react").ReactElement}
+ */
 function PeriodSelector({ period, onChange }) {
   return (
     <div className="inline-flex rounded-xl bg-white p-1 shadow-sm">
@@ -157,6 +211,10 @@ function PeriodSelector({ period, onChange }) {
   );
 }
 
+/**
+ * Admin dashboard: metrics, pending reviews, and activity logs.
+ * @returns {import("react").ReactElement}
+ */
 export default function AdminDashboard() {
   const { loading } = useAdminAuth();
   const [period, setPeriod] = useState("semana");
@@ -176,6 +234,7 @@ export default function AdminDashboard() {
     loadDashboard();
   }, [loading, logsPage, period]);
 
+  /** Loads metrics, pending reviews, logs, and profiles for the dashboard. @returns {Promise<void>} */
   async function loadDashboard() {
     const supabase = createClient();
     const days = period === "mes" ? 30 : 7;
@@ -243,6 +302,12 @@ export default function AdminDashboard() {
     setPerfis(perfisRes.data ?? []);
   }
 
+  /**
+   * Approves or rejects a review from the dashboard queue.
+   * @param {string} id - Review id.
+   * @param {string} status - New status (`aprovada` | `rejeitada`).
+   * @returns {Promise<void>}
+   */
   async function updateStatus(id, status) {
     const supabase = createClient();
     await supabase.from("avaliacoes").update({ status }).eq("id", id);

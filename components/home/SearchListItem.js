@@ -1,14 +1,24 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
+/**
+ * PlaceThumb - Circular thumbnail or initial fallback for a place row.
+ * @param {object} props
+ * @param {string} [props.imagemUrl] - Cover image URL.
+ * @param {string} props.nome - Place name for fallback initial.
+ * @returns {import('react').ReactElement}
+ */
 function PlaceThumb({ imagemUrl, nome }) {
   if (imagemUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={imagemUrl}
-        alt=""
+        alt={nome}
+        width={80}
+        height={80}
+        sizes="80px"
         className="h-10 w-10 shrink-0 rounded-full object-cover"
       />
     );
@@ -21,6 +31,16 @@ function PlaceThumb({ imagemUrl, nome }) {
   );
 }
 
+/**
+ * SearchListItem - Compact linked row for search browse lists.
+ * @param {object} props
+ * @param {string} props.href - Destination path for the place.
+ * @param {string} [props.imagemUrl] - Cover image URL.
+ * @param {string} props.nome - Place name.
+ * @param {string} props.categoria - Category label.
+ * @param {import('react').ReactNode} props.leading - Leading icon or emoji.
+ * @returns {import('react').ReactElement}
+ */
 export default function SearchListItem({ href, imagemUrl, nome, categoria, leading }) {
   return (
     <Link

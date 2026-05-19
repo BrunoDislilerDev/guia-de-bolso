@@ -2,6 +2,16 @@
 
 import Link from "next/link";
 
+/**
+ * HomeContextHeader - Home page title, location, contextual phrase, and profile link.
+ * @param {object} props
+ * @param {object|null} props.user - Authenticated Supabase user, or null.
+ * @param {string|null} props.avatarUrl - Profile photo URL when available.
+ * @param {string} props.contextualPhrase - Dynamic suggestion text for the user.
+ * @param {string} [props.locationLabel] - Display label for the current area.
+ * @param {(user: object) => string} props.getUserInitial - Returns avatar fallback initial.
+ * @returns {import('react').ReactElement}
+ */
 export default function HomeContextHeader({
   user,
   avatarUrl,
@@ -9,6 +19,12 @@ export default function HomeContextHeader({
   locationLabel = "Imbituba, SC",
   getUserInitial,
 }) {
+  const nome =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Usuário";
+
   return (
     <header className="mb-5">
       <div className="flex items-start justify-between gap-3">
@@ -34,7 +50,7 @@ export default function HomeContextHeader({
         >
           {user && avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+            <img src={avatarUrl} alt={nome} className="h-full w-full object-cover" />
           ) : user ? (
             <span className="text-sm font-bold text-white flex h-full w-full items-center justify-center bg-[#1a4a3a]">
               {getUserInitial(user)}

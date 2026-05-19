@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Renderiza cinco estrelas preenchidas conforme a nota (arredondada).
+ * @param {object} props
+ * @param {number} props.value - Nota de 0 a 5.
+ * @param {string} [props.className] - Classes de tamanho/cor do texto.
+ * @returns {import("react").JSX.Element}
+ */
 function Stars({ value, className = "text-lg" }) {
   const rounded = Math.round(Number(value) || 0);
   return (
@@ -10,6 +17,11 @@ function Stars({ value, className = "text-lg" }) {
   );
 }
 
+/**
+ * Formata data de avaliação para exibição em pt-BR (ex.: "19 mai 2026").
+ * @param {string|number|Date} value - ISO ou timestamp da avaliação.
+ * @returns {string} Data formatada ou string vazia se inválida.
+ */
 function formatReviewDate(value) {
   if (!value) return "";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -21,6 +33,18 @@ function formatReviewDate(value) {
     .replace(".", "");
 }
 
+/**
+ * Seção de avaliações com resumo, até três reviews e CTA para avaliar.
+ * @param {object} props
+ * @param {Array<{ id: string, nota: number, comentario?: string, created_at?: string, perfis?: object }>} props.avaliacoes - Avaliações aprovadas.
+ * @param {number} props.mediaAvaliacoes - Média das notas.
+ * @param {number} props.totalAvaliacoes - Total de avaliações.
+ * @param {{ percentRecomenda: number, melhorPara: string[] }} [props.resumo] - Bloco de insights agregados.
+ * @param {(avaliacao: object) => string} props.getReviewerName - Resolve o nome exibido do autor.
+ * @param {boolean} props.jaAvaliou - Desabilita o botão se o usuário já avaliou.
+ * @param {() => void} props.onAvaliar - Abre fluxo/modal de nova avaliação.
+ * @returns {import("react").JSX.Element}
+ */
 export default function LugarAvaliacoesSection({
   avaliacoes,
   mediaAvaliacoes,

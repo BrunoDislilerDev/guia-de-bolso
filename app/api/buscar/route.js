@@ -20,6 +20,11 @@ Cada lugar inclui "abertoAgora" (true/false) com base no horário atual em Ameri
 - Se a busca pedir lugares fechados, retorne só IDs com abertoAgora=false.
 - Caso contrário, priorize relevância e não exclua por horário.`;
 
+/**
+ * Parses a JSON array of place IDs from Claude API text, with fallback extraction.
+ * @param {string} text - Raw model response text.
+ * @returns {unknown[]} Parsed ID list or empty array.
+ */
 function parseIds(text) {
   const trimmed = text.trim();
 
@@ -43,6 +48,11 @@ function parseIds(text) {
   return [];
 }
 
+/**
+ * AI-powered natural-language search over active places (premium usage enforced).
+ * @param {import("next/server").NextRequest} request - JSON body: `{ query, filtroStatus? }`.
+ * @returns {Promise<import("next/server").NextResponse>} Matching places and usage metadata.
+ */
 export async function POST(request) {
   try {
     const { query, filtroStatus = FILTRO_STATUS_BUSCA.TODOS } = await request.json();

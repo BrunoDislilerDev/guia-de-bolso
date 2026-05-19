@@ -18,10 +18,20 @@ const categoryStyles = {
   Compras: "bg-blue-100 text-blue-700",
 };
 
+/**
+ * Resolve URL da capa do lugar para o card admin.
+ * @param {object} lugar - Registro de `lugares`.
+ * @returns {string} URL da imagem ou string vazia.
+ */
 function getFoto(lugar) {
   return getCapaFromLugar(lugar) || lugar.foto_url || "";
 }
 
+/**
+ * Extrai nome da cidade do lugar ou da relação `localizacoes`.
+ * @param {object} lugar - Registro com `cidade` ou `localizacoes`.
+ * @returns {string}
+ */
 function getCidade(lugar) {
   const localizacao = Array.isArray(lugar.localizacoes)
     ? lugar.localizacoes[0]
@@ -29,6 +39,11 @@ function getCidade(lugar) {
   return lugar.cidade || localizacao?.cidade || "";
 }
 
+/**
+ * Gera iniciais (até duas letras) para placeholder sem foto.
+ * @param {string} nome - Nome do lugar.
+ * @returns {string}
+ */
 function getInitials(nome) {
   return String(nome || "?")
     .split(" ")
@@ -38,10 +53,22 @@ function getInitials(nome) {
     .join("");
 }
 
+/**
+ * Indica se o lugar está ativo para exibição pública.
+ * @param {object} lugar - Registro com `status` ou `ativa`.
+ * @returns {boolean}
+ */
 function isAtivo(lugar) {
   return lugar.status === "ativo" || lugar.ativa === true;
 }
 
+/**
+ * Card de lugar na grade admin com foto, categoria, status e ações editar/excluir.
+ * @param {object} props
+ * @param {object} props.lugar - Registro de `lugares`.
+ * @param {(lugar: object) => void} props.onDelete - Soft-delete (status desativado).
+ * @returns {import("react").JSX.Element}
+ */
 function LugarCard({ lugar, onDelete }) {
   const foto = getFoto(lugar);
   const cidade = getCidade(lugar);
@@ -105,6 +132,10 @@ function LugarCard({ lugar, onDelete }) {
   );
 }
 
+/**
+ * Página admin de listagem de lugares com busca, filtros e grid de cards.
+ * @returns {import("react").JSX.Element}
+ */
 export default function LugaresGridPage() {
   const { loading } = useAdminAuth();
   const [lugares, setLugares] = useState([]);
@@ -113,6 +144,7 @@ export default function LugaresGridPage() {
   const [status, setStatus] = useState("Todos");
   const [cidade, setCidade] = useState("Todas");
 
+  /** Busca todos os lugares com cidade da relação `localizacoes` e atualiza o estado. */
   const loadLugares = useCallback(async () => {
     const supabase = createClient();
     const { data } = await supabase
@@ -133,6 +165,10 @@ export default function LugaresGridPage() {
     return () => clearTimeout(timer);
   }, [loading, loadLugares]);
 
+  /**
+   * Confirma e desativa um lugar (status `desativado`) sem remover do banco.
+   * @param {object} lugar - Lugar a desativar.
+   */
   async function handleDelete(lugar) {
     const confirmed = window.confirm(`Excluir "${lugar.nome}"?`);
     if (!confirmed) return;

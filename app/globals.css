@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --color-primary: #1a4a3a;
+  --color-primary-dark: #1a2e28;
+  --color-primary-light: #7fd4ae;
+  --color-background: #f0f4f3;
+  --color-surface: #ffffff;
+  --color-muted: #5a6b66;
+  --color-border: #e5e7eb;
 }
 
 @theme inline {
@@ -12,12 +19,14 @@
   --font-display: var(--font-plus-jakarta);
 }
 
+/* Dark mode desativado até implementação completa no app.
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
 }
+*/
 
 body {
   background: var(--background);
@@ -31,4 +40,10 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #1a4a3a;
+  outline-offset: 2px;
+  border-radius: 4px;
 }

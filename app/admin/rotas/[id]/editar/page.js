@@ -7,6 +7,10 @@ import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import RotaForm from "@/components/admin/RotaForm";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * Admin page to edit an existing route and its waypoints.
+ * @returns {import("react").ReactElement}
+ */
 export default function EditarRotaPage() {
   const { loading } = useAdminAuth();
   const { id } = useParams();

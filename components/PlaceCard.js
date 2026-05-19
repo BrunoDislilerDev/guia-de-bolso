@@ -1,12 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { getStatusFuncionamento } from "@/lib/horarios";
-import { createClient } from "@/lib/supabase";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { getTagsFromLugar } from "@/lib/tags";
 
+/**
+ * IconPin - Location pin icon for distance display.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconPin({ className = "h-4 w-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -15,6 +20,13 @@ function IconPin({ className = "h-4 w-4" }) {
   );
 }
 
+/**
+ * FavoriteIcon - Heart icon reflecting favorite state.
+ * @param {object} props
+ * @param {boolean} props.active - Whether the place is favorited.
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function FavoriteIcon({ active, className = "h-5 w-5" }) {
   return (
     <svg
@@ -30,50 +42,57 @@ function FavoriteIcon({ active, className = "h-5 w-5" }) {
   );
 }
 
-export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
+/**
+ * Returns aggregated rating from the place record when available.
+ * @param {object} lugar - Place record.
+ * @returns {number|null} Average rating or null.
+ */
+function getRatingMedio(lugar) {
+  const value = lugar.rating_medio ?? lugar.media_avaliacoes;
+  if (value === null || value === undefined) return null;
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : null;
+}
+
+/**
+ * PlaceCard - Full-height place card with image, status, and optional favorite action.
+ * @param {object} props
+ * @param {object} props.lugar - Place record from Supabase.
+ * @param {boolean} [props.isFavorito] - Whether the current user favorited this place.
+ * @param {(lugar: object) => void} [props.onFavoritar] - Called when the favorite button is pressed.
+ * @param {boolean} [props.priority] - Preload image for above-the-fold cards.
+ * @returns {import('react').ReactElement}
+ */
+export default function PlaceCard({
+  lugar,
+  isFavorito = false,
+  onFavoritar,
+  priority = false,
+}) {
   const status = getStatusFuncionamento(lugar.horarios);
   const distancia = lugar.distancia_calculada || lugar.distancia;
   const tags = getTagsFromLugar(lugar).slice(0, 2);
-  const [rating, setRating] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const supabase = createClient();
-
-    supabase
-      .from("avaliacoes")
-      .select("nota")
-      .eq("lugar_id", lugar.id)
-      .eq("status", "aprovada")
-      .then(({ data }) => {
-        if (cancelled) return;
-
-        if (!data?.length) {
-          setRating(null);
-          return;
-        }
-
-        const total = data.reduce((sum, avaliacao) => sum + Number(avaliacao.nota || 0), 0);
-        setRating(total / data.length);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [lugar.id]);
+  const rating = getRatingMedio(lugar);
+  const imagemUrl = getCapaFromLugar(lugar);
 
   return (
     <article className="relative min-h-[380px] overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={getCapaFromLugar(lugar)}
-        alt={lugar.nome}
-        className="absolute inset-0 h-full w-full object-cover"
-      />
+      {imagemUrl ? (
+        <Image
+          src={imagemUrl}
+          alt={lugar.nome}
+          fill
+          sizes="(max-width: 768px) 100vw, 400px"
+          className="object-cover"
+          priority={priority}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
 
       <div className="absolute left-4 top-4 flex flex-col items-start gap-2">
-        {rating && (
+        {rating !== null && (
           <span className="rounded-full bg-black/55 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
             ⭐ {rating.toFixed(1)}
           </span>
@@ -125,7 +144,7 @@ export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
         <button
           type="button"
           onClick={() => onFavoritar(lugar)}
-        className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white shadow-sm backdrop-blur-md"
+          className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white shadow-sm backdrop-blur-md"
           aria-label={isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         >
           <FavoriteIcon active={isFavorito} />

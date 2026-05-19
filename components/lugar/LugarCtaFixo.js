@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Barra fixa inferior com botão principal (ex.: "IR AGORA").
+ * @param {object} props
+ * @param {string} props.label - Texto do botão.
+ * @param {() => void} props.onClick - Ação ao tocar (navegação, sheet de mapas, etc.).
+ * @returns {import("react").JSX.Element}
+ */
 export default function LugarCtaFixo({ label, onClick }) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">

@@ -1,9 +1,15 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import { getCapaFromRota } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase/server";
 
+/**
+ * Clock icon for route detail metrics.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconClock({ className = "h-5 w-5" }) {
   return (
     <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -13,6 +19,11 @@ function IconClock({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Pin icon for route detail metrics.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconPin({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -21,6 +32,11 @@ function IconPin({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Bolt icon for route difficulty.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconBolt({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -29,6 +45,11 @@ function IconBolt({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Send/share icon for route actions.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconSend({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -37,6 +58,11 @@ function IconSend({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Bookmark icon for save action (placeholder).
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconBookmark({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -45,14 +71,29 @@ function IconBookmark({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Display title for a route record.
+ * @param {object} rota - Route row.
+ * @returns {string} Route name.
+ */
 function getRotaNome(rota) {
   return rota.nome || rota.titulo || "Rota sem nome";
 }
 
+/**
+ * Cover image URL for a route.
+ * @param {object} rota - Route row.
+ * @returns {string|undefined} Image URL.
+ */
 function getFotoCapa(rota) {
   return getCapaFromRota(rota);
 }
 
+/**
+ * Formats route duration from `duracao_minutos`.
+ * @param {object} rota - Route row.
+ * @returns {string} Human-readable duration or em dash.
+ */
 function formatDuracao(rota) {
   const minutos = rota.duracao_minutos;
   if (minutos === null || minutos === undefined) return "—";
@@ -68,6 +109,11 @@ function formatDuracao(rota) {
     : `${mins}m`;
 }
 
+/**
+ * Formats route distance for the detail page.
+ * @param {object} rota - Route row.
+ * @returns {string} Distance label.
+ */
 function formatDistancia(rota) {
   const value = rota.distancia_km ?? rota.distancia;
   if (!value) return "Livre";
@@ -75,42 +121,70 @@ function formatDistancia(rota) {
   return String(value).includes("km") ? value : `${value} km`;
 }
 
+/**
+ * Tailwind text color class for difficulty on detail page.
+ * @param {string} [value] - Difficulty text.
+ * @returns {string} CSS class name.
+ */
 function dificuldadeClass(value) {
   const dificuldade = String(value || "").toLowerCase();
   if (dificuldade.includes("dif")) return "text-red-500";
   if (dificuldade.includes("mod") || dificuldade.includes("méd") || dificuldade.includes("med")) {
-    return "text-amber-600";
+    return "text-amber-800";
   }
-  return "text-emerald-600";
+  return "text-[#1a4a3a]";
 }
 
+/**
+ * Full-bleed hero cover for route detail.
+ * @param {{ rota: object }} props
+ * @returns {import("react").ReactElement}
+ */
 function Cover({ rota }) {
   const foto = getFotoCapa(rota);
 
   if (!foto) {
-    return <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-600" />;
+    return <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />;
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={foto} alt={getRotaNome(rota)} className="absolute inset-0 h-full w-full object-cover" />
+    <div className="absolute inset-0">
+      <Image
+        src={foto}
+        alt={getRotaNome(rota)}
+        fill
+        sizes="100vw"
+        className="object-cover"
+        priority
+      />
+    </div>
   );
 }
 
-function Metric({ label, value, Icon, valueClassName = "text-gray-950" }) {
+/**
+ * Single metric block on the route detail page.
+ * @param {{ label: string, value: string, Icon: (props: { className?: string }) => import("react").ReactElement, valueClassName?: string }} props
+ * @returns {import("react").ReactElement}
+ */
+function Metric({ label, value, Icon, valueClassName = "text-[#1a2e28]" }) {
   return (
     <div className="flex-1">
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#5a6b66]">
         {label}
       </p>
       <p className={`mt-1 flex items-center gap-1.5 text-sm font-bold ${valueClassName}`}>
-        <Icon className="h-4 w-4 text-gray-500" />
+        <Icon className="h-4 w-4 text-[#5a6b66]" />
         {value}
       </p>
     </div>
   );
 }
 
+/**
+ * Route detail page with cover, metrics, and step list.
+ * @param {{ params: Promise<{ id: string }> }} props - Dynamic route params.
+ * @returns {Promise<import("react").ReactElement>}
+ */
 export default async function RotaDetalhePage({ params }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -135,7 +209,7 @@ export default async function RotaDetalhePage({ params }) {
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${nome} ${cidade}`)}`;
 
   return (
-    <div className="min-h-screen bg-white text-gray-950">
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md">
         <section className="relative h-64 overflow-hidden bg-[#1a4a3a]">
           <Cover rota={rota} />
@@ -143,14 +217,14 @@ export default async function RotaDetalhePage({ params }) {
 
           <Link
             href="/rotas"
-            className="absolute left-4 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/75 text-2xl font-semibold text-gray-950 shadow-md backdrop-blur"
+            className="absolute left-4 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/75 text-2xl font-semibold text-[#1a2e28] shadow-md backdrop-blur"
             aria-label="Voltar para rotas"
           >
             ←
           </Link>
           <button
             type="button"
-            className="absolute right-4 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/75 text-gray-950 shadow-md backdrop-blur"
+            className="absolute right-4 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/75 text-[#1a2e28] shadow-md backdrop-blur"
             aria-label="Salvar rota"
           >
             <IconBookmark />
@@ -166,7 +240,7 @@ export default async function RotaDetalhePage({ params }) {
             {nome}
           </h1>
 
-          <div className="mt-6 flex gap-4 border-b border-gray-200 pb-5">
+          <div className="mt-6 flex gap-4 border-b border-[#e3e9e6] pb-5">
             <Metric label="Duração" value={formatDuracao(rota)} Icon={IconClock} />
             <Metric label="Distância" value={formatDistancia(rota)} Icon={IconPin} />
             <Metric
@@ -181,7 +255,7 @@ export default async function RotaDetalhePage({ params }) {
             href={mapsHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-black py-4 text-sm font-bold text-white"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1a4a3a] py-4 text-sm font-bold text-white"
           >
             <IconSend />
             Abrir no Maps
@@ -189,7 +263,7 @@ export default async function RotaDetalhePage({ params }) {
 
           <section className="mt-8">
             <h2 className="text-xl font-bold">Sobre esta rota</h2>
-            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+            <p className="mt-3 text-sm leading-relaxed text-[#5a6b66]">
               {rota.descricao || "Descrição não informada."}
             </p>
           </section>
@@ -198,18 +272,18 @@ export default async function RotaDetalhePage({ params }) {
             <section className="mt-9">
               <h2 className="text-xl font-bold">Pontos do percurso</h2>
               <div className="relative mt-5 grid gap-5">
-                <div className="absolute bottom-6 left-5 top-6 w-px bg-gray-200" />
+                <div className="absolute bottom-6 left-5 top-6 w-px bg-[#e3e9e6]" />
                 {pontos.map((ponto, index) => (
                   <div key={ponto.id} className="relative flex gap-4">
-                    <div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
+                    <div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a4a3a] text-sm font-bold text-white">
                       {ponto.ordem || index + 1}
                     </div>
-                    <article className="flex-1 rounded-3xl bg-gray-100 p-4">
-                      <h3 className="font-bold text-gray-950">
+                    <article className="flex-1 rounded-2xl bg-white p-4 shadow-sm">
+                      <h3 className="font-bold text-[#1a2e28]">
                         {ponto.nome || ponto.titulo || `Ponto ${index + 1}`}
                       </h3>
                       {ponto.descricao && (
-                        <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                        <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
                           {ponto.descricao}
                         </p>
                       )}

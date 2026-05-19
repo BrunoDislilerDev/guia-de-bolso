@@ -1,3 +1,7 @@
+/**
+ * PlaceCardSkeleton - Loading placeholder matching PlaceCard dimensions.
+ * @returns {import('react').ReactElement}
+ */
 export default function PlaceCardSkeleton() {
   return (
     <div className="min-h-[380px] animate-pulse overflow-hidden rounded-2xl bg-white shadow-sm">

@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from "react";
 import LoginModal from "@/components/LoginModal";
+import DailyLimitCountdown from "@/components/DailyLimitCountdown";
 import PremiumPaywallSheet from "@/components/PremiumPaywallSheet";
 import RoteiroBottomSheet from "@/components/RoteiroBottomSheet";
-import { canUseRoteiro } from "@/lib/premium";
+import { canUseRoteiro, isDailyRoteiroLimitReached } from "@/lib/premium";
 import RoteiroContent from "@/components/rotas/RoteiroContent";
 import { createClient } from "@/lib/supabase";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 
+/**
+ * Formata data ISO para exibição em pt-BR (fuso America/Sao_Paulo).
+ * @param {string} [iso] - Data em ISO 8601.
+ * @returns {string} Data formatada ou string vazia.
+ */
 function formatData(iso) {
   if (!iso) return "";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -19,6 +25,13 @@ function formatData(iso) {
   }).format(new Date(iso));
 }
 
+/**
+ * Modal de leitura de um roteiro salvo (título, data e conteúdo em markdown).
+ * @param {object} props
+ * @param {{ id?: string, titulo: string, created_at?: string, conteudo?: string }|null} props.roteiro - Roteiro a exibir; null fecha o modal.
+ * @param {() => void} props.onClose - Fecha o modal.
+ * @returns {import("react").JSX.Element|null}
+ */
 function RoteiroViewModal({ roteiro, onClose }) {
   if (!roteiro) return null;
 
@@ -54,6 +67,13 @@ function RoteiroViewModal({ roteiro, onClose }) {
   );
 }
 
+/**
+ * Seção da home de rotas: CTA de roteiro com IA, lista de roteiros salvos e modais de login/paywall.
+ * @param {object} props
+ * @param {boolean} props.isLoggedIn - Indica sessão ativa na página pai.
+ * @param {Array<{ id?: string, titulo: string, created_at?: string, conteudo?: string }>} [props.roteirosIniciais=[]] - Roteiros pré-carregados do servidor.
+ * @returns {import("react").JSX.Element}
+ */
 export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
   const [user, setUser] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -62,7 +82,13 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
   const [roteiros, setRoteiros] = useState(roteirosIniciais);
   const [roteiroVisualizando, setRoteiroVisualizando] = useState(null);
 
-  const { usage, refresh: refreshUsage, setUsage: setPremiumUsage } = usePremiumUsage(user);
+  const {
+    usage,
+    loading: usageLoading,
+    synced: usageSynced,
+    refresh: refreshUsage,
+    setUsage: setPremiumUsage,
+  } = usePremiumUsage(user);
 
   useEffect(() => {
     const supabase = createClient();
@@ -80,6 +106,10 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  /**
+   * Insere ou atualiza um roteiro no topo da lista local após salvar no sheet.
+   * @param {{ id?: string }|null|undefined} novoRoteiro - Roteiro retornado pela API.
+   */
   function handleRoteiroSalvo(novoRoteiro) {
     if (!novoRoteiro) return;
     setRoteiros((atual) => [
@@ -88,6 +118,9 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
     ]);
   }
 
+  /**
+   * Abre o sheet de criação ou exibe login/paywall conforme sessão e limites premium.
+   */
   function handleAbrirCriar() {
     if (!isLoggedIn || !user) {
       setLoginOpen(true);
@@ -108,6 +141,7 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
   }
 
   const loggedIn = Boolean(user) && isLoggedIn;
+  const roteiroLimiteDiarioAtingido = loggedIn && isDailyRoteiroLimitReached(usage);
 
   return (
     <>
@@ -119,25 +153,64 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
         <p className="mt-1 text-sm text-emerald-100/90">
           Monte seu roteiro ideal em segundos
         </p>
-        {loggedIn && usage && (
+        {loggedIn && (
           <p className="mt-2 text-xs text-emerald-100/80">
-            {usage.premium
-              ? "✨ Premium — roteiros com IA ilimitados"
-              : `${usage.roteiros.used}/${usage.roteiros.limit} roteiros gratuitos este mês`}
+            {usageLoading && !usage
+              ? "Carregando uso de IA…"
+              : usage
+                ? usage.premium
+                  ? "✨ Premium — roteiros com IA ilimitados"
+                  : `${usage.roteiros.used}/${usage.roteiros.limit} roteiros gratuitos hoje`
+                : usageSynced
+                  ? null
+                  : "Carregando uso de IA…"}
           </p>
+        )}
+        {roteiroLimiteDiarioAtingido && (
+          <div className="mt-3 rounded-xl bg-white/10 px-3 py-2">
+            <DailyLimitCountdown
+              compact
+              prefix="Novos roteiros em"
+              className="text-xs text-emerald-50"
+              initialMs={usage?.msUntilReset}
+            />
+          </div>
         )}
         <button
           type="button"
           onClick={handleAbrirCriar}
-          className="mt-4 w-full rounded-xl bg-white py-3 text-sm font-semibold text-emerald-900 transition-colors hover:bg-emerald-50"
+          className="mt-4 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30]"
         >
           Criar roteiro
         </button>
       </section>
 
+      {loggedIn && roteiros.length === 0 && (
+        <section className="mb-6 rounded-2xl bg-white p-6 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#d4ede8] text-[#1a4a3a]">
+            <svg className="h-11 w-11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+              <line x1="8" y1="2" x2="8" y2="18" />
+              <line x1="16" y1="6" x2="16" y2="22" />
+            </svg>
+          </div>
+          <h2 className="mt-4 text-lg font-bold text-[#1a2e28]">Nenhum roteiro salvo ainda</h2>
+          <p className="mt-2 text-sm text-[#5a6b66]">
+            Monte seu primeiro roteiro personalizado com IA.
+          </p>
+          <button
+            type="button"
+            onClick={handleAbrirCriar}
+            className="mt-5 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30]"
+          >
+            Criar meu primeiro roteiro
+          </button>
+        </section>
+      )}
+
       {loggedIn && roteiros.length > 0 && (
         <section className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-gray-950">Meus roteiros</h2>
+          <h2 className="mb-3 text-lg font-bold text-[#1a2e28]">Meus roteiros</h2>
           <div className="grid gap-3">
             {roteiros.map((roteiro) => (
               <article
@@ -151,7 +224,7 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
                 <button
                   type="button"
                   onClick={() => setRoteiroVisualizando(roteiro)}
-                  className="shrink-0 rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
+                  className="shrink-0 rounded-full bg-[#1a4a3a] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#153d30]"
                 >
                   Ver
                 </button>

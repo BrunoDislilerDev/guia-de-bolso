@@ -8,6 +8,15 @@ import {
   isEmAlta,
 } from "@/lib/homeContext";
 
+/**
+ * OQueFazerAgora - Hero suggestion card for the top contextual place pick.
+ * @param {object} props
+ * @param {object|null} props.lugar - Featured place record, or null while loading.
+ * @param {Set<string>|string[]} props.popularIds - IDs of places trending today.
+ * @param {(lugar: object) => void} [props.onFavoritar] - Favorite toggle handler.
+ * @param {(lugar: object) => boolean} [props.isFavorito] - Returns whether the place is favorited.
+ * @returns {import('react').ReactElement}
+ */
 export default function OQueFazerAgora({ lugar, popularIds, onFavoritar, isFavorito }) {
   if (!lugar) {
     return (
@@ -99,7 +108,7 @@ export default function OQueFazerAgora({ lugar, popularIds, onFavoritar, isFavor
 
           <Link
             href={`/lugares/${lugar.id}`}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7fd4ae] py-4 text-center text-sm font-bold text-[#0b2e24] shadow-lg transition-transform active:scale-[0.98]"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1a4a3a] py-3.5 text-center text-sm font-bold text-white shadow-lg transition-transform active:scale-[0.98]"
           >
             Começar este plano
             <span aria-hidden>→</span>

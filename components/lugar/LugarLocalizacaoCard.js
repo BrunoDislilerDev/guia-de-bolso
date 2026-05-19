@@ -1,6 +1,17 @@
 "use client";
 
+/**
+ * Seção de localização com mapa estático, endereço e CTA para abrir no app de mapas.
+ * @param {object} props
+ * @param {string} props.endereco - Endereço formatado para exibição.
+ * @param {string} [props.mapUrl] - URL do Google Maps (link acessível oculto).
+ * @param {string} [props.staticMapSrc] - URL da imagem do mapa estático.
+ * @param {string} props.nome - Nome do lugar (texto alternativo do mapa).
+ * @param {() => void} props.onAbrirMapa - Abre o mapa no app preferido do usuário.
+ * @returns {import("react").JSX.Element}
+ */
 export default function LugarLocalizacaoCard({
+  nome,
   endereco,
   mapUrl,
   staticMapSrc,
@@ -20,7 +31,7 @@ export default function LugarLocalizacaoCard({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={staticMapSrc}
-              alt=""
+              alt={`Mapa de ${nome}`}
               className="h-36 w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />

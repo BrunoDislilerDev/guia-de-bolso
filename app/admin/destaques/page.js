@@ -4,6 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * Admin CRUD for featured places (`destaques`) and plan assignment.
+ * @returns {import("react").ReactElement}
+ */
 export default function AdminDestaquesPage() {
   const { loading } = useAdminAuth();
   const [destaques, setDestaques] = useState([]);
@@ -59,6 +63,11 @@ export default function AdminDestaquesPage() {
     return () => clearTimeout(timer);
   }, [loading, loadData]);
 
+  /**
+   * Creates a new destaque from the admin form.
+   * @param {import("react").FormEvent} event - Form submit.
+   * @returns {Promise<void>}
+   */
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
@@ -97,6 +106,11 @@ export default function AdminDestaquesPage() {
     setMessage("Destaque criado com sucesso.");
   }
 
+  /**
+   * Toggles the `ativo` flag on a destaque with optimistic UI.
+   * @param {object} destaque - Destaque row.
+   * @returns {Promise<void>}
+   */
   async function toggleAtivo(destaque) {
     const supabase = createClient();
     const next = !destaque.ativo;
@@ -106,6 +120,11 @@ export default function AdminDestaquesPage() {
     await supabase.from("destaques").update({ ativo: next }).eq("id", destaque.id);
   }
 
+  /**
+   * Deletes a destaque after user confirmation.
+   * @param {object} destaque - Destaque row.
+   * @returns {Promise<void>}
+   */
   async function removeDestaque(destaque) {
     const confirmed = window.confirm("Remover este destaque?");
     if (!confirmed) return;

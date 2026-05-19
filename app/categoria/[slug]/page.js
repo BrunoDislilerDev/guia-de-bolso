@@ -4,9 +4,47 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import PlaceCard from "@/components/PlaceCard";
+import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
 import { createClient } from "@/lib/supabase";
 import { withDistanciaDinamica } from "@/lib/localizacao";
 
+/**
+ * Error banner with alert icon for failed data loads.
+ * @param {object} props
+ * @param {string} props.message - User-facing error text.
+ * @param {import("react").ReactNode} [props.action] - Optional navigation control.
+ * @returns {import("react").ReactElement}
+ */
+function ErrorBanner({ message, action }) {
+  return (
+    <div
+      className="mb-5 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      <svg
+        className="h-5 w-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <div className="min-w-0 flex-1">
+        <p>{message}</p>
+        {action ? <div className="mt-2">{action}</div> : null}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Lists active places in a category with optional subcategory filter.
+ * @returns {import("react").ReactElement}
+ */
 export default function CategoriaPage() {
   const { slug } = useParams();
   const categoria = decodeURIComponent(String(slug ?? ""));
@@ -15,6 +53,7 @@ export default function CategoriaPage() {
   const [subcategoriaSelecionada, setSubcategoriaSelecionada] = useState("Todos");
   const [userPosition, setUserPosition] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -41,8 +80,14 @@ export default function CategoriaPage() {
       .select("*, localizacoes(*), lugares_tags(tags(*))")
       .eq("categoria", categoria)
       .eq("status", "ativo")
-      .then(({ data }) => {
-        setLugares(data ?? []);
+      .then(({ data, error }) => {
+        if (error) {
+          setFetchError(true);
+          setLugares([]);
+        } else {
+          setFetchError(false);
+          setLugares(data ?? []);
+        }
         setLoading(false);
       });
 
@@ -88,6 +133,20 @@ export default function CategoriaPage() {
           </div>
         </header>
 
+        {fetchError && (
+          <ErrorBanner
+            message="Não foi possível carregar os lugares."
+            action={
+              <Link
+                href="/categorias"
+                className="inline-flex text-sm font-semibold text-red-800 underline"
+              >
+                ← Voltar
+              </Link>
+            }
+          />
+        )}
+
         {subcategorias.length > 0 && (
           <div className="mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
             {[
@@ -115,21 +174,26 @@ export default function CategoriaPage() {
         )}
 
         <div className="grid gap-4">
-          {loading ? (
-            <p className="py-8 text-center text-sm text-[#5a6b66]">
-              Carregando...
-            </p>
+          {fetchError ? null : loading ? (
+            <>
+              {[0, 1, 2, 3, 4, 5].map((item) => (
+                <PlaceCardSkeleton key={item} />
+              ))}
+            </>
           ) : lugaresFiltrados.length === 0 ? (
             <p className="py-8 text-center text-sm text-[#5a6b66]">
               Nenhum local encontrado nessa categoria.
             </p>
           ) : (
-            lugaresFiltrados.map((lugar) => (
-              <PlaceCard
-                key={lugar.id}
-                lugar={withDistanciaDinamica(lugar, userPosition)}
-              />
-            ))
+            <ul className="grid list-none gap-4 p-0">
+              {lugaresFiltrados.map((lugar) => (
+                <li key={lugar.id}>
+                  <PlaceCard
+                    lugar={withDistanciaDinamica(lugar, userPosition)}
+                  />
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>

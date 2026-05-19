@@ -3,6 +3,10 @@
 import SearchListItem from "@/components/home/SearchListItem";
 import { getCapaFromLugar } from "@/lib/fotos";
 
+/**
+ * IconClock - Clock icon for recently visited places.
+ * @returns {import('react').ReactElement}
+ */
 function IconClock() {
   return (
     <svg className="h-4 w-4 text-[#5a6b66]" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -11,6 +15,14 @@ function IconClock() {
   );
 }
 
+/**
+ * SearchBrowsePanel - Browse view with recently visited and popular places.
+ * @param {object} props
+ * @param {object[]} [props.visitados] - Recently visited place records.
+ * @param {object[]} [props.populares] - Popular place records.
+ * @param {boolean} props.loadingPopulares - Whether popular places are loading.
+ * @returns {import('react').ReactElement}
+ */
 export default function SearchBrowsePanel({ visitados = [], populares = [], loadingPopulares }) {
   return (
     <div className="space-y-6 pb-6">

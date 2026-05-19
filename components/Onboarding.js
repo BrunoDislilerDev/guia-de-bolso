@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 
+/**
+ * IconPin - Map pin icon for onboarding slide.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconPin({ className = "h-7 w-7" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -10,6 +16,12 @@ function IconPin({ className = "h-7 w-7" }) {
   );
 }
 
+/**
+ * IconTimer - Timer icon for onboarding slide.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconTimer({ className = "h-7 w-7" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -18,6 +30,12 @@ function IconTimer({ className = "h-7 w-7" }) {
   );
 }
 
+/**
+ * IconHeart - Heart icon for onboarding slide.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconHeart({ className = "h-7 w-7" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -26,6 +44,12 @@ function IconHeart({ className = "h-7 w-7" }) {
   );
 }
 
+/**
+ * IconWaves - Waves icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconWaves({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -34,6 +58,12 @@ function IconWaves({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * IconMountain - Mountain icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconMountain({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -42,6 +72,12 @@ function IconMountain({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * IconUtensils - Utensils icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconUtensils({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -50,6 +86,12 @@ function IconUtensils({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * IconStar - Star icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconStar({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -58,6 +100,12 @@ function IconStar({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * IconMap - Map icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconMap({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -66,6 +114,12 @@ function IconMap({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * IconCamera - Camera icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconCamera({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -74,6 +128,12 @@ function IconCamera({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * IconSunset - Sunset icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconSunset({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -82,6 +142,12 @@ function IconSunset({ className = "h-6 w-6" }) {
   );
 }
 
+/**
+ * IconCup - Cup icon for feature chip.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconCup({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -123,16 +189,30 @@ const slides = [
   },
 ];
 
+/**
+ * Onboarding - Multi-slide first-run introduction with skip and completion.
+ * @param {object} props
+ * @param {() => void} [props.onComplete] - Called after the user finishes or skips onboarding.
+ * @returns {import('react').ReactElement}
+ */
 export default function Onboarding({ onComplete }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const slide = slides[currentSlide];
   const isLastSlide = currentSlide === slides.length - 1;
 
+  /**
+   * Persists onboarding completion in localStorage and invokes the parent callback.
+   * @returns {void}
+   */
   function completeOnboarding() {
     localStorage.setItem("onboarding_visto", "true");
     onComplete?.();
   }
 
+  /**
+   * Advances to the next slide or completes onboarding on the last slide.
+   * @returns {void}
+   */
   function handlePrimaryAction() {
     if (isLastSlide) {
       completeOnboarding();

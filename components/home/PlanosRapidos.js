@@ -2,6 +2,12 @@
 
 import { PLANOS_RAPIDOS } from "@/lib/homeContext";
 
+/**
+ * PlanosRapidos - Horizontal list of preset experience plan cards.
+ * @param {object} props
+ * @param {(plano: object) => void} props.onPlanoClick - Called when a plan card is selected.
+ * @returns {import('react').ReactElement}
+ */
 export default function PlanosRapidos({ onPlanoClick }) {
   return (
     <section className="mb-8">

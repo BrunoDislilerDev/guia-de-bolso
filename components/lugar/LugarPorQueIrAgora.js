@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Lista persuasiva "Por que ir agora" com emoji e texto por item.
+ * @param {object} props
+ * @param {Array<{ text: string, emoji: string }>} props.bullets - Itens de copy; vazio oculta a seção.
+ * @returns {import("react").JSX.Element|null}
+ */
 export default function LugarPorQueIrAgora({ bullets }) {
   if (!bullets?.length) return null;
 

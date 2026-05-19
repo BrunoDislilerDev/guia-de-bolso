@@ -1,0 +1,195 @@
+# API
+
+Server routes live under `app/api/` as **Next.js Route Handlers**. All AI and premium-sensitive operations run here so API keys never reach the browser.
+
+Base URL (production): `https://guia-de-bolso-puce.vercel.app/api`  
+Local: `http://localhost:3000/api`
+
+## Authentication
+
+Most protected routes use Supabase session cookies via `@supabase/ssr`:
+
+```js
+import { getAuthUser } from "@/lib/premiumServer";
+const user = await getAuthUser();
+```
+
+Unauthenticated requests return `401` with `{ code: "LOGIN_REQUIRED" }` where applicable.
+
+## Endpoints
+
+### `POST /api/buscar`
+
+Natural-language place search powered by Claude.
+
+**Auth:** Required  
+**Premium:** Free tier — **3 searches/day** (resets at midnight, America/Sao_Paulo); Premium — unlimited
+
+**Request body:**
+
+```json
+{
+  "query": "restaurante romântico com vista",
+  "filtroStatus": "todos"
+}
+```
+
+`filtroStatus`: `todos` | `abertos` | `fechados` (see `lib/busca.js`)
+
+**Success response:**
+
+```json
+{
+  "lugares": [/* full place objects with relations */],
+  "usage": {
+    "premium": false,
+    "buscas": { "used": 1, "limit": 3 }
+  }
+}
+```
+
+**Error codes:**
+
+| HTTP | `code` | Meaning |
+|------|--------|---------|
+| 400 | — | Missing query |
+| 401 | `LOGIN_REQUIRED` | Not signed in |
+| 403 | `LIMIT_REACHED` | Daily search limit exceeded (resets at midnight SP) |
+| 500 | — | AI or server error |
+
+**Flow:**
+
+1. `checkBuscaAccess(user?.id, { increment: true })` validates limits and increments.
+2. Loads active `lugares` with `localizacoes`, `lugares_tags`.
+3. Builds compact context with `abertoAgora` per place.
+4. Claude returns JSON array of place IDs.
+5. Post-filter by `filtroStatus`.
+6. `increment_busca_ia` via RPC; returns updated `usage`.
+
+---
+
+### `POST /api/roteiro`
+
+Generates a multi-day AI itinerary (markdown).
+
+**Auth:** Required  
+**Premium:** Free — **2/day**; Premium — unlimited
+
+**Request body (example):**
+
+```json
+{
+  "dias": "3",
+  "perfil": "casal",
+  "interesses": ["praia", "gastronomia"]
+}
+```
+
+All three fields are required. `dias` and `perfil` must be non-empty **strings** (the route uses `.trim()`). `interesses` must be a non-empty array.
+
+**Success:** `{ "conteudo": "...", "titulo": "Roteiro 3 - casal", "usage": { ... } }`  
+**Errors:** Same pattern as `/api/buscar` (`LOGIN_REQUIRED`, `LIMIT_REACHED`)
+
+Implementation: `app/api/roteiro/route.js`, formatting in `lib/roteiroMarkdown.js`.
+
+---
+
+### `POST /api/roteiro/salvar`
+
+Persists a generated itinerary to `roteiros` for the logged-in user.
+
+**Auth:** Required
+
+**Request body:**
+
+```json
+{
+  "titulo": "Fim de semana em Imbituba",
+  "dias": "2",
+  "perfil": "casal",
+  "interesses": ["praia", "gastronomia"],
+  "conteudo": "..."
+}
+```
+
+Required: `titulo`, `dias`, `perfil`, `conteudo` (trimmed strings). `interesses` optional array (defaults to `[]`).
+
+**Success:** `{ "success": true, "roteiro": { "id", "titulo", "dias", "perfil", "interesses", "conteudo", "created_at" } }`
+
+---
+
+### `GET /api/uso-premium`
+
+Returns current user's premium status and **daily** AI usage (with optional `resetsAt` / `msUntilReset` for countdown UI).
+
+**Auth:** Session required via cookies (`getAuthUser()`).
+
+**Responses:**
+
+| Case | Body | HTTP |
+|------|------|------|
+| Signed in | `{ "loggedIn": true, "usage": { ... } }` | 200 |
+| Anonymous | `{ "loggedIn": false, "usage": null }` | 200 |
+| Server error | `{ "loggedIn": false, "usage": null, "error": "..." }` | 500 |
+
+`usage` comes from `getPerfilUsage()` → `normalizeUsageFromPerfil()` (uses `isSameUsageDay()` for `uso_ia_mes`). **No** synthetic `0/3` fallback on read errors — the client keeps same-day `localStorage` cache instead.
+
+**Response example:**
+
+```json
+{
+  "loggedIn": true,
+  "usage": {
+    "premium": false,
+    "day": "2026-05-19",
+    "buscas": { "used": 2, "limit": 3, "remaining": 1 },
+    "roteiros": { "used": 0, "limit": 2, "remaining": 2 },
+    "resetsAt": "2026-05-20T03:00:00.000Z",
+    "msUntilReset": 19800000
+  }
+}
+```
+
+**Client hook:** `lib/usePremiumUsage.js`
+
+| Export | Meaning |
+|--------|---------|
+| `usage` | Current `PremiumUsage` (hydrated from cache, then server) |
+| `loading` | Fetch in progress |
+| `synced` | At least one sync attempt finished this session |
+| `refresh()` | Re-fetch from this endpoint |
+| `setUsage()` | Optimistic update + `localStorage` write (e.g. after `POST /api/buscar`) |
+
+## Client ↔ server data access
+
+Not all data goes through `/api`. The browser Supabase client reads public data directly (places, reviews, favorites) subject to RLS:
+
+| Operation | Path |
+|-----------|------|
+| List places | `supabase.from("lugares")` |
+| Favorites CRUD | `supabase.from("favoritos")` |
+| Submit review | `supabase.from("avaliacoes").insert()` |
+| Admin CRUD | Admin pages + RLS for `admin`/`dev` roles |
+
+## Environment variables (API)
+
+| Variable | Required by |
+|----------|-------------|
+| `ANTHROPIC_API_KEY` | `/api/buscar`, `/api/roteiro` |
+| `ANTHROPIC_MODEL` | Model id (default `claude-sonnet-4-5`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Auth session |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth session |
+
+## Rate limits and cost control
+
+- Free-tier limits are **per calendar day** (America/Sao_Paulo): 3 buscas, 2 roteiros; enforced in `lib/premiumServer.js` and RPC `increment_*_ia` before AI calls.
+- Read path (`GET /api/uso-premium`, `normalizeUsageFromPerfil`) uses `isSameUsageDay()` so legacy `uso_ia_mes` values `YYYY-MM` still count within the same calendar month. RPC `increment_*_ia` matches exact `YYYY-MM-DD` only.
+- `LIMIT_REACHED` responses include `usage`; RPC JSON uses `resets_at`, client-normalized `usage` uses camelCase `resetsAt` / `msUntilReset`.
+- Roteiro generation uses a filtered place list (`lib/roteiroLugares.js`) to reduce tokens.
+- Search sends summarized place context (`lib/busca.js` → `buildLugarBuscaResumo`).
+
+## Related docs
+
+- [Architecture](./architecture.md)
+- [Features](./features.md) — product limits
+- [Database](./database.md) — `increment_*_ia` functions

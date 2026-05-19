@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Ícone de relógio para o resumo de horários.
+ * @param {object} props
+ * @param {string} [props.className] - Classes Tailwind do SVG.
+ * @returns {import("react").JSX.Element}
+ */
 function IconClock({ className = "h-4 w-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -8,6 +14,14 @@ function IconClock({ className = "h-4 w-4" }) {
   );
 }
 
+/**
+ * Card compacto de horário com atalho para o bottom sheet completo.
+ * @param {object} props
+ * @param {string} props.resumo - Texto do horário do dia (ex.: "Aberto · fecha às 18h").
+ * @param {boolean} props.aberto - Destaque visual de aberto vs fechado.
+ * @param {() => void} props.onVerCompletos - Abre a grade semanal de horários.
+ * @returns {import("react").JSX.Element}
+ */
 export default function LugarHorariosCompact({ resumo, aberto, onVerCompletos }) {
   return (
     <section className="mt-5">

@@ -7,6 +7,10 @@ import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import LocalForm from "@/components/admin/LocalForm";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * Admin page to edit a place, location, and tags via `LocalForm`.
+ * @returns {import("react").ReactElement}
+ */
 export default function EditarLocalPage() {
   const { loading } = useAdminAuth();
   const { id } = useParams();

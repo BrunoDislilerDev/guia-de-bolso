@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AuthFlow from "@/components/AuthFlow";
 
+/**
+ * Map pin icon for the login hero badge.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconPin({ className = "h-7 w-7" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -13,6 +18,10 @@ function IconPin({ className = "h-7 w-7" }) {
   );
 }
 
+/**
+ * Full-screen login page; redirects authenticated users to home.
+ * @returns {import("react").ReactElement}
+ */
 export default function LoginPage() {
   const router = useRouter();
   const [checkingSession, setCheckingSession] = useState(true);

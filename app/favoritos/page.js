@@ -1,13 +1,52 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import PlaceCard from "@/components/PlaceCard";
+import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 
+/**
+ * Error banner with alert icon for failed data loads.
+ * @param {object} props
+ * @param {string} props.message - User-facing error text.
+ * @param {import("react").ReactNode} [props.action] - Optional retry control.
+ * @returns {import("react").ReactElement}
+ */
+function ErrorBanner({ message, action }) {
+  return (
+    <div
+      className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      <svg
+        className="h-5 w-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <div className="min-w-0 flex-1">
+        <p>{message}</p>
+        {action ? <div className="mt-2">{action}</div> : null}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Empty-state heart illustration for the favorites page.
+ * @returns {import("react").ReactElement}
+ */
 function EmptyIllustration() {
   return (
     <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#d4ede8] text-[#1a4a3a]">
@@ -18,17 +57,28 @@ function EmptyIllustration() {
   );
 }
 
+/**
+ * Extracts the nested lugar record from a favoritos join row.
+ * @param {object} favorito - Favorito row with `lugares` or `lugar` relation.
+ * @returns {object|undefined} Place object or undefined.
+ */
 function normalizeLugarFromFavorito(favorito) {
   const nested = favorito.lugares || favorito.lugar;
   if (Array.isArray(nested)) return nested[0];
   return nested;
 }
 
+/**
+ * User favorites list with login gate and optimistic remove.
+ * @returns {import("react").ReactElement}
+ */
 export default function FavoritosPage() {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [lugares, setLugares] = useState([]);
   const [loadingFavoritos, setLoadingFavoritos] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -69,30 +119,47 @@ export default function FavoritosPage() {
         if (cancelled) return;
 
         if (!error) {
+          setFetchError(false);
           setLugares((data ?? []).map(normalizeLugarFromFavorito).filter(Boolean));
           setLoadingFavoritos(false);
           return;
         }
 
-        const { data: favoritos } = await supabase
+        const { data: favoritos, error: favoritosError } = await supabase
           .from("favoritos")
           .select("lugar_id")
           .eq("user_id", user.id);
 
-        const ids = (favoritos ?? []).map((favorito) => favorito.lugar_id);
-
-        if (ids.length === 0) {
+        if (favoritosError) {
+          setFetchError(true);
           setLugares([]);
           setLoadingFavoritos(false);
           return;
         }
 
-        const { data: lugaresData } = await supabase
+        const ids = (favoritos ?? []).map((favorito) => favorito.lugar_id);
+
+        if (ids.length === 0) {
+          setFetchError(false);
+          setLugares([]);
+          setLoadingFavoritos(false);
+          return;
+        }
+
+        const { data: lugaresData, error: lugaresError } = await supabase
           .from("lugares")
           .select("*")
           .in("id", ids)
           .eq("status", "ativo");
 
+        if (lugaresError) {
+          setFetchError(true);
+          setLugares([]);
+          setLoadingFavoritos(false);
+          return;
+        }
+
+        setFetchError(false);
         setLugares(lugaresData ?? []);
         setLoadingFavoritos(false);
       });
@@ -103,6 +170,11 @@ export default function FavoritosPage() {
     };
   }, [user]);
 
+  /**
+   * Removes a place from the user's favorites with optimistic UI update.
+   * @param {object} lugar - Place to unfavorite.
+   * @returns {Promise<void>}
+   */
   async function handleRemoverFavorito(lugar) {
     if (!user) {
       setIsModalOpen(true);
@@ -144,12 +216,29 @@ export default function FavoritosPage() {
           </p>
         </header>
 
+        {fetchError && user && !loadingFavoritos && (
+          <ErrorBanner
+            message="Não foi possível carregar seus favoritos. Tente novamente."
+            action={
+              <button
+                type="button"
+                onClick={() => router.refresh()}
+                className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-800"
+              >
+                Tentar novamente
+              </button>
+            }
+          />
+        )}
+
         {authLoading ? (
-          <p className="py-8 text-center text-sm text-[#5a6b66]">
-            Carregando...
-          </p>
+          <div className="grid gap-4">
+            {[0, 1, 2].map((item) => (
+              <PlaceCardSkeleton key={item} />
+            ))}
+          </div>
         ) : !user ? (
-          <section className="rounded-3xl bg-white p-6 text-center shadow-sm">
+          <section className="rounded-2xl bg-white p-6 text-center shadow-sm">
             <EmptyIllustration />
             <h2 className="mt-5 text-xl font-bold text-[#1a4a3a]">
               Faça login para ver seus favoritos
@@ -165,12 +254,14 @@ export default function FavoritosPage() {
               Fazer login
             </button>
           </section>
-        ) : loadingFavoritos ? (
-          <p className="py-8 text-center text-sm text-[#5a6b66]">
-            Carregando favoritos...
-          </p>
+        ) : fetchError ? null : loadingFavoritos ? (
+          <div className="grid gap-4">
+            {[0, 1, 2].map((item) => (
+              <PlaceCardSkeleton key={item} />
+            ))}
+          </div>
         ) : lugares.length === 0 ? (
-          <section className="rounded-3xl bg-white p-6 text-center shadow-sm">
+          <section className="rounded-2xl bg-white p-6 text-center shadow-sm">
             <EmptyIllustration />
             <h2 className="mt-5 text-xl font-bold text-[#1a4a3a]">
               Nenhum favorito ainda
@@ -186,16 +277,17 @@ export default function FavoritosPage() {
             </Link>
           </section>
         ) : (
-          <div className="grid gap-4">
+          <ul className="grid list-none gap-4 p-0">
             {lugares.map((lugar) => (
-              <PlaceCard
-                key={lugar.id}
-                lugar={lugar}
-                isFavorito
-                onFavoritar={handleRemoverFavorito}
-              />
+              <li key={lugar.id}>
+                <PlaceCard
+                  lugar={lugar}
+                  isFavorito
+                  onFavoritar={handleRemoverFavorito}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
 

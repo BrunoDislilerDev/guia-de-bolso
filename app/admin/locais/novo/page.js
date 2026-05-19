@@ -4,6 +4,10 @@ import Link from "next/link";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import LocalForm from "@/components/admin/LocalForm";
 
+/**
+ * Admin page to create a new place via `LocalForm`.
+ * @returns {import("react").ReactElement}
+ */
 export default function NovoLocalPage() {
   const { loading } = useAdminAuth();
 

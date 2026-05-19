@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Carrossel horizontal de tags/comodidades do lugar.
+ * @param {object} props
+ * @param {Array<{ id: string|number, nome: string, icone?: string }>} props.tags - Tags vinculadas ao lugar.
+ * @returns {import("react").JSX.Element|null}
+ */
 export default function LugarTags({ tags }) {
   if (!tags?.length) return null;
 

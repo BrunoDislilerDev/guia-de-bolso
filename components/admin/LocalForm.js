@@ -63,6 +63,11 @@ const categorias = [
 
 const MAX_TAGS = 3;
 
+/**
+ * Aplica máscara brasileira ao telefone enquanto o usuário digita (até 11 dígitos).
+ * @param {string} value - Valor bruto do input.
+ * @returns {string} Telefone formatado, ex.: "(48) 9 1234-5678".
+ */
 function formatTelefone(value) {
   const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
   if (!digits) return "";
@@ -74,6 +79,12 @@ function formatTelefone(value) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
+/**
+ * Campo de formulário com label e input estilizado.
+ * @param {object} props
+ * @param {string} props.label - Texto do label.
+ * @returns {import("react").JSX.Element}
+ */
 function Input({ label, ...props }) {
   return (
     <label className="block text-sm font-semibold text-[#1a2e28]">
@@ -86,6 +97,15 @@ function Input({ label, ...props }) {
   );
 }
 
+/**
+ * Formulário admin de criação/edição de lugar (dados, fotos, tags, horários e localização).
+ * @param {object} props
+ * @param {typeof emptyLocalForm} [props.initialData] - Valores iniciais do lugar.
+ * @param {object|null} [props.initialLocalizacao] - Registro de `localizacoes` vinculado.
+ * @param {Array<{ id: number|string }>} [props.initialTags] - Tags já associadas.
+ * @param {string|null} [props.editingId] - UUID do lugar em edição; null para novo.
+ * @returns {import("react").JSX.Element}
+ */
 export default function LocalForm({
   initialData = emptyLocalForm,
   initialLocalizacao = null,
@@ -149,6 +169,10 @@ export default function LocalForm({
 
   const visibleTags = filterTagsByCategoria(tags, form.categoria);
 
+  /**
+   * Alterna seleção de tag respeitando o limite de {@link MAX_TAGS}.
+   * @param {string} tagId - ID da tag como string.
+   */
   function toggleTag(tagId) {
     setSelectedTagIds((current) => {
       if (current.includes(tagId)) {
@@ -164,6 +188,10 @@ export default function LocalForm({
     });
   }
 
+  /**
+   * Adiciona arquivos pendentes de upload à fila de fotos do lugar.
+   * @param {File[]} files - Arquivos de imagem aceitos.
+   */
   function addPhotoFiles(files) {
     setPhotoError("");
     setPhotoItems((current) => [
@@ -172,6 +200,10 @@ export default function LocalForm({
     ]);
   }
 
+  /**
+   * Remove um item da galeria e revoga preview blob se existir.
+   * @param {string} id - ID interno do item em `photoItems`.
+   */
   function removePhotoItem(id) {
     setPhotoItems((current) => {
       const item = current.find((entry) => entry.id === id);
@@ -180,6 +212,10 @@ export default function LocalForm({
     });
   }
 
+  /**
+   * Persiste lugar, fotos no Storage, localização e vínculos de tags no Supabase.
+   * @param {import("react").FormEvent<HTMLFormElement>} event - Evento de submit do formulário.
+   */
   async function handleSubmit(event) {
     event.preventDefault();
     setSaving(true);

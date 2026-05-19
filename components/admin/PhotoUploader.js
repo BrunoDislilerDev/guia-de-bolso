@@ -5,6 +5,17 @@ import { isAcceptedImageFile } from "@/lib/storageUpload";
 
 const ACCEPT = "image/jpeg,image/png,image/webp";
 
+/**
+ * Upload múltiplo de fotos com preview, remoção e mensagem de erro.
+ * @param {object} props
+ * @param {string} [props.label="Fotos"] - Título da seção.
+ * @param {Array<{ id: string, preview?: string, url?: string }>} [props.items=[]] - Itens existentes ou pendentes.
+ * @param {(files: File[]) => void} props.onAddFiles - Callback com arquivos filtrados aceitos.
+ * @param {(id: string) => void} props.onRemove - Remove item pelo id.
+ * @param {boolean} [props.disabled=false] - Desabilita adicionar/remover durante save.
+ * @param {string} [props.error=""] - Mensagem de erro abaixo do botão.
+ * @returns {import("react").JSX.Element}
+ */
 export default function PhotoUploader({
   label = "Fotos",
   items = [],
@@ -15,6 +26,10 @@ export default function PhotoUploader({
 }) {
   const inputRef = useRef(null);
 
+  /**
+   * Repassa arquivos válidos ao pai e limpa o input para permitir reenvio do mesmo arquivo.
+   * @param {import("react").ChangeEvent<HTMLInputElement>} event - Change do input file.
+   */
   function handleFileChange(event) {
     const files = Array.from(event.target.files || []).filter(isAcceptedImageFile);
     if (files.length > 0) onAddFiles(files);
@@ -35,7 +50,7 @@ export default function PhotoUploader({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.preview || item.url}
-                alt=""
+                alt="Pré-visualização da foto"
                 className="h-full w-full object-cover"
               />
               <button

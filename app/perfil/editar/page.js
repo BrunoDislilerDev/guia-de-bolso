@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * Resolves display name from user metadata or email.
+ * @param {import("@supabase/supabase-js").User | null} user - Auth user.
+ * @returns {string} Display name (may be empty).
+ */
 function getUserName(user) {
   return (
     user?.user_metadata?.full_name ||
@@ -14,10 +19,19 @@ function getUserName(user) {
   );
 }
 
+/**
+ * First letter of the user's display name for avatar fallback.
+ * @param {import("@supabase/supabase-js").User | null} user - Auth user.
+ * @returns {string} Uppercase initial.
+ */
 function getInitial(user) {
   return (getUserName(user) || "?").charAt(0).toUpperCase();
 }
 
+/**
+ * Edit profile page: name and avatar upload to Supabase Storage.
+ * @returns {import("react").ReactElement}
+ */
 export default function EditarPerfilPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -68,6 +82,11 @@ export default function EditarPerfilPage() {
     });
   }, [router]);
 
+  /**
+   * Uploads a new avatar to storage and syncs perfis + auth metadata.
+   * @param {import("react").ChangeEvent<HTMLInputElement>} event - File input change.
+   * @returns {Promise<void>}
+   */
   async function handlePhotoChange(event) {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -127,6 +146,11 @@ export default function EditarPerfilPage() {
     setUploading(false);
   }
 
+  /**
+   * Saves profile name to `perfis` and auth user metadata.
+   * @param {import("react").FormEvent} event - Form submit.
+   * @returns {Promise<void>}
+   */
   async function handleSave(event) {
     event.preventDefault();
     if (!user) return;
@@ -145,7 +169,7 @@ export default function EditarPerfilPage() {
     );
 
     if (error) {
-      setMessage("Não foi possível salvar agora. Verifique a tabela perfis.");
+      setMessage("Não foi possível salvar. Tente novamente.");
       setSaving(false);
       return;
     }
@@ -202,7 +226,7 @@ export default function EditarPerfilPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={avatarUrl}
-                  alt=""
+                  alt="Foto de perfil atual"
                   className="h-full w-full object-cover"
                 />
               ) : (

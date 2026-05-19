@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthFlow from "@/components/AuthFlow";
@@ -8,6 +8,11 @@ import BottomNav from "@/components/BottomNav";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 
+/**
+ * Person silhouette icon for logged-out profile state.
+ * @param {{ className?: string }} props - Optional Tailwind classes.
+ * @returns {import("react").ReactElement}
+ */
 function IconPerson({ className = "h-16 w-16" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -22,12 +27,22 @@ const navigationApps = [
   { key: "waze", label: "Waze" },
 ];
 
+/**
+ * Human-readable auth provider label.
+ * @param {import("@supabase/supabase-js").User | null} user - Auth user.
+ * @returns {string} Provider display name.
+ */
 function providerName(user) {
   const provider = user?.app_metadata?.provider;
   if (provider === "google") return "Google";
   return provider || "Conta";
 }
 
+/**
+ * Resolves display name from user metadata or email.
+ * @param {import("@supabase/supabase-js").User | null} user - Auth user.
+ * @returns {string} Display name.
+ */
 function getUserName(user) {
   return (
     user?.user_metadata?.full_name ||
@@ -37,11 +52,23 @@ function getUserName(user) {
   );
 }
 
+/**
+ * First letter of the user's display name.
+ * @param {import("@supabase/supabase-js").User | null} user - Auth user.
+ * @returns {string} Uppercase initial.
+ */
 function getInitial(user) {
   return getUserName(user).charAt(0).toUpperCase();
 }
 
+/**
+ * Modal bottom sheet for profile settings and confirmations.
+ * @param {{ isOpen: boolean, onClose: () => void, title: string, children: import("react").ReactNode }} props
+ * @returns {import("react").ReactElement|null}
+ */
 function BottomSheet({ isOpen, onClose, title, children }) {
+  const titleId = useId();
+
   if (!isOpen) return null;
 
   return (
@@ -53,6 +80,9 @@ function BottomSheet({ isOpen, onClose, title, children }) {
         className="w-full rounded-t-[24px] bg-white px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
         style={{ animation: "sheetIn 220ms ease-out" }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
       >
         <style>{`
           @keyframes sheetIn {
@@ -61,13 +91,20 @@ function BottomSheet({ isOpen, onClose, title, children }) {
           }
         `}</style>
         <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-[#d8dfdc]" />
-        <h2 className="mb-4 text-lg font-bold text-[#1a2e28]">{title}</h2>
+        <h2 id={titleId} className="mb-4 text-lg font-bold text-[#1a2e28]">
+          {title}
+        </h2>
         {children}
       </div>
     </div>
   );
 }
 
+/**
+ * Tappable settings row with optional subtitle and danger styling.
+ * @param {{ icon: string, label: string, detail?: string, danger?: boolean, onClick?: () => void }} props
+ * @returns {import("react").ReactElement}
+ */
 function SettingRow({ icon, label, detail, danger = false, onClick }) {
   return (
     <button
@@ -89,6 +126,10 @@ function SettingRow({ icon, label, detail, danger = false, onClick }) {
   );
 }
 
+/**
+ * User profile, settings, logout, and account deletion flows.
+ * @returns {import("react").ReactElement}
+ */
 export default function PerfilPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -137,6 +178,7 @@ export default function PerfilPage() {
       .then(({ count }) => setFavoritosCount(count ?? 0));
   }, [user]);
 
+  /** Signs out the user, logs the event, and redirects to home. @returns {Promise<void>} */
   async function handleLogout() {
     const supabase = createClient();
     await registrarLog(supabase, user, "logout");
@@ -145,6 +187,7 @@ export default function PerfilPage() {
     router.push("/");
   }
 
+  /** Logs account deletion, signs out, and shows confirmation. @returns {Promise<void>} */
   async function handleDeleteAccountRequest() {
     const supabase = createClient();
     await registrarLog(supabase, user, "deletou_conta");
@@ -155,6 +198,10 @@ export default function PerfilPage() {
     router.push("/");
   }
 
+  /**
+   * Persists preferred maps app in localStorage.
+   * @param {string} value - One of `google`, `apple`, `waze`.
+   */
   function handleSelectNavigationApp(value) {
     localStorage.setItem("map_app_preferido", value);
     setNavPreference(value);
@@ -208,7 +255,7 @@ export default function PerfilPage() {
 
           <Link
             href="/"
-            className="mt-5 text-sm font-medium text-[#5a6b66] transition-colors hover:text-[#1a4a3a]"
+            className="mt-5 text-sm font-medium text-[#5a6b66] underline underline-offset-2 transition-colors hover:text-[#1a4a3a]"
           >
             Continuar sem login
           </Link>
@@ -230,7 +277,7 @@ export default function PerfilPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarUrl}
-                alt=""
+                alt={`${getUserName(user) || "Foto de perfil"}`}
                 className="h-20 w-20 rounded-full object-cover ring-4 ring-[#d4ede8]"
               />
             ) : (
@@ -239,7 +286,7 @@ export default function PerfilPage() {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-xl font-bold text-[#1a2e28]">
+              <h1 className="truncate text-2xl font-bold text-[#1a2e28]">
                 {getUserName(user)}
               </h1>
               <p className="truncate text-sm text-[#5a6b66]">{user.email}</p>

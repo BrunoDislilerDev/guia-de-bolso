@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
+/**
+ * Refreshes the Supabase auth session on each matched request and syncs cookies.
+ * @param {import("next/server").NextRequest} request - Incoming request.
+ * @returns {Promise<import("next/server").NextResponse>} Response with updated session cookies.
+ */
 export async function middleware(request) {
   let supabaseResponse = NextResponse.next({ request });
 

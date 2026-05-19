@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
+import DailyLimitCountdown from "@/components/DailyLimitCountdown";
 import PremiumPaywallSheet from "@/components/PremiumPaywallSheet";
 import EmAltaHoje from "@/components/home/EmAltaHoje";
 import HomeContextHeader from "@/components/home/HomeContextHeader";
@@ -25,13 +26,18 @@ import {
 import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
 import { getLugaresVisitados } from "@/lib/lugaresVisitados";
 import { withDistanciaDinamica } from "@/lib/localizacao";
-import { canUseBusca } from "@/lib/premium";
+import { canUseBusca, isDailyBuscaLimitReached } from "@/lib/premium";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 
 const LUGAR_SELECT = "*, localizacoes(*), lugares_tags(tags(*))";
 
+/**
+ * First letter of the user's display name for the avatar fallback.
+ * @param {import("@supabase/supabase-js").User | null} user - Auth user.
+ * @returns {string} Uppercase initial.
+ */
 function getUserInitial(user) {
   const name =
     user?.user_metadata?.full_name ||
@@ -41,29 +47,73 @@ function getUserInitial(user) {
   return name.charAt(0).toUpperCase();
 }
 
+/**
+ * Loads active places with location and tags for the home feed.
+ * @param {number} [limit=50] - Max rows to fetch.
+ * @returns {Promise<object[]>} Active places.
+ */
 async function fetchLugaresAtivos(limit = 50) {
   const supabase = createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("lugares")
     .select(LUGAR_SELECT)
     .eq("status", "ativo")
     .limit(limit);
 
+  if (error) throw error;
   return data ?? [];
 }
 
+/**
+ * Loads non-featured active places for the "Perto de você" section.
+ * @returns {Promise<object[]>} Nearby candidate places.
+ */
 async function fetchLugaresProximos() {
   const supabase = createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("lugares")
     .select(LUGAR_SELECT)
     .eq("status", "ativo")
     .eq("destaque", false)
     .limit(6);
 
+  if (error) throw error;
   return data ?? [];
 }
 
+/**
+ * Loads trending places for home; throws if the favorites query fails.
+ * @param {import("@supabase/supabase-js").SupabaseClient} supabase
+ * @param {number} limit
+ * @returns {Promise<object[]>}
+ */
+async function fetchLugaresPopularesHome(supabase, limit) {
+  const { error } = await supabase.from("favoritos").select("lugar_id");
+  if (error) throw error;
+  return fetchLugaresPopulares(supabase, limit);
+}
+
+/**
+ * Discreet placeholder when a home section fails to load.
+ * @param {object} props
+ * @param {string} [props.title] - Optional section heading.
+ * @returns {import("react").ReactElement}
+ */
+function SectionUnavailable({ title }) {
+  return (
+    <section className="mb-8">
+      {title ? <h2 className="mb-3 text-lg font-bold text-[#1a2e28]">{title}</h2> : null}
+      <p className="py-4 text-center text-sm text-[#5a6b66]">
+        Conteúdo indisponível no momento
+      </p>
+    </section>
+  );
+}
+
+/**
+ * Home page: contextual feed, smart search, favorites, and premium gates.
+ * @returns {import("react").ReactElement}
+ */
 export default function Home() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -77,6 +127,13 @@ export default function Home() {
     "Descubra o melhor da região agora"
   );
   const [homeLoading, setHomeLoading] = useState(true);
+  const [pertoLoading, setPertoLoading] = useState(true);
+  const [sectionErrors, setSectionErrors] = useState({
+    hero: false,
+    emAlta: false,
+    perto: false,
+    clima: false,
+  });
 
   const [termoBusca, setTermoBusca] = useState("");
   const [termoResultado, setTermoResultado] = useState("");
@@ -100,6 +157,8 @@ export default function Home() {
 
   const {
     usage: premiumUsage,
+    loading: premiumUsageLoading,
+    synced: premiumUsageSynced,
     refresh: refreshPremiumUsage,
     setUsage: setPremiumUsage,
   } = usePremiumUsage(user);
@@ -174,24 +233,84 @@ export default function Home() {
     setHomeLoading(true);
     const supabase = createClient();
 
-    Promise.all([
-      fetchLugaresAtivos(),
-      fetchLugaresPopulares(supabase, 8),
-      fetchLugaresProximos(),
-      fetchClimaApis(IMBITUBA_COORDS.latitude, IMBITUBA_COORDS.longitude).catch(
-        () => null
-      ),
-    ])
-      .then(([ativos, populares, proximos, clima]) => {
+    async function loadPrimary() {
+      try {
+        const [ativosResult, popularesResult] = await Promise.allSettled([
+          fetchLugaresAtivos(),
+          fetchLugaresPopularesHome(supabase, 8),
+        ]);
+
         if (cancelled) return;
-        setLugaresAtivos(ativos);
-        setLugaresPopulares(populares);
-        setLugaresProximos(proximos);
-        setContextualPhrase(getFraseContextual(clima));
-      })
-      .finally(() => {
+
+        const errors = { hero: false, emAlta: false };
+
+        if (ativosResult.status === "fulfilled") {
+          setLugaresAtivos(ativosResult.value);
+        } else {
+          errors.hero = true;
+        }
+
+        if (popularesResult.status === "fulfilled") {
+          setLugaresPopulares(popularesResult.value);
+        } else {
+          errors.emAlta = true;
+        }
+
+        setSectionErrors((prev) => ({
+          ...prev,
+          hero: errors.hero,
+          emAlta: errors.emAlta,
+        }));
+      } catch {
+        if (!cancelled) {
+          setSectionErrors((prev) => ({ ...prev, hero: true, emAlta: true }));
+        }
+      } finally {
         if (!cancelled) setHomeLoading(false);
-      });
+      }
+    }
+
+    loadPrimary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading]);
+
+  useEffect(() => {
+    if (authLoading) return undefined;
+
+    let cancelled = false;
+    setPertoLoading(true);
+
+    async function loadSecondary() {
+      try {
+        const [proximosResult, climaResult] = await Promise.allSettled([
+          fetchLugaresProximos(),
+          fetchClimaApis(IMBITUBA_COORDS.latitude, IMBITUBA_COORDS.longitude),
+        ]);
+
+        if (cancelled) return;
+
+        if (proximosResult.status === "fulfilled") {
+          setLugaresProximos(proximosResult.value);
+          setSectionErrors((prev) => ({ ...prev, perto: false }));
+        } else {
+          setSectionErrors((prev) => ({ ...prev, perto: true }));
+        }
+
+        if (climaResult.status === "fulfilled") {
+          setContextualPhrase(getFraseContextual(climaResult.value));
+          setSectionErrors((prev) => ({ ...prev, clima: false }));
+        } else {
+          setSectionErrors((prev) => ({ ...prev, clima: true }));
+        }
+      } finally {
+        if (!cancelled) setPertoLoading(false);
+      }
+    }
+
+    loadSecondary();
 
     return () => {
       cancelled = true;
@@ -222,6 +341,7 @@ export default function Home() {
   useEffect(() => {
     if (!searchMode) return undefined;
 
+    /** Closes search overlay when Escape is pressed. @param {KeyboardEvent} event */
     function handleEscape(event) {
       if (event.key === "Escape") fecharBusca();
     }
@@ -242,6 +362,11 @@ export default function Home() {
       });
   }, [user]);
 
+  /**
+   * Toggles favorite state for a place; opens login modal if guest.
+   * @param {object} lugar - Place to favorite or unfavorite.
+   * @returns {Promise<void>}
+   */
   async function handleFavoritar(lugar) {
     if (!user) {
       setMotivoModal("favoritar");
@@ -281,6 +406,7 @@ export default function Home() {
       });
   }
 
+  /** Resets search UI state and blurs the input. */
   function fecharBusca() {
     setSearchMode(null);
     setTermoBusca("");
@@ -290,12 +416,17 @@ export default function Home() {
     searchInputRef.current?.blur();
   }
 
+  /** Opens browse mode and refreshes recently visited places. */
   function handleSearchFocus() {
     setVisitadosRecentes(getLugaresVisitados());
     if (searchMode === "results" && termoBusca.trim()) return;
     setSearchMode("browse");
   }
 
+  /**
+   * Closes browse mode on blur unless focus moved inside the search container.
+   * @param {import("react").FocusEvent<HTMLInputElement>} event - Blur event.
+   */
   function handleSearchBlur(event) {
     if (termoBusca.trim()) return;
     const next = event.relatedTarget;
@@ -307,11 +438,21 @@ export default function Home() {
     }, 150);
   }
 
+  /**
+   * Opens the premium paywall sheet for a feature.
+   * @param {string} feature - Feature key shown in the paywall.
+   */
   function abrirPaywall(feature) {
     setPaywallFeature(feature);
     setPaywallOpen(true);
   }
 
+  /**
+   * Runs AI search via `/api/buscar` with premium and login checks.
+   * @param {string} query - Search text.
+   * @param {string} [filtroOverride] - Optional open/closed status filter.
+   * @returns {Promise<void>}
+   */
   async function executarBusca(query, filtroOverride) {
     const termo = query.trim();
     if (!termo) return;
@@ -383,6 +524,10 @@ export default function Home() {
     }
   }
 
+  /**
+   * Applies a quick-plan chip filter and triggers search.
+   * @param {{ query: string, filtro: string }} plano - Quick plan preset.
+   */
   function handlePlanoClick(plano) {
     setFiltroBuscaStatus(plano.filtro);
     searchInputRef.current?.focus();
@@ -391,6 +536,8 @@ export default function Home() {
 
   const isFavorito = (lugar) => favoritos.includes(String(lugar.id));
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const buscaLimiteDiarioAtingido =
+    Boolean(user) && isDailyBuscaLimitReached(premiumUsage);
 
   if (!onboardingChecked || authLoading) {
     return (
@@ -413,6 +560,12 @@ export default function Home() {
           contextualPhrase={contextualPhrase}
           getUserInitial={getUserInitial}
         />
+
+        {!homeLoading && sectionErrors.clima && (
+          <p className="mb-4 text-center text-sm text-[#5a6b66]">
+            Conteúdo indisponível no momento
+          </p>
+        )}
 
         <SmartSearch
           searchContainerRef={searchContainerRef}
@@ -447,12 +600,23 @@ export default function Home() {
               onChange={setFiltroBuscaStatus}
             />
           )}
-          {user && premiumUsage && searchMode && (
+          {user && searchMode && (
             <p className="mb-2 text-center text-[10px] text-[#8a9a95]">
-              {premiumUsage.premium
-                ? "Premium · buscas ilimitadas"
-                : `IA ${premiumUsage.buscas.used}/${premiumUsage.buscas.limit} este mês`}
+              {premiumUsageLoading && !premiumUsage
+                ? "Carregando uso de IA…"
+                : premiumUsage
+                  ? premiumUsage.premium
+                    ? "Premium · buscas ilimitadas"
+                    : `IA ${premiumUsage.buscas.used}/${premiumUsage.buscas.limit} hoje · renova à meia-noite`
+                  : premiumUsageSynced
+                    ? null
+                    : "Carregando uso de IA…"}
             </p>
+          )}
+          {buscaLimiteDiarioAtingido && searchMode && (
+            <div className="mb-3">
+              <DailyLimitCountdown initialMs={premiumUsage?.msUntilReset} />
+            </div>
           )}
           {searchMode === "browse" && (
             <SearchBrowsePanel
@@ -485,20 +649,44 @@ export default function Home() {
         >
           {!homeLoading && (
             <>
-              <OQueFazerAgora
-                lugar={heroLugar}
-                popularIds={popularIds}
-                onFavoritar={handleFavoritar}
-                isFavorito={isFavorito}
-              />
-              <EmAltaHoje lugares={emAltaExibidos} />
+              {sectionErrors.hero ? (
+                <SectionUnavailable title="O que fazer agora" />
+              ) : (
+                <OQueFazerAgora
+                  lugar={heroLugar}
+                  popularIds={popularIds}
+                  onFavoritar={handleFavoritar}
+                  isFavorito={isFavorito}
+                />
+              )}
+              {sectionErrors.emAlta ? (
+                <SectionUnavailable title="🔥 Em alta hoje" />
+              ) : (
+                <EmAltaHoje lugares={emAltaExibidos} />
+              )}
               <PlanosRapidos onPlanoClick={handlePlanoClick} />
-              <PertoDeVoce
-                user={user}
-                lugares={proximosExibidos}
-                isFavorito={isFavorito}
-                onFavoritar={handleFavoritar}
-              />
+              {sectionErrors.perto ? (
+                <SectionUnavailable title="Perto de você" />
+              ) : pertoLoading ? (
+                <section className="mb-4">
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-[#5a6b66]">
+                      Descoberta complementar
+                    </p>
+                    <h2 className="text-lg font-bold text-[#1a2e28]">Perto de você</h2>
+                  </div>
+                  <p className="py-4 text-center text-sm text-[#5a6b66]">
+                    Carregando lugares perto de você...
+                  </p>
+                </section>
+              ) : (
+                <PertoDeVoce
+                  user={user}
+                  lugares={proximosExibidos}
+                  isFavorito={isFavorito}
+                  onFavoritar={handleFavoritar}
+                />
+              )}
             </>
           )}
 

@@ -1,3 +1,7 @@
+/**
+ * Skeleton UI shown while the rotas route segment is loading.
+ * @returns {import("react").ReactElement}
+ */
 export default function RotasLoading() {
   return (
     <div className="min-h-screen bg-gray-50">

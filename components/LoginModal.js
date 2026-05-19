@@ -11,6 +11,12 @@ const subtitles = {
   premium: "Entre na sua conta para assinar o Guia Premium",
 };
 
+/**
+ * IconHeart - Heart icon for favorites login prompt.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconHeart({ className = "h-9 w-9" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -19,6 +25,12 @@ function IconHeart({ className = "h-9 w-9" }) {
   );
 }
 
+/**
+ * IconLock - Lock icon for restricted-content login prompt.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconLock({ className = "h-9 w-9" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -27,6 +39,14 @@ function IconLock({ className = "h-9 w-9" }) {
   );
 }
 
+/**
+ * LoginModal - Bottom sheet prompting login for restricted actions.
+ * @param {object} props
+ * @param {boolean} props.isOpen - Whether the modal is visible.
+ * @param {() => void} props.onClose - Called when the user dismisses the modal.
+ * @param {string} [props.motivo] - Context key for subtitle copy (e.g. favoritar, rotas).
+ * @returns {import('react').ReactElement|null}
+ */
 export default function LoginModal({ isOpen, onClose, motivo = "favoritar" }) {
   const MainIcon = motivo === "favoritar" ? IconHeart : IconLock;
   const subtitle =

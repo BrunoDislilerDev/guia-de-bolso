@@ -1,262 +1,350 @@
-# Guia de Bolso 🌿
+<h1 align="center">Guia de Bolso</h1>
 
-App de descoberta local para Garopaba e Imbituba — Santa Catarina, Brasil.
+<p align="center">
+  <strong>AI-powered local discovery for Brazil’s southern coast</strong><br />
+  Real-time recommendations for Garopaba & Imbituba, Santa Catarina
+</p>
 
-Permite que moradores e turistas encontrem praias, restaurantes e atrações da região com uma experiência mobile-first, limpa e intuitiva.
+<p align="center">
+  <a href="https://guia-de-bolso-puce.vercel.app"><strong>Live application</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./docs/README.md">Documentation</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/BrunoDislilerDev/guia-de-bolso/issues">Report an issue</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Production-success?style=flat-square" alt="Production" />
+  <img src="https://img.shields.io/badge/Next.js-16-000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/AI-Claude-D97757?style=flat-square" alt="Claude" />
+  <img src="https://img.shields.io/badge/Hosted-Vercel-000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" />
+</p>
 
 ---
 
-## Stack
+## Table of contents
 
-| Camada | Tecnologia |
+- [Overview](#overview)
+- [Product capabilities](#product-capabilities)
+- [Screenshots](#screenshots)
+- [Technology stack](#technology-stack)
+- [Getting started](#getting-started)
+- [Environment variables](#environment-variables)
+- [Production deployment](#production-deployment)
+- [Project structure](#project-structure)
+- [Documentation](#documentation)
+- [Security](#security)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [Author](#author)
+
+---
+
+## Overview
+
+**Guia de Bolso** is a mobile-first web application that helps residents and visitors decide **what to do right now**—not merely where to go.
+
+The product combines a curated place catalog, live context (opening hours, geolocation, time-of-day messaging), moderated social proof, and **Anthropic Claude**–powered natural-language search and trip planning. An internal admin console supports content operations, review moderation, and commercial placement for partner businesses.
+
+| | |
 |---|---|
-| Frontend | Next.js 16 (App Router) |
-| Estilização | Tailwind CSS |
-| Banco de dados | Supabase (PostgreSQL + Storage) |
-| IA | Claude API (Anthropic) |
-| Deploy | Vercel |
-| Editor | Cursor |
-| Controle de versão | Git + GitHub |
+| **Production URL** | https://guia-de-bolso-puce.vercel.app |
+| **Service region** | Garopaba & Imbituba, SC, Brazil |
+| **Primary interface** | Portuguese (pt-BR) |
+| **Target devices** | Mobile web (optimized ~390px viewport) |
+
+### Problem & solution
+
+| Audience | Need | How Guia de Bolso addresses it |
+|----------|------|--------------------------------|
+| Tourists | Low-friction discovery without heavy planning | Contextual home, AI search, ready-made “plans,” turn-by-turn handoff |
+| Residents | Know what is open and nearby, immediately | Live hours, distance, filters (open / closed / all) |
+| Local businesses | Visibility in the official regional guide | Listings, highlights, commercial tiers (roadmap: self-service portal) |
 
 ---
 
-## Como rodar localmente
+## Product capabilities
 
-**Pré-requisitos:** Node.js, Git
+### Consumer experience
+
+- **Decision-oriented home** — contextual header, AI search with quick prompts, hero suggestion (“what to do now”), trending places, preset itineraries, nearby discovery
+- **Conversion-focused place pages** — immersive hero, persuasive copy, quick actions (establishments vs. public venues), reviews summary, fixed navigation CTA
+- **Category exploration** — full taxonomy via `/categorias` and filtered listings
+- **Authentication** — Google OAuth and SMS OTP (Supabase Auth + Twilio)
+- **Engagement** — favorites, moderated reviews, share, onboarding flow
+
+### Guia Premium (subscription)
+
+| Capability | Free (signed in) | Premium |
+|------------|------------------|---------|
+| AI place search | 3 / day (resets at midnight, Brasília) | Unlimited |
+| AI trip itinerary | 2 / day (resets at midnight, Brasília) | Unlimited |
+| Extended weather insights | Gated | Full access |
+
+*Billing integration (Asaas) is on the roadmap; paywall UI is implemented.*
+
+### Operations & admin
+
+Role-gated console at `/admin`: place and route CRUD, photo uploads, map pinning, hours editor, tag management, review moderation, highlight/plan management, analytics logs, user roles (`admin`, `dev`, `estabelecimento`).
+
+---
+
+## Screenshots
+
+Place exported images under `docs/screenshots/` using the filenames below.
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/home.png" alt="Home screen" width="280" /><br />
+      <sub><b>Home</b> — contextual assistant, AI search, hero recommendation</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/lugar-detalhe.png" alt="Place detail" width="280" /><br />
+      <sub><b>Place detail</b> — immersive hero, actions, fixed CTA</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/busca-ia.png" alt="AI search" width="280" /><br />
+      <sub><b>AI search</b> — natural language + open/closed filters</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/rotas.png" alt="Routes" width="280" /><br />
+      <sub><b>Routes</b> — curated trails + AI-generated itineraries</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/login.png" alt="Login" width="280" /><br />
+      <sub><b>Authentication</b> — OAuth & SMS</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/admin.png" alt="Admin" width="280" /><br />
+      <sub><b>Admin</b> — content & moderation</sub>
+    </td>
+  </tr>
+</table>
+
+Recommended capture size: **390×844** (mobile viewport). See `docs/screenshots/.gitkeep` for file naming.
+
+---
+
+## Technology stack
+
+| Layer | Technology | Responsibility |
+|-------|------------|----------------|
+| Application | **Next.js 16** (App Router) | Routing, SSR/CSR, API route handlers |
+| UI | **React 19**, **Tailwind CSS 4** | Component layer, design system |
+| Data | **Supabase** (PostgreSQL) | Persistence, RLS, SQL migrations |
+| Identity | **Supabase Auth** | Sessions, OAuth, phone OTP |
+| Assets | **Supabase Storage** | Place, route, and profile media |
+| AI | **Anthropic Claude** | Semantic search ranking, itinerary generation |
+| Maps | Google / Apple / Waze (deep links) | End-user navigation |
+| Weather | **Open-Meteo** | Forecast data (no API key required) |
+| Hosting | **Vercel** | Build, deploy, edge delivery |
+| Runtime | **Node.js 20+**, **JavaScript** | Application language (no TypeScript) |
+
+### Server API surface
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/buscar` | `POST` | AI-powered place search |
+| `/api/roteiro` | `POST` | Generate multi-day itinerary |
+| `/api/roteiro/salvar` | `POST` | Persist user itinerary |
+| `/api/uso-premium` | `GET` | Subscription usage quotas |
+
+Full contracts: [`docs/api.md`](./docs/api.md).
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- Node.js **20+**
+- npm
+- Git
+- Supabase project (database + auth configured)
+- Anthropic API key
+
+### Local setup
 
 ```bash
-# 1. Clonar o repositório
 git clone https://github.com/BrunoDislilerDev/guia-de-bolso.git
 cd guia-de-bolso
-
-# 2. Instalar dependências
 npm install
-
-# 3. Configurar variáveis de ambiente
-# Crie um arquivo .env.local na raiz com:
-NEXT_PUBLIC_SUPABASE_URL=sua_url_aqui
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_aqui
-ANTHROPIC_API_KEY=sua_chave_aqui
-ANTHROPIC_MODEL=claude-sonnet-4-5
-
-# 4. Rodar em desenvolvimento
+cp .env.example .env.local
+# Edit .env.local with your credentials
 npm run dev
 ```
 
-Acessa em `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000).
 
-### Migrations Supabase (Premium e contadores de IA)
+### Database migrations
 
-Rode no **SQL Editor** do Supabase, nesta ordem:
+Apply SQL scripts in the Supabase **SQL Editor**, in order:
 
-1. `supabase/premium_usuario.sql` — colunas de assinatura e uso em `perfis`
-2. `supabase/increment_uso_ia.sql` — funções atômicas `increment_busca_ia` e `increment_roteiro_ia` (contador confiável)
-3. `supabase/perfis_premium_policies.sql` — RLS para o usuário ler/atualizar o próprio perfil
+1. `supabase/premium_usuario.sql`
+2. `supabase/increment_uso_ia.sql`
+3. `supabase/perfis_premium_policies.sql`
 
-Para testar o plano gratuito com limites, garanta `premium_ativo = false` no seu perfil.
+Additional scripts (storage, tags, etc.) are documented in [`docs/database.md`](./docs/database.md).
 
----
+### NPM scripts
 
-## Guia Premium e limites de IA
-
-| Recurso | Sem login | Grátis (logado) | Premium (R$ 9,90/mês) |
-|---|---|---|---|
-| Busca com IA | Login obrigatório | 3 buscas/mês | Ilimitado |
-| Roteiro com IA | Login obrigatório | 2 roteiros/mês | Ilimitado |
-| Card de clima (home) | CTA de login | Resumo visível | Resumo visível |
-| Detalhes do clima (sheet) | — | Paywall Premium | Completo |
-
-- Paywall em `components/PremiumPaywallSheet.js` (pagamento via gateway em breve).
-- Contadores em `perfis`: `buscas_ia`, `roteiros_ia`, `uso_ia_mes`, `premium_ativo`.
-- API `GET /api/uso-premium` retorna uso do mês; busca e roteiro retornam `usage` atualizado na resposta.
-- Busca com filtro **Todos / Abertos agora / Fechados** (`components/home/SearchStatusFilter.js`).
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run start` | Run production build locally |
+| `npm run lint` | ESLint |
 
 ---
 
-## Banco de dados
+## Environment variables
 
-Projeto usa Supabase com a seguinte tabela principal:
+Create **`.env.local`** at the repository root. Do not commit secrets.
 
-**Tabela: `lugares`**
+| Variable | Required | Scope | Description |
+|----------|:--------:|-------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Client + server | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Client + server | Supabase anonymous key |
+| `ANTHROPIC_API_KEY` | Yes | Server only | Anthropic API secret |
+| `ANTHROPIC_MODEL` | Recommended | Server only | Model ID (e.g. `claude-sonnet-4-5`) |
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| id | uuid | Chave primária automática |
-| nome | text | Nome do lugar |
-| descricao | text | Descrição curta |
-| categoria | text | Natureza, Gastronomia, Noite, Serviços, Hospedagem |
-| distancia | text | Ex: "2.3km de você" |
-| imagem_url | text | URL da imagem |
-| destaque | bool | Aparece como destaque da semana |
-| created_at | timestamp | Automático |
-
----
-
-## O que já foi construído
-
-- [x] Setup completo do ambiente (Node, Git, Cursor)
-- [x] Projeto Next.js com Tailwind CSS
-- [x] Home page mobile-first com layout fiel ao design original
-- [x] Chips de categoria com scroll horizontal (Natureza, Gastronomia, Noite, Serviços, Hospedagem)
-- [x] Card de destaque da semana
-- [x] Seção "Perto de você" com cards horizontais
-- [x] Bottom navigation bar
-- [x] Integração com Supabase
-- [x] Dados sendo buscados dinamicamente do banco
-- [x] Filtro por categoria funcional
-- [x] Página de detalhe de cada lugar (`/lugares/[id]`)
-- [x] Busca por linguagem natural com Claude API
-- [x] Autenticação com Google via Supabase Auth
-- [x] Página de login com redirecionamento automático
-- [x] Avatar do usuário logado no header
-- [x] Login via SMS com Twilio (OTP de 6 dígitos)
-- [x] Login via SMS com Twilio funcionando
-- [x] Novo visual da página de login (foto de fundo, painel verde escuro)
-- [x] Novo visual da página de login com foto de fundo
-- [x] Removido Apple Sign In (pendente Apple Developer Program)
-- [x] Apple Sign In removido (pendente Apple Developer Program)
-- [x] Fluxo de verificação com contador de reenvio e tratamento de erros
-- [x] Carrossel de destaques na home com auto-scroll e dots
-- [x] Sistema de planos (Básico, Padrão, Premium) com badges visuais
-- [x] Temperatura real via OpenWeatherMap API
-- [x] Geolocalização dinâmica com distância real calculada
-- [x] Endereço estruturado com Google Places Autocomplete no admin
-- [x] Tabela localizacoes separada com lat/lng
-- [x] Subcategorias por categoria
-- [x] Tags nos lugares com chips visuais
-- [x] Tags incluídas no contexto da busca por IA
-- [x] Cards com gradiente e altura mínima de 380px
-- [x] Página de categoria com grid de lugares (`/categoria/[slug]`)
-- [x] Filtro por subcategoria na página de categoria
-- [x] Status aberto/fechado em tempo real
-- [x] Carrossel de fotos na página de detalhe com chip 1/N
-- [x] Botão de compartilhar no detalhe do lugar
-- [x] Ações rápidas no detalhe (Ligar, Instagram, Cardápio, Site)
-- [x] Horários de funcionamento com bottom sheet completo
-- [x] Seção Localização com link para Google Maps
-- [x] Seção Sobre com "Leia mais"
-- [x] Botão IR AGORA com escolha de app (Google Maps, Apple Maps, Waze)
-- [x] Favoritos reais salvos no Supabase
-- [x] Página de favoritos com remoção de favoritos
-- [x] Bottom nav com navegação ativa por rota
-- [x] Página de perfil com foto, nome, email e estatísticas
-- [x] Editar perfil com upload de foto para Supabase Storage
-- [x] Upload de foto de perfil funcionando
-- [x] Tela de perfil sem login com benefícios e opções de entrada
-- [x] Logout com confirmação
-- [x] Excluir conta com confirmação estilo Apple/Google
-- [x] Preferência de app de navegação salva no localStorage
-- [x] Bottom sheet de login para conteúdo restrito
-- [x] Onboarding com 3 telas
-- [x] Painel admin completo (`/admin`)
-- [x] Dashboard com analytics e logs em tempo real
-- [x] Gestão de locais com status (ativo, desativado, em_analise)
-- [x] Admin com seleção de subcategoria e tags
-- [x] Moderação de avaliações (aprovar/rejeitar)
-- [x] Gestão de destaques e planos
-- [x] Gestão de destaques no painel admin
-- [x] Gestão de usuários
-- [x] Sistema de logs (login, logout, favoritos, IR AGORA, acesso ao app)
-- [x] Sistema de avaliações com moderação
-- [x] Editor de horários com time picker (toggles Fechado/24h)
-- [x] Página de categorias (`/categorias`)
-- [x] Novas categorias: Cultura, Aventura, Bem-estar, Compras
-- [x] Tabela perfis com roles (user/admin)
-- [x] 25 lugares cadastrados em 5 categorias
-- [x] Imagens reais via Supabase Storage
-- [x] Deploy automático na Vercel
-- [x] Seção de Rotas com listagem e card destaque
-- [x] Página de detalhe de rota com pontos do percurso
-- [x] Skeleton de carregamento na listagem de rotas
-- [x] CRUD completo de Rotas no painel admin
-- [x] Admin de Lugares redesenhado com fotos, grid de cards e filtros
-- [x] Upload de fotos real no admin (lugares e rotas) com preview e Supabase Storage
-- [x] Mapa interativo no cadastro de lugares com marcador arrastável via Google Maps
-- [x] Máscara de telefone (xx) x xxxx-xxxx no formulário de lugares
-- [x] Tags filtradas por categoria no formulário de lugares
-- [x] Sistema de roles expandido: dev, admin, usuario, estabelecimento
-- [x] Dashboard admin redesenhado com cards de métricas e variação semanal
-- [x] Logs com badges coloridos por ação e detalhes formatados
-- [x] Campo distância removido do formulário de lugares (calculado no app)
-- [x] Bloco de endereço movido para o final do formulário de lugares
-- [x] Mapa com altura aumentada para 350px
-- [x] Busca com histórico de visitados recentes (localStorage)
-- [x] Seção "Populares agora" na tela de busca
-- [x] Resultados de busca em tela isolada com skeleton e estado vazio
-- [x] Animação de transição ao focar no campo de busca
-- [x] Roteiro personalizado com IA (Claude API) dentro da tela de Rotas
-- [x] Formulário guiado: dias, perfil e interesses
-- [x] Loading animado com mensagens alternadas durante geração do roteiro
-- [x] Roteiros salvos no banco e exibidos na tela de Rotas
-- [x] Card de clima e condições na home com seletor de praias
-- [x] Dados em tempo real via Open-Meteo Weather e Open-Meteo Marine (gratuito, sem chave)
-- [x] Resumo: temperatura, ondas, vento, UV e badge de condição para banho
-- [x] Sheet detalhado com gráfico de ondas 24h, temperatura da água, fase da lua e índice UV com barra colorida
-- [x] RLS (Row Level Security) ativado em todas as 15 tabelas do banco
-- [x] Auditoria completa de código: imports, rotas, null safety e console.logs removidos
-- [x] Foreign keys validadas: avaliacoes, destaques, favoritos, lugares_tags
-- [x] Buckets de Storage configurados com policies: lugares-fotos, rotas-fotos, Guia de Bolso - Imagens
-- [x] Guia Premium: limites de busca e roteiro com IA para usuários logados (3 buscas e 2 roteiros/mês no plano grátis)
-- [x] Paywall Premium (R$ 9,90/mês) para uso ilimitado e detalhes completos do clima
-- [x] Clima na home apenas para usuários logados; sheet de detalhes exige Premium
-- [x] Busca com IA: filtro por lugares abertos, fechados ou todos (horário real)
-- [x] Contadores de IA com funções SQL atômicas (`increment_busca_ia`, `increment_roteiro_ia`)
-- [x] API `/api/uso-premium` e hook `usePremiumUsage` para exibir uso na UI
-- [x] Roteiro com IA: UI formatada (dias, períodos, setas, dicas, tempo) via `RoteiroContent` + `formatRoteiroConteudo`
-- [x] Geração de roteiro otimizada (lugares filtrados por interesse, prompt estruturado, menos tokens)
-
----
-
-## Próximos passos
-
-### Essenciais
-- [ ] Pagamento recorrente do Guia Premium (Asaas: PIX, boleto, cartão)
-- [ ] Notificações Push (boas-vindas por geolocalização, promoções para quem favoritou)
-- [ ] Busca por voz (Web Speech API + Claude API)
-- [ ] Modo offline básico (PWA com service worker)
-- [ ] QR Code do estabelecimento (cliente escaneia → perfil no app → avalia)
-
-### Diferenciais
-- [ ] "Estou aqui agora" — check-in com contagem de pessoas no lugar em tempo real
-- [ ] Eventos locais (tabela de eventos temporários integrada à home)
-
-### Melhorias técnicas
-- [ ] Dark mode completo (implementar com CSS variables quando o app estiver maduro)
-- [ ] Dark mode no admin (painel administrativo em tema escuro)
-- [ ] Apple Sign In (pós Apple Developer Program)
-- [ ] WhatsApp Auth (pós aprovação Meta)
-- [ ] Role "estabelecimento" com painel próprio
-
----
-
-## Segurança do banco
-
-Todas as tabelas usam Row Level Security (RLS) com as seguintes regras:
-
-| Tabela | Leitura | Escrita |
-|---|---|---|
-| lugares | Público (status = ativo) | Admin/Dev |
-| rotas, rota_pontos | Público | Admin/Dev |
-| perfis | Próprio usuário | Próprio usuário (+ funções `increment_*_ia`) |
-| favoritos | Próprio usuário | Próprio usuário |
-| avaliacoes | Público (aprovadas) | Usuário autenticado |
-| roteiros | Próprio usuário | Próprio usuário |
-| logs | Admin/Dev | Sistema |
-| tags, subcategorias, planos | Público | Admin/Dev |
-| destaques, localizacoes, fotos_lugar | Público | Admin/Dev |
-
----
-
-## Fluxo de desenvolvimento
-
-```
-Edita no Cursor → git push → Vercel atualiza automaticamente
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-sonnet-4-5
 ```
 
-Variáveis de ambiente precisam estar configuradas tanto no `.env.local` (local) quanto nas Environment Variables da Vercel (produção).
+**Auth redirect URLs** (Supabase Dashboard → Authentication):
+
+| Environment | Site URL | Redirect URL |
+|-------------|----------|--------------|
+| Local | `http://localhost:3000` | `http://localhost:3000/auth/callback` |
+| Production | `https://guia-de-bolso-puce.vercel.app` | `https://guia-de-bolso-puce.vercel.app/auth/callback` |
 
 ---
 
-## Autor
+## Production deployment
 
-Bruno Disliler — [brunodisliler.com](https://brunodisliler.com)
+The application deploys to **Vercel** on push to the default branch.
+
+### 1. Vercel project
+
+| Setting | Value |
+|---------|--------|
+| Framework | Next.js |
+| Build command | `npm run build` |
+| Install command | `npm install` |
+| Node.js version | 20.x |
+
+### 2. Environment configuration
+
+Mirror all variables from `.env.local` in **Vercel → Settings → Environment Variables** for Production (and Preview environments if used).
+
+### 3. Supabase (production)
+
+- Run migrations from `/supabase` on the production project
+- Register production domain in Auth redirect allowlist
+- Verify Storage buckets and RLS policies
+
+### 4. Post-deploy verification
+
+- [ ] Home loads with place data
+- [ ] Sign-in (Google / SMS) completes callback
+- [ ] Authenticated AI search returns results and increments usage
+- [ ] Place detail navigation CTA opens maps provider
+- [ ] Admin routes reject non-admin roles
+
+Detailed runbook: [`docs/deployment.md`](./docs/deployment.md).
+
+### Release pipeline
+
+```text
+git push → Vercel build → Production
+```
+
+---
+
+## Project structure
+
+```text
+guia-de-bolso/
+├── app/                 # Next.js routes & API handlers
+├── components/          # UI (home/, lugar/, admin/, shared)
+├── lib/                 # Domain logic & integrations
+├── supabase/            # SQL migrations (manual apply)
+├── docs/                # Technical documentation
+├── public/              # Static assets
+└── .env.example         # Environment template
+```
+
+---
+
+## Documentation
+
+Full index: **[docs/README.md](./docs/README.md)**
+
+| Guide | Description |
+|-------|-------------|
+| [architecture.md](./docs/architecture.md) | System design & data flows |
+| [database.md](./docs/database.md) | Schema, RLS, migrations |
+| [api.md](./docs/api.md) | HTTP API reference |
+| [features.md](./docs/features.md) | Feature matrix & access rules |
+| [deployment.md](./docs/deployment.md) | Production operations |
+| [contributing.md](./docs/contributing.md) | Contribution guidelines |
+
+---
+
+## Security
+
+- **Row Level Security (RLS)** enforced on Supabase tables
+- AI keys and usage increments run **server-side only** (`app/api/*`)
+- User-generated reviews require moderation before public display
+- Administrative functions gated by `perfis.role`
+- Atomic usage counters via `SECURITY DEFINER` SQL functions (`increment_busca_ia`, `increment_roteiro_ia`)
+
+Report security concerns via [GitHub Issues](https://github.com/BrunoDislilerDev/guia-de-bolso/issues) (private disclosure process can be defined as the project matures).
+
+---
+
+## Roadmap
+
+| Phase | Theme | Highlights |
+|-------|-------|------------|
+| **Q1** | Monetization | Recurring billing (Asaas), establishment self-service portal |
+| **Q2** | Growth | Push notifications, voice search, PWA / offline baseline |
+| **Q3** | Platform | Public-venue metadata in admin, local events, check-in feature |
+| **Q4** | Enterprise | Municipal partnerships, Apple / WhatsApp auth, dark mode |
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read [`docs/contributing.md`](./docs/contributing.md) before opening a pull request.
+
+1. Fork the repository  
+2. Create a feature branch  
+3. Ensure `npm run build` passes  
+4. Submit a PR with a clear description and screenshots for UI changes  
+
+---
+
+## Author
+
+**Bruno Disliler** — Full-stack developer building AI-powered consumer products.
+
+- Website: [brunodisliler.com](https://brunodisliler.com)  
+- GitHub: [@BrunoDislilerDev](https://github.com/BrunoDislilerDev)
+
+---
+
+<p align="center">
+  <sub>Guia de Bolso · Local discovery infrastructure for the Litoral Catarinense</sub>
+</p>

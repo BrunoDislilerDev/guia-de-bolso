@@ -10,6 +10,11 @@ const dias = [
   ["sab", "Sábado"],
 ];
 
+/**
+ * Converte string de horário do banco em estado editável do editor.
+ * @param {string} [value] - `"fechado"`, `"24h"` ou `"HH:MM-HH:MM"`.
+ * @returns {{ fechado: boolean, vinteQuatroHoras: boolean, abertura: string, fechamento: string }}
+ */
 function parseHorario(value) {
   if (value === "24h") {
     return { fechado: false, vinteQuatroHoras: true, abertura: "00:00", fechamento: "23:59" };
@@ -23,6 +28,14 @@ function parseHorario(value) {
   return { fechado: false, vinteQuatroHoras: false, abertura, fechamento };
 }
 
+/**
+ * Toggle acessível estilo switch para Fechado / 24h.
+ * @param {object} props
+ * @param {boolean} props.checked - Estado ligado.
+ * @param {(next: boolean) => void} props.onChange - Callback com novo valor.
+ * @param {string} props.label - Texto ao lado do switch.
+ * @returns {import("react").JSX.Element}
+ */
 function Switch({ checked, onChange, label }) {
   return (
     <button
@@ -47,6 +60,14 @@ function Switch({ checked, onChange, label }) {
   );
 }
 
+/**
+ * Input nativo `type="time"` com estilos do admin.
+ * @param {object} props
+ * @param {string} props.value - Valor HH:MM.
+ * @param {boolean} props.disabled - Desabilita quando fechado ou 24h.
+ * @param {(value: string) => void} props.onChange - Novo horário selecionado.
+ * @returns {import("react").JSX.Element}
+ */
 function TimeInput({ value, disabled, onChange }) {
   return (
     <input
@@ -59,7 +80,19 @@ function TimeInput({ value, disabled, onChange }) {
   );
 }
 
+/**
+ * Grade semanal de horários de funcionamento para o admin (fechado, intervalo ou 24h).
+ * @param {object} props
+ * @param {Record<string, string>} [props.horarios={}] - Mapa dia → valor (`dom`, `seg`, …).
+ * @param {(horarios: Record<string, string>) => void} [props.onChange] - Atualiza o objeto completo no pai.
+ * @returns {import("react").JSX.Element}
+ */
 export default function HorarioEditor({ horarios = {}, onChange }) {
+  /**
+   * Atualiza o valor de um dia da semana no objeto `horarios`.
+   * @param {string} key - Chave do dia (`dom`, `seg`, …).
+   * @param {string} nextValue - Novo valor (`fechado`, `24h` ou intervalo).
+   */
   function updateDia(key, nextValue) {
     onChange?.({
       ...horarios,
@@ -67,6 +100,12 @@ export default function HorarioEditor({ horarios = {}, onChange }) {
     });
   }
 
+  /**
+   * Altera abertura ou fechamento e persiste como string `abertura-fechamento`.
+   * @param {string} key - Chave do dia.
+   * @param {"abertura"|"fechamento"} field - Campo alterado.
+   * @param {string} value - Horário HH:MM.
+   */
   function updateHoras(key, field, value) {
     const parsed = parseHorario(horarios[key]);
     const next = { ...parsed, [field]: value };

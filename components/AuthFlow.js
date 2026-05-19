@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * IconGoogle - Google brand icon for OAuth button.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconGoogle({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>
@@ -15,6 +21,12 @@ function IconGoogle({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * IconMessage - Message icon for SMS login option.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @returns {import('react').ReactElement}
+ */
 function IconMessage({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -23,6 +35,11 @@ function IconMessage({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Formats a Brazilian phone number as the user types.
+ * @param {string} value - Raw input value.
+ * @returns {string} Formatted phone string.
+ */
 function formatPhone(value) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 2) return digits;
@@ -33,10 +50,21 @@ function formatPhone(value) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
+/**
+ * Strips non-digits from a phone string and limits to 11 digits.
+ * @param {string} value - Raw input value.
+ * @returns {string} Digits-only phone string.
+ */
 function cleanPhone(value) {
   return value.replace(/\D/g, "").slice(0, 11);
 }
 
+/**
+ * AuthFlow - Multi-step login with Google OAuth and SMS OTP verification.
+ * @param {object} props
+ * @param {boolean} [props.compact] - Compact styling for use inside modals.
+ * @returns {import('react').ReactElement}
+ */
 export default function AuthFlow({ compact = false }) {
   const router = useRouter();
   const [screen, setScreen] = useState("main");
@@ -61,6 +89,10 @@ export default function AuthFlow({ compact = false }) {
     return () => clearTimeout(timer);
   }, [screen, resendSeconds]);
 
+  /**
+   * Starts Google OAuth sign-in via Supabase.
+   * @returns {Promise<void>}
+   */
   async function handleGoogle() {
     setOauthLoading(true);
     const supabase = createClient();
@@ -71,6 +103,11 @@ export default function AuthFlow({ compact = false }) {
     if (error) setOauthLoading(false);
   }
 
+  /**
+   * Sends or resends an SMS OTP to the entered phone number.
+   * @param {boolean} [isResend] - Whether this is a resend attempt.
+   * @returns {Promise<void>}
+   */
   async function sendCode(isResend = false) {
     setPhoneError("");
     setCodeError("");
@@ -102,6 +139,10 @@ export default function AuthFlow({ compact = false }) {
     setTimeout(() => inputsRef.current[0]?.focus(), 50);
   }
 
+  /**
+   * Verifies the 6-digit SMS code and redirects on success.
+   * @returns {Promise<void>}
+   */
   async function verifyCode() {
     setCodeError("");
     setVerifying(true);
@@ -128,6 +169,12 @@ export default function AuthFlow({ compact = false }) {
     setTimeout(() => router.push("/"), 1500);
   }
 
+  /**
+   * Updates a single OTP digit and focuses the next input.
+   * @param {number} index - Digit index (0–5).
+   * @param {string} value - Input value for that cell.
+   * @returns {void}
+   */
   function updateCode(index, value) {
     const digit = value.replace(/\D/g, "").slice(-1);
     const next = [...code];
@@ -137,12 +184,23 @@ export default function AuthFlow({ compact = false }) {
     if (digit && index < 5) inputsRef.current[index + 1]?.focus();
   }
 
+  /**
+   * Moves focus to the previous OTP input on backspace when current cell is empty.
+   * @param {number} index - Digit index (0–5).
+   * @param {import('react').KeyboardEvent} event - Keyboard event.
+   * @returns {void}
+   */
   function handleCodeKeyDown(index, event) {
     if (event.key === "Backspace" && !code[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
     }
   }
 
+  /**
+   * Fills all OTP inputs when a 6-digit code is pasted.
+   * @param {import('react').ClipboardEvent} event - Paste event.
+   * @returns {void}
+   */
   function handlePaste(event) {
     const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length !== 6) return;
@@ -151,6 +209,10 @@ export default function AuthFlow({ compact = false }) {
     inputsRef.current[5]?.focus();
   }
 
+  /**
+   * Returns to the phone entry screen and clears OTP state.
+   * @returns {void}
+   */
   function resetPhone() {
     setScreen("phone");
     setCode(["", "", "", "", "", ""]);

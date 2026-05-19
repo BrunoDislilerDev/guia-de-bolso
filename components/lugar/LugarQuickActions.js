@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Ícone de telefone para ação "Ligar".
+ * @param {object} props
+ * @param {string} [props.className] - Classes Tailwind do SVG.
+ * @returns {import("react").JSX.Element}
+ */
 function IconPhone({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -8,6 +14,12 @@ function IconPhone({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Ícone do Instagram.
+ * @param {object} props
+ * @param {string} [props.className] - Classes Tailwind do SVG.
+ * @returns {import("react").JSX.Element}
+ */
 function IconInstagram({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -16,6 +28,12 @@ function IconInstagram({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Ícone de cardápio / gastronomia.
+ * @param {object} props
+ * @param {string} [props.className] - Classes Tailwind do SVG.
+ * @returns {import("react").JSX.Element}
+ */
 function IconUtensils({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -24,6 +42,12 @@ function IconUtensils({ className = "h-5 w-5" }) {
   );
 }
 
+/**
+ * Ícone de site / web genérico.
+ * @param {object} props
+ * @param {string} [props.className] - Classes Tailwind do SVG.
+ * @returns {import("react").JSX.Element}
+ */
 function IconGlobe({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -39,6 +63,14 @@ const ICONS_ESTABELECIMENTO = {
   site: IconGlobe,
 };
 
+/**
+ * Botão ou link de ação rápida para estabelecimentos (ligar, Instagram, etc.).
+ * @param {object} props
+ * @param {string} props.label - Texto exibido abaixo do ícone.
+ * @param {string} [props.href] - URL externa; se ausente, renderiza botão desabilitado.
+ * @param {import("react").ComponentType<{ className?: string }>} props.Icon - Componente de ícone.
+ * @returns {import("react").JSX.Element}
+ */
 function BotaoEstabelecimento({ label, href, Icon }) {
   const content = (
     <>
@@ -68,6 +100,12 @@ function BotaoEstabelecimento({ label, href, Icon }) {
   );
 }
 
+/**
+ * Chip informativo para locais públicos (praia, trilha, etc.) — apenas exibição.
+ * @param {object} props
+ * @param {{ id: string, label: string, emoji: string }} props.acao - Dados da ação informativa.
+ * @returns {import("react").JSX.Element}
+ */
 function ChipPublico({ acao }) {
   return (
     <div
@@ -85,6 +123,13 @@ function ChipPublico({ acao }) {
   );
 }
 
+/**
+ * Seção de ações rápidas na página do lugar (links externos ou chips informativos).
+ * @param {object} props
+ * @param {"estabelecimento"|"publico"} [props.modo="estabelecimento"] - Layout e tipo de ação.
+ * @param {Array<{ id: string, label: string, href?: string, emoji?: string }>} [props.acoes=[]] - Lista de ações; vazio oculta a seção.
+ * @returns {import("react").JSX.Element|null}
+ */
 export default function LugarQuickActions({ modo = "estabelecimento", acoes = [] }) {
   if (!acoes.length) return null;
 

@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+/**
+ * IconHome - Home tab navigation icon.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @param {boolean} [props.active]
+ * @returns {import('react').ReactElement}
+ */
 function IconHome({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -11,6 +18,13 @@ function IconHome({ className = "h-5 w-5", active = false }) {
   );
 }
 
+/**
+ * IconHeart - Favorites tab navigation icon.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @param {boolean} [props.active]
+ * @returns {import('react').ReactElement}
+ */
 function IconHeart({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -19,6 +33,13 @@ function IconHeart({ className = "h-5 w-5", active = false }) {
   );
 }
 
+/**
+ * IconGrid - Explore/categories tab navigation icon.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @param {boolean} [props.active]
+ * @returns {import('react').ReactElement}
+ */
 function IconGrid({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -27,6 +48,13 @@ function IconGrid({ className = "h-5 w-5", active = false }) {
   );
 }
 
+/**
+ * IconMap - Routes tab navigation icon.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @param {boolean} [props.active]
+ * @returns {import('react').ReactElement}
+ */
 function IconMap({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -36,6 +64,13 @@ function IconMap({ className = "h-5 w-5", active = false }) {
   );
 }
 
+/**
+ * IconPerson - Profile tab navigation icon.
+ * @param {object} props
+ * @param {string} [props.className]
+ * @param {boolean} [props.active]
+ * @returns {import('react').ReactElement}
+ */
 function IconPerson({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -53,11 +88,18 @@ const items = [
   { href: "/perfil", label: "Perfil", Icon: IconPerson },
 ];
 
+/**
+ * BottomNav - Fixed bottom navigation bar with primary app routes.
+ * @returns {import('react').ReactElement}
+ */
 export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <nav
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      aria-label="Navegação principal"
+    >
       <div className="pointer-events-auto flex w-full max-w-md items-center justify-around gap-0.5 rounded-[28px] border border-white/20 bg-white/85 px-2 py-2 shadow-[0_8px_32px_rgba(11,26,26,0.12)] backdrop-blur-xl">
         {items.map(({ href, label, Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -66,6 +108,7 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
+              aria-label={label}
               className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 transition-all ${
                 active
                   ? "bg-[#1a4a3a] text-white shadow-sm"

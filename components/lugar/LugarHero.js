@@ -1,7 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
+/**
+ * Ícone de coração para favoritar ou indicar favorito ativo.
+ * @param {object} props
+ * @param {boolean} props.active - Se o lugar está nos favoritos (preenche o ícone).
+ * @param {string} [props.className] - Classes Tailwind do SVG.
+ * @returns {import("react").JSX.Element}
+ */
 function FavoriteIcon({ active, className = "w-5 h-5" }) {
   return (
     <svg
@@ -17,6 +25,12 @@ function FavoriteIcon({ active, className = "w-5 h-5" }) {
   );
 }
 
+/**
+ * Ícone de compartilhar (seta para cima).
+ * @param {object} props
+ * @param {string} [props.className] - Classes Tailwind do SVG.
+ * @returns {import("react").JSX.Element}
+ */
 function ShareIcon({ className = "w-5 h-5" }) {
   return (
     <svg
@@ -36,6 +50,28 @@ function ShareIcon({ className = "w-5 h-5" }) {
   );
 }
 
+/**
+ * Hero da página de detalhe do lugar: carrossel de fotos, navegação, favorito e metadados.
+ * @param {object} props
+ * @param {string} props.nome - Nome do lugar (alt das imagens e título).
+ * @param {string[]} props.imagens - URLs das fotos do carrossel.
+ * @param {number} props.fotoAtual - Índice da foto visível (0-based).
+ * @param {import("react").RefObject<HTMLDivElement>} props.carouselRef - Ref do container com scroll horizontal.
+ * @param {import("react").UIEventHandler<HTMLDivElement>} props.onCarouselScroll - Handler de scroll do carrossel.
+ * @param {string} props.categoria - Nome da categoria exibida no chip.
+ * @param {string} props.categoriaStyle - Classes Tailwind do chip de categoria.
+ * @param {string} [props.subcategoria] - Nome da subcategoria (chip opcional).
+ * @param {string} [props.subcategoriaIcone] - Emoji ou ícone da subcategoria.
+ * @param {string} [props.distancia] - Texto de distância (ex.: "2,3 km de você").
+ * @param {number} props.mediaAvaliacoes - Média das notas aprovadas.
+ * @param {number} props.totalAvaliacoes - Quantidade de avaliações.
+ * @param {{ aberto: boolean }} props.status - Estado aberto/fechado do horário.
+ * @param {boolean} [props.mostrarStatusAbertura=true] - Exibe chip "Aberto agora" / "Fechado".
+ * @param {boolean} props.isFavorito - Se o usuário favoritou o lugar.
+ * @param {() => void} props.onFavoritar - Callback ao tocar no botão de favorito.
+ * @param {() => void} props.onShare - Callback ao tocar em compartilhar.
+ * @returns {import("react").JSX.Element}
+ */
 export default function LugarHero({
   nome,
   imagens,
@@ -65,13 +101,19 @@ export default function LugarHero({
         className="flex h-full snap-x snap-mandatory overflow-x-auto scroll-smooth scrollbar-hide [-webkit-overflow-scrolling:touch]"
       >
         {imagens.map((foto, index) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <div
             key={`${foto}-${index}`}
-            src={foto}
-            alt={nome}
-            className="h-full w-full shrink-0 snap-center object-cover"
-          />
+            className="relative h-full w-full shrink-0 snap-center"
+          >
+            <Image
+              src={foto}
+              alt={nome}
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority={index === 0}
+            />
+          </div>
         ))}
       </div>
 
@@ -83,7 +125,7 @@ export default function LugarHero({
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <Link
           href="/"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-lg font-semibold text-white backdrop-blur-md"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-lg font-semibold text-white backdrop-blur-md"
           aria-label="Voltar"
         >
           ←
@@ -92,7 +134,7 @@ export default function LugarHero({
           <button
             type="button"
             onClick={onShare}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md"
             aria-label="Compartilhar lugar"
           >
             <ShareIcon />
@@ -100,7 +142,7 @@ export default function LugarHero({
           <button
             type="button"
             onClick={onFavoritar}
-            className={`flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md ${
+            className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-md ${
               isFavorito
                 ? "bg-[#1a4a3a] text-white"
                 : "bg-black/35 text-white"

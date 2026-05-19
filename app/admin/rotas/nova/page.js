@@ -4,6 +4,10 @@ import Link from "next/link";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import RotaForm from "@/components/admin/RotaForm";
 
+/**
+ * Admin page to create a new route via `RotaForm`.
+ * @returns {import("react").ReactElement}
+ */
 export default function NovaRotaPage() {
   const { loading } = useAdminAuth();
 

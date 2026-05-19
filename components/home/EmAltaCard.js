@@ -1,37 +1,36 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { getStatusFuncionamento } from "@/lib/horarios";
 import { getTagsFromLugar } from "@/lib/tags";
-import { createClient } from "@/lib/supabase";
 
-export default function EmAltaCard({ lugar }) {
+/**
+ * Returns aggregated rating from the place record when available.
+ * @param {object} lugar - Place record.
+ * @returns {number|null} Average rating or null.
+ */
+function getRatingMedio(lugar) {
+  const value = lugar.rating_medio ?? lugar.media_avaliacoes;
+  if (value === null || value === undefined) return null;
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : null;
+}
+
+/**
+ * EmAltaCard - Compact trending place card for the home carousel.
+ * @param {object} props
+ * @param {object} props.lugar - Place record from Supabase.
+ * @param {boolean} [props.priority] - Preload image for the first visible carousel card.
+ * @returns {import('react').ReactElement}
+ */
+export default function EmAltaCard({ lugar, priority = false }) {
   const status = getStatusFuncionamento(lugar.horarios);
   const tags = getTagsFromLugar(lugar).slice(0, 2);
   const distancia = lugar.distancia_calculada || lugar.distancia;
-  const [rating, setRating] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const supabase = createClient();
-
-    supabase
-      .from("avaliacoes")
-      .select("nota")
-      .eq("lugar_id", lugar.id)
-      .eq("status", "aprovada")
-      .then(({ data }) => {
-        if (cancelled || !data?.length) return;
-        const total = data.reduce((sum, row) => sum + Number(row.nota || 0), 0);
-        setRating(total / data.length);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [lugar.id]);
+  const rating = getRatingMedio(lugar);
+  const imagemUrl = getCapaFromLugar(lugar);
 
   return (
     <Link
@@ -39,12 +38,19 @@ export default function EmAltaCard({ lugar }) {
       className="group flex w-[200px] shrink-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md"
     >
       <div className="relative h-28 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={getCapaFromLugar(lugar)}
-          alt=""
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        {imagemUrl ? (
+          <Image
+            src={imagemUrl}
+            alt={lugar.nome}
+            width={400}
+            height={300}
+            sizes="200px"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            priority={priority}
+          />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
+        )}
         <span
           className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
             status.aberto ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
@@ -52,7 +58,7 @@ export default function EmAltaCard({ lugar }) {
         >
           {status.aberto ? "Aberto" : "Fechado"}
         </span>
-        {rating && (
+        {rating !== null && (
           <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
             ⭐ {rating.toFixed(1)}
           </span>

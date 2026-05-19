@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useId, useRef, useState } from "react";
 import LoginModal from "@/components/LoginModal";
 import LugarAvaliacoesSection from "@/components/lugar/LugarAvaliacoesSection";
 import LugarCtaFixo from "@/components/lugar/LugarCtaFixo";
@@ -43,6 +43,12 @@ const categoriaStyles = {
   Hospedagem: "bg-[#f5e6b8] text-[#7a6520]",
 };
 
+/**
+ * Builds a maps search/navigation query from coordinates or address.
+ * @param {object} lugar - Place record.
+ * @param {object} [localizacao] - Related `localizacoes` row.
+ * @returns {string} Query string for map apps.
+ */
 function getRouteQuery(lugar, localizacao) {
   const latitude = Number(localizacao?.latitude);
   const longitude = Number(localizacao?.longitude);
@@ -54,15 +60,33 @@ function getRouteQuery(lugar, localizacao) {
   return localizacao?.endereco_completo || lugar.endereco || `${lugar.nome} Imbituba Santa Catarina`;
 }
 
+/**
+ * Google Maps deep link for the place.
+ * @param {object} lugar - Place record.
+ * @param {object} [localizacao] - Related location row.
+ * @returns {string} Google Maps URL.
+ */
 function googleMapsUrl(lugar, localizacao) {
   const query = encodeURIComponent(getRouteQuery(lugar, localizacao));
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
+/**
+ * Apple Maps deep link for the place.
+ * @param {object} lugar - Place record.
+ * @param {object} [localizacao] - Related location row.
+ * @returns {string} Apple Maps URL.
+ */
 function appleMapsUrl(lugar, localizacao) {
   return `https://maps.apple.com/?q=${encodeURIComponent(getRouteQuery(lugar, localizacao))}`;
 }
 
+/**
+ * Waze navigation deep link for the place.
+ * @param {object} lugar - Place record.
+ * @param {object} [localizacao] - Related location row.
+ * @returns {string} Waze URL.
+ */
 function wazeUrl(lugar, localizacao) {
   const latitude = Number(localizacao?.latitude);
   const longitude = Number(localizacao?.longitude);
@@ -74,6 +98,11 @@ function wazeUrl(lugar, localizacao) {
   return `https://waze.com/ul?q=${encodeURIComponent(getRouteQuery(lugar, localizacao))}&navigate=yes`;
 }
 
+/**
+ * Normalizes an Instagram handle or URL to a full profile link.
+ * @param {string} [value] - Handle or URL.
+ * @returns {string|null} Instagram URL or null.
+ */
 function instagramUrl(value) {
   if (!value) return null;
   if (value.startsWith("http")) return value;
@@ -81,6 +110,11 @@ function instagramUrl(value) {
   return `https://instagram.com/${handle}`;
 }
 
+/**
+ * Display name for a review author from joined profile data.
+ * @param {object} avaliacao - Review with optional `profiles` / `perfis`.
+ * @returns {string} Reviewer name or anonymous fallback.
+ */
 function getReviewerName(avaliacao) {
   return (
     avaliacao.profiles?.full_name ||
@@ -90,7 +124,14 @@ function getReviewerName(avaliacao) {
   );
 }
 
+/**
+ * Bottom sheet for hours, navigation choice, and review form on place detail.
+ * @param {{ isOpen: boolean, onClose: () => void, title: string, children: import("react").ReactNode }} props
+ * @returns {import("react").ReactElement|null}
+ */
 function BottomSheet({ isOpen, onClose, title, children }) {
+  const titleId = useId();
+
   if (!isOpen) return null;
 
   return (
@@ -102,6 +143,9 @@ function BottomSheet({ isOpen, onClose, title, children }) {
         className="w-full rounded-t-[24px] bg-white px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
         style={{ animation: "sheetIn 220ms ease-out" }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
       >
         <style>{`
           @keyframes sheetIn {
@@ -110,21 +154,62 @@ function BottomSheet({ isOpen, onClose, title, children }) {
           }
         `}</style>
         <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-[#d8dfdc]" />
-        <h2 className="mb-4 text-lg font-bold text-[#1a2e28]">{title}</h2>
+        <h2 id={titleId} className="mb-4 text-lg font-bold text-[#1a2e28]">
+          {title}
+        </h2>
         {children}
       </div>
     </div>
   );
 }
 
+/**
+ * Error banner with alert icon for failed data loads.
+ * @param {object} props
+ * @param {string} props.message - User-facing error text.
+ * @param {import("react").ReactNode} [props.action] - Optional retry or navigation control.
+ * @returns {import("react").ReactElement}
+ */
+function ErrorBanner({ message, action }) {
+  return (
+    <div
+      className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      <svg
+        className="h-5 w-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <div className="min-w-0 flex-1">
+        <p>{message}</p>
+        {action ? <div className="mt-2">{action}</div> : null}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Place detail page: photos, hours, reviews, favorites, and navigation.
+ * @returns {import("react").ReactElement}
+ */
 export default function LugarPage() {
   const { id } = useParams();
+  const router = useRouter();
   const [lugar, setLugar] = useState(null);
   const [fotos, setFotos] = useState([]);
   const [fotoAtual, setFotoAtual] = useState(0);
   const carouselRef = useRef(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [isFavorito, setIsFavorito] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showHorarios, setShowHorarios] = useState(false);
@@ -192,7 +277,15 @@ export default function LugarPage() {
       .eq("id", id)
       .eq("status", "ativo")
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          setFetchError(true);
+          setLugar(null);
+          setLoading(false);
+          return;
+        }
+
+        setFetchError(false);
         setLugar(data);
         if (data) {
           saveLugarVisitado(data, getCapaFromLugar(data));
@@ -306,6 +399,10 @@ export default function LugarPage() {
       });
   }, [id]);
 
+  /**
+   * Toggles favorite for the current place with optimistic UI.
+   * @returns {Promise<void>}
+   */
   async function handleFavoritar() {
     if (!user) {
       setMotivoModal("favoritar");
@@ -349,6 +446,10 @@ export default function LugarPage() {
     }
   }
 
+  /**
+   * Opens the review sheet or login modal; blocks if user already reviewed.
+   * @returns {Promise<void>}
+   */
   async function handleOpenAvaliacao() {
     if (!user) {
       setMotivoModal("avaliar");
@@ -372,6 +473,10 @@ export default function LugarPage() {
     setShowAvaliacao(true);
   }
 
+  /**
+   * Submits a pending review for moderation.
+   * @returns {Promise<void>}
+   */
   async function handleEnviarAvaliacao() {
     if (!user || !lugar || nota === 0) return;
 
@@ -402,6 +507,27 @@ export default function LugarPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando...
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-[#f0f4f3] px-4 py-6 text-[#1a2e28]">
+        <div className="mx-auto max-w-md">
+          <ErrorBanner
+            message="Erro ao carregar o lugar. Tente novamente."
+            action={
+              <button
+                type="button"
+                onClick={() => router.refresh()}
+                className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-800"
+              >
+                Tentar novamente
+              </button>
+            }
+          />
+        </div>
       </div>
     );
   }
@@ -463,6 +589,7 @@ export default function LugarPage() {
     : getAcoesRapidasLocais(lugar, tags, distancia);
   const modoAcoes = ehEstabelecimento ? "estabelecimento" : "publico";
 
+  /** Updates the photo carousel index from horizontal scroll position. */
   function handleCarouselScroll() {
     const carousel = carouselRef.current;
     if (!carousel) return;
@@ -471,6 +598,10 @@ export default function LugarPage() {
     setFotoAtual(nextIndex);
   }
 
+  /**
+   * Opens the user's preferred maps app and logs the IR AGORA action.
+   * @param {string} [preference] - Override: `google`, `apple`, or `waze`.
+   */
   function openRoute(preference) {
     const selected = preference || localStorage.getItem("map_app_preferido");
 
@@ -496,6 +627,10 @@ export default function LugarPage() {
     window.open(urls[selected], "_blank", "noopener,noreferrer");
   }
 
+  /**
+   * Shares the place via Web Share API or copies the link to clipboard.
+   * @returns {Promise<void>}
+   */
   async function handleShare() {
     const shareData = {
       title: lugar.nome,
@@ -564,6 +699,7 @@ export default function LugarPage() {
           )}
 
           <LugarLocalizacaoCard
+            nome={lugar.nome}
             endereco={endereco}
             mapUrl={mapsLink}
             staticMapSrc={staticMapSrc}

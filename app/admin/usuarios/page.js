@@ -9,10 +9,20 @@ import {
 } from "@/lib/adminRoles";
 import { createClient } from "@/lib/supabase";
 
+/**
+ * First letter of user display name for avatar fallback.
+ * @param {object} user - Perfil row.
+ * @returns {string} Uppercase initial.
+ */
 function getInitial(user) {
   return (user.nome || user.full_name || user.email || "?").charAt(0).toUpperCase();
 }
 
+/**
+ * Colored chip showing normalized user role.
+ * @param {{ role: string }} props
+ * @returns {import("react").ReactElement}
+ */
 function RoleChip({ role }) {
   const normalized = normalizeRole(role);
   return (
@@ -24,6 +34,10 @@ function RoleChip({ role }) {
   );
 }
 
+/**
+ * Admin user list with role management.
+ * @returns {import("react").ReactElement}
+ */
 export default function AdminUsuariosPage() {
   const { loading } = useAdminAuth();
   const [usuarios, setUsuarios] = useState([]);
@@ -33,6 +47,7 @@ export default function AdminUsuariosPage() {
     if (!loading) loadUsuarios();
   }, [loading]);
 
+  /** Loads all profiles ordered by creation date. @returns {Promise<void>} */
   async function loadUsuarios() {
     const supabase = createClient();
     const { data } = await supabase
@@ -42,6 +57,12 @@ export default function AdminUsuariosPage() {
     setUsuarios(data ?? []);
   }
 
+  /**
+   * Updates a user's role with optimistic UI rollback on error.
+   * @param {object} usuario - Perfil row.
+   * @param {string} novoRole - New role value.
+   * @returns {Promise<void>}
+   */
   async function updateRole(usuario, novoRole) {
     if (normalizeRole(usuario.role) === novoRole) return;
 

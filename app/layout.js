@@ -16,6 +16,11 @@ export const metadata = {
   description: "Explore Imbituba — natureza, gastronomia e noite",
 };
 
+/**
+ * Root HTML layout with global fonts and metadata for the app.
+ * @param {{ children: import("react").ReactNode }} props - Layout children.
+ * @returns {import("react").ReactElement}
+ */
 export default function RootLayout({ children }) {
   return (
     <html
