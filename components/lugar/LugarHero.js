@@ -1,0 +1,170 @@
+"use client";
+
+import Link from "next/link";
+
+function FavoriteIcon({ active, className = "w-5 h-5" }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill={active ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+    </svg>
+  );
+}
+
+function ShareIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7" />
+      <path d="M16 6l-4-4-4 4" />
+      <path d="M12 2v14" />
+    </svg>
+  );
+}
+
+export default function LugarHero({
+  nome,
+  imagens,
+  fotoAtual,
+  carouselRef,
+  onCarouselScroll,
+  categoria,
+  categoriaStyle,
+  subcategoria,
+  subcategoriaIcone,
+  distancia,
+  mediaAvaliacoes,
+  totalAvaliacoes,
+  status,
+  mostrarStatusAbertura = true,
+  isFavorito,
+  onFavoritar,
+  onShare,
+}) {
+  const temNota = totalAvaliacoes > 0 && mediaAvaliacoes > 0;
+
+  return (
+    <div className="relative h-[min(52vh,380px)] min-h-[300px] overflow-hidden bg-[#0b1f1a]">
+      <div
+        ref={carouselRef}
+        onScroll={onCarouselScroll}
+        className="flex h-full snap-x snap-mandatory overflow-x-auto scroll-smooth scrollbar-hide [-webkit-overflow-scrolling:touch]"
+      >
+        {imagens.map((foto, index) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={`${foto}-${index}`}
+            src={foto}
+            alt={nome}
+            className="h-full w-full shrink-0 snap-center object-cover"
+          />
+        ))}
+      </div>
+
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#071612]/95 via-[#071612]/45 to-[#071612]/20"
+        aria-hidden
+      />
+
+      <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+        <Link
+          href="/"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-lg font-semibold text-white backdrop-blur-md"
+          aria-label="Voltar"
+        >
+          ←
+        </Link>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onShare}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md"
+            aria-label="Compartilhar lugar"
+          >
+            <ShareIcon />
+          </button>
+          <button
+            type="button"
+            onClick={onFavoritar}
+            className={`flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md ${
+              isFavorito
+                ? "bg-[#1a4a3a] text-white"
+                : "bg-black/35 text-white"
+            }`}
+            aria-label={
+              isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"
+            }
+          >
+            <FavoriteIcon active={isFavorito} />
+          </button>
+        </div>
+      </div>
+
+      {imagens.length > 1 && (
+        <div className="absolute right-4 top-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))] z-20 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+          {fotoAtual + 1} / {imagens.length}
+        </div>
+      )}
+
+      <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-5 pt-16">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${categoriaStyle}`}
+          >
+            {categoria}
+          </span>
+          {subcategoria && (
+            <span className="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium text-white/90 backdrop-blur-sm">
+              {subcategoriaIcone && <span className="mr-1">{subcategoriaIcone}</span>}
+              {subcategoria}
+            </span>
+          )}
+        </div>
+
+        <h1 className="mt-2 font-display text-[1.75rem] font-bold leading-tight tracking-tight text-white">
+          {nome}
+        </h1>
+
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          {temNota && (
+            <span className="flex items-center gap-1 text-sm font-semibold text-white">
+              <span className="text-[#f5c842]">★</span>
+              {mediaAvaliacoes.toFixed(1)}
+              <span className="font-normal text-white/70">
+                ({totalAvaliacoes})
+              </span>
+            </span>
+          )}
+          {mostrarStatusAbertura && (
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                status.aberto
+                  ? "bg-[#3ecf8e] text-[#053d24]"
+                  : "bg-[#ff6b5a] text-white"
+              }`}
+            >
+              {status.aberto ? "Aberto agora" : "Fechado"}
+            </span>
+          )}
+          {distancia && (
+            <span className="text-sm font-medium text-white/85">{distancia}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

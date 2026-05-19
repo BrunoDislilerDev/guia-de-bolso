@@ -10,7 +10,7 @@ const OPCOES = [
 
 export default function SearchStatusFilter({ value, onChange }) {
   return (
-    <div className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+    <div className="mb-2 flex gap-1.5">
       {OPCOES.map((opcao) => {
         const selected = value === opcao.id;
 
@@ -19,7 +19,7 @@ export default function SearchStatusFilter({ value, onChange }) {
             key={opcao.id}
             type="button"
             onClick={() => onChange(opcao.id)}
-            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
               selected
                 ? "bg-[#1a4a3a] text-white"
                 : "bg-white text-[#1a4a3a] ring-1 ring-[#e3e9e6] hover:bg-[#f7faf9]"

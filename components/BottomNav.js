@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-function IconHome({ className = "h-6 w-6", active = false }) {
+function IconHome({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M3 10.5L12 3l9 7.5V21h-6v-6H9v6H3V10.5z" />
@@ -11,7 +11,7 @@ function IconHome({ className = "h-6 w-6", active = false }) {
   );
 }
 
-function IconHeart({ className = "h-6 w-6", active = false }) {
+function IconHeart({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
@@ -19,28 +19,24 @@ function IconHeart({ className = "h-6 w-6", active = false }) {
   );
 }
 
-function IconGrid({ className = "h-6 w-6", active = false }) {
+function IconGrid({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
-      <path d="M4 4h6v6H4V4z" />
-      <path d="M14 4h6v6h-6V4z" />
-      <path d="M4 14h6v6H4v-6z" />
-      <path d="M14 14h6v6h-6v-6z" />
+      <path d="M4 4h6v6H4V4zM14 4h6v6h-6V4zM4 14h6v6H4v-6zM14 14h6v6h-6v-6z" />
     </svg>
   );
 }
 
-function IconMap({ className = "h-6 w-6", active = false }) {
+function IconMap({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" />
-      <path d="M9 3v15" />
-      <path d="M15 6v15" />
+      <path d="M9 3v15M15 6v15" />
     </svg>
   );
 }
 
-function IconPerson({ className = "h-6 w-6", active = false }) {
+function IconPerson({ className = "h-5 w-5", active = false }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -51,7 +47,7 @@ function IconPerson({ className = "h-6 w-6", active = false }) {
 
 const items = [
   { href: "/", label: "Início", Icon: IconHome },
-  { href: "/categorias", label: "Categorias", Icon: IconGrid },
+  { href: "/categorias", label: "Explorar", Icon: IconGrid },
   { href: "/rotas", label: "Rotas", Icon: IconMap },
   { href: "/favoritos", label: "Favoritos", Icon: IconHeart },
   { href: "/perfil", label: "Perfil", Icon: IconPerson },
@@ -61,8 +57,8 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-2 left-2 right-2 z-40 mx-auto max-w-md rounded-full bg-[#0B1A1A] px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_14px_35px_rgba(11,26,26,0.28)]">
-      <div className="flex items-center justify-around gap-1">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="pointer-events-auto flex w-full max-w-md items-center justify-around gap-0.5 rounded-[28px] border border-white/20 bg-white/85 px-2 py-2 shadow-[0_8px_32px_rgba(11,26,26,0.12)] backdrop-blur-xl">
         {items.map(({ href, label, Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
@@ -70,13 +66,15 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-full px-2 py-2 transition-colors ${
-                active ? "bg-white !text-[#0B1A1A]" : "text-white"
+              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 transition-all ${
+                active
+                  ? "bg-[#1a4a3a] text-white shadow-sm"
+                  : "text-[#5a6b66] hover:text-[#1a4a3a]"
               }`}
               aria-current={active ? "page" : undefined}
             >
               <Icon active={active} />
-              <span className="text-xs font-medium">{label}</span>
+              <span className="text-[10px] font-semibold leading-tight">{label}</span>
             </Link>
           );
         })}
