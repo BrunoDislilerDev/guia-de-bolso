@@ -19,11 +19,11 @@ function RoteiroViewModal({ roteiro, onClose }) {
   if (!roteiro) return null;
 
   return (
-    <motionless
+    <div
       className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4"
       onClick={onClose}
     >
-      <motionless
+      <div
         className="flex max-h-[90vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl sm:max-w-lg sm:rounded-3xl"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
@@ -50,8 +50,8 @@ function RoteiroViewModal({ roteiro, onClose }) {
             Fechar
           </button>
         </div>
-      </motionless>
-    </motionless>
+      </div>
+    </div>
   );
 }
 
@@ -62,11 +62,15 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
   const [roteiroVisualizando, setRoteiroVisualizando] = useState(null);
 
   function handleRoteiroSalvo(novoRoteiro) {
-    setRoteiros((atual) => [novoRoteiro, ...atual]);
+    if (!novoRoteiro) return;
+    setRoteiros((atual) => [
+      novoRoteiro,
+      ...atual.filter((item) => item.id !== novoRoteiro.id),
+    ]);
   }
 
   return (
-  <>
+    <>
       <section className="mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 to-emerald-900 p-5 text-white shadow-sm">
         <span className="text-2xl" aria-hidden>
           ✨
@@ -90,7 +94,7 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
           <div className="grid gap-3">
             {roteiros.map((roteiro) => (
               <article
-                key={roteiro.id}
+                key={roteiro.id ?? roteiro.created_at}
                 className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm"
               >
                 <div className="min-w-0 flex-1">

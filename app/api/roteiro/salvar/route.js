@@ -21,21 +21,25 @@ export async function POST(request) {
       );
     }
 
-    const { error } = await supabase.from("roteiros").insert({
-      user_id: user.id,
-      titulo: titulo.trim(),
-      dias: dias.trim(),
-      perfil: perfil.trim(),
-      interesses: Array.isArray(interesses) ? interesses : [],
-      conteudo: conteudo.trim(),
-    });
+    const { data: roteiro, error } = await supabase
+      .from("roteiros")
+      .insert({
+        user_id: user.id,
+        titulo: titulo.trim(),
+        dias: dias.trim(),
+        perfil: perfil.trim(),
+        interesses: Array.isArray(interesses) ? interesses : [],
+        conteudo: conteudo.trim(),
+      })
+      .select("id, titulo, dias, perfil, interesses, conteudo, created_at")
+      .single();
 
     if (error) {
       console.error("Erro ao salvar roteiro:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, roteiro });
   } catch (err) {
     console.error("Salvar roteiro error:", err);
     return NextResponse.json(

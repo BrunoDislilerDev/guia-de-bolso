@@ -154,12 +154,36 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Campo distância removido do formulário de lugares (calculado no app)
 - [x] Bloco de endereço movido para o final do formulário de lugares
 - [x] Mapa com altura aumentada para 350px
+- [x] Busca com histórico de visitados recentes (localStorage)
+- [x] Seção "Populares agora" na tela de busca
+- [x] Resultados de busca em tela isolada com skeleton e estado vazio
+- [x] Animação de transição ao focar no campo de busca
+- [x] Roteiro personalizado com IA (Claude API) dentro da tela de Rotas
+- [x] Formulário guiado: dias, perfil e interesses
+- [x] Loading animado com mensagens alternadas durante geração do roteiro
+- [x] Roteiros salvos no banco e exibidos na tela de Rotas
 
 ---
 
 ## Próximos passos
 
+### Essenciais
+- [ ] Notificações Push (boas-vindas por geolocalização, promoções para quem favoritou)
+- [ ] Busca por voz (Web Speech API + Claude API)
+- [ ] Modo offline básico (PWA com service worker)
+- [ ] QR Code do estabelecimento (cliente escaneia → perfil no app → avalia)
+
+### Diferenciais
+- [ ] "Estou aqui agora" — check-in com contagem de pessoas no lugar em tempo real
+- [ ] Clima e condições da praia (ondas, vento, UV, bom para banho — dados INMET/Marinha)
+- [ ] Eventos locais (tabela de eventos temporários integrada à home)
+
+### Melhorias técnicas
+- [ ] Dark mode completo (implementar com CSS variables quando o app estiver maduro)
+- [ ] Dark mode no admin (painel administrativo em tema escuro)
 - [ ] Apple Sign In (pós Apple Developer Program)
+- [ ] WhatsApp Auth (pós aprovação Meta)
+- [ ] Role "estabelecimento" com painel próprio
 
 ---
 

@@ -161,8 +161,7 @@ export default function RoteiroBottomSheet({
 
       setToast("Roteiro salvo!");
       setTimeout(() => setToast(""), 3000);
-      onRoteiroSalvo?.({
-        id: crypto.randomUUID(),
+      onRoteiroSalvo?.(data.roteiro ?? {
         titulo,
         dias,
         perfil,
@@ -182,9 +181,9 @@ export default function RoteiroBottomSheet({
   return (
     <>
       {toast && (
-        <motionless className="fixed left-4 right-4 top-4 z-[70] mx-auto max-w-md rounded-2xl bg-[#1a4a3a] px-4 py-3 text-center text-sm font-semibold text-white shadow-lg">
+        <div className="fixed left-4 right-4 top-4 z-[70] mx-auto max-w-md rounded-2xl bg-[#1a4a3a] px-4 py-3 text-center text-sm font-semibold text-white shadow-lg">
           {toast}
-        </motionless>
+        </div>
       )}
 
       <div
@@ -248,7 +247,7 @@ export default function RoteiroBottomSheet({
 
                 <section className="mt-6">
                   <h3 className="text-sm font-bold text-gray-800">2. Qual o perfil?</h3>
-                  <motionless className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="mt-3 grid grid-cols-2 gap-2">
                     {PERFIS.map((item) => {
                       const selected = perfil === item.label;
                       return (
@@ -269,7 +268,7 @@ export default function RoteiroBottomSheet({
                         </button>
                       );
                     })}
-                  </motionless>
+                  </div>
                 </section>
 
                 <section className="mt-6">

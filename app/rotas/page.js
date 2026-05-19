@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
+import RoteiroSection from "@/components/rotas/RoteiroSection";
 import { getCapaFromRota } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase/server";
 
@@ -144,11 +145,25 @@ function CompactRouteCard({ rota }) {
 
 export default async function RotasPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data } = await supabase
     .from("rotas")
     .select("*")
     .order("destaque", { ascending: false })
     .order("created_at", { ascending: false });
+
+  let roteiros = [];
+  if (user) {
+    const { data: roteirosData } = await supabase
+      .from("roteiros")
+      .select("id, titulo, dias, perfil, interesses, conteudo, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    roteiros = roteirosData ?? [];
+  }
 
   const rotas = data ?? [];
   const destaque = rotas.find((rota) => rota.destaque === true);
@@ -164,6 +179,8 @@ export default async function RotasPage() {
       </header>
 
       <main className="mx-auto max-w-md px-4 pb-28 pt-5">
+        <RoteiroSection isLoggedIn={Boolean(user)} roteirosIniciais={roteiros} />
+
         {rotas.length === 0 ? (
           <p className="rounded-3xl bg-white p-5 text-sm text-gray-500 shadow-sm">
             Nenhuma rota cadastrada ainda.
