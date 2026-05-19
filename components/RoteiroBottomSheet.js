@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatRoteiroConteudo } from "@/lib/roteiroMarkdown";
+import RoteiroContent from "@/components/rotas/RoteiroContent";
 
 const DIAS_OPCOES = ["1 dia", "2 dias", "3 dias", "4+ dias"];
 
@@ -43,6 +43,8 @@ export default function RoteiroBottomSheet({
   onClose,
   isLoggedIn,
   onLoginRequired,
+  onLimitReached,
+  onUsageRefresh,
   onRoteiroSalvo,
 }) {
   const [dias, setDias] = useState("");
@@ -108,6 +110,11 @@ export default function RoteiroBottomSheet({
   async function handleGerar() {
     if (!formularioCompleto || loading) return;
 
+    if (!isLoggedIn) {
+      onLoginRequired?.();
+      return;
+    }
+
     setErro("");
     setView("loading");
     setLoading(true);
@@ -116,6 +123,7 @@ export default function RoteiroBottomSheet({
     try {
       const response = await fetch("/api/roteiro", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dias, perfil, interesses }),
       });
@@ -123,12 +131,23 @@ export default function RoteiroBottomSheet({
       const data = await response.json();
 
       if (!response.ok) {
+        if (data.code === "LOGIN_REQUIRED") {
+          onLoginRequired?.();
+          setView("form");
+          return;
+        }
+        if (data.code === "LIMIT_REACHED") {
+          onLimitReached?.();
+          setView("form");
+          return;
+        }
         throw new Error(data.error ?? "Erro ao gerar roteiro");
       }
 
       setTitulo(data.titulo ?? `Roteiro ${dias} - ${perfil}`);
       setConteudo(data.conteudo ?? "");
       setView("result");
+      onUsageRefresh?.(data.usage ?? null);
     } catch (error) {
       setErro(error.message || "Não foi possível gerar o roteiro. Tente novamente.");
       setView("form");
@@ -324,11 +343,19 @@ export default function RoteiroBottomSheet({
 
             {view === "result" && (
               <>
-                <h2 className="text-xl font-bold text-gray-950">{titulo}</h2>
-                <div
-                  className="prose prose-sm mt-4 max-w-none text-sm leading-relaxed text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: formatRoteiroConteudo(conteudo) }}
-                />
+                <div className="rounded-2xl bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54] p-4 text-white shadow-md">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100/90">
+                    Seu roteiro
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold leading-tight">{titulo}</h2>
+                  <p className="mt-2 text-sm text-emerald-50/90">
+                    {dias} · {perfil}
+                  </p>
+                </div>
+
+                <div className="mt-4 rounded-2xl bg-[#f0f4f3] p-3">
+                  <RoteiroContent conteudo={conteudo} />
+                </div>
 
                 {erro && (
                   <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>

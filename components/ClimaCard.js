@@ -8,6 +8,7 @@ import {
   getUvLabel,
   normalizePraias,
 } from "@/lib/clima";
+import { canViewClimaDetalhes } from "@/lib/premium";
 import { createClient } from "@/lib/supabase";
 
 function bathBadgeClass(tone) {
@@ -35,7 +36,13 @@ function ClimaCardSkeleton() {
   );
 }
 
-export default function ClimaCard() {
+export default function ClimaCard({
+  user,
+  usage,
+  usageLoading = false,
+  onLoginRequired,
+  onPremiumRequired,
+}) {
   const [praias, setPraias] = useState([]);
   const [praiaSelecionada, setPraiaSelecionada] = useState(null);
   const [clima, setClima] = useState(null);
@@ -117,6 +124,40 @@ export default function ClimaCard() {
       cancelled = true;
     };
   }, [praiaSelecionada]);
+
+  function handleVerDetalhes() {
+    if (!user) {
+      onLoginRequired?.();
+      return;
+    }
+
+    if (usageLoading) return;
+
+    const access = canViewClimaDetalhes(usage, true);
+    if (access.code === "PREMIUM_REQUIRED") {
+      onPremiumRequired?.();
+      return;
+    }
+    setSheetOpen(true);
+  }
+
+  if (!user) {
+    return (
+      <section className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
+        <h2 className="text-base font-bold text-[#1a2e28]">Clima nas praias</h2>
+        <p className="mt-2 text-sm text-[#5a6b66]">
+          Faça login para ver temperatura, ondas e condições do mar em tempo real.
+        </p>
+        <button
+          type="button"
+          onClick={onLoginRequired}
+          className="mt-4 w-full rounded-xl bg-[#1a4a3a] py-3 text-sm font-semibold text-white"
+        >
+          Entrar para ver o clima
+        </button>
+      </section>
+    );
+  }
 
   if (loadingPraias) {
     return <ClimaCardSkeleton />;
@@ -215,10 +256,10 @@ export default function ClimaCard() {
 
             <button
               type="button"
-              onClick={() => setSheetOpen(true)}
+              onClick={handleVerDetalhes}
               className="mt-4 w-full text-left text-sm font-semibold text-[#1a4a3a] transition-opacity hover:opacity-80"
             >
-              Ver detalhes →
+              {usage?.premium ? "Ver detalhes →" : "Ver detalhes completos →"}
             </button>
           </>
         )}

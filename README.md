@@ -45,6 +45,32 @@ npm run dev
 
 Acessa em `http://localhost:3000`.
 
+### Migrations Supabase (Premium e contadores de IA)
+
+Rode no **SQL Editor** do Supabase, nesta ordem:
+
+1. `supabase/premium_usuario.sql` — colunas de assinatura e uso em `perfis`
+2. `supabase/increment_uso_ia.sql` — funções atômicas `increment_busca_ia` e `increment_roteiro_ia` (contador confiável)
+3. `supabase/perfis_premium_policies.sql` — RLS para o usuário ler/atualizar o próprio perfil
+
+Para testar o plano gratuito com limites, garanta `premium_ativo = false` no seu perfil.
+
+---
+
+## Guia Premium e limites de IA
+
+| Recurso | Sem login | Grátis (logado) | Premium (R$ 9,90/mês) |
+|---|---|---|---|
+| Busca com IA | Login obrigatório | 3 buscas/mês | Ilimitado |
+| Roteiro com IA | Login obrigatório | 2 roteiros/mês | Ilimitado |
+| Card de clima (home) | CTA de login | Resumo visível | Resumo visível |
+| Detalhes do clima (sheet) | — | Paywall Premium | Completo |
+
+- Paywall em `components/PremiumPaywallSheet.js` (pagamento via gateway em breve).
+- Contadores em `perfis`: `buscas_ia`, `roteiros_ia`, `uso_ia_mes`, `premium_ativo`.
+- API `GET /api/uso-premium` retorna uso do mês; busca e roteiro retornam `usage` atualizado na resposta.
+- Busca com filtro **Todos / Abertos agora / Fechados** (`components/home/SearchStatusFilter.js`).
+
 ---
 
 ## Banco de dados
@@ -166,12 +192,25 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Dados em tempo real via Open-Meteo Weather e Open-Meteo Marine (gratuito, sem chave)
 - [x] Resumo: temperatura, ondas, vento, UV e badge de condição para banho
 - [x] Sheet detalhado com gráfico de ondas 24h, temperatura da água, fase da lua e índice UV com barra colorida
+- [x] RLS (Row Level Security) ativado em todas as 15 tabelas do banco
+- [x] Auditoria completa de código: imports, rotas, null safety e console.logs removidos
+- [x] Foreign keys validadas: avaliacoes, destaques, favoritos, lugares_tags
+- [x] Buckets de Storage configurados com policies: lugares-fotos, rotas-fotos, Guia de Bolso - Imagens
+- [x] Guia Premium: limites de busca e roteiro com IA para usuários logados (3 buscas e 2 roteiros/mês no plano grátis)
+- [x] Paywall Premium (R$ 9,90/mês) para uso ilimitado e detalhes completos do clima
+- [x] Clima na home apenas para usuários logados; sheet de detalhes exige Premium
+- [x] Busca com IA: filtro por lugares abertos, fechados ou todos (horário real)
+- [x] Contadores de IA com funções SQL atômicas (`increment_busca_ia`, `increment_roteiro_ia`)
+- [x] API `/api/uso-premium` e hook `usePremiumUsage` para exibir uso na UI
+- [x] Roteiro com IA: UI formatada (dias, períodos, setas, dicas, tempo) via `RoteiroContent` + `formatRoteiroConteudo`
+- [x] Geração de roteiro otimizada (lugares filtrados por interesse, prompt estruturado, menos tokens)
 
 ---
 
 ## Próximos passos
 
 ### Essenciais
+- [ ] Pagamento recorrente do Guia Premium (Asaas: PIX, boleto, cartão)
 - [ ] Notificações Push (boas-vindas por geolocalização, promoções para quem favoritou)
 - [ ] Busca por voz (Web Speech API + Claude API)
 - [ ] Modo offline básico (PWA com service worker)
@@ -187,6 +226,24 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [ ] Apple Sign In (pós Apple Developer Program)
 - [ ] WhatsApp Auth (pós aprovação Meta)
 - [ ] Role "estabelecimento" com painel próprio
+
+---
+
+## Segurança do banco
+
+Todas as tabelas usam Row Level Security (RLS) com as seguintes regras:
+
+| Tabela | Leitura | Escrita |
+|---|---|---|
+| lugares | Público (status = ativo) | Admin/Dev |
+| rotas, rota_pontos | Público | Admin/Dev |
+| perfis | Próprio usuário | Próprio usuário (+ funções `increment_*_ia`) |
+| favoritos | Próprio usuário | Próprio usuário |
+| avaliacoes | Público (aprovadas) | Usuário autenticado |
+| roteiros | Próprio usuário | Próprio usuário |
+| logs | Admin/Dev | Sistema |
+| tags, subcategorias, planos | Público | Admin/Dev |
+| destaques, localizacoes, fotos_lugar | Público | Admin/Dev |
 
 ---
 

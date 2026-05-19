@@ -17,12 +17,18 @@ export default function SearchResultsPanel({
   termo,
   loading,
   resultados = [],
+  erro = "",
   onSugestaoClick,
   isFavorito,
   onFavoritar,
 }) {
   return (
     <div className="pb-6">
+      {erro && (
+        <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          {erro}
+        </p>
+      )}
       <div className="mb-5 flex items-start justify-between gap-3">
         <h2 className="text-lg font-bold text-[#1a2e28]">
           Resultados para &ldquo;{termo}&rdquo;

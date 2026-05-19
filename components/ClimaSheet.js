@@ -50,7 +50,7 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
       `}</style>
 
       <div
-        className="flex max-h-[92vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl"
+        className="w-full max-w-md h-auto max-h-[90vh] flex flex-col rounded-t-[24px] bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
         style={{ animation: "climaSheetIn 260ms ease-out forwards" }}
         role="dialog"
@@ -59,7 +59,10 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
       >
         <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200" />
 
-        <div className="flex-1 overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+        <div
+          className="overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4"
+          style={{ maxHeight: "calc(90vh - 2rem)" }}
+        >
           <h2 id="clima-sheet-title" className="text-xl font-bold text-[#1a2e28]">
             {praia?.nome}
           </h2>

@@ -6,6 +6,9 @@ const subtitles = {
   favoritar: "Salve seus lugares favoritos para acessar quando quiser",
   avaliar: "Compartilhe sua experiência e ajude outros viajantes",
   rotas: "Acesse rotas detalhadas com dicas exclusivas para chegar lá",
+  busca: "Faça login para buscar lugares com inteligência artificial",
+  clima: "Faça login para ver o clima das praias da região",
+  premium: "Entre na sua conta para assinar o Guia Premium",
 };
 
 function IconHeart({ className = "h-9 w-9" }) {

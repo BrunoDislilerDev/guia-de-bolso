@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
+import {
+  FILTRO_STATUS_BUSCA,
+  buildLugarBuscaResumo,
+  filtrarLugaresPorStatus,
+  getFiltroStatusLabel,
+} from "@/lib/busca";
+import { checkBuscaAccess, getAuthUser } from "@/lib/premiumServer";
 import { supabase } from "@/lib/supabase";
-import { getTagsFromLugar } from "@/lib/tags";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
 const SYSTEM_PROMPT = `Você é um assistente do app Guia de Bolso, um guia local de Garopaba e Imbituba.
-Com base nos lugares disponíveis, retorne os IDs dos lugares mais relevantes
-para a busca do usuário. Responda APENAS com um array JSON de IDs, ex: ["uuid-1", "uuid-2"].
-Use exatamente os IDs fornecidos na lista de lugares. Se nenhum lugar for relevante, retorne [].`;
+Com base nos lugares disponíveis, retorne os IDs dos lugares mais relevantes para a busca do usuário.
+Responda APENAS com um array JSON de IDs, ex: ["uuid-1", "uuid-2"].
+Use exatamente os IDs fornecidos na lista de lugares. Se nenhum lugar for relevante, retorne [].
+
+Cada lugar inclui "abertoAgora" (true/false) com base no horário atual em America/Sao_Paulo.
+- Se a busca pedir lugares abertos, retorne só IDs com abertoAgora=true.
+- Se a busca pedir lugares fechados, retorne só IDs com abertoAgora=false.
+- Caso contrário, priorize relevância e não exclua por horário.`;
 
 function parseIds(text) {
   const trimmed = text.trim();
@@ -34,10 +45,24 @@ function parseIds(text) {
 
 export async function POST(request) {
   try {
-    const { query } = await request.json();
+    const { query, filtroStatus = FILTRO_STATUS_BUSCA.TODOS } = await request.json();
 
     if (!query?.trim()) {
       return NextResponse.json({ lugares: [] });
+    }
+
+    const { user } = await getAuthUser();
+    const access = await checkBuscaAccess(user?.id, { increment: true, user });
+
+    if (!access.allowed) {
+      return NextResponse.json(
+        {
+          error: access.message,
+          code: access.code,
+          usage: access.usage ?? null,
+        },
+        { status: access.status }
+      );
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -58,15 +83,36 @@ export async function POST(request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const lugaresResumo = (lugares ?? []).map((l) => {
-      const tags = getTagsFromLugar(l).map((tag) => tag.nome);
+    const lugaresAtivos = lugares ?? [];
+    const lugaresParaBusca = filtrarLugaresPorStatus(lugaresAtivos, filtroStatus);
+
+    if (
+      filtroStatus !== FILTRO_STATUS_BUSCA.TODOS &&
+      lugaresParaBusca.length === 0
+    ) {
+      return NextResponse.json({
+        lugares: [],
+        usage: access.usage ?? null,
+        filtroStatus,
+        message: "Nenhum lugar corresponde ao filtro de horário selecionado.",
+      });
+    }
+
+    const lugaresResumo = lugaresParaBusca.map((lugar) => {
+      const resumo = buildLugarBuscaResumo(lugar);
       return {
-        id: l.id,
-        contexto: `${l.nome}${l.subcategoria ? ` (${l.subcategoria})` : ""} - tags: ${
-          tags.length > 0 ? tags.join(", ") : "sem tags"
-        } - ${l.descricao} - categoria: ${l.categoria}`,
+        id: resumo.id,
+        contexto: `${resumo.nome}${resumo.subcategoria ? ` (${resumo.subcategoria})` : ""} - ${
+          resumo.abertoAgora ? "ABERTO AGORA" : "FECHADO AGORA"
+        } (${resumo.statusDetail}) - tags: ${
+          resumo.tags.length > 0 ? resumo.tags.join(", ") : "sem tags"
+        } - ${resumo.descricao} - categoria: ${resumo.categoria}`,
+        abertoAgora: resumo.abertoAgora,
       };
     });
+
+    const filtroLabel = getFiltroStatusLabel(filtroStatus);
+    const queryUsuario = query.trim();
 
     const requestBody = {
       model: process.env.ANTHROPIC_MODEL ?? CLAUDE_MODEL,
@@ -75,7 +121,11 @@ export async function POST(request) {
       messages: [
         {
           role: "user",
-          content: `Lugares disponíveis:\n${JSON.stringify(lugaresResumo)}\n\nBusca do usuário: ${query.trim()}`,
+          content: `Filtro de horário: ${filtroLabel}.
+Lugares disponíveis (${lugaresResumo.length}):
+${JSON.stringify(lugaresResumo)}
+
+Busca do usuário: ${queryUsuario}`,
         },
       ],
     };
@@ -103,14 +153,19 @@ export async function POST(request) {
     const text = claudeData.content?.[0]?.text ?? "[]";
     const ids = parseIds(text);
 
-    const lugaresPorId = new Map((lugares ?? []).map((l) => [String(l.id), l]));
-    const filtrados = ids
+    const lugaresPorId = new Map(lugaresAtivos.map((l) => [String(l.id), l]));
+    let filtrados = ids
       .map((id) => lugaresPorId.get(String(id)))
       .filter(Boolean);
 
-    return NextResponse.json({ lugares: filtrados });
-  } catch (err) {
-    // TODO: adicionar logger de produção
+    filtrados = filtrarLugaresPorStatus(filtrados, filtroStatus);
+
+    return NextResponse.json({
+      lugares: filtrados,
+      usage: access.usage ?? null,
+      filtroStatus,
+    });
+  } catch {
     return NextResponse.json(
       { error: "Erro interno ao processar a busca" },
       { status: 500 }

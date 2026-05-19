@@ -1,14 +1,35 @@
 import { NextResponse } from "next/server";
+import { checkRoteiroAccess, getAuthUser } from "@/lib/premiumServer";
+import { selecionarLugaresParaRoteiro } from "@/lib/roteiroLugares";
 import { supabase } from "@/lib/supabase";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
-const SYSTEM_PROMPT = `Você é um especialista local em Imbituba, Santa Catarina.
-Monte um roteiro detalhado e personalizado baseado APENAS nos lugares fornecidos.
-Para cada dia sugira manhã, tarde e noite.
-Para cada período: nome do lugar (exatamente como no banco), o que fazer lá, dica local e tempo sugerido.
-Tom amigável, local e autêntico. Em português do Brasil.
-Formato markdown com emojis. Não invente lugares fora da lista.`;
+const SYSTEM_PROMPT = `Você é um especialista local em Imbituba e Garopaba, Santa Catarina.
+Monte um roteiro personalizado usando APENAS os lugares da lista (nome exato).
+Use EXATAMENTE este formato markdown:
+
+# Dia 1 — Título curto do dia
+
+## 🌅 Manhã
+**Nome do Lugar**
+→ O que fazer lá (1-2 frases)
+💡 Dica local curta
+⏱️ ~2h
+
+## ☀️ Tarde
+**Outro Lugar**
+→ Atividade
+💡 Dica
+⏱️ ~3h
+
+## 🌙 Noite
+**Lugar**
+→ Atividade
+💡 Dica
+⏱️ ~2h
+
+Repita para cada dia. Tom amigável, emojis, português do Brasil. Não invente lugares.`;
 
 export async function POST(request) {
   try {
@@ -18,6 +39,20 @@ export async function POST(request) {
       return NextResponse.json(
         { error: "Informe dias, perfil e interesses." },
         { status: 400 }
+      );
+    }
+
+    const { user } = await getAuthUser();
+    const access = await checkRoteiroAccess(user?.id, { increment: true, user });
+
+    if (!access.allowed) {
+      return NextResponse.json(
+        {
+          error: access.message,
+          code: access.code,
+          usage: access.usage ?? null,
+        },
+        { status: access.status }
       );
     }
 
@@ -31,24 +66,14 @@ export async function POST(request) {
 
     const { data: lugaresRaw, error } = await supabase
       .from("lugares")
-      .select("id, nome, descricao, categoria, subcategoria, lugares_tags(tags(nome))")
+      .select("id, nome, descricao, categoria, subcategoria, destaque, lugares_tags(tags(nome))")
       .eq("status", "ativo");
 
     if (error) {
-      console.error("Supabase lugares error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const lugares = (lugaresRaw ?? []).map((lugar) => ({
-      id: lugar.id,
-      nome: lugar.nome,
-      descricao: lugar.descricao,
-      categoria: lugar.categoria,
-      subcategoria: lugar.subcategoria,
-      tags: (lugar.lugares_tags ?? [])
-        .map((item) => item.tags?.nome)
-        .filter(Boolean),
-    }));
+    const lugares = selecionarLugaresParaRoteiro(lugaresRaw, interesses);
 
     const interessesTexto = Array.isArray(interesses)
       ? interesses.join(", ")
@@ -63,13 +88,13 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL ?? CLAUDE_MODEL,
-        max_tokens: 2000,
+        max_tokens: 1400,
         system: SYSTEM_PROMPT,
         messages: [
           {
             role: "user",
-            content: `Monte um roteiro de ${dias} para ${perfil} com interesse em ${interessesTexto}.
-Lugares disponíveis: ${JSON.stringify(lugares)}`,
+            content: `Roteiro de ${dias} | Perfil: ${perfil} | Interesses: ${interessesTexto}
+Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
           },
         ],
       }),
@@ -78,7 +103,6 @@ Lugares disponíveis: ${JSON.stringify(lugares)}`,
     const claudeRaw = await claudeResponse.text();
 
     if (!claudeResponse.ok) {
-      console.error("Claude error:", claudeResponse.status, claudeRaw);
       return NextResponse.json(
         { error: "Erro ao consultar a Claude API" },
         { status: 500 }
@@ -91,9 +115,9 @@ Lugares disponíveis: ${JSON.stringify(lugares)}`,
     return NextResponse.json({
       conteudo,
       titulo: `Roteiro ${dias} - ${perfil}`,
+      usage: access.usage ?? null,
     });
-  } catch (err) {
-    console.error("Roteiro API error:", err);
+  } catch {
     return NextResponse.json(
       { error: "Erro interno ao gerar roteiro" },
       { status: 500 }

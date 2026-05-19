@@ -7,8 +7,13 @@ import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
 import PlaceCard from "@/components/PlaceCard";
 import ClimaCard from "@/components/ClimaCard";
+import PremiumPaywallSheet from "@/components/PremiumPaywallSheet";
 import SearchBrowsePanel from "@/components/home/SearchBrowsePanel";
 import SearchResultsPanel from "@/components/home/SearchResultsPanel";
+import SearchStatusFilter from "@/components/home/SearchStatusFilter";
+import { FILTRO_STATUS_BUSCA } from "@/lib/busca";
+import { canUseBusca } from "@/lib/premium";
+import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
 import { getLugaresVisitados } from "@/lib/lugaresVisitados";
@@ -509,6 +514,17 @@ export default function Home() {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [motivoModal, setMotivoModal] = useState("favoritar");
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState("geral");
+  const [erroBusca, setErroBusca] = useState("");
+  const [filtroBuscaStatus, setFiltroBuscaStatus] = useState(FILTRO_STATUS_BUSCA.TODOS);
+
+  const {
+    usage: premiumUsage,
+    loading: premiumLoading,
+    refresh: refreshPremiumUsage,
+    setUsage: setPremiumUsage,
+  } = usePremiumUsage(user);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -735,31 +751,78 @@ export default function Home() {
     }, 150);
   }
 
+  function abrirPaywall(feature) {
+    setPaywallFeature(feature);
+    setPaywallOpen(true);
+  }
+
   async function executarBusca(query) {
     const termo = query.trim();
     if (!termo) return;
+
+    if (!user) {
+      setMotivoModal("busca");
+      setIsModalOpen(true);
+      return;
+    }
+
+    const access = canUseBusca(premiumUsage, Boolean(user));
+    if (!access.allowed) {
+      if (access.code === "LIMIT_REACHED") {
+        abrirPaywall("busca");
+      } else if (access.code === "LOGIN_REQUIRED") {
+        setMotivoModal("busca");
+        setIsModalOpen(true);
+      }
+      return;
+    }
 
     setTermoBusca(termo);
     setTermoResultado(termo);
     setSearchMode("results");
     setLoadingBusca(true);
     setResultadosBusca([]);
+    setErroBusca("");
 
     try {
       const response = await fetch("/api/buscar", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: termo }),
+        body: JSON.stringify({ query: termo, filtroStatus: filtroBuscaStatus }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Erro na busca");
+        if (data.code === "LOGIN_REQUIRED") {
+          setMotivoModal("busca");
+          setIsModalOpen(true);
+          setSearchMode("browse");
+          return;
+        }
+        if (data.code === "LIMIT_REACHED") {
+          abrirPaywall("busca");
+          await refreshPremiumUsage();
+          setSearchMode("browse");
+          return;
+        }
+        setErroBusca(data.error ?? "Erro na busca");
+        setResultadosBusca([]);
+        return;
       }
 
       setResultadosBusca(data.lugares ?? []);
+      if (data.message && (data.lugares ?? []).length === 0) {
+        setErroBusca(data.message);
+      }
+      if (data.usage) {
+        setPremiumUsage(data.usage);
+      } else {
+        await refreshPremiumUsage();
+      }
     } catch {
+      setErroBusca("Não foi possível concluir a busca. Tente novamente.");
       setResultadosBusca([]);
     } finally {
       setLoadingBusca(false);
@@ -892,6 +955,19 @@ export default function Home() {
               : "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
           }`}
         >
+          {searchMode && (
+            <SearchStatusFilter
+              value={filtroBuscaStatus}
+              onChange={setFiltroBuscaStatus}
+            />
+          )}
+          {user && premiumUsage && searchMode && (
+            <p className="-mt-2 mb-3 text-center text-xs text-[#5a6b66]">
+              {premiumUsage.premium
+                ? "✨ Premium — buscas com IA ilimitadas"
+                : `Busca com IA: ${premiumUsage.buscas.used}/${premiumUsage.buscas.limit} este mês`}
+            </p>
+          )}
           {searchMode === "browse" && (
             <SearchBrowsePanel
               visitados={visitadosRecentes}
@@ -904,6 +980,7 @@ export default function Home() {
               termo={termoResultado}
               loading={loadingBusca}
               resultados={resultadosExibidos}
+              erro={erroBusca}
               onSugestaoClick={handleSugestaoClick}
               isFavorito={isFavorito}
               onFavoritar={handleFavoritar}
@@ -946,7 +1023,16 @@ export default function Home() {
           />
         )}
 
-        <ClimaCard />
+        <ClimaCard
+          user={user}
+          usage={premiumUsage}
+          usageLoading={premiumLoading}
+          onLoginRequired={() => {
+            setMotivoModal("clima");
+            setIsModalOpen(true);
+          }}
+          onPremiumRequired={() => abrirPaywall("clima")}
+        />
 
         <section className="mt-2">
           <div className="mb-4 flex items-center justify-between gap-2">
@@ -1020,6 +1106,17 @@ export default function Home() {
         isOpen={isModalOpen}
         motivo={motivoModal}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      <PremiumPaywallSheet
+        isOpen={paywallOpen}
+        feature={paywallFeature}
+        onClose={() => setPaywallOpen(false)}
+        onLogin={() => {
+          setPaywallOpen(false);
+          setMotivoModal("premium");
+          setIsModalOpen(true);
+        }}
       />
     </div>
   );
