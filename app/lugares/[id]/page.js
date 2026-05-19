@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import LoginModal from "@/components/LoginModal";
-import { getFotosFromLugar } from "@/lib/fotos";
+import { getCapaFromLugar, getFotosFromLugar } from "@/lib/fotos";
+import { saveLugarVisitado } from "@/lib/lugaresVisitados";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 import {
@@ -283,6 +284,9 @@ export default function LugarPage() {
       .maybeSingle()
       .then(({ data }) => {
         setLugar(data);
+        if (data) {
+          saveLugarVisitado(data, getCapaFromLugar(data));
+        }
         const fotosJson = getFotosFromLugar(data);
         if (fotosJson.length > 0) {
           setFotos(fotosJson);

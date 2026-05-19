@@ -144,12 +144,21 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Skeleton de carregamento na listagem de rotas
 - [x] CRUD completo de Rotas no painel admin
 - [x] Admin de Lugares redesenhado com fotos, grid de cards e filtros
+- [x] Upload de fotos real no admin (lugares e rotas) com preview e Supabase Storage
+- [x] Mapa interativo no cadastro de lugares com marcador arrastável via Google Maps
+- [x] Máscara de telefone (xx) x xxxx-xxxx no formulário de lugares
+- [x] Tags filtradas por categoria no formulário de lugares
+- [x] Sistema de roles expandido: dev, admin, usuario, estabelecimento
+- [x] Dashboard admin redesenhado com cards de métricas e variação semanal
+- [x] Logs com badges coloridos por ação e detalhes formatados
+- [x] Campo distância removido do formulário de lugares (calculado no app)
+- [x] Bloco de endereço movido para o final do formulário de lugares
+- [x] Mapa com altura aumentada para 350px
 
 ---
 
 ## Próximos passos
 
-- [ ] WhatsApp Auth (pós aprovação Meta)
 - [ ] Apple Sign In (pós Apple Developer Program)
 
 ---

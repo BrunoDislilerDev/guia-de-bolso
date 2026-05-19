@@ -1,0 +1,369 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { formatRoteiroConteudo } from "@/lib/roteiroMarkdown";
+
+const DIAS_OPCOES = ["1 dia", "2 dias", "3 dias", "4+ dias"];
+
+const PERFIS = [
+  { id: "familia", label: "Família com crianças", emoji: "👨‍👩‍👧" },
+  { id: "casal", label: "Casal", emoji: "💑" },
+  { id: "solo", label: "Solo", emoji: "🧍" },
+  { id: "grupo", label: "Grupo de amigos", emoji: "👥" },
+];
+
+const INTERESSES_OPCOES = [
+  "Praias",
+  "Trilhas",
+  "Gastronomia",
+  "Vida noturna",
+  "Cultura",
+  "Compras",
+  "Aventura",
+  "Bem-estar",
+];
+
+const LOADING_MESSAGES = [
+  "Consultando os melhores lugares...",
+  "Montando seu roteiro...",
+  "Quase pronto...",
+];
+
+function Spinner() {
+  return (
+    <div
+      className="h-10 w-10 animate-spin rounded-full border-[3px] border-emerald-200 border-t-emerald-600"
+      aria-hidden
+    />
+  );
+}
+
+export default function RoteiroBottomSheet({
+  isOpen,
+  onClose,
+  isLoggedIn,
+  onLoginRequired,
+  onRoteiroSalvo,
+}) {
+  const [dias, setDias] = useState("");
+  const [perfil, setPerfil] = useState("");
+  const [interesses, setInteresses] = useState([]);
+  const [view, setView] = useState("form");
+  const [loading, setLoading] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [titulo, setTitulo] = useState("");
+  const [conteudo, setConteudo] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [toast, setToast] = useState("");
+  const [erro, setErro] = useState("");
+
+  const formularioCompleto = Boolean(dias && perfil && interesses.length > 0);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    function handleEscape(event) {
+      if (event.key === "Escape" && !loading && !salvando) {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isOpen, loading, salvando, onClose]);
+
+  useEffect(() => {
+    if (view !== "loading") return undefined;
+
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((current) => (current + 1) % LOADING_MESSAGES.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [view]);
+
+  function resetFormulario() {
+    setDias("");
+    setPerfil("");
+    setInteresses([]);
+    setTitulo("");
+    setConteudo("");
+    setErro("");
+    setLoadingMessageIndex(0);
+    setView("form");
+  }
+
+  function handleClose() {
+    if (loading || salvando) return;
+    resetFormulario();
+    onClose();
+  }
+
+  function toggleInteresse(item) {
+    setInteresses((atual) =>
+      atual.includes(item) ? atual.filter((i) => i !== item) : [...atual, item]
+    );
+  }
+
+  async function handleGerar() {
+    if (!formularioCompleto || loading) return;
+
+    setErro("");
+    setView("loading");
+    setLoading(true);
+    setLoadingMessageIndex(0);
+
+    try {
+      const response = await fetch("/api/roteiro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dias, perfil, interesses }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Erro ao gerar roteiro");
+      }
+
+      setTitulo(data.titulo ?? `Roteiro ${dias} - ${perfil}`);
+      setConteudo(data.conteudo ?? "");
+      setView("result");
+    } catch (error) {
+      setErro(error.message || "Não foi possível gerar o roteiro. Tente novamente.");
+      setView("form");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSalvar() {
+    if (!isLoggedIn) {
+      onLoginRequired?.();
+      return;
+    }
+
+    setSalvando(true);
+    setErro("");
+
+    try {
+      const response = await fetch("/api/roteiro/salvar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo, dias, perfil, interesses, conteudo }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Erro ao salvar roteiro");
+      }
+
+      setToast("Roteiro salvo!");
+      setTimeout(() => setToast(""), 3000);
+      onRoteiroSalvo?.({
+        id: crypto.randomUUID(),
+        titulo,
+        dias,
+        perfil,
+        interesses,
+        conteudo,
+        created_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      setErro(error.message || "Não foi possível salvar o roteiro.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {toast && (
+        <motionless className="fixed left-4 right-4 top-4 z-[70] mx-auto max-w-md rounded-2xl bg-[#1a4a3a] px-4 py-3 text-center text-sm font-semibold text-white shadow-lg">
+          {toast}
+        </motionless>
+      )}
+
+      <div
+        className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm"
+        onClick={handleClose}
+        style={{ animation: "roteiroOverlayIn 220ms ease-out forwards" }}
+      >
+        <style>{`
+          @keyframes roteiroOverlayIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes roteiroSheetIn {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+        `}</style>
+
+        <div
+          className="flex max-h-[92vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl"
+          onClick={(event) => event.stopPropagation()}
+          style={{ animation: "roteiroSheetIn 260ms ease-out forwards" }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="roteiro-sheet-title"
+        >
+          <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200" />
+
+          <div className="flex-1 overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+            {view === "form" && (
+              <>
+                <h2 id="roteiro-sheet-title" className="text-xl font-bold text-gray-950">
+                  Criar roteiro com IA
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Responda as perguntas para montar seu roteiro personalizado.
+                </p>
+
+                <section className="mt-6">
+                  <h3 className="text-sm font-bold text-gray-800">1. Quantos dias?</h3>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {DIAS_OPCOES.map((opcao) => {
+                      const selected = dias === opcao;
+                      return (
+                        <button
+                          key={opcao}
+                          type="button"
+                          onClick={() => setDias(opcao)}
+                          className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                            selected
+                              ? "bg-emerald-700 text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          {opcao}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="mt-6">
+                  <h3 className="text-sm font-bold text-gray-800">2. Qual o perfil?</h3>
+                  <motionless className="mt-3 grid grid-cols-2 gap-2">
+                    {PERFIS.map((item) => {
+                      const selected = perfil === item.label;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setPerfil(item.label)}
+                          className={`flex flex-col items-center justify-center gap-1 rounded-2xl border-2 px-3 py-4 text-center text-sm font-semibold transition-colors ${
+                            selected
+                              ? "border-emerald-700 bg-emerald-50 text-emerald-900"
+                              : "border-gray-100 bg-gray-50 text-gray-700 hover:border-gray-200"
+                          }`}
+                        >
+                          <span className="text-2xl" aria-hidden>
+                            {item.emoji}
+                          </span>
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </motionless>
+                </section>
+
+                <section className="mt-6">
+                  <h3 className="text-sm font-bold text-gray-800">3. Interesses</h3>
+                  <p className="mt-1 text-xs text-gray-500">Selecione um ou mais</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {INTERESSES_OPCOES.map((item) => {
+                      const selected = interesses.includes(item);
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => toggleInteresse(item)}
+                          className={`rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                            selected
+                              ? "bg-emerald-700 text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {erro && (
+                  <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleGerar}
+                  disabled={!formularioCompleto}
+                  className="mt-6 w-full rounded-xl bg-emerald-700 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  Gerar meu roteiro
+                </button>
+              </>
+            )}
+
+            {view === "loading" && (
+              <div className="flex min-h-[320px] flex-col items-center justify-center py-10 text-center">
+                <Spinner />
+                <p className="mt-5 text-base font-semibold text-gray-800">
+                  {LOADING_MESSAGES[loadingMessageIndex]}
+                </p>
+                <p className="mt-2 text-sm text-gray-500">
+                  A IA está montando o melhor roteiro para você
+                </p>
+              </div>
+            )}
+
+            {view === "result" && (
+              <>
+                <h2 className="text-xl font-bold text-gray-950">{titulo}</h2>
+                <div
+                  className="prose prose-sm mt-4 max-w-none text-sm leading-relaxed text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: formatRoteiroConteudo(conteudo) }}
+                />
+
+                {erro && (
+                  <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>
+                )}
+
+                <div className="mt-6 space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleSalvar}
+                    disabled={salvando}
+                    className="w-full rounded-xl bg-emerald-700 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
+                  >
+                    {salvando ? "Salvando..." : "Salvar roteiro"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetFormulario}
+                    className="w-full rounded-xl border border-gray-200 bg-white py-3.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50"
+                  >
+                    Novo roteiro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="w-full py-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

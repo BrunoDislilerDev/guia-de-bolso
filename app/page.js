@@ -6,7 +6,11 @@ import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
 import PlaceCard from "@/components/PlaceCard";
+import SearchBrowsePanel from "@/components/home/SearchBrowsePanel";
+import SearchResultsPanel from "@/components/home/SearchResultsPanel";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
+import { getLugaresVisitados } from "@/lib/lugaresVisitados";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 import { withDistanciaDinamica } from "@/lib/localizacao";
@@ -23,6 +27,14 @@ function IconSearch({ className = "w-4 h-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16 6.5 6.5 0 0016 9.5c0 1.61-.59 3.09-1.57 4.23l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+    </svg>
+  );
+}
+
+function IconClose({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
     </svg>
   );
 }
@@ -539,9 +551,15 @@ export default function Home() {
   const [lugaresProximos, setLugaresProximos] = useState([]);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
   const [termoBusca, setTermoBusca] = useState("");
-  const [buscaAtiva, setBuscaAtiva] = useState(false);
+  const [termoResultado, setTermoResultado] = useState("");
+  const [searchMode, setSearchMode] = useState(null);
   const [resultadosBusca, setResultadosBusca] = useState([]);
   const [loadingBusca, setLoadingBusca] = useState(false);
+  const [visitadosRecentes, setVisitadosRecentes] = useState([]);
+  const [populares, setPopulares] = useState([]);
+  const [loadingPopulares, setLoadingPopulares] = useState(false);
+  const searchInputRef = useRef(null);
+  const searchContainerRef = useRef(null);
   const [favoritos, setFavoritos] = useState([]);
   const [userPosition, setUserPosition] = useState(null);
   const [categoriaSections, setCategoriaSections] = useState({
@@ -653,7 +671,7 @@ export default function Home() {
   }, [authLoading]);
 
   useEffect(() => {
-    if (authLoading || buscaAtiva) return;
+    if (authLoading || searchMode) return;
 
     let cancelled = false;
 
@@ -664,7 +682,42 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [categoriaSelecionada, buscaAtiva, authLoading]);
+  }, [categoriaSelecionada, searchMode, authLoading]);
+
+  useEffect(() => {
+    if (searchMode !== "browse") return;
+
+    setVisitadosRecentes(getLugaresVisitados());
+
+    let cancelled = false;
+    setLoadingPopulares(true);
+
+    const supabase = createClient();
+    fetchLugaresPopulares(supabase, 5)
+      .then((data) => {
+        if (!cancelled) setPopulares(data);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingPopulares(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchMode]);
+
+  useEffect(() => {
+    if (!searchMode) return undefined;
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        fecharBusca();
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [searchMode]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -751,19 +804,53 @@ export default function Home() {
     }
   }
 
-  async function handleBuscar(event) {
-    event.preventDefault();
-    const query = termoBusca.trim();
-    if (!query) return;
+  function fecharBusca() {
+    setSearchMode(null);
+    setTermoBusca("");
+    setTermoResultado("");
+    setResultadosBusca([]);
+    setLoadingBusca(false);
+    searchInputRef.current?.blur();
+  }
 
+  function handleSearchFocus() {
+    setVisitadosRecentes(getLugaresVisitados());
+
+    if (searchMode === "results" && termoBusca.trim()) return;
+
+    setSearchMode("browse");
+  }
+
+  function handleSearchBlur(event) {
+    if (termoBusca.trim()) return;
+
+    const next = event.relatedTarget;
+    if (next && searchContainerRef.current?.contains(next)) return;
+
+    window.setTimeout(() => {
+      if (searchInputRef.current === document.activeElement) return;
+      if (termoBusca.trim()) return;
+      if (searchMode === "browse") {
+        fecharBusca();
+      }
+    }, 150);
+  }
+
+  async function executarBusca(query) {
+    const termo = query.trim();
+    if (!termo) return;
+
+    setTermoBusca(termo);
+    setTermoResultado(termo);
+    setSearchMode("results");
     setLoadingBusca(true);
-    setBuscaAtiva(true);
+    setResultadosBusca([]);
 
     try {
       const response = await fetch("/api/buscar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query: termo }),
       });
 
       const data = await response.json();
@@ -780,22 +867,34 @@ export default function Home() {
     }
   }
 
-  function handleLimparBusca() {
-    setBuscaAtiva(false);
-    setResultadosBusca([]);
-    setLoadingBusca(false);
+  async function handleBuscar(event) {
+    event.preventDefault();
+    await executarBusca(termoBusca);
+  }
+
+  function handleSugestaoClick(termo) {
+    executarBusca(termo);
   }
 
   function handleTermoBuscaChange(value) {
     setTermoBusca(value);
 
     if (!value.trim()) {
-      handleLimparBusca();
+      setResultadosBusca([]);
+      setLoadingBusca(false);
+      setTermoResultado("");
+
+      if (searchMode === "results") {
+        setSearchMode("browse");
+      }
     }
   }
 
-  const lugaresExibidos = (buscaAtiva ? resultadosBusca : lugaresProximos).map(
-    (lugar) => withDistanciaDinamica(lugar, userPosition)
+  const lugaresProximosExibidos = lugaresProximos.map((lugar) =>
+    withDistanciaDinamica(lugar, userPosition)
+  );
+  const resultadosExibidos = resultadosBusca.map((lugar) =>
+    withDistanciaDinamica(lugar, userPosition)
   );
   const destaquesExibidos = destaques.map((lugar) =>
     withDistanciaDinamica(lugar, userPosition)
@@ -858,19 +957,71 @@ export default function Home() {
         </header>
 
         {/* Search */}
-        <form onSubmit={handleBuscar} className="mb-4">
+        <form
+          ref={searchContainerRef}
+          onSubmit={handleBuscar}
+          className="relative z-10 mb-4"
+        >
           <div className="relative">
             <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9aa8a3]" />
             <input
+              ref={searchInputRef}
               type="search"
               value={termoBusca}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
               onChange={(e) => handleTermoBuscaChange(e.target.value)}
               placeholder="O que você procura? Ex: quero comer peixe fresco..."
-              className="w-full rounded-xl border-0 bg-white py-3 pl-10 pr-4 text-sm text-[#1a2e28] shadow-sm placeholder:text-[#9aa8a3] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30"
+              className={`w-full rounded-xl border-0 bg-white py-3 pl-10 text-sm text-[#1a2e28] shadow-sm placeholder:text-[#9aa8a3] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30 ${
+                searchMode ? "pr-10" : "pr-4"
+              }`}
             />
+            {searchMode && (
+              <button
+                type="button"
+                onClick={fecharBusca}
+                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#5a6b66] transition-colors hover:bg-[#eef3f1] hover:text-[#1a4a3a]"
+                aria-label="Fechar busca"
+              >
+                <IconClose />
+              </button>
+            )}
           </div>
         </form>
 
+        <div
+          className={`transition-all duration-300 ease-out ${
+            searchMode
+              ? "translate-y-0 opacity-100"
+              : "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
+          }`}
+        >
+          {searchMode === "browse" && (
+            <SearchBrowsePanel
+              visitados={visitadosRecentes}
+              populares={populares}
+              loadingPopulares={loadingPopulares}
+            />
+          )}
+          {searchMode === "results" && (
+            <SearchResultsPanel
+              termo={termoResultado}
+              loading={loadingBusca}
+              resultados={resultadosExibidos}
+              onSugestaoClick={handleSugestaoClick}
+              isFavorito={isFavorito}
+              onFavoritar={handleFavoritar}
+            />
+          )}
+        </div>
+
+        <div
+          className={`transition-all duration-300 ease-out ${
+            searchMode
+              ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
+              : "translate-y-0 opacity-100"
+          }`}
+        >
         {/* Categories */}
         <div className="mb-6 flex gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
           {categories.map(({ label, bg, activeBg, text, border, Icon }) => {
@@ -901,23 +1052,9 @@ export default function Home() {
 
         <section className="mt-2">
           <div className="mb-4 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-bold text-[#1a2e28]">
-              {buscaAtiva ? "Resultados da busca" : "Perto de você"}
-            </h2>
-            {buscaAtiva && (
-              <button
-                type="button"
-                onClick={() => {
-                  setTermoBusca("");
-                  handleLimparBusca();
-                }}
-                className="shrink-0 text-sm font-medium text-[#1a4a3a] transition-opacity hover:opacity-80"
-              >
-                × Limpar busca
-              </button>
-            )}
+            <h2 className="text-lg font-bold text-[#1a2e28]">Perto de você</h2>
           </div>
-          {!user && !buscaAtiva ? (
+          {!user ? (
             <div className="rounded-3xl bg-[#d4ede8] p-4 text-[#1a4a3a] shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70">
@@ -939,18 +1076,12 @@ export default function Home() {
             </div>
           ) : (
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
-            {loadingBusca ? (
+            {lugaresProximosExibidos.length === 0 ? (
               <p className="py-6 text-center text-sm text-[#5a6b66]">
-                Buscando com IA...
-              </p>
-            ) : lugaresExibidos.length === 0 ? (
-              <p className="py-6 text-center text-sm text-[#5a6b66]">
-                {buscaAtiva
-                  ? "Nenhum lugar encontrado para essa busca."
-                  : "Nenhum lugar por perto no momento."}
+                Nenhum lugar por perto no momento.
               </p>
             ) : (
-              lugaresExibidos.map((lugar) => (
+              lugaresProximosExibidos.map((lugar) => (
                 <div key={lugar.id} className="w-[285px] shrink-0">
                   <PlaceCard
                     lugar={lugar}
@@ -982,6 +1113,7 @@ export default function Home() {
           lugares={categoriaSections.Noite}
           userPosition={userPosition}
         />
+        </div>
       </div>
 
       <BottomNav />
