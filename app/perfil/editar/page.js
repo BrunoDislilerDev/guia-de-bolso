@@ -89,14 +89,6 @@ export default function EditarPerfilPage() {
         contentType: file.type || "image/jpeg",
       });
 
-    console.log("upload data:", uploadData);
-    console.log("upload error:", uploadError);
-    console.log("upload error message:", uploadError?.message);
-    console.log("upload error details:", JSON.stringify(uploadError));
-    console.log("bucket:", bucketName);
-    console.log("path:", filePath);
-    console.log("user id:", user.id);
-
     if (uploadError) {
       setMessage("Não foi possível enviar a foto. Tente novamente.");
       setUploading(false);
@@ -117,7 +109,6 @@ export default function EditarPerfilPage() {
     );
 
     if (perfilError) {
-      console.log("erro ao salvar foto_url no perfil:", perfilError);
       setMessage("Foto enviada, mas não foi possível salvar no perfil.");
       setUploading(false);
       return;

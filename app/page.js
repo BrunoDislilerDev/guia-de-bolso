@@ -40,14 +40,6 @@ function IconClose({ className = "w-4 h-4" }) {
   );
 }
 
-function IconCloud({ className = "w-4 h-4" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
-    </svg>
-  );
-}
-
 function IconPerson({ className = "w-5 h-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -208,37 +200,6 @@ const planoStyles = {
   "Padrão": "bg-[#b8e6d4] text-[#1a4a3a]",
   Premium: "bg-[#f5d76e] text-[#6b4e00]",
 };
-
-const imbitubaCoords = {
-  latitude: -28.2342,
-  longitude: -48.6612,
-};
-
-async function fetchWeather(position) {
-  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
-  if (!apiKey) throw new Error("NEXT_PUBLIC_OPENWEATHER_API_KEY não configurada");
-
-  const params = new URLSearchParams({
-    lat: String(position.latitude),
-    lon: String(position.longitude),
-    appid: apiKey,
-    units: "metric",
-    lang: "pt_br",
-  });
-
-  const response = await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?${params.toString()}`
-  );
-
-  if (!response.ok) throw new Error("Erro ao buscar clima");
-
-  const data = await response.json();
-
-  return {
-    temperature: Number(data.main?.temp),
-    icon: data.weather?.[0]?.icon ?? null,
-  };
-}
 
 function getBrazilDate() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -499,28 +460,6 @@ function DestaquesCarousel({ destaques, favoritos, onFavoritar }) {
   );
 }
 
-function WeatherBadge({ weather }) {
-  return (
-    <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#1a4a3a] shadow-sm">
-      {weather.icon ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
-          alt=""
-          className="h-5 w-5"
-        />
-      ) : (
-        <IconCloud className="w-4 h-4 text-[#6b8f9e]" />
-      )}
-      {weather.loading && weather.temperature === null
-        ? "..."
-        : Number.isFinite(weather.temperature)
-          ? `${weather.temperature.toFixed(1)}°`
-          : "--°"}
-    </span>
-  );
-}
-
 function HorizontalSection({ title, href, lugares, userPosition }) {
   if (!lugares.length) return null;
 
@@ -568,11 +507,6 @@ export default function Home() {
     Natureza: [],
     Noite: [],
   });
-  const [weather, setWeather] = useState({
-    loading: true,
-    temperature: null,
-    icon: null,
-  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [motivoModal, setMotivoModal] = useState("favoritar");
 
@@ -599,42 +533,6 @@ export default function Home() {
       { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 }
     );
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const position = userPosition || imbitubaCoords;
-
-    async function loadWeather() {
-      setWeather((current) => ({ ...current, loading: true }));
-
-      try {
-        const nextWeather = await fetchWeather(position);
-        if (cancelled) return;
-
-        setWeather({
-          loading: false,
-          temperature: nextWeather.temperature,
-          icon: nextWeather.icon,
-        });
-      } catch {
-        if (cancelled) return;
-
-        setWeather((current) => ({
-          ...current,
-          loading: false,
-          temperature: current.temperature,
-        }));
-      }
-    }
-
-    loadWeather();
-    const interval = setInterval(loadWeather, 30 * 60 * 1000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [userPosition]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -927,13 +825,10 @@ export default function Home() {
               Guia de{" "}
               <span className="text-[#1a4a3a]">bolso.</span>
             </h1>
-            <div className="mt-1 flex items-center gap-2">
-              <p className="flex min-w-0 items-center gap-1 text-sm text-[#5a6b66]">
-                <IconPin className="w-3.5 h-3.5 shrink-0 text-[#1a4a3a]" />
-                <span className="truncate">Explore Imbituba</span>
-              </p>
-              <WeatherBadge weather={weather} />
-            </div>
+            <p className="mt-1 flex min-w-0 items-center gap-1 text-sm text-[#5a6b66]">
+              <IconPin className="w-3.5 h-3.5 shrink-0 text-[#1a4a3a]" />
+              <span className="truncate">Explore Imbituba</span>
+            </p>
           </div>
           <Link
             href={user ? "/perfil" : "/login"}

@@ -16,7 +16,7 @@ const SUGESTOES = ["Praias", "Restaurantes", "Trilhas"];
 export default function SearchResultsPanel({
   termo,
   loading,
-  resultados,
+  resultados = [],
   onSugestaoClick,
   isFavorito,
   onFavoritar,

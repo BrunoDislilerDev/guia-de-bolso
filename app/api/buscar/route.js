@@ -43,7 +43,6 @@ export async function POST(request) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!apiKey) {
-      console.error("ANTHROPIC_API_KEY ausente — verifique .env.local");
       return NextResponse.json(
         { error: "ANTHROPIC_API_KEY não configurada" },
         { status: 500 }
@@ -56,7 +55,6 @@ export async function POST(request) {
       .eq("status", "ativo");
 
     if (error) {
-      console.error("Supabase error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -82,8 +80,6 @@ export async function POST(request) {
       ],
     };
 
-    console.log("Claude request model:", requestBody.model);
-
     const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -96,9 +92,6 @@ export async function POST(request) {
 
     const claudeRaw = await claudeResponse.text();
 
-    console.log("Claude response status:", claudeResponse.status);
-    console.log("Claude response body:", claudeRaw);
-
     if (!claudeResponse.ok) {
       return NextResponse.json(
         { error: "Erro ao consultar a Claude API" },
@@ -110,18 +103,14 @@ export async function POST(request) {
     const text = claudeData.content?.[0]?.text ?? "[]";
     const ids = parseIds(text);
 
-    console.log("Claude parsed IDs:", ids);
-
     const lugaresPorId = new Map((lugares ?? []).map((l) => [String(l.id), l]));
     const filtrados = ids
       .map((id) => lugaresPorId.get(String(id)))
       .filter(Boolean);
 
-    console.log("Lugares retornados:", filtrados.length);
-
     return NextResponse.json({ lugares: filtrados });
   } catch (err) {
-    console.error("Buscar error:", err);
+    // TODO: adicionar logger de produção
     return NextResponse.json(
       { error: "Erro interno ao processar a busca" },
       { status: 500 }

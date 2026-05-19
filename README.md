@@ -162,6 +162,10 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] Formulário guiado: dias, perfil e interesses
 - [x] Loading animado com mensagens alternadas durante geração do roteiro
 - [x] Roteiros salvos no banco e exibidos na tela de Rotas
+- [x] Card de clima e condições na home com seletor de praias
+- [x] Dados em tempo real via Open-Meteo Weather e Open-Meteo Marine (gratuito, sem chave)
+- [x] Resumo: temperatura, ondas, vento, UV e badge de condição para banho
+- [x] Sheet detalhado com gráfico de ondas 24h, temperatura da água, fase da lua e índice UV com barra colorida
 
 ---
 
@@ -175,7 +179,6 @@ Projeto usa Supabase com a seguinte tabela principal:
 
 ### Diferenciais
 - [ ] "Estou aqui agora" — check-in com contagem de pessoas no lugar em tempo real
-- [ ] Clima e condições da praia (ondas, vento, UV, bom para banho — dados INMET/Marinha)
 - [ ] Eventos locais (tabela de eventos temporários integrada à home)
 
 ### Melhorias técnicas

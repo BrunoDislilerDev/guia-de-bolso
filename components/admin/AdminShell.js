@@ -43,10 +43,6 @@ export function useAdminAuth() {
         .eq("id", currentUser.id)
         .maybeSingle();
 
-      console.log("user id:", currentUser?.id);
-      console.log("perfil data:", perfilData);
-      console.log("perfil error:", perfilError);
-
       if (cancelled) return;
 
       if (!canAccessAdmin(perfilData?.role)) {
