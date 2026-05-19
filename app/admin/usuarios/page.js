@@ -2,15 +2,32 @@
 
 import { useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
+import {
+  ROLES,
+  getRoleChipClass,
+  normalizeRole,
+} from "@/lib/adminRoles";
 import { createClient } from "@/lib/supabase";
 
 function getInitial(user) {
   return (user.nome || user.full_name || user.email || "?").charAt(0).toUpperCase();
 }
 
+function RoleChip({ role }) {
+  const normalized = normalizeRole(role);
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${getRoleChipClass(role)}`}
+    >
+      {normalized}
+    </span>
+  );
+}
+
 export default function AdminUsuariosPage() {
   const { loading } = useAdminAuth();
   const [usuarios, setUsuarios] = useState([]);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     if (!loading) loadUsuarios();
@@ -25,13 +42,30 @@ export default function AdminUsuariosPage() {
     setUsuarios(data ?? []);
   }
 
-  async function toggleRole(usuario) {
+  async function updateRole(usuario, novoRole) {
+    if (normalizeRole(usuario.role) === novoRole) return;
+
+    setUpdatingId(usuario.id);
     const supabase = createClient();
-    const nextRole = usuario.role === "admin" ? "user" : "admin";
+
     setUsuarios((items) =>
-      items.map((item) => (item.id === usuario.id ? { ...item, role: nextRole } : item))
+      items.map((item) => (item.id === usuario.id ? { ...item, role: novoRole } : item))
     );
-    await supabase.from("perfis").update({ role: nextRole }).eq("id", usuario.id);
+
+    const { error } = await supabase
+      .from("perfis")
+      .update({ role: novoRole })
+      .eq("id", usuario.id);
+
+    if (error) {
+      setUsuarios((items) =>
+        items.map((item) =>
+          item.id === usuario.id ? { ...item, role: usuario.role } : item
+        )
+      );
+    }
+
+    setUpdatingId(null);
   }
 
   if (loading) {
@@ -52,7 +86,7 @@ export default function AdminUsuariosPage() {
               <th className="p-3">Email</th>
               <th className="p-3">Role</th>
               <th className="p-3">Cadastro</th>
-              <th className="p-3">Ações</th>
+              <th className="p-3">Alterar role</th>
             </tr>
           </thead>
           <tbody>
@@ -86,9 +120,7 @@ export default function AdminUsuariosPage() {
                   </td>
                   <td className="p-3">{usuario.email || "—"}</td>
                   <td className="p-3">
-                    <span className="rounded-full bg-[#f0f4f3] px-3 py-1 text-xs font-semibold text-[#1a4a3a]">
-                      {usuario.role || "user"}
-                    </span>
+                    <RoleChip role={usuario.role} />
                   </td>
                   <td className="p-3">
                     {usuario.created_at
@@ -96,13 +128,18 @@ export default function AdminUsuariosPage() {
                       : "—"}
                   </td>
                   <td className="p-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleRole(usuario)}
-                      className="rounded-lg bg-[#1a4a3a] px-3 py-2 text-sm font-semibold text-white"
+                    <select
+                      value={normalizeRole(usuario.role)}
+                      disabled={updatingId === usuario.id}
+                      onChange={(event) => updateRole(usuario, event.target.value)}
+                      className="rounded-xl bg-[#f0f4f3] px-3 py-2 text-sm font-semibold text-[#1a2e28] outline-none ring-[#1a4a3a]/20 focus:ring-2 disabled:opacity-60"
                     >
-                      Tornar {usuario.role === "admin" ? "user" : "admin"}
-                    </button>
+                      {ROLES.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                 </tr>
               ))

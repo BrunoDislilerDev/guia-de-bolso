@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStatusFuncionamento } from "@/lib/horarios";
 import { createClient } from "@/lib/supabase";
+import { getCapaFromLugar } from "@/lib/fotos";
 import { getTagsFromLugar } from "@/lib/tags";
 
 function IconPin({ className = "h-4 w-4" }) {
@@ -65,7 +66,7 @@ export default function PlaceCard({ lugar, isFavorito = false, onFavoritar }) {
     <article className="relative min-h-[380px] overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={lugar.imagem_url}
+        src={getCapaFromLugar(lugar)}
         alt={lugar.nome}
         className="absolute inset-0 h-full w-full object-cover"
       />

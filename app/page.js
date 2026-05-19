@@ -6,6 +6,7 @@ import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
 import PlaceCard from "@/components/PlaceCard";
+import { getCapaFromLugar } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 import { withDistanciaDinamica } from "@/lib/localizacao";
@@ -391,7 +392,7 @@ function DestaquesCarousel({ destaques, favoritos, onFavoritar }) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={lugar.imagem_url}
+                src={getCapaFromLugar(lugar)}
                 alt={lugar.nome}
                 className="absolute inset-0 h-full w-full object-cover"
               />

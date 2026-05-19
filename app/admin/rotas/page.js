@@ -15,7 +15,7 @@ function formatDuracao(minutos) {
 }
 
 function statusStyle(ativa) {
-  return ativa ? "bg-[#d4ede8] text-[#1a4a3a]" : "bg-zinc-200 text-zinc-600";
+  return ativa ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-500";
 }
 
 export default function AdminRotasPage() {
@@ -122,16 +122,16 @@ export default function AdminRotasPage() {
                     onClick={() => toggleDestaque(rota)}
                     className={`rounded-full px-3 py-1 text-xs font-bold ${
                       rota.destaque
-                        ? "bg-[#d4ede8] text-[#1a4a3a]"
-                        : "bg-zinc-100 text-zinc-600"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-gray-100 text-gray-500"
                     }`}
                   >
-                    {rota.destaque ? "Sim" : "Não"}
+                    {rota.destaque ? "Destaque ativo" : "Sem destaque"}
                   </button>
                 </td>
                 <td className="p-3">
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyle(rota.ativa)}`}>
-                    {rota.ativa ? "ativo" : "inativo"}
+                    {rota.ativa ? "Ativa" : "Inativa"}
                   </span>
                 </td>
                 <td className="p-3">

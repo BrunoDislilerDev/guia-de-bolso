@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
+import { getCapaFromRota } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase/server";
 
 function IconClock({ className = "h-5 w-5" }) {
@@ -49,7 +50,7 @@ function getRotaNome(rota) {
 }
 
 function getFotoCapa(rota) {
-  return rota.foto_capa || rota.imagem_capa || rota.imagem_url;
+  return getCapaFromRota(rota);
 }
 
 function formatDuracao(rota) {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
+import { getCapaFromLugar } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase";
 
 const categoryStyles = {
@@ -18,7 +19,7 @@ const categoryStyles = {
 };
 
 function getFoto(lugar) {
-  return lugar.foto_url || lugar.imagem_url || lugar.foto_capa || "";
+  return getCapaFromLugar(lugar) || lugar.foto_url || "";
 }
 
 function getCidade(lugar) {

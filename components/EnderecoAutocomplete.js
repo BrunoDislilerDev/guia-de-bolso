@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import EnderecoMapPicker from "@/components/EnderecoMapPicker";
+import { loadGoogleMaps } from "@/lib/googleMaps";
 
 const initialLocalizacao = {
   rua: "",
@@ -14,41 +16,6 @@ const initialLocalizacao = {
   latitude: null,
   longitude: null,
 };
-
-let googleMapsPromise;
-
-function loadGoogleMaps() {
-  if (typeof window === "undefined") return Promise.reject(new Error("Browser only"));
-  if (window.google?.maps?.places) return Promise.resolve(window.google);
-
-  if (!googleMapsPromise) {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    googleMapsPromise = new Promise((resolve, reject) => {
-      if (!apiKey) {
-        reject(new Error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY não configurada"));
-        return;
-      }
-
-      const existingScript = document.querySelector("script[data-google-maps-places]");
-      if (existingScript) {
-        existingScript.addEventListener("load", () => resolve(window.google));
-        existingScript.addEventListener("error", reject);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.dataset.googleMapsPlaces = "true";
-      script.onload = () => resolve(window.google);
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
-  return googleMapsPromise;
-}
 
 function getAddressPart(components, type, shortName = false) {
   const component = components.find((item) => item.types.includes(type));
@@ -177,6 +144,14 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
     emit({ ...localizacao, [field]: value, endereco_completo: "" });
   }
 
+  function handleCoordinatesChange(lat, lng) {
+    emit({
+      ...localizacao,
+      latitude: lat,
+      longitude: lng,
+    });
+  }
+
   function handleSelect(prediction) {
     if (!geocoderRef.current) return;
 
@@ -244,6 +219,12 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
         <Field label="Estado" value={localizacao.estado} onChange={(value) => updateField("estado", value)} />
         <Field label="CEP" value={localizacao.cep} onChange={(value) => updateField("cep", value)} />
       </div>
+
+      <EnderecoMapPicker
+        latitude={localizacao.latitude}
+        longitude={localizacao.longitude}
+        onCoordinatesChange={handleCoordinatesChange}
+      />
     </div>
   );
 }

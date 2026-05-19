@@ -139,12 +139,16 @@ Projeto usa Supabase com a seguinte tabela principal:
 - [x] 25 lugares cadastrados em 5 categorias
 - [x] Imagens reais via Supabase Storage
 - [x] Deploy automático na Vercel
+- [x] Seção de Rotas com listagem e card destaque
+- [x] Página de detalhe de rota com pontos do percurso
+- [x] Skeleton de carregamento na listagem de rotas
+- [x] CRUD completo de Rotas no painel admin
+- [x] Admin de Lugares redesenhado com fotos, grid de cards e filtros
 
 ---
 
 ## Próximos passos
 
-- [ ] Rotas com etapas e fotos
 - [ ] WhatsApp Auth (pós aprovação Meta)
 - [ ] Apple Sign In (pós Apple Developer Program)
 

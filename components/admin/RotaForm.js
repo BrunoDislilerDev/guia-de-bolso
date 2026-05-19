@@ -3,7 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import PhotoUploader from "@/components/admin/PhotoUploader";
+import { getInitialPhotoItems } from "@/lib/fotos";
+import {
+  createPhotoItemFromFile,
+  getExistingUrlsFromPhotoItems,
+  getPendingFilesFromPhotoItems,
+  revokePhotoItemPreview,
+} from "@/lib/photoItems";
 import { createClient } from "@/lib/supabase";
+import {
+  ROTAS_FOTOS_BUCKET,
+  uploadEntityPhotos,
+} from "@/lib/storageUpload";
 
 const emptyForm = {
   nome: "",
@@ -13,7 +25,6 @@ const emptyForm = {
   dificuldade: "Fácil",
   duracao_minutos: "",
   distancia_km: "",
-  foto_capa: "",
   destaque: false,
   ativa: true,
 };
@@ -36,7 +47,6 @@ function normalizeRota(rota) {
     ...emptyForm,
     ...(rota ?? {}),
     nome: rota?.nome || rota?.titulo || "",
-    foto_capa: rota?.foto_capa || rota?.imagem_capa || "",
     duracao_minutos: rota?.duracao_minutos ?? "",
     distancia_km: rota?.distancia_km ?? "",
     ativa: rota?.ativa ?? true,
@@ -50,7 +60,11 @@ export default function RotaForm({
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [photoError, setPhotoError] = useState("");
   const [form, setForm] = useState(normalizeRota(initialData));
+  const [photoItems, setPhotoItems] = useState(() =>
+    getInitialPhotoItems(initialData, "foto_capa")
+  );
   const [pontos, setPontos] = useState(
     initialPontos.map((ponto, index) => ({
       nome: ponto.nome || ponto.titulo || "",
@@ -59,6 +73,22 @@ export default function RotaForm({
     }))
   );
   const [novoPonto, setNovoPonto] = useState({ nome: "", descricao: "" });
+
+  function addPhotoFiles(files) {
+    setPhotoError("");
+    setPhotoItems((current) => [
+      ...current,
+      ...files.map((file) => createPhotoItemFromFile(file)),
+    ]);
+  }
+
+  function removePhotoItem(id) {
+    setPhotoItems((current) => {
+      const item = current.find((entry) => entry.id === id);
+      revokePhotoItemPreview(item);
+      return current.filter((entry) => entry.id !== id);
+    });
+  }
 
   function addPonto() {
     if (!novoPonto.nome.trim()) return;
@@ -96,6 +126,7 @@ export default function RotaForm({
   async function handleSubmit(event) {
     event.preventDefault();
     setSaving(true);
+    setPhotoError("");
 
     const supabase = createClient();
     const payload = {
@@ -107,8 +138,6 @@ export default function RotaForm({
       dificuldade: form.dificuldade,
       duracao_minutos: form.duracao_minutos ? Number(form.duracao_minutos) : null,
       distancia_km: form.distancia_km ? Number(form.distancia_km) : null,
-      foto_capa: form.foto_capa.trim(),
-      imagem_capa: form.foto_capa.trim(),
       destaque: Boolean(form.destaque),
       ativa: Boolean(form.ativa),
     };
@@ -119,27 +148,63 @@ export default function RotaForm({
 
     let rotaId = editingId;
 
-    if (editingId) {
-      await supabase.from("rotas").update(payload).eq("id", editingId);
-      await supabase.from("rota_pontos").delete().eq("rota_id", editingId);
-    } else {
-      const { data } = await supabase
-        .from("rotas")
-        .insert(payload)
-        .select("id")
-        .single();
-      rotaId = data?.id;
-    }
+    try {
+      if (editingId) {
+        const { error } = await supabase.from("rotas").update(payload).eq("id", editingId);
+        if (error) throw error;
+        await supabase.from("rota_pontos").delete().eq("rota_id", editingId);
+      } else {
+        const { data, error } = await supabase
+          .from("rotas")
+          .insert(payload)
+          .select("id")
+          .single();
+        if (error) throw error;
+        rotaId = data?.id;
+      }
 
-    if (rotaId && pontos.length > 0) {
-      await supabase.from("rota_pontos").insert(
-        pontos.map((ponto, index) => ({
-          rota_id: rotaId,
-          ordem: index + 1,
-          nome: ponto.nome,
-          descricao: ponto.descricao,
-        }))
+      if (!rotaId) throw new Error("Não foi possível salvar a rota.");
+
+      const existingUrls = getExistingUrlsFromPhotoItems(photoItems);
+      const pendingFiles = getPendingFilesFromPhotoItems(photoItems);
+      const uploadedUrls = await uploadEntityPhotos(
+        supabase,
+        ROTAS_FOTOS_BUCKET,
+        rotaId,
+        pendingFiles
       );
+      const fotos = [...existingUrls, ...uploadedUrls];
+      const capa = fotos[0] || "";
+
+      const { error: fotosError } = await supabase
+        .from("rotas")
+        .update({
+          fotos,
+          foto_capa: capa || null,
+          imagem_capa: capa || null,
+        })
+        .eq("id", rotaId);
+
+      if (fotosError) throw fotosError;
+
+      if (pontos.length > 0) {
+        const { error: pontosError } = await supabase.from("rota_pontos").insert(
+          pontos.map((ponto, index) => ({
+            rota_id: rotaId,
+            ordem: index + 1,
+            nome: ponto.nome,
+            descricao: ponto.descricao,
+          }))
+        );
+        if (pontosError) throw pontosError;
+      }
+    } catch (error) {
+      console.error(error);
+      setPhotoError(
+        error?.message || "Não foi possível salvar as fotos. Tente novamente."
+      );
+      setSaving(false);
+      return;
     }
 
     router.push(`/admin/rotas?success=${editingId ? "updated" : "created"}`);
@@ -210,16 +275,7 @@ export default function RotaForm({
           />
         </Field>
 
-        <Field label="URL da foto de capa">
-          <input
-            value={form.foto_capa}
-            placeholder="https://..."
-            onChange={(event) => setForm({ ...form, foto_capa: event.target.value })}
-            className={inputClass()}
-          />
-        </Field>
-
-        <div className="flex items-end gap-5">
+        <div className="flex items-end gap-5 md:col-span-2">
           <label className="flex items-center gap-2 text-sm font-semibold text-[#1a2e28]">
             <input
               type="checkbox"
@@ -238,6 +294,14 @@ export default function RotaForm({
           </label>
         </div>
       </div>
+
+      <PhotoUploader
+        items={photoItems}
+        onAddFiles={addPhotoFiles}
+        onRemove={removePhotoItem}
+        disabled={saving}
+        error={photoError}
+      />
 
       <label className="mt-4 block text-sm font-semibold text-[#1a2e28]">
         Descrição

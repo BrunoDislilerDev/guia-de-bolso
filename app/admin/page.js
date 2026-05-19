@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   });
   const [pendentes, setPendentes] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [perfis, setPerfis] = useState([]);
   const [logsPage, setLogsPage] = useState(0);
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function AdminDashboard() {
       irAgora,
       avaliacoes,
       logsRes,
+      perfisRes,
     ] = await Promise.all([
       supabase
         .from("lugares")
@@ -78,6 +80,7 @@ export default function AdminDashboard() {
         .select("*")
         .order("created_at", { ascending: false })
         .range(logsPage * 20, logsPage * 20 + 19),
+      supabase.from("perfis").select("id, nome"),
     ]);
 
     setStats({
@@ -100,6 +103,7 @@ export default function AdminDashboard() {
       setPendentes(data ?? []);
     }
     setLogs(logsRes.data ?? []);
+    setPerfis(perfisRes.data ?? []);
   }
 
   async function updateStatus(id, status) {
@@ -211,9 +215,13 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
+              {logs.map((log) => {
+                const perfil = perfis.find((p) => p.id === log.user_id);
+                const nomeUsuario = perfil?.nome || "Visitante";
+
+                return (
                 <tr key={log.id} className="border-t border-[#eef3f1]">
-                  <td className="p-2">{log.user_nome || log.user_email || "Visitante"}</td>
+                  <td className="p-2">{nomeUsuario}</td>
                   <td className="p-2 font-semibold text-[#1a4a3a]">
                     {formatarAcaoLog(log)}
                   </td>
@@ -226,7 +234,8 @@ export default function AdminDashboard() {
                       : "—"}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { canAccessAdmin } from "@/lib/adminRoles";
 import { createClient } from "@/lib/supabase";
 
 const links = [
@@ -48,7 +49,7 @@ export function useAdminAuth() {
 
       if (cancelled) return;
 
-      if (perfilData?.role !== "admin") {
+      if (!canAccessAdmin(perfilData?.role)) {
         router.replace("/");
         return;
       }
@@ -68,7 +69,13 @@ export function useAdminAuth() {
   return { loading, user, perfil };
 }
 
-export default function AdminShell({ title, children }) {
+export default function AdminShell({
+  title,
+  subtitle,
+  headerAction,
+  contentClassName = "",
+  children,
+}) {
   const pathname = usePathname();
 
   return (
@@ -102,15 +109,20 @@ export default function AdminShell({ title, children }) {
           </nav>
         </aside>
 
-        <main className="flex-1 p-4 md:p-8">
+        <main className={`flex-1 p-4 md:p-8 ${contentClassName}`}>
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[#1a4a3a]">
                 Admin
               </p>
               <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+              {subtitle && (
+                <p className="mt-1 text-sm text-[#5a6b66]">{subtitle}</p>
+              )}
             </div>
-            <div className="flex gap-2 overflow-x-auto md:hidden">
+            {headerAction && <div className="shrink-0">{headerAction}</div>}
+          </div>
+          <div className="mb-4 flex gap-2 overflow-x-auto md:hidden">
               {links.map((link) => (
                 <Link
                   key={link.href}
@@ -123,7 +135,7 @@ export default function AdminShell({ title, children }) {
               ))}
             </div>
           </div>
-          {children}
+          <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

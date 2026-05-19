@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import LoginModal from "@/components/LoginModal";
+import { getFotosFromLugar } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 import {
@@ -282,6 +283,10 @@ export default function LugarPage() {
       .maybeSingle()
       .then(({ data }) => {
         setLugar(data);
+        const fotosJson = getFotosFromLugar(data);
+        if (fotosJson.length > 0) {
+          setFotos(fotosJson);
+        }
         setLoading(false);
       });
 
@@ -290,10 +295,12 @@ export default function LugarPage() {
       .select("*")
       .eq("lugar_id", id)
       .then(({ data }) => {
-        const urls = (data ?? [])
-          .map((foto) => foto.url || foto.imagem_url || foto.foto_url)
-          .filter(Boolean);
-        setFotos(urls);
+        setFotos((current) => {
+          if (current.length > 0) return current;
+          return (data ?? [])
+            .map((foto) => foto.url || foto.imagem_url || foto.foto_url)
+            .filter(Boolean);
+        });
       });
 
     supabase
@@ -503,7 +510,7 @@ export default function LugarPage() {
 
   const badgeStyle =
     categoriaStyles[lugar.categoria] ?? "bg-white text-[#1a4a3a]";
-  const imagens = fotos.length > 0 ? fotos : [lugar.imagem_url];
+  const imagens = fotos.length > 0 ? fotos : getFotosFromLugar(lugar);
   const status = getStatusFuncionamento(lugar.horarios);
   const diaAtual = getDiaAtualKey();
   const endereco =

@@ -4,8 +4,24 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import EnderecoAutocomplete from "@/components/EnderecoAutocomplete";
 import HorarioEditor from "@/components/admin/HorarioEditor";
+import PhotoUploader from "@/components/admin/PhotoUploader";
+import { getInitialPhotoItems } from "@/lib/fotos";
+import {
+  createPhotoItemFromFile,
+  getExistingUrlsFromPhotoItems,
+  getPendingFilesFromPhotoItems,
+  revokePhotoItemPreview,
+} from "@/lib/photoItems";
 import { createClient } from "@/lib/supabase";
-import { getTagIds } from "@/lib/tags";
+import {
+  LUGARES_FOTOS_BUCKET,
+  uploadEntityPhotos,
+} from "@/lib/storageUpload";
+import {
+  filterTagIdsByCategoria,
+  filterTagsByCategoria,
+  getTagIds,
+} from "@/lib/tags";
 
 const emptyHorario = {
   dom: "fechado",
@@ -22,8 +38,6 @@ export const emptyLocalForm = {
   descricao: "",
   categoria: "Natureza",
   subcategoria: "",
-  distancia: "",
-  imagem_url: "",
   destaque: false,
   telefone: "",
   instagram: "",
@@ -46,6 +60,19 @@ const categorias = [
   "Bem-estar",
   "Compras",
 ];
+
+const MAX_TAGS = 3;
+
+function formatTelefone(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
+  if (!digits) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 3) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 7) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3)}`;
+  }
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
 
 function Input({ label, ...props }) {
   return (
@@ -70,11 +97,17 @@ export default function LocalForm({
   const [localizacao, setLocalizacao] = useState(initialLocalizacao);
   const [subcategorias, setSubcategorias] = useState([]);
   const [tags, setTags] = useState([]);
-  const [selectedTagIds, setSelectedTagIds] = useState(getTagIds(initialTags));
+  const [selectedTagIds, setSelectedTagIds] = useState(
+    () => getTagIds(initialTags).slice(0, MAX_TAGS)
+  );
+  const [tagLimitMessage, setTagLimitMessage] = useState("");
+  const [photoItems, setPhotoItems] = useState(() => getInitialPhotoItems(initialData));
+  const [photoError, setPhotoError] = useState("");
   const [form, setForm] = useState({
     ...emptyLocalForm,
     ...initialData,
     horarios: initialData?.horarios || emptyHorario,
+    telefone: formatTelefone(initialData?.telefone),
   });
 
   useEffect(() => {
@@ -105,35 +138,104 @@ export default function LocalForm({
       });
   }, [form.categoria, form.subcategoria]);
 
-  function toggleTag(tagId) {
+  useEffect(() => {
+    if (tags.length === 0) return;
+
     setSelectedTagIds((current) =>
-      current.includes(tagId)
-        ? current.filter((id) => id !== tagId)
-        : [...current, tagId]
+      filterTagIdsByCategoria(current, tags, form.categoria).slice(0, MAX_TAGS)
     );
+    setTagLimitMessage("");
+  }, [form.categoria, tags]);
+
+  const visibleTags = filterTagsByCategoria(tags, form.categoria);
+
+  function toggleTag(tagId) {
+    setSelectedTagIds((current) => {
+      if (current.includes(tagId)) {
+        setTagLimitMessage("");
+        return current.filter((id) => id !== tagId);
+      }
+      if (current.length >= MAX_TAGS) {
+        setTagLimitMessage("Você pode selecionar no máximo 3 tags.");
+        return current;
+      }
+      setTagLimitMessage("");
+      return [...current, tagId];
+    });
+  }
+
+  function addPhotoFiles(files) {
+    setPhotoError("");
+    setPhotoItems((current) => [
+      ...current,
+      ...files.map((file) => createPhotoItemFromFile(file)),
+    ]);
+  }
+
+  function removePhotoItem(id) {
+    setPhotoItems((current) => {
+      const item = current.find((entry) => entry.id === id);
+      revokePhotoItemPreview(item);
+      return current.filter((entry) => entry.id !== id);
+    });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setSaving(true);
+    setPhotoError("");
     const supabase = createClient();
+    const { imagem_url: _imagemUrl, fotos: _fotos, ...formFields } = form;
     const payload = {
-      ...form,
+      ...formFields,
       endereco: localizacao?.endereco_completo || form.endereco || "",
       destaque: Boolean(form.destaque),
       horarios: form.horarios,
     };
     let lugarId = editingId;
 
-    if (editingId) {
-      await supabase.from("lugares").update(payload).eq("id", editingId);
-    } else {
-      const { data } = await supabase
+    try {
+      if (editingId) {
+        const { error } = await supabase.from("lugares").update(payload).eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("lugares")
+          .insert(payload)
+          .select("id")
+          .single();
+        if (error) throw error;
+        lugarId = data?.id;
+      }
+
+      if (!lugarId) throw new Error("Não foi possível salvar o local.");
+
+      const existingUrls = getExistingUrlsFromPhotoItems(photoItems);
+      const pendingFiles = getPendingFilesFromPhotoItems(photoItems);
+      const uploadedUrls = await uploadEntityPhotos(
+        supabase,
+        LUGARES_FOTOS_BUCKET,
+        lugarId,
+        pendingFiles
+      );
+      const fotos = [...existingUrls, ...uploadedUrls];
+
+      const { error: fotosError } = await supabase
         .from("lugares")
-        .insert(payload)
-        .select("id")
-        .single();
-      lugarId = data?.id;
+        .update({
+          fotos,
+          imagem_url: fotos[0] || null,
+        })
+        .eq("id", lugarId);
+
+      if (fotosError) throw fotosError;
+    } catch (error) {
+      console.error(error);
+      setPhotoError(
+        error?.message || "Não foi possível salvar as fotos. Tente novamente."
+      );
+      setSaving(false);
+      return;
     }
 
     if (lugarId && localizacao?.endereco_completo) {
@@ -209,9 +311,14 @@ export default function LocalForm({
             <option value="em_analise">em_analise</option>
           </select>
         </label>
-        <Input label="Distância" value={form.distancia || ""} onChange={(e) => setForm({ ...form, distancia: e.target.value })} />
-        <Input label="Imagem URL" value={form.imagem_url || ""} onChange={(e) => setForm({ ...form, imagem_url: e.target.value })} />
-        <Input label="Telefone" value={form.telefone || ""} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+        <Input
+          label="Telefone"
+          type="tel"
+          inputMode="numeric"
+          placeholder="(48) 9 1234-5678"
+          value={form.telefone || ""}
+          onChange={(e) => setForm({ ...form, telefone: formatTelefone(e.target.value) })}
+        />
         <Input label="Instagram" value={form.instagram || ""} onChange={(e) => setForm({ ...form, instagram: e.target.value })} />
         <Input label="Cardápio URL" value={form.cardapio_url || ""} onChange={(e) => setForm({ ...form, cardapio_url: e.target.value })} />
         <Input label="Site URL" value={form.site_url || ""} onChange={(e) => setForm({ ...form, site_url: e.target.value })} />
@@ -221,13 +328,34 @@ export default function LocalForm({
         </label>
       </div>
 
+      <PhotoUploader
+        items={photoItems}
+        onAddFiles={addPhotoFiles}
+        onRemove={removePhotoItem}
+        disabled={saving}
+        error={photoError}
+      />
+
       <div className="mt-4">
-        <p className="mb-2 text-sm font-semibold text-[#1a2e28]">Tags</p>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-[#1a2e28]">Tags</p>
+          <span className="text-xs font-semibold text-[#5a6b66]">
+            {selectedTagIds.length}/{MAX_TAGS} selecionadas
+          </span>
+        </div>
+        {tagLimitMessage && (
+          <p className="mb-2 text-xs font-semibold text-[#d9534f]">{tagLimitMessage}</p>
+        )}
+        <p className="mb-2 text-xs text-[#5a6b66]">Máximo de 3 tags por local.</p>
         <div className="grid gap-2 rounded-2xl bg-[#f7faf9] p-3 md:grid-cols-3">
-          {tags.length === 0 ? (
-            <p className="text-sm text-[#5a6b66]">Nenhuma tag cadastrada.</p>
+          {visibleTags.length === 0 ? (
+            <p className="text-sm text-[#5a6b66]">
+              {tags.length === 0
+                ? "Nenhuma tag cadastrada."
+                : `Nenhuma tag disponível para ${form.categoria}.`}
+            </p>
           ) : (
-            tags.map((tag) => {
+            visibleTags.map((tag) => {
               const tagId = String(tag.id);
               return (
                 <label
@@ -248,18 +376,8 @@ export default function LocalForm({
         </div>
       </div>
 
-      <div className="mt-4">
-        <p className="mb-2 text-sm font-semibold text-[#1a2e28]">
-          Endereço estruturado
-        </p>
-        <EnderecoAutocomplete
-          initialValue={localizacao}
-          onSave={(value) => setLocalizacao(value)}
-        />
-      </div>
-
       <label className="mt-4 block text-sm font-semibold text-[#1a2e28]">
-        Descrição
+        Descrição curta
         <textarea value={form.descricao || ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} className="mt-1 min-h-20 w-full rounded-xl bg-[#f0f4f3] p-3 text-sm font-normal outline-none" />
       </label>
 
@@ -276,6 +394,16 @@ export default function LocalForm({
             onChange={(horarios) => setForm({ ...form, horarios })}
           />
         </div>
+      </div>
+
+      <div className="mt-6">
+        <p className="mb-2 text-sm font-semibold text-[#1a2e28]">
+          Endereço estruturado
+        </p>
+        <EnderecoAutocomplete
+          initialValue={localizacao}
+          onSave={(value) => setLocalizacao(value)}
+        />
       </div>
 
       <button disabled={saving} className="mt-5 rounded-xl bg-[#1a4a3a] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
