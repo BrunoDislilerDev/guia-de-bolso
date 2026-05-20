@@ -20,14 +20,14 @@ cd guia-de-bolso
 npm install
 ```
 
-Create `.env.local` at the project root (copy from [`.env.example`](../.env.example) if present):
+Create `.env.local` at the project root (copy from [`.env.example`](../.env.example)):
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_MODEL=claude-sonnet-4-5
-# Optional — admin place form (Google Places Autocomplete)
+# Optional — Google Places (admin) + Static Maps (place detail)
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 ```
 

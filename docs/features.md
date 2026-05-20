@@ -10,10 +10,10 @@ User-facing product reference for **Guia de Bolso** (Garopaba & Imbituba, SC). B
 
 | Role | Typical access |
 |------|----------------|
-| **Guest** | Browse places, categories, curated routes list, place details |
-| **Logged-in user** | Favorites, reviews, AI search (3/day), AI roteiros (2/day), saved roteiros |
-| **Premium** | Unlimited AI search & roteiros; full beach weather UI when mounted |
-| **Admin / Dev** | CMS at `/admin` (not consumer-facing) |
+| **Guest** | Browse places, categories, curated routes, place details; mini weather on outdoor detail; **no** AI search/roteiros; full `ClimaSheet` requires login |
+| **Logged-in user** | Favorites, reviews, AI search (3/day), AI roteiros (2/day), saved roteiros, full outdoor weather sheet on place detail |
+| **Premium** | Unlimited AI search & roteiros (weather on detail is login-gated, not premium-gated today) |
+| **Admin / Dev** | CMS at `/admin` (`canAccessAdmin`: roles `admin`, `dev` only) |
 
 ---
 
@@ -50,7 +50,7 @@ Feel the app is aware of “right now” (morning/afternoon/night, weather hints
 2. Guest taps avatar area → `/login` or profile when logged in.
 
 **Edge cases**
-- Weather API failure → phrase falls back to time-of-day copy only.
+- Weather API failure → phrase falls back to time-of-day copy only; home may show a discreet gray line (“Conteúdo indisponível no momento”) when the climate request fails in the secondary load phase.
 - Geolocation is **not** required for the header (fixed regional coords for climate).
 - Phrase uses `America/Sao_Paulo` logic (aligned with opening hours).
 
@@ -124,20 +124,24 @@ Only see places that are open now (or intentionally closed).
 ## 6. Home — “O que fazer agora” (hero suggestion)
 
 **Description**  
-Large hero card with one **contextual place**: photo, badges (e.g. trending), distance, experience time, favorite, CTA to detail.
+Large hero card with one **contextual place**: photo, badges (e.g. trending), a **2×2 metrics grid** (distance, experience duration, regional temperature, estimated drive time), favorite, and **EXPLORAR** CTA to detail.
 
 **User goal**  
 Get a single strong recommendation without searching.
 
 **Main flows**
 1. Active places loaded → sorted by distance if GPS available → `pickHeroLugar` chooses one.
-2. User taps card or CTA → `/lugares/[id]`.
-3. User toggles favorite on hero (login required).
+2. Secondary home load fetches Open-Meteo for Imbituba → `temperaturaClima` passed into the hero (shown as e.g. `23°C`, or `--°C` if unavailable).
+3. **De carro** estimates minutes from parsed `distancia_calculada` at 30 km/h, rounded to the nearest 5 (`~5 min`, `~10 min`, …).
+4. User taps card or CTA → `/lugares/[id]`.
+5. User toggles favorite on hero (login required).
 
 **Edge cases**
 - No places / still loading → placeholder “Carregando sugestão…”.
+- Supabase failure for active places → hero section replaced by gray `SectionUnavailable` (“Conteúdo indisponível no momento”), not a silent empty hero.
 - Hero preference uses popularity set + proximity heuristics (`lib/homeContext.js`).
-- Without GPS, distance may show static/legacy `distancia` text.
+- Without GPS, distance may show static/legacy `distancia` text; drive-time block shows `—` when distance cannot be parsed to km.
+- Hero does **not** show open/closed or “best time” chips (those appear on list cards only when hours are configured).
 
 ---
 
@@ -150,10 +154,13 @@ Horizontal list of popular places (by favorite count), with distance when GPS is
 See what others save most often.
 
 **Main flows**
-1. `fetchLugaresPopulares` → up to 8 cards → `EmAltaCard` (may fetch rating snippet per card).
+1. `fetchLugaresPopulares` → up to 8 cards → `EmAltaCard` with `next/image` (first card may use `priority` preload).
+2. Star rating renders only when the place row includes `rating_medio` or `media_avaliacoes` (no per-card Supabase query).
 
 **Edge cases**
 - Ties / few favorites → fallback to recent active places.
+- Popular fetch failure → `SectionUnavailable` for the section title “🔥 Em alta hoje”.
+- Open/closed chip renders only when `mostrar_horarios` is true and `horarios` is non-empty (same rule as `PlaceCard`).
 - Cards link to place detail; not the same algorithm as hero pick.
 
 ---
@@ -185,11 +192,13 @@ Bottom section listing nearby active places, sorted by calculated distance.
 Discover what is close right now.
 
 **Main flows**
-1. `fetchLugaresProximos` loads active places → `sortLugaresPorDistancia` with GPS.
-2. Tap card → place detail.
+1. Loaded in a **secondary** home `useEffect` (after hero + trending) via `fetchLugaresProximos` → `sortLugaresPorDistancia` with GPS.
+2. Tap card → place detail; first visible `PlaceCard` may use image `priority`.
 
 **Edge cases**
 - Geolocation denied/unavailable → order may be arbitrary; distance label weak or missing.
+- Open/closed badge on `PlaceCard` follows the same `mostrar_horarios` + non-empty `horarios` rule as “Em alta”.
+- Section shows its own loading copy while secondary fetch runs; fetch failure → `SectionUnavailable` (“Perto de você”).
 - Complements hero/trending rather than replacing them.
 
 ---
@@ -204,10 +213,12 @@ Move between main app areas with one thumb.
 
 **Main flows**
 1. Tap item → route change; active state from `pathname`.
+2. Container uses `aria-label="Navegação principal"`; each link has an `aria-label` with the tab name.
 
 **Edge cases**
 - Hidden on some full-bleed flows only if page omits component (most consumer pages include it).
 - `/categoria/[slug]` is reached from Explorar, not a nav tab.
+- Interactive targets sized for touch (e.g. `h-11 w-11` on search controls elsewhere).
 
 ---
 
@@ -220,13 +231,14 @@ Nine fixed categories with live counts; each opens a filtered grid with optional
 Browse by type (Nature, Food, Night, etc.) when not using AI search.
 
 **Main flows**
-1. `/categorias` → count per category from DB → tap → `/categoria/[slug]`.
-2. Category page loads active places + `subcategorias` for slug.
+1. `/categorias` → **one** query `select("categoria")` on active `lugares`, counts aggregated client-side → tap → `/categoria/[slug]`.
+2. Category page loads active places + `subcategorias` for slug; loading shows six `PlaceCardSkeleton` placeholders.
 3. “Todos” or a subcategory chip filters client-side list.
 4. `PlaceCard` → detail; geolocation sorts by distance when available.
 
 **Edge cases**
 - Invalid/empty slug → empty list after load.
+- Supabase error on category grid → red `ErrorBanner` (“Não foi possível carregar os lugares”) with link back to `/categorias`.
 - Subcategory chips only if rows exist in `subcategorias` for that category name.
 - No login required for browsing.
 
@@ -235,21 +247,28 @@ Browse by type (Nature, Food, Night, etc.) when not using AI search.
 ## 12. Place detail
 
 **Description**  
-Conversion-focused page for a single active place: photo carousel, persuasion copy, actions, tags, hours (establishments), map, about, reviews, fixed navigation CTA.
+Conversion-focused page for a single active place: photo carousel, persuasion copy, quick actions, tags, optional hours, optional **weather widget** (outdoor categories), optional address/map, about, reviews, fixed navigation CTA.
 
 **User goal**  
 Decide to go now, contact the business, or navigate.
 
 **Main flows**
 1. Open `/lugares/[id]` → parallel load place, photos (`fotos` jsonb + `fotos_lugar`), location, tags, reviews, favorite/review state.
-2. **Establishment** (restaurant, salon, etc.): open/closed badge, hours sheet, Call / Instagram / Menu / Site.
-3. **Public** (beach, trail, etc.): info chips (travel time, access, duration, best time) — no call/menu row.
-4. Tap fixed CTA → choose or use preferred maps app → external navigation + `ir_agora` log.
-5. Favorite, share, submit review (logged in).
+2. **Establishment** (restaurant, salon, etc.): open/closed badge on hero when hours apply; compact hours row + sheet when `mostrar_horarios`; Call / Instagram / Menu / Site only for fields with URLs.
+3. **Public** (beach, trail, etc.): info chips via quick actions — no call/menu row.
+4. **Outdoor** (`Natureza`, `Aventura` with lat/lng): `LugarClimaWidget` shows live summary; tap **Ver mais** → `ClimaSheet` if logged in, else `LoginModal` (`clima`).
+5. **Address block** when `mostrar_endereco` and `localizacoes.endereco_completo` — static map (Google Maps Static API) or fallback link to Google Maps.
+6. Tap fixed CTA → choose or use preferred maps app → external navigation + `ir_agora` log.
+7. Favorite, share, submit review (logged in).
 
 **Edge cases**
 - Inactive or missing id → “Lugar não encontrado”.
-- No photos → placeholder/gradient from `getCapaFromLugar`.
+- Supabase error loading place → full-page red `ErrorBanner` with “Tentar novamente” (`router.refresh()`).
+- No photos → placeholder/gradient from `getCapaFromLugar`; hero uses `next/image` with descriptive `alt` (place name).
+- No hours configured or `mostrar_horarios=false` → no compact hours row.
+- No address or `mostrar_endereco=false` → no location card.
+- Climate widget hidden if API fails (no error banner; section omitted).
+- Hours, maps picker, climate sheet, and review sheets use `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` tied to sheet titles.
 - Reviews: only `aprovada` shown; user’s pending review shows “awaiting approval” UX via `jaAvaliou`.
 - One review per user per place (second attempt blocked).
 - `profiles` join failure → fallback query without author names.
@@ -269,14 +288,16 @@ Build a personal shortlist for the trip.
 
 **Main flows**
 1. Logged in → heart on cards/detail → `favoritos` insert/delete + log.
-2. `/favoritos` lists active places (join or fallback two-step query).
+2. `/favoritos` lists active places (join or fallback two-step query); loading uses `PlaceCardSkeleton` rows.
 3. Remove from list → delete row + optimistic UI revert on error.
 
 **Edge cases**
 - Guest on `/favoritos` → CTA + `LoginModal`.
+- Fetch failure → red `ErrorBanner` with “Tentar novamente” (`router.refresh()`).
 - Deactivated place drops from list (`lugares!inner` + `status=ativo`).
 - Optimistic UI rollback if RLS/network fails.
 - Favorite state on home resets when session ends.
+- Place list rendered as semantic `<ul>` / `<li>`.
 
 ---
 
@@ -376,7 +397,7 @@ Manage identity, preferences, and session.
 
 **Edge cases**
 - “Avaliações” stat hardcoded `0` (not loaded from DB).
-- **Notificações** row is UI-only (no handler).
+- **Notificações** row removed from UI until push notifications ship.
 - Delete account: confirmation copy warns permanence; signs out without guaranteed backend erasure.
 
 ---
@@ -409,14 +430,15 @@ Editorial routes at `/rotas` and `/rotas/[id]`: cover, difficulty, duration, dis
 Follow a predefined trail or city walk with guidance.
 
 **Main flows**
-1. `/rotas` (server-rendered) lists routes; featured card if `destaque=true`.
-2. Tap route → detail with step list and metrics.
+1. `/rotas` (server-rendered) lists routes with app palette (`#f0f4f3` / `#1a4a3a`); cover images via `next/image`; featured card if `destaque=true`.
+2. Tap route → detail with step list and metrics (same visual system, difficulty labels use higher-contrast amber where needed).
 3. No login required to **view** list/detail (public read).
 
 **Edge cases**
-- Empty DB → empty state message.
+- Empty DB → empty state (“Nenhuma rota cadastrada ainda”) with map illustration.
 - Inactive routes (`ativa=false`) depend on RLS/query (admin manages).
 - Distinct from AI **roteiros** on same page.
+- Route cards use semantic list markup where applicable.
 
 ---
 
@@ -435,6 +457,7 @@ Get a custom day-by-day plan for the region.
 
 **Edge cases**
 - Guest → login modal.
+- No saved roteiros yet → empty state in `RoteiroSection` (“Nenhum roteiro salvo ainda”).
 - Daily limit 2/day → paywall (`roteiro`) with countdown; compact `DailyLimitCountdown` on `/rotas` card when blocked (`Novos roteiros em HH:MM:SS`, light text on dark gradient).
 - Usage counter: same hydrate → sync pattern as search (`usePremiumUsage`); label `X/2 roteiros gratuitos hoje`.
 - Incomplete form blocked client-side.
@@ -504,26 +527,61 @@ Know if a business is open before going.
 
 ---
 
-## 25. Weather context
+## 25. Loading states, errors & accessibility (cross-cutting)
 
 **Description**  
-**Active:** home header phrases use Open-Meteo summary via `fetchClimaApis`.  
-**Built but not mounted:** `ClimaCard` (beach picker, waves, UV, water temp) with premium gate for detail sheet — no page imports it today.
+Shared UX patterns from the UI/UX audit: resilient data loading, visible failures, skeleton placeholders, image optimization, and baseline accessibility.
 
 **User goal**  
-Plan beach/outdoor time with local weather awareness.
+Understand when content failed vs. is empty; navigate with keyboard/screen readers; see fast above-the-fold images.
 
-**Main flows**
-1. Home load → climate fetch → contextual phrase only.
-2. (If `ClimaCard` enabled in future) guest login prompt → premium sheet for extended metrics.
+**Patterns**
+
+| Pattern | Where | Behavior |
+|---------|--------|----------|
+| **SectionUnavailable** | Home (`app/page.js`) | Gray, non-alarming copy per failed section (“Conteúdo indisponível no momento”) |
+| **ErrorBanner** | Place detail, category grid, favorites | Red `role="alert"` banner; optional retry or back link |
+| **PlaceCardSkeleton** | Favorites, category list, search results | Pulse placeholders matching card height |
+| **`next/image`** | `PlaceCard`, `EmAltaCard`, search rows, lugar hero, route covers | Remote hosts allowed in `next.config.mjs` (Supabase Storage, picsum) |
+| **Design tokens** | `app/globals.css` | `--color-primary`, `--color-background`, etc.; system dark mode media query **disabled** until full theme ships |
+| **Focus** | Global | `*:focus-visible` outline in brand green |
+| **Dialogs** | Bottom sheets (detail, profile) | `role="dialog"`, `aria-modal`, labelled titles |
 
 **Edge cases**
-- Climate fetch failure → neutral time-based phrases.
-- Premium paywall copy exists for `clima` feature key even if UI is not shipped on home.
+- Home loads in **two phases**: primary (`lugares` ativos + populares) then secondary (perto + clima); each phase uses `Promise.allSettled` so one failure does not block the other.
+- Search network errors still use inline message in the results panel (unchanged).
+- `OQueFazerAgora` hero still uses a plain `<img>` (not yet migrated to `next/image`).
 
 ---
 
-## 26. Dedicated login page
+## 26. Weather context
+
+**Description**  
+**Open-Meteo** (forecast + marine) via `lib/clima.js`.
+
+| Surface | What users see |
+|---------|----------------|
+| **Home header** | Time/weather-aware phrase (`getFraseContextual`) |
+| **Hero card** | Regional temperature in the 2×2 metrics grid (`temperaturaClima` from the same fetch) |
+| **Place detail** | `LugarClimaWidget` for **Natureza** / **Aventura** with coordinates — mini summary for everyone; **`ClimaSheet`** (UV, waves chart, sea temp, moon) for **logged-in** users |
+| **Not mounted** | `ClimaCard` beach picker on home (component exists; use detail widget instead) |
+
+**User goal**  
+Plan beach/outdoor time with local weather awareness at decision time (especially on place pages).
+
+**Main flows**
+1. Home secondary load → `fetchClimaApis(IMBITUBA_COORDS)` → phrase + hero temperature.
+2. Outdoor place detail → `fetchClimaApisCached(lat, lng)` → widget; logged-in tap opens `ClimaSheet`.
+3. Guest tap on widget → `LoginModal` with motivo `clima`.
+
+**Edge cases**
+- Climate fetch failure on home → neutral time-based phrases; hero shows `--°C`.
+- Widget omitted on detail if marine/weather API fails (silent).
+- `PremiumPaywallSheet` copy for `clima` exists but detail sheet is **login-gated**, not premium-gated in the current build.
+
+---
+
+## 27. Dedicated login page
 
 **Description**  
 Marketing-style `/login` with background photo and `AuthFlow` in a green panel.
@@ -540,7 +598,7 @@ Sign in from a focused screen (bookmark, redirect, marketing link).
 
 ---
 
-## 27. Activity logging (user-visible impact: minimal)
+## 28. Activity logging (user-visible impact: minimal)
 
 **Description**  
 Server/client inserts into `logs` for login, logout, favorites, `ir_agora`, app open. Drives **admin dashboard**, not end-user UI.
@@ -563,7 +621,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Area | Description | User goal (operator) |
 |------|-------------|----------------------|
 | Dashboard | Counts, trends, recent logs, quick review actions | Monitor app health |
-| Locais (`/admin/locais`) | CRUD, photos, hours, tags, address autocomplete | Keep catalog accurate |
+| Locais (`/admin/locais`) | CRUD, photos, hours, tags, address autocomplete, `mostrar_endereco` / `mostrar_horarios` toggles | Keep catalog accurate |
 | Rotas | CRUD, steps, featured flag | Publish trails |
 | Avaliações | Approve/reject pending | Moderate UGC |
 | Destaques | Link place + commercial plan + date range | Run paid highlights |
@@ -572,6 +630,8 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 **Edge cases**
 - Client-side gate only — misconfigured RLS could block writes.
 - Primary CMS path is `/admin/locais`; `/admin/lugares` re-exports the same grid (legacy URL, not in nav).
+- Address is stored in `localizacoes` only; run `lugares_visibilidade.sql` if visibility toggles fail to save.
+- `EnderecoAutocomplete` locks the search field after selection so the dropdown does not reopen on the same text.
 - Destaques form casts ids with `Number()` — must match DB id types (uuid vs serial).
 
 ---
@@ -585,7 +645,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Asaas billing & establishment self-service portal | Documented in business model, not built |
 | Commercial carousel on home (`destaques` table) | Admin exists; consumer carousel removed from home redesign |
 | In-app notifications | Profile row placeholder only |
-| `ClimaCard` on main routes | Component exists, not imported |
+| `ClimaCard` on home | Component exists; weather on detail via `LugarClimaWidget` instead |
 
 ---
 

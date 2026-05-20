@@ -15,6 +15,7 @@ import {
 import { createClient } from "@/lib/supabase";
 import {
   LUGARES_FOTOS_BUCKET,
+  getStorageErrorMessage,
   uploadEntityPhotos,
 } from "@/lib/storageUpload";
 import {
@@ -43,10 +44,11 @@ export const emptyLocalForm = {
   instagram: "",
   cardapio_url: "",
   site_url: "",
-  endereco: "",
   descricao_longa: "",
   status: "ativo",
   horarios: emptyHorario,
+  mostrar_endereco: true,
+  mostrar_horarios: true,
 };
 
 const categorias = [
@@ -128,6 +130,8 @@ export default function LocalForm({
     ...initialData,
     horarios: initialData?.horarios || emptyHorario,
     telefone: formatTelefone(initialData?.telefone),
+    mostrar_endereco: initialData?.mostrar_endereco ?? true,
+    mostrar_horarios: initialData?.mostrar_horarios ?? true,
   });
 
   useEffect(() => {
@@ -221,14 +225,22 @@ export default function LocalForm({
     setSaving(true);
     setPhotoError("");
     const supabase = createClient();
-    const { imagem_url: _imagemUrl, fotos: _fotos, ...formFields } = form;
+    const {
+      imagem_url: _imagemUrl,
+      fotos: _fotos,
+      endereco: _endereco,
+      ...formFields
+    } = form;
     const payload = {
       ...formFields,
-      endereco: localizacao?.endereco_completo || form.endereco || "",
       destaque: Boolean(form.destaque),
+      mostrar_endereco: Boolean(form.mostrar_endereco),
+      mostrar_horarios: Boolean(form.mostrar_horarios),
       horarios: form.horarios,
     };
     let lugarId = editingId;
+    const existingUrls = getExistingUrlsFromPhotoItems(photoItems);
+    const pendingFiles = getPendingFilesFromPhotoItems(photoItems);
 
     try {
       if (editingId) {
@@ -245,15 +257,35 @@ export default function LocalForm({
       }
 
       if (!lugarId) throw new Error("Não foi possível salvar o local.");
-
-      const existingUrls = getExistingUrlsFromPhotoItems(photoItems);
-      const pendingFiles = getPendingFilesFromPhotoItems(photoItems);
-      const uploadedUrls = await uploadEntityPhotos(
-        supabase,
-        LUGARES_FOTOS_BUCKET,
-        lugarId,
-        pendingFiles
+    } catch (error) {
+      console.error(error);
+      setPhotoError(
+        error?.message ||
+          "Não foi possível salvar o local. Se o erro citar colunas mostrar_endereco ou mostrar_horarios, rode supabase/lugares_visibilidade.sql no SQL Editor."
       );
+      setSaving(false);
+      return;
+    }
+
+    try {
+      if (pendingFiles.length > 0) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error("Faça login para enviar fotos.");
+        }
+      }
+
+      const uploadedUrls =
+        pendingFiles.length > 0
+          ? await uploadEntityPhotos(
+              supabase,
+              LUGARES_FOTOS_BUCKET,
+              lugarId,
+              pendingFiles
+            )
+          : [];
       const fotos = [...existingUrls, ...uploadedUrls];
 
       const { error: fotosError } = await supabase
@@ -268,7 +300,9 @@ export default function LocalForm({
     } catch (error) {
       console.error(error);
       setPhotoError(
-        error?.message || "Não foi possível salvar as fotos. Tente novamente."
+        getStorageErrorMessage(error) ||
+          error?.message ||
+          "Não foi possível salvar as fotos. Tente novamente."
       );
       setSaving(false);
       return;
@@ -422,17 +456,41 @@ export default function LocalForm({
         <textarea value={form.descricao_longa || ""} onChange={(e) => setForm({ ...form, descricao_longa: e.target.value })} className="mt-1 min-h-24 w-full rounded-xl bg-[#f0f4f3] p-3 text-sm font-normal outline-none" />
       </label>
 
-      <div className="mt-4">
-        <p className="text-sm font-semibold text-[#1a2e28]">Horários</p>
-        <div className="mt-2">
-          <HorarioEditor
-            horarios={form.horarios}
-            onChange={(horarios) => setForm({ ...form, horarios })}
-          />
-        </div>
-      </div>
+      <label className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#1a2e28]">
+        <input
+          type="checkbox"
+          checked={Boolean(form.mostrar_horarios)}
+          onChange={(e) =>
+            setForm({ ...form, mostrar_horarios: e.target.checked })
+          }
+        />
+        Este local tem horário de funcionamento
+      </label>
 
-      <div className="mt-6">
+      {form.mostrar_horarios && (
+        <div className="mt-2">
+          <p className="text-sm font-semibold text-[#1a2e28]">Horários</p>
+          <div className="mt-2">
+            <HorarioEditor
+              horarios={form.horarios}
+              onChange={(horarios) => setForm({ ...form, horarios })}
+            />
+          </div>
+        </div>
+      )}
+
+      <label className="mt-6 flex items-center gap-2 text-sm font-semibold text-[#1a2e28]">
+        <input
+          type="checkbox"
+          checked={Boolean(form.mostrar_endereco)}
+          onChange={(e) =>
+            setForm({ ...form, mostrar_endereco: e.target.checked })
+          }
+        />
+        Exibir endereço no app
+      </label>
+
+      <div className="mt-4">
         <p className="mb-2 text-sm font-semibold text-[#1a2e28]">
           Endereço estruturado
         </p>

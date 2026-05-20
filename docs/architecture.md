@@ -32,9 +32,8 @@ flowchart TB
   subgraph External["Third-party APIs"]
     Claude["Anthropic Claude"]
     Meteo["Open-Meteo"]
-    OSM["OpenStreetMap\nstatic maps"]
     Maps["Google / Apple / Waze\ndeep links"]
-    GMaps["Google Maps\nadmin geocoding"]
+    GMaps["Google Maps API\nPlaces + Static Maps"]
   end
 
   UI --> Pages
@@ -51,7 +50,7 @@ flowchart TB
   UI --> LS
   UI --> Maps
   Pages --> Meteo
-  Pages --> OSM
+  Pages --> GMaps
   Admin["Admin UI"] --> GMaps
 ```
 
@@ -90,6 +89,21 @@ There is no global React Context for auth or premium; each page or hook loads se
 | `/rotas`, `/rotas/[id]` | Curated routes + AI itineraries |
 | `/perfil`, `/perfil/editar` | User profile |
 | `/login` | `app/login/page.js` | Auth entry |
+| `/auth/callback` | `app/auth/callback/route.js` | OAuth code exchange (Route Handler) |
+
+### Route map (admin)
+
+Requires `perfis.role` ∈ `admin`, `dev` (`lib/adminRoles.js` → `canAccessAdmin`). Primary CMS path is **`/admin/locais`**; `/admin/lugares` re-exports the same grid.
+
+| Route | Purpose |
+|-------|---------|
+| `/admin` | Dashboard metrics and recent logs |
+| `/admin/locais`, `/admin/locais/novo`, `/admin/locais/[id]/editar` | Place CRUD |
+| `/admin/lugares` | Legacy alias of locais grid |
+| `/admin/rotas`, `/admin/rotas/nova`, `/admin/rotas/[id]/editar` | Curated route CRUD |
+| `/admin/avaliacoes` | Review moderation |
+| `/admin/destaques` | Commercial highlights |
+| `/admin/usuarios` | Role management |
 
 ### Component organization
 
@@ -98,7 +112,7 @@ Components are grouped by **domain**, not by atomic design tier:
 ```
 components/
 ├── home/                  # Home (header, search, hero, trending, plans)
-├── lugar/                 # Place detail (hero, actions, reviews, CTA)
+├── lugar/                 # Place detail (hero, actions, climate widget, reviews, CTA)
 ├── admin/                 # CMS forms, grid, AdminShell
 ├── rotas/                 # RoteiroSection, RoteiroContent, bottom sheet
 ├── BottomNav.js           # Consumer bottom navigation
@@ -127,8 +141,49 @@ components/
 ### UI constraints
 
 - **Mobile-first**: content column ~`max-w-md`, centered on desktop
-- **Design tokens**: primary green `#1a4a3a`, background `#f0f4f3`
-- **Navigation**: floating `BottomNav` on main consumer routes
+- **Design tokens** (`app/globals.css`): `--color-primary` (`#1a4a3a`), `--color-background` (`#f0f4f3`), `--color-muted` (`#5a6b66`), `--color-surface`, etc. Tailwind still uses hex literals in many components; tokens are the canonical palette for new work.
+- **Dark mode**: `@media (prefers-color-scheme: dark)` overrides are **commented out** until a full theme ships (avoids half-themed OS dark mode).
+- **Focus**: global `*:focus-visible` outline (brand green, 2px).
+- **Navigation**: floating `BottomNav` on main consumer routes (`aria-label` on nav and links).
+
+### Image delivery
+
+Place and route covers use **`next/image`** (not raw `<img>`) on main list/detail surfaces: `PlaceCard`, `EmAltaCard`, `SearchListItem`, `LugarHero`, `/rotas` list and detail.
+
+`next.config.mjs` whitelists remote hosts:
+
+| Host | Path |
+|------|------|
+| `rsdjbqzjdyeaedyqwrvc.supabase.co` | `/storage/v1/object/public/**` |
+| `picsum.photos` | (dev/placeholder) |
+
+Above-the-fold cards may pass `priority` (first `EmAltaCard`, first `PlaceCard` in “Perto de você”). Exception: `OQueFazerAgora` hero still uses `<img>`.
+
+### Home data loading (resilience)
+
+`app/page.js` splits fetches into two `useEffect` hooks:
+
+```text
+Phase 1 (primary):  fetchLugaresAtivos + fetchLugaresPopularesHome  →  Promise.allSettled
+Phase 2 (secondary): fetchLugaresProximos + fetchClimaApis            →  Promise.allSettled
+```
+
+- Each phase maps failures to `sectionErrors` flags (`hero`, `emAlta`, `perto`, `clima`).
+- Failed sections render `SectionUnavailable` (gray copy) instead of failing silently.
+- Critical path (hero + trending) unblocks `homeLoading` before “Perto de você” finishes.
+
+### Client error surfaces
+
+Error UI is **page-local** (not shared components under `components/`):
+
+| Pattern | Defined in | Notes |
+|---------|------------|--------|
+| `SectionUnavailable` | `app/page.js` | Per-section soft failure on home |
+| `ErrorBanner` (`role="alert"`) | `app/lugares/[id]/page.js`, `app/categoria/[slug]/page.js`, `app/favoritos/page.js` | Red banner; retry via `router.refresh()` where applicable |
+| Inline search error | `SmartSearch` / `SearchResultsPanel` | AI/network failures |
+| `saveError` banner | `components/admin/RotaForm.js` | Failed route save |
+
+Bottom sheets on place detail and profile use **`role="dialog"`**, **`aria-modal="true"`**, and **`aria-labelledby`** (`useId()`).
 
 ### Admin frontend
 
@@ -168,7 +223,7 @@ lib/supabase.js
 
 | Endpoint | Auth | Responsibility |
 |----------|------|----------------|
-| `POST /api/buscar` | Required | Premium check → load places → Claude ranking → filter → `increment_busca_ia` |
+| `POST /api/buscar` | Required (non-empty `query`) | Premium check → load places → Claude ranking → filter → `increment_busca_ia`; empty `query` returns `{ lugares: [] }` without auth |
 | `POST /api/roteiro` | Required | Generate itinerary (Claude), premium check, token-optimized prompt |
 | `POST /api/roteiro/salvar` | Required | Insert into `roteiros` |
 | `GET /api/uso-premium` | Optional | Returns `{ loggedIn, usage }`; `usage` when session present |
@@ -182,10 +237,21 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `premium.js` | Shared | Daily limits, `getUsageDayKey()`, `isSameUsageDay()`, `normalizeUsageFromPerfil`, `isDailyBuscaLimitReached` |
 | `premiumServer.js` | Server | `getAuthUser`, `checkBuscaAccess`, RPC increment wrappers |
 | `busca.js` | Shared | Open/closed filter, compact summaries for Claude |
-| `horarios.js` | Shared | Brazil timezone hours, `getStatusFuncionamento` |
+| `horarios.js` | Shared | Brazil timezone hours, `getStatusFuncionamento` (optional `mostrar_horarios` for badge UI), `horariosTemCadastro` |
 | `localizacao.js` | Shared | Haversine distance, `withDistanciaDinamica` |
 | `logs.js` | Shared | Insert into `logs` for analytics |
 | `storageUpload.js` | Client | Admin photo upload to Storage |
+| `homeContext.js` | Shared | Home phrases, hero pick, quick-search chips, preset plans, `getMelhorHorario` (null without hours) |
+| `lugarDetalhe.js` | Shared | Establishment vs public place, quick actions, persuasion copy, `getStaticMapUrl` (Google Static Maps) |
+| `lugaresPopulares.js` | Shared | Trending places by favorite count |
+| `lugaresVisitados.js` | Client | Recent places in `localStorage` for search browse |
+| `clima.js` | Shared | Open-Meteo weather/marine; `fetchClimaApisCached`, `lugarExibeClima`; home phrase + hero temp + `LugarClimaWidget` |
+| `fotos.js` / `photoItems.js` | Shared | Cover URL helpers for places and routes |
+| `tags.js` | Shared | Tag chips from `lugares_tags` joins |
+| `adminRoles.js` | Shared | `canAccessAdmin`, role chips, `user` → `usuario` normalization |
+| `roteiroMarkdown.js` / `roteiroLugares.js` | Server/shared | Itinerary formatting and catalog filtering for AI |
+| `usePremiumUsage.js` | Client | Premium quota hook + `localStorage` cache |
+| `googleMaps.js` | Client | Admin map picker helpers |
 
 ### Middleware
 
@@ -223,6 +289,11 @@ sequenceDiagram
   RLS-->>SB: allowed rows
   SB-->>UI: places + joins (localizacoes, tags)
 ```
+
+**Performance notes (client):**
+
+- **No N+1 ratings on cards:** `PlaceCard` / `EmAltaCard` read optional `rating_medio` or `media_avaliacoes` on the place object only (no per-card `avaliacoes` query).
+- **`/categorias`:** one `select("categoria")` on active rows, counts reduced in JS (not nine `count` queries).
 
 Typical joins on place detail:
 
@@ -399,9 +470,8 @@ API returns machine-readable codes: `LOGIN_REQUIRED` (401), `LIMIT_REACHED` (403
 | **Vercel** | Git push → deploy | Hosting, serverless, CDN | Vercel project env vars |
 | **Google OAuth** | Supabase Auth provider | Social login | Configured in Supabase dashboard |
 | **Twilio** | Supabase Auth (SMS provider) | OTP delivery | Supabase + Twilio config |
-| **Open-Meteo** | `lib/clima.js`, `ClimaCard` (when enabled) | Weather/marine forecast | None (public API) |
-| **OpenStreetMap** | `lib/lugarDetalhe.getStaticMapUrl` | Static map preview on place detail | None (public tile/static API) |
-| **Google Maps** | Admin `LocalForm`, user deep links | Geocoding/places autocomplete (admin), navigation | Browser keys / Places API in admin |
+| **Open-Meteo** | `lib/clima.js`, `LugarClimaWidget`, `ClimaSheet` | Weather/marine forecast (home + outdoor place detail) | None (public API) |
+| **Google Maps** | `EnderecoAutocomplete`, `getStaticMapUrl`, user deep links | Places autocomplete (admin), Static Maps preview on detail, navigation | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (Places + Static Maps APIs) |
 | **Apple Maps / Waze** | User-initiated deep links only | Turn-by-turn navigation | None |
 
 ### Anthropic API
@@ -428,6 +498,7 @@ No server-side routing API. `openRoute()` in place detail:
 - **Buckets:** `lugares-fotos`, `rotas-fotos` (see `supabase/storage-policies.sql`)
 - **Upload:** `lib/storageUpload.js` from admin forms
 - **Public URLs** stored on place/route/profile records
+- **Delivery:** browser loads Storage URLs through **`next/image`** (optimized sizing, lazy load) where integrated; URLs must match `images.remotePatterns` in `next.config.mjs`
 
 ---
 

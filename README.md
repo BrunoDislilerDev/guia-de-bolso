@@ -69,11 +69,12 @@ The product combines a curated place catalog, live context (opening hours, geolo
 
 ### Consumer experience
 
-- **Decision-oriented home** — contextual header, AI search with quick prompts, hero suggestion (“what to do now”), trending places, preset itineraries, nearby discovery
+- **Decision-oriented home** — contextual header, AI search with quick prompts, hero suggestion (“what to do now”), trending places, preset itineraries, nearby discovery; two-phase loading with per-section fallback when data fails
 - **Conversion-focused place pages** — immersive hero, persuasive copy, quick actions (establishments vs. public venues), reviews summary, fixed navigation CTA
 - **Category exploration** — full taxonomy via `/categorias` and filtered listings
 - **Authentication** — Google OAuth and SMS OTP (Supabase Auth + Twilio)
 - **Engagement** — favorites, moderated reviews, share, onboarding flow
+- **Resilient UX** — skeleton loaders, visible error banners, optimized images via `next/image`, shared design tokens and focus styles (see [`docs/features.md`](./docs/features.md) §25)
 
 ### Guia Premium (subscription)
 
@@ -81,7 +82,7 @@ The product combines a curated place catalog, live context (opening hours, geolo
 |------------|------------------|---------|
 | AI place search | 3 / day (resets at midnight, Brasília) | Unlimited |
 | AI trip itinerary | 2 / day (resets at midnight, Brasília) | Unlimited |
-| Extended weather insights | Gated | Full access |
+| `ClimaCard` beach weather UI | Not on home (header uses Open-Meteo phrase only) | Full sheet when component is mounted |
 
 *Billing integration (Asaas) is on the roadmap; paywall UI is implemented.*
 
@@ -185,13 +186,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Database migrations
 
-Apply SQL scripts in the Supabase **SQL Editor**, in order:
-
-1. `supabase/premium_usuario.sql`
-2. `supabase/increment_uso_ia.sql`
-3. `supabase/perfis_premium_policies.sql`
-
-Additional scripts (storage, tags, etc.) are documented in [`docs/database.md`](./docs/database.md).
+Apply SQL scripts in the Supabase **SQL Editor** using the full ordered checklist in [`docs/database.md`](./docs/database.md#migration-checklist-new-environment) (premium columns, RPC counters, RLS, tags, photos, storage, logs).
 
 ### NPM scripts
 
@@ -348,3 +343,44 @@ Contributions are welcome. Please read [`docs/contributing.md`](./docs/contribut
 <p align="center">
   <sub>Guia de Bolso · Local discovery infrastructure for the Litoral Catarinense</sub>
 </p>
+
+---
+
+## Planejamento V2
+
+### História e Cultura
+Transformar o Guia de Bolso na memória digital de Imbituba e Garopaba,
+oferecendo contexto histórico e cultural que nenhum guia local digital tem.
+
+**Estrutura planejada:**
+- [ ] Campo `historia` e `curiosidades` na tabela lugares (banco + admin)
+- [ ] Seção "Sabia que..." na página de detalhe de cada lugar
+- [ ] Categoria "Cultura" com filtro por lugares com história cadastrada
+- [ ] Linha do tempo interativa da cidade na home ou seção dedicada
+- [ ] Roteiro histórico com IA — filtro "Monte um roteiro histórico"
+- [ ] Áudio guia — narração em áudio gerada a partir do campo história (Text-to-Speech)
+
+**Conteúdo prioritário para cadastrar:**
+- Farol de Imbituba
+- Porto de Imbituba
+- Centro histórico
+- Praias com lendas e histórias locais
+- Influência açoriana na arquitetura e culinária
+
+**Impacto esperado:**
+Diferencial único no mercado — nenhum app local conta a história dos 
+lugares de forma acessível para o turista que está no ponto.
+Potencial de parceria com prefeitura, secretaria de cultura e historiadores locais.
+
+### Outras features planejadas
+- [ ] Notificações Push
+- [ ] Busca por voz (Web Speech API + Claude API)
+- [ ] Modo offline básico (PWA com service worker)
+- [ ] QR Code do estabelecimento
+- [ ] Check-in "Estou aqui agora" com contagem em tempo real
+- [ ] Eventos locais (shows, feiras, festivais)
+- [ ] Dark mode completo (CSS variables)
+- [ ] Dark mode no admin
+- [ ] Role "estabelecimento" com painel próprio
+- [ ] Apple Sign In (pós Apple Developer Program)
+- [ ] WhatsApp Auth (pós aprovação Meta)

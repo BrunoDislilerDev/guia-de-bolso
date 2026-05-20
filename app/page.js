@@ -126,6 +126,7 @@ export default function Home() {
   const [contextualPhrase, setContextualPhrase] = useState(
     "Descubra o melhor da região agora"
   );
+  const [temperaturaClima, setTemperaturaClima] = useState(null);
   const [homeLoading, setHomeLoading] = useState(true);
   const [pertoLoading, setPertoLoading] = useState(true);
   const [sectionErrors, setSectionErrors] = useState({
@@ -301,8 +302,11 @@ export default function Home() {
 
         if (climaResult.status === "fulfilled") {
           setContextualPhrase(getFraseContextual(climaResult.value));
+          const temp = Number(climaResult.value?.temperature);
+          setTemperaturaClima(Number.isFinite(temp) ? temp : null);
           setSectionErrors((prev) => ({ ...prev, clima: false }));
         } else {
+          setTemperaturaClima(null);
           setSectionErrors((prev) => ({ ...prev, clima: true }));
         }
       } finally {
@@ -655,6 +659,7 @@ export default function Home() {
                 <OQueFazerAgora
                   lugar={heroLugar}
                   popularIds={popularIds}
+                  temperatura={temperaturaClima}
                   onFavoritar={handleFavoritar}
                   isFavorito={isFavorito}
                 />

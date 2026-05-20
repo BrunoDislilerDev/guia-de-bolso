@@ -14,7 +14,7 @@ import { getAuthUser } from "@/lib/premiumServer";
 const user = await getAuthUser();
 ```
 
-Unauthenticated requests return `401` with `{ code: "LOGIN_REQUIRED" }` where applicable.
+Unauthenticated requests to AI routes return `401` with `{ code: "LOGIN_REQUIRED", error, usage? }` where applicable. `POST /api/roteiro/salvar` returns `401` with `{ error }` only (no `code`).
 
 ## Endpoints
 
@@ -52,10 +52,12 @@ Natural-language place search powered by Claude.
 
 | HTTP | `code` | Meaning |
 |------|--------|---------|
-| 400 | — | Missing query |
+| 200 | — | Empty or whitespace `query` → `{ "lugares": [] }` (no auth check, no AI call, no quota increment) |
 | 401 | `LOGIN_REQUIRED` | Not signed in |
 | 403 | `LIMIT_REACHED` | Daily search limit exceeded (resets at midnight SP) |
 | 500 | — | AI or server error |
+
+Optional success fields: `message` (e.g. filter empty), `filtroStatus` echo.
 
 **Flow:**
 
@@ -115,6 +117,14 @@ Persists a generated itinerary to `roteiros` for the logged-in user.
 Required: `titulo`, `dias`, `perfil`, `conteudo` (trimmed strings). `interesses` optional array (defaults to `[]`).
 
 **Success:** `{ "success": true, "roteiro": { "id", "titulo", "dias", "perfil", "interesses", "conteudo", "created_at" } }`
+
+**Errors:**
+
+| HTTP | Body | Meaning |
+|------|------|---------|
+| 401 | `{ "error": "Faça login para salvar o roteiro." }` | No session (no `code` field) |
+| 400 | `{ "error": "Dados incompletos para salvar o roteiro." }` | Missing required trimmed fields |
+| 500 | `{ "error": "..." }` | Insert or server failure |
 
 ---
 

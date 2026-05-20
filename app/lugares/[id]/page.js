@@ -7,9 +7,9 @@ import LoginModal from "@/components/LoginModal";
 import LugarAvaliacoesSection from "@/components/lugar/LugarAvaliacoesSection";
 import LugarCtaFixo from "@/components/lugar/LugarCtaFixo";
 import LugarHero from "@/components/lugar/LugarHero";
+import LugarClimaWidget from "@/components/lugar/LugarClimaWidget";
 import LugarHorariosCompact from "@/components/lugar/LugarHorariosCompact";
 import LugarLocalizacaoCard from "@/components/lugar/LugarLocalizacaoCard";
-import LugarPorQueIrAgora from "@/components/lugar/LugarPorQueIrAgora";
 import LugarQuickActions from "@/components/lugar/LugarQuickActions";
 import LugarTags from "@/components/lugar/LugarTags";
 import { getCapaFromLugar, getFotosFromLugar } from "@/lib/fotos";
@@ -20,11 +20,11 @@ import {
   getCtaIrAgoraText,
   getFraseConvencimento,
   getHorarioResumo,
-  getPorQueIrAgora,
   getResumoAvaliacoes,
   getStaticMapUrl,
   isLugarEstabelecimento,
 } from "@/lib/lugarDetalhe";
+import { lugarExibeClima } from "@/lib/clima";
 import { getDistanciaLugar } from "@/lib/localizacao";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
@@ -553,8 +553,11 @@ export default function LugarPage() {
   const imagens = fotos.length > 0 ? fotos : getFotosFromLugar(lugar);
   const status = getStatusFuncionamento(lugar.horarios);
   const diaAtual = getDiaAtualKey();
-  const endereco =
-    localizacao?.endereco_completo || lugar.endereco || "Endereço não informado";
+  const enderecoExibicao = (
+    localizacao?.endereco_completo?.trim() ||
+    lugar.endereco?.trim() ||
+    ""
+  );
   const descricaoLonga = lugar.descricao_longa || lugar.descricao;
   const totalAvaliacoes = avaliacoes.length;
   const mediaAvaliacoes =
@@ -566,27 +569,25 @@ export default function LugarPage() {
   const lugarParaDistancia = { ...lugar, localizacoes: localizacao };
   const distancia = getDistanciaLugar(lugarParaDistancia, userPosition);
   const fraseConvencimento = getFraseConvencimento(lugar, tags);
-  const porQueIrAgora = getPorQueIrAgora(
-    lugar,
-    tags,
-    status,
-    mediaAvaliacoes,
-    totalAvaliacoes
-  );
   const resumoAvaliacoes = getResumoAvaliacoes(avaliacoes, lugar.categoria);
   const horarioResumo = getHorarioResumo(status);
   const ehEstabelecimento = isLugarEstabelecimento(lugar);
   const ctaLabel = getCtaIrAgoraText(status, ehEstabelecimento);
   const staticMapSrc = getStaticMapUrl(localizacao);
   const mapsLink = googleMapsUrl(lugar, localizacao);
-  const acoesRapidas = ehEstabelecimento
+  const acoesRapidasBase = ehEstabelecimento
     ? getAcoesRapidasEstabelecimento({
-        telefone: lugar.telefone,
-        instagramHref: instagramUrl(lugar.instagram),
-        cardapioUrl: lugar.cardapio_url,
-        siteUrl: lugar.site_url,
+        telefone: lugar.telefone?.trim() || undefined,
+        instagramHref: lugar.instagram?.trim()
+          ? instagramUrl(lugar.instagram)
+          : null,
+        cardapioUrl: lugar.cardapio_url?.trim() || undefined,
+        siteUrl: lugar.site_url?.trim() || undefined,
       })
     : getAcoesRapidasLocais(lugar, tags, distancia);
+  const acoesRapidas = ehEstabelecimento
+    ? acoesRapidasBase.filter((acao) => acao.href)
+    : acoesRapidasBase;
   const modoAcoes = ehEstabelecimento ? "estabelecimento" : "publico";
 
   /** Updates the photo carousel index from horizontal scroll position. */
@@ -687,10 +688,9 @@ export default function LugarPage() {
 
           <LugarQuickActions modo={modoAcoes} acoes={acoesRapidas} />
 
-          <LugarPorQueIrAgora bullets={porQueIrAgora} />
           <LugarTags tags={tags} />
 
-          {ehEstabelecimento && (
+          {lugar.mostrar_horarios && (
             <LugarHorariosCompact
               resumo={horarioResumo}
               aberto={status.aberto}
@@ -698,13 +698,30 @@ export default function LugarPage() {
             />
           )}
 
-          <LugarLocalizacaoCard
-            nome={lugar.nome}
-            endereco={endereco}
-            mapUrl={mapsLink}
-            staticMapSrc={staticMapSrc}
-            onAbrirMapa={() => openRoute()}
-          />
+          {lugarExibeClima(lugar, localizacao) && (
+            <LugarClimaWidget
+              nomeLugar={lugar.nome}
+              latitude={Number(localizacao.latitude)}
+              longitude={Number(localizacao.longitude)}
+              user={user}
+              onLoginRequired={() => {
+                setMotivoModal("clima");
+                setIsModalOpen(true);
+              }}
+            />
+          )}
+
+          {lugar.mostrar_endereco && enderecoExibicao && (
+            <LugarLocalizacaoCard
+              nome={lugar.nome}
+              endereco={enderecoExibicao}
+              mapUrl={mapsLink}
+              staticMapSrc={staticMapSrc}
+              latitude={localizacao?.latitude}
+              longitude={localizacao?.longitude}
+              onAbrirMapa={() => openRoute()}
+            />
+          )}
 
           {descricaoLonga && (
             <section className="mt-6">

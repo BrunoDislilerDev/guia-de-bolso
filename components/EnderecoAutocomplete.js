@@ -119,6 +119,9 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
   const autocompleteRef = useRef(null);
   const geocoderRef = useRef(null);
   const sessionTokenRef = useRef(null);
+  /** Endereço confirmado (seleção ou geocode) — evita reabrir sugestões para o mesmo texto. */
+  const lockedQueryRef = useRef(null);
+  const [inputFocused, setInputFocused] = useState(false);
 
   useEffect(() => {
     loadGoogleMaps()
@@ -135,8 +138,10 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      const endereco = initialValue?.endereco_completo ?? "";
       setLocalizacao({ ...initialLocalizacao, ...(initialValue ?? {}) });
-      setQuery(initialValue?.endereco_completo ?? "");
+      setQuery(endereco);
+      lockedQueryRef.current = endereco.trim() ? endereco : null;
     }, 0);
 
     return () => clearTimeout(timer);
@@ -144,6 +149,14 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
 
   useEffect(() => {
     if (!googleReady || query.trim().length < 3) {
+      const timer = setTimeout(() => setSuggestions([]), 0);
+      return () => clearTimeout(timer);
+    }
+
+    if (
+      lockedQueryRef.current &&
+      query.trim() === String(lockedQueryRef.current).trim()
+    ) {
       const timer = setTimeout(() => setSuggestions([]), 0);
       return () => clearTimeout(timer);
     }
@@ -209,19 +222,27 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
   function handleSelect(prediction) {
     if (!geocoderRef.current) return;
 
-    setQuery(prediction.description);
+    const descricao = prediction.description;
+    lockedQueryRef.current = descricao;
+    setQuery(descricao);
     setSuggestions([]);
+    setInputFocused(false);
+
     geocoderRef.current.geocode(
       { placeId: prediction.place_id },
       (results, status) => {
         if (status !== "OK" || !results?.[0]) {
+          lockedQueryRef.current = null;
           setError("Não foi possível buscar os detalhes do endereço.");
           return;
         }
 
         const parsed = parsePlace(results[0]);
+        const enderecoFinal = parsed.endereco_completo || descricao;
+        lockedQueryRef.current = enderecoFinal;
         emit(parsed);
-        setQuery(parsed.endereco_completo || prediction.description);
+        setQuery(enderecoFinal);
+        setSuggestions([]);
         sessionTokenRef.current =
           new window.google.maps.places.AutocompleteSessionToken();
       }
@@ -236,18 +257,31 @@ export default function EnderecoAutocomplete({ initialValue, onSave }) {
           <input
             value={query}
             onChange={(event) => {
-              setQuery(event.target.value);
+              const next = event.target.value;
+              setQuery(next);
               setError("");
+              if (
+                lockedQueryRef.current &&
+                next.trim() !== String(lockedQueryRef.current).trim()
+              ) {
+                lockedQueryRef.current = null;
+              }
             }}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => {
+              window.setTimeout(() => setInputFocused(false), 120);
+            }}
+            autoComplete="off"
             placeholder="Digite rua, número, cidade..."
             className="mt-1 w-full rounded-xl border border-[#d8dfdc] bg-white px-3 py-2 text-sm font-normal outline-none ring-[#1a4a3a]/20 focus:ring-2"
           />
-          {suggestions.length > 0 && (
+          {inputFocused && suggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-[#d8dfdc] bg-white shadow-lg">
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion.place_id}
                   type="button"
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => handleSelect(suggestion)}
                   className="block w-full px-3 py-2 text-left text-sm text-[#1a2e28] hover:bg-[#f0f4f3]"
                 >

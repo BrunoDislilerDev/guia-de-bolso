@@ -157,7 +157,7 @@ export default function LugarHero({
       </div>
 
       {imagens.length > 1 && (
-        <div className="absolute right-4 top-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))] z-20 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+        <div className="absolute bottom-4 right-4 z-20 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
           {fotoAtual + 1} / {imagens.length}
         </div>
       )}

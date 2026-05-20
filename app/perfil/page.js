@@ -312,7 +312,7 @@ export default function PerfilPage() {
         </section>
 
         <section className="mt-6 grid gap-3">
-          <SettingRow icon="🔔" label="Notificações" />
+          {/* Notificações — oculto até implementação */}
           <SettingRow
             icon="🗺️"
             label="App de navegação preferido"

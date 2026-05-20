@@ -33,9 +33,8 @@ Supabase (us-west-2) ◄───────────────┘
 External services used at runtime (no Vercel env required unless noted):
 
 - **Anthropic** — AI search & roteiros (`ANTHROPIC_API_KEY`)
-- **Open-Meteo** — weather for home context (public API)
-- **OpenStreetMap** — static map thumbnails on place detail
-- **Google Maps** — admin address autocomplete only (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, optional)
+- **Open-Meteo** — weather for home context and outdoor place detail (public API)
+- **Google Maps** — admin Places autocomplete + Static Maps preview on place detail (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, optional; enable **Places API** and **Maps Static API**)
 
 ---
 
@@ -77,7 +76,7 @@ Apply to **Production**, **Preview**, and **Development** as appropriate (previe
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Client + Server | Supabase **anon** / publishable key (RLS applies) |
 | `ANTHROPIC_API_KEY` | Yes | Server only | Claude API secret for `/api/buscar` and `/api/roteiro` |
 | `ANTHROPIC_MODEL` | Recommended | Server only | Model id, e.g. `claude-sonnet-4-5` (fallback in code if omitted) |
-| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Optional | Client | Admin place form — Places Autocomplete (`EnderecoAutocomplete`) |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Optional | Client | Admin Places Autocomplete (`EnderecoAutocomplete`); place detail static map (`getStaticMapUrl` in `lib/lugarDetalhe.js`) |
 
 ### Variables you must NOT expose
 
@@ -97,7 +96,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ANTHROPIC_API_KEY=sk-ant-api03-...
 ANTHROPIC_MODEL=claude-sonnet-4-5
 
-# Optional — admin address autocomplete only
+# Optional — Places Autocomplete (admin) + Static Maps (place detail)
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIza...
 ```
 
@@ -418,9 +417,11 @@ Use this list for **first launch** and **each major release**.
 
 ## Performance notes
 
-- Place/route images are served from **Supabase Storage** (CDN).
+- Place/route images are served from **Supabase Storage** (CDN), delivered in the app via **`next/image`** where integrated (`next.config.mjs` `images.remotePatterns`).
+- Home loads catalog in **two phases** (primary then nearby + weather) so hero/trending are not blocked by secondary fetches.
+- Category page counts use **one** `lugares` query, not per-category `count` head requests.
 - AI routes are **serverless** — cold starts possible after idle periods.
-- Static map images on place detail call **OpenStreetMap** (third-party latency).
+- Static map images on place detail call **Google Maps Static API** when the key is configured; otherwise the UI falls back to a Maps link.
 - Middleware runs on most routes to refresh auth cookies (small overhead per request).
 
 ---

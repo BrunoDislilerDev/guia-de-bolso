@@ -103,12 +103,18 @@ Core content: beaches, restaurants, trails, services, etc.
 | `instagram` | `text` | Handle or URL |
 | `cardapio_url` | `text` | Menu link |
 | `site_url` | `text` | Website |
-| `endereco` | `text` | Denormalized address string (also in `localizacoes`) |
+| `endereco` | `text` | *(legacy — may be absent in some DBs)* Admin saves address in `localizacoes` only |
+| `mostrar_endereco` | `boolean` | Show address/map block on place detail *(migration: `lugares_visibilidade.sql`)* |
+| `mostrar_horarios` | `boolean` | Show hours UI and open/closed badges when `horarios` is set *(migration)* |
 | `imagem_url` | `text` | Legacy cover; first photo synced here on save |
 | `fotos` | `jsonb` | Array of public image URLs *(migration: `fotos_migration.sql`)* |
 | `destaque` | `boolean` | Legacy highlight flag on row |
 | `distancia` | `text` | Legacy static label; app prefers `localizacoes` + GPS (`distancia_calculada`) |
+| `rating_medio` | `numeric` | *(optional, not in repo migrations)* — if present, `PlaceCard` / `EmAltaCard` show stars without extra queries |
+| `media_avaliacoes` | `numeric` | *(optional alias)* — same client read path as `rating_medio` |
 | `created_at` | `timestamptz` | |
+
+Until an aggregate column or view exists, cards omit the rating chip; detail page still loads approved `avaliacoes` for the full list.
 
 ---
 
@@ -439,6 +445,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | 7 | `fotos_migration.sql` | `lugares.fotos`, `rotas.fotos` + Storage policies for photo buckets |
 | 8 | `storage-policies.sql` | Avatar policies on `imagens` |
 | 9 | `logs_policies.sql` | FK `logs.user_id` → `perfis`, permissive read policy |
+| 10 | `lugares_visibilidade.sql` | `lugares.mostrar_endereco`, `lugares.mostrar_horarios` (default `true`) |
 
 ---
 
@@ -448,8 +455,9 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 
 | Use case | Query |
 |----------|--------|
-| Active places for hero / nearby | `lugares` `.select("*, localizacoes(*), lugares_tags(tags(*))")` `.eq("status","ativo")` |
-| Trending (“Em alta”) | `fetchLugaresPopulares`: aggregate `favoritos.lugar_id`, then `lugares` `.in("id", topIds)` |
+| Active places (hero) | `lugares` `.select("*, localizacoes(*), lugares_tags(tags(*))")` `.eq("status","ativo")` `.limit(50)` — phase 1 |
+| Trending (“Em alta”) | `fetchLugaresPopulares` (`lib/lugaresPopulares.js`): reads `favoritos`, then active `lugares` by top IDs — phase 1 |
+| “Perto de você” | Same select as above `.eq("destaque", false)` `.limit(6)` — phase 2 |
 | Favorites on home | `favoritos` `.select("lugar_id")` `.eq("user_id", user.id)` |
 | AI search | **Not SQL** — `POST /api/buscar` loads catalog server-side |
 
@@ -476,7 +484,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 
 | Use case | Query |
 |----------|--------|
-| Category grid counts | `lugares` `.select("id", { count: "exact", head: true })` per category |
+| Category grid counts | `lugares` `.select("categoria")` `.eq("status","ativo")` — aggregate counts in JS (`app/categorias/page.js`) |
 | Filtered list | `lugares` + joins `.eq("categoria", ...)` `.eq("subcategoria", ...)` |
 | Subcategory chips | `subcategorias` `.eq("categoria", slug)` |
 
@@ -535,7 +543,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 
 Not defined in repo migrations. Suggested for production:
 
-- `lugares(status, categoria)`
+- `lugares(status, categoria)` — also supports `/categorias` single-pass count (`select categoria where status = ativo`)
 - `lugares_tags(lugar_id)`, `lugares_tags(tag_id)`
 - `favoritos(user_id)`, `favoritos(lugar_id)`
 - `avaliacoes(lugar_id, status)`

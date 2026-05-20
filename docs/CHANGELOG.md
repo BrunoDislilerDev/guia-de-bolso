@@ -6,6 +6,68 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-20
+
+### Added
+
+- **`LugarClimaWidget`** on place detail (`/lugares/[id]`) for **Natureza** and **Aventura** places with coordinates — mini summary (temp, waves, bath status, wind) for all visitors; **`ClimaSheet`** with full Open-Meteo/marine metrics for **logged-in** users (login modal for guests).
+- **`fetchClimaApisCached`** and **`lugarExibeClima`** in `lib/clima.js` (10-minute in-memory cache per coordinates).
+- **Hero metrics grid (2×2)** on `OQueFazerAgora` — Distância, Tempo da experiência, regional **Temperatura** (from home climate fetch), **De carro** (drive-time estimate from distance at 30 km/h, rounded to 5 min).
+- **Place visibility flags** on `lugares`: `mostrar_endereco`, `mostrar_horarios` (admin toggles; migration `supabase/lugares_visibilidade.sql`).
+- **`getStorageErrorMessage`** in `lib/storageUpload.js` for clearer admin photo upload errors.
+
+### Changed
+
+- **Open/closed badges** on `EmAltaCard` and `PlaceCard` only when `mostrar_horarios` is true and `horarios` is a non-empty object (`getStatusFuncionamento` with optional second argument).
+- **Place detail** — hours block gated by `mostrar_horarios`; address/map block by `mostrar_endereco` and non-empty address; establishment quick actions omit links without URLs; removed **`LugarPorQueIrAgora`** section.
+- **Static map preview** on place detail uses **Google Maps Static API** (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`) with clickable fallback when the image fails (`LugarLocalizacaoCard`).
+- **Admin `LocalForm`** — address saved only via `localizacoes` (no `lugares.endereco` in payload); visibility checkboxes; improved save vs. photo error handling.
+- **Profile** — “Notificações” setting row hidden until implemented.
+
+### Fixed
+
+- **Admin `EnderecoAutocomplete`** — dropdown no longer reopens after a confirmed selection; single-click selection (`lockedQueryRef`, focus-gated list, `onMouseDown` preventDefault).
+- **`getMelhorHorario`** — returns `null` when the place has no registered hours (hero no longer shows misleading “Abre …” copy for beaches).
+
+### Documentation
+
+- Updated `docs/features.md`, `docs/architecture.md`, `docs/database.md`, and `docs/deployment.md` for climate-on-detail, hero metrics, visibility columns, Google Static Maps, and admin address behavior.
+
+## [0.3.0] - 2026-05-19
+
+### Added
+
+- **Decision-oriented home** — contextual header (`HomeContextHeader`), expanded `SmartSearch`, hero “O que fazer agora” (`OQueFazerAgora`), “Em alta hoje”, preset “Planos rápidos”, and “Perto de você”; driven by `lib/homeContext.js`.
+- **Conversion-focused place detail** — modular `components/lugar/*` (immersive hero, quick actions by venue type, compact hours, fixed navigation CTA); establishment vs. public-place logic in `lib/lugarDetalhe.js`.
+- **`next/image`** for place cards, trending cards, search rows, lugar hero, and route covers; `images.remotePatterns` in `next.config.mjs` (Supabase Storage + picsum).
+- **`PlaceCardSkeleton`** loading placeholders on favorites, category grids, and search results.
+- **Visible error handling** — red `ErrorBanner` (`role="alert"`) on place detail, category listings, and favorites; gray `SectionUnavailable` per failed home section.
+- **Design tokens** in `app/globals.css` (`--color-primary`, `--color-background`, `--color-muted`, etc.) and global `*:focus-visible` outline.
+- **Accessibility** — `BottomNav` and search controls with `aria-label`; bottom sheets with `role="dialog"`, `aria-modal`, and `aria-labelledby`; semantic `<ul>` / `<li>` on place lists.
+- **Empty states** — curated routes list (“Nenhuma rota cadastrada ainda”) and saved AI roteiros (“Nenhum roteiro salvo ainda”).
+- **Technical documentation** under `docs/` (architecture, database, API, features, deployment, contributing) and restructured root `README.md`.
+- **JSDoc** across `app/`, `components/`, `lib/`, and `middleware.js` (no runtime behavior change).
+
+### Changed
+
+- **Home data loading** — two phases (`Promise.allSettled`): primary (active places + trending) then secondary (nearby + weather); failures isolated per section instead of failing the whole page.
+- **`/categorias`** — single `select("categoria")` with client-side counts (replaces nine per-category count queries).
+- **Place/route cards** — ratings read from optional `rating_medio` / `media_avaliacoes` on the row only (removed per-card `avaliacoes` queries).
+- **`/rotas` and `/rotas/[id]`** — aligned with app palette (`#f0f4f3`, `#1a4a3a`), `rounded-2xl` cards, higher-contrast difficulty labels.
+- **Primary actions** — unified green CTAs (`#1a4a3a`) on hero, roteiro section, and route detail.
+- **System dark mode** — `prefers-color-scheme: dark` overrides disabled until a full theme ships.
+- **Touch targets** — minimum ~44px on smart-search and lugar hero icon buttons.
+
+### Fixed
+
+- **Silent Supabase failures** on home sections, favorites, category pages, and place detail — users now see retry or section-unavailable copy instead of empty UI.
+- **Admin route form** — `saveError` banner when save fails.
+- **`EnderecoMapPicker`** — “Mapa indisponível no momento” when the map cannot load.
+
+### Documentation
+
+- Updated `docs/features.md`, `docs/architecture.md`, and `docs/database.md` for home loading, error patterns, `next/image`, design tokens, and optional rating fields on `lugares`.
+
 ## [0.2.0] - 2026-05-19
 
 ### Added
@@ -42,5 +104,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Initial production release: home, place detail, categories, auth (Google + SMS), favorites, reviews, admin panel, AI search and roteiros (Guia Premium with monthly-style usage counters), routes, and Vercel deploy.
 
+[0.3.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/releases/tag/v0.1.0

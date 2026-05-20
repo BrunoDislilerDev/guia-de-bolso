@@ -26,7 +26,7 @@ function getRatingMedio(lugar) {
  * @returns {import('react').ReactElement}
  */
 export default function EmAltaCard({ lugar, priority = false }) {
-  const status = getStatusFuncionamento(lugar.horarios);
+  const status = getStatusFuncionamento(lugar.horarios, lugar.mostrar_horarios);
   const tags = getTagsFromLugar(lugar).slice(0, 2);
   const distancia = lugar.distancia_calculada || lugar.distancia;
   const rating = getRatingMedio(lugar);
@@ -51,13 +51,15 @@ export default function EmAltaCard({ lugar, priority = false }) {
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
         )}
-        <span
-          className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-            status.aberto ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
-          }`}
-        >
-          {status.aberto ? "Aberto" : "Fechado"}
-        </span>
+        {status && (
+          <span
+            className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              status.aberto ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
+            }`}
+          >
+            {status.aberto ? "Aberto" : "Fechado"}
+          </span>
+        )}
         {rating !== null && (
           <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
             ⭐ {rating.toFixed(1)}

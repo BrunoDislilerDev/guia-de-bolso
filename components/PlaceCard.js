@@ -69,7 +69,7 @@ export default function PlaceCard({
   onFavoritar,
   priority = false,
 }) {
-  const status = getStatusFuncionamento(lugar.horarios);
+  const status = getStatusFuncionamento(lugar.horarios, lugar.mostrar_horarios);
   const distancia = lugar.distancia_calculada || lugar.distancia;
   const tags = getTagsFromLugar(lugar).slice(0, 2);
   const rating = getRatingMedio(lugar);
@@ -101,13 +101,15 @@ export default function PlaceCard({
           {lugar.categoria}
         </span>
       </div>
-      <span
-        className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
-          status.aberto ? "bg-[#1a4a3a]" : "bg-[#d9534f]"
-        }`}
-      >
-        {status.label}
-      </span>
+      {status && (
+        <span
+          className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
+            status.aberto ? "bg-[#1a4a3a]" : "bg-[#d9534f]"
+          }`}
+        >
+          {status.label}
+        </span>
+      )}
 
       <Link
         href={`/lugares/${lugar.id}`}
