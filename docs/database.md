@@ -91,7 +91,7 @@ Core content: beaches, restaurants, trails, services, etc.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | `uuid` PK | |
+| `id` | `bigint` PK | Serial/numeric id (not uuid in production) |
 | `nome` | `text` | Display name |
 | `descricao` | `text` | Short description |
 | `descricao_longa` | `text` | Long “about” copy |
@@ -152,6 +152,7 @@ Controlled vocabulary for place attributes (pet friendly, vista mar, etc.).
 | `id` | `integer` PK | |
 | `nome` | `text` | Label |
 | `categorias` | `jsonb` | Array of category names where tag is valid *(migration: `tags_categorias.sql`)* |
+| `aplica_em_rotas` | `boolean` | When true, tag appears in admin route form *(migration: `rotas_taxonomia.sql`)* |
 
 Admin limits **3 tags per place**. Filtering: `lib/tags.js` (`filterTagsByCategoria`).
 
@@ -178,7 +179,8 @@ Lookup for admin and category pages. **Not** FK-linked to `lugares`; matched by 
 |--------|------|-------------|
 | `id` | (serial/uuid) | PK |
 | `categoria` | `text` | Parent category name |
-| `nome` | `text` | Subcategory label |
+| `nome` | `text` | Broad place type only (e.g. Praias, Trilhas — not Surfe/pôr do sol; those are **tags**) |
+| `icone` | `text` | Optional emoji shown in admin and category chips |
 
 Queried with `.eq("categoria", form.categoria)` in admin and `.eq("categoria", slug)` on `/categoria/[slug]`.
 
@@ -226,10 +228,10 @@ Admin-managed curated routes (trails, city walks). **Distinct from** AI `roteiro
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | `uuid` | PK |
-| `nome` / `titulo` | `text` | Display title (form writes both) |
+| `nome` | `text` | Display title |
 | `descricao` | `text` | |
 | `cidade` | `text` | e.g. Imbituba |
-| `categoria` | `text` | e.g. Trilha |
+| `categoria` | `text` | Tipo de experiência — valores fixos em `lib/rotas.js` (Trilha, Passeio urbano, …) |
 | `dificuldade` | `text` | Fácil, Médio, Difícil |
 | `duracao_minutos` | `integer` | |
 | `distancia_km` | `numeric` | |
@@ -238,6 +240,22 @@ Admin-managed curated routes (trails, city walks). **Distinct from** AI `roteiro
 | `foto_capa` / `imagem_capa` | `text` | Legacy cover URLs |
 | `fotos` | `jsonb` | Gallery URLs *(migration: `fotos_migration.sql`)* |
 | `created_at` | `timestamptz` | |
+
+**Tags:** junction `rotas_tags` → `tags` (subset com `tags.aplica_em_rotas = true`). Admin: máx. 3 tags; replace on save.
+
+---
+
+### `rotas_tags`
+
+Join table **many-to-many** `rotas` ↔ `tags` (subset de tags aplicáveis a rotas).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `uuid` | PK |
+| `rota_id` | `uuid` FK | → `rotas.id` |
+| `tag_id` | `integer` FK | → `tags.id` |
+
+Admin replaces all rows on save: `delete` by `rota_id`, then `insert` batch. Filtering: `lib/tags.js` (`filterTagsParaRotas`, `getTagsFromRota`).
 
 ---
 
@@ -251,9 +269,56 @@ Ordered steps for a `rotas` row.
 | `rota_id` | `uuid` FK | → `rotas` |
 | `ordem` | `integer` | Step sequence |
 | `nome` | `text` | Step title |
-| `descricao` | `text` | Step instruction |
+| `descricao` | `text` | Step instruction *(legado; prefer `rota_ponto_detalhes`)* |
+| `lugar_id` | `bigint` FK (nullable) | *(legado, não usado no app)* |
 
-Admin: delete all points for route, re-insert on save.
+Detalhes ordenados em **`rota_ponto_detalhes`** (várias descrições por ponto). Admin: delete pontos da rota (cascade) e re-insert.
+
+---
+
+### `rota_ponto_detalhes`
+
+Ordered description lines for each `rota_pontos` row.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `uuid` | PK |
+| `ponto_id` | `uuid` FK | → `rota_pontos.id` |
+| `ordem` | `integer` | Line sequence |
+| `texto` | `text` | Description line |
+
+*(migration: `rota_ponto_detalhes.sql`)*
+
+---
+
+### `rota_dicas`
+
+Ordered tips for a `rotas` row, shown at the bottom of `/rotas/[id]`.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `uuid` | PK |
+| `rota_id` | `uuid` FK | → `rotas` |
+| `ordem` | `integer` | Tip sequence |
+| `texto` | `text` | Tip content |
+| `created_at` | `timestamptz` | |
+
+Admin: delete all tips for route, re-insert on save *(migration: `rota_dicas.sql`)*.
+
+---
+
+### `rotas_localizacoes`
+
+Structured address and coordinates (1:1 with `rotas`). Used by **Abrir no Maps** on `/rotas/[id]`; endereço **não** é exibido no app.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `rota_id` | `uuid` PK/FK | → `rotas.id`, upsert `onConflict: rota_id` |
+| `rua`, `numero`, `bairro`, `cidade`, `estado`, `cep`, `pais` | `text` | Address parts |
+| `endereco_completo` | `text` | Full formatted address |
+| `latitude`, `longitude` | `float` | Map pin / navigation target |
+
+*(migration: `rotas_localizacoes.sql`)*
 
 ---
 
@@ -331,7 +396,11 @@ Inserted via `lib/logs.js` → `registrarLog()`.
 | `favoritos` | `lugares`, user | N:1 | `user_id`, `lugar_id` |
 | `avaliacoes` | `lugares`, user | N:1 | Moderation on `status` |
 | `destaques` | `lugares`, `planos` | N:1 each | Date range + `ativo` |
+| `rotas_tags` | `rotas`, `tags` | N:M | `rota_id`, `tag_id` |
 | `rota_pontos` | `rotas` | N:1 | Ordered by `ordem` |
+| `rota_ponto_detalhes` | `rota_pontos` | N:1 | Ordered description lines |
+| `rota_dicas` | `rotas` | N:1 | Ordered tips by `ordem` |
+| `rotas_localizacoes` | `rotas` | 1:1 | `rota_id`; maps/navigation only |
 | `roteiros` | user | N:1 | Private to owner |
 | `logs` | `perfis` | N:1 | Optional `user_id` |
 | `subcategorias` | `lugares` | Logical | Text match on `categoria` + `nome`, not FK |
@@ -343,14 +412,15 @@ Inserted via `lib/logs.js` → `registrarLog()`.
 *, lugares(nome)                              -- admin reviews, destaques
 *, planos(nome, frequencia, preco)            -- destaques list
 id,lugar_id,lugares!inner(*)                  -- favoritos with place embed
-tags(*)                                       -- via lugares_tags
+*, rotas_tags(tags(*))                        -- routes list/detail
+*, lugares(id, nome)                          -- route steps with optional place link
 ```
 
 ---
 
 ## Row Level Security (RLS)
 
-RLS policies are **not fully versioned** in the repo. The table below reflects **intended behavior** from app design and **explicit policies** in `/supabase`. Verify in Supabase Dashboard → Authentication → Policies.
+RLS policies for **`rotas`** and related tables are in [`rotas_policies.sql`](../supabase/rotas_policies.sql) (`is_admin_user()` helper; public read active routes; admin/dev write).
 
 ### Documented policies in repo
 
@@ -369,11 +439,11 @@ RLS policies are **not fully versioned** in the repo. The table below reflects *
 |-------|-----------------|-----------------|-------------------------------------|
 | `lugares` | `SELECT` where `status = 'ativo'` | Same | `INSERT`/`UPDATE`/`DELETE` all statuses |
 | `localizacoes`, `fotos_lugar`, `tags`, `subcategorias` | `SELECT` | `SELECT` | Full write |
-| `lugares_tags` | `SELECT` | `SELECT` | Write via admin session |
+| `lugares_tags`, `rotas_tags` | `SELECT` | `SELECT` | Write via admin session |
 | `favoritos` | — | `SELECT`/`INSERT`/`DELETE` own `user_id` | — |
 | `avaliacoes` | `SELECT` where `status = 'aprovada'` | `INSERT` own; `SELECT` own pending | `SELECT` all; `UPDATE` status |
 | `roteiros` | — | CRUD own `user_id` | — |
-| `rotas`, `rota_pontos` | `SELECT` active/public | `SELECT` | Full write |
+| `rotas`, `rota_pontos`, `rota_dicas` | `SELECT` active/public | `SELECT` | Full write |
 | `destaques`, `planos` | `SELECT` active (if exposed) | — | Full write |
 | `perfis` | — | Own row; admin may need broader `SELECT` for `/admin/usuarios` | Update any `role` |
 | `logs` | — | `INSERT` (app) | `SELECT` (dashboard) |
@@ -446,6 +516,13 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | 8 | `storage-policies.sql` | Avatar policies on `imagens` |
 | 9 | `logs_policies.sql` | FK `logs.user_id` → `perfis`, permissive read policy |
 | 10 | `lugares_visibilidade.sql` | `lugares.mostrar_endereco`, `lugares.mostrar_horarios` (default `true`) |
+| 11 | `taxonomia_lugares_cleanup.sql` | Canonical subcategorias per category + migrate/remove redundant subs + seed detail **tags** (Surfe, etc.) |
+| 11b | `subcategoria_piscinas_naturais.sql` | Superseded by `taxonomia_lugares_cleanup.sql` (kept for reference) |
+| 12 | `rotas_taxonomia.sql` | `rotas_tags`, `tags.aplica_em_rotas`, `rota_pontos.lugar_id` |
+| 13 | `rota_dicas.sql` | Ordered tips table `rota_dicas` |
+| 14 | `rotas_policies.sql` | RLS on `rotas`, `rota_pontos`, `rota_dicas`, `rotas_tags` (admin write) |
+| 15 | `rotas_localizacoes.sql` | Structured address/coords for routes (`rotas_localizacoes`) |
+| 16 | `rota_ponto_detalhes.sql` | Multiple ordered descriptions per route step |
 
 ---
 
@@ -492,7 +569,10 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 
 | Use case | Query |
 |----------|--------|
-| Curated routes | `rotas` `.select("*")` (active/public per RLS) |
+| Curated routes | `rotas` `.select("*, rotas_tags(tags(*))")` (active/public per RLS) |
+| Route detail steps | `rota_pontos` `.select("*, rota_ponto_detalhes(id, texto, ordem)")` |
+| Route detail tips | `rota_dicas` `.select("*")` `.eq("rota_id")` `.order("ordem")` |
+| Route maps target | `rotas_localizacoes` `.maybeSingle()` by `rota_id` |
 | Saved AI trips | `roteiros` `.select("id, titulo, dias, ...")` `.eq("user_id")` |
 | Generate itinerary | `POST /api/roteiro` — server reads `lugares` catalog |
 | Save itinerary | `POST /api/roteiro/salvar` → `roteiros.insert` |
@@ -513,7 +593,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Auth gate | `perfis` `.select("*")` `.eq("id", user.id)` — `canAccessAdmin(role)` |
 | Places grid | `lugares` `.select("*, localizacoes(cidade)")` |
 | Place CRUD | `lugares` insert/update; `localizacoes` upsert; `lugares_tags` replace |
-| Routes CRUD | `rotas` + `rota_pontos` delete/insert |
+| Routes CRUD | `rotas` + `rota_pontos` + `rota_ponto_detalhes` + `rota_dicas` + `rotas_tags` + `rotas_localizacoes` |
 | Reviews moderation | `avaliacoes` `.update({ status })` |
 | Highlights | `destaques` + joins `lugares`, `planos` |
 | Users | `perfis` `.select("*")` `.update({ role })` |

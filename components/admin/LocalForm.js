@@ -7,9 +7,10 @@ import HorarioEditor from "@/components/admin/HorarioEditor";
 import PhotoUploader from "@/components/admin/PhotoUploader";
 import { getInitialPhotoItems } from "@/lib/fotos";
 import {
+  buildFotosUrlsFromPhotoItems,
   createPhotoItemFromFile,
-  getExistingUrlsFromPhotoItems,
   getPendingFilesFromPhotoItems,
+  movePhotoItemToCover,
   revokePhotoItemPreview,
 } from "@/lib/photoItems";
 import { createClient } from "@/lib/supabase";
@@ -216,6 +217,10 @@ export default function LocalForm({
     });
   }
 
+  function setPhotoCover(id) {
+    setPhotoItems((current) => movePhotoItemToCover(current, id));
+  }
+
   /**
    * Persiste lugar, fotos no Storage, localização e vínculos de tags no Supabase.
    * @param {import("react").FormEvent<HTMLFormElement>} event - Evento de submit do formulário.
@@ -239,7 +244,6 @@ export default function LocalForm({
       horarios: form.horarios,
     };
     let lugarId = editingId;
-    const existingUrls = getExistingUrlsFromPhotoItems(photoItems);
     const pendingFiles = getPendingFilesFromPhotoItems(photoItems);
 
     try {
@@ -286,7 +290,7 @@ export default function LocalForm({
               pendingFiles
             )
           : [];
-      const fotos = [...existingUrls, ...uploadedUrls];
+      const fotos = buildFotosUrlsFromPhotoItems(photoItems, uploadedUrls);
 
       const { error: fotosError } = await supabase
         .from("lugares")
@@ -402,6 +406,7 @@ export default function LocalForm({
         items={photoItems}
         onAddFiles={addPhotoFiles}
         onRemove={removePhotoItem}
+        onSetCover={setPhotoCover}
         disabled={saving}
         error={photoError}
       />

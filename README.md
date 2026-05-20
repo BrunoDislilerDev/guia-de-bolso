@@ -349,28 +349,41 @@ Contributions are welcome. Please read [`docs/contributing.md`](./docs/contribut
 ## Planejamento V2
 
 ### História e Cultura
-Transformar o Guia de Bolso na memória digital de Imbituba e Garopaba,
+Transformar o Guia de Bolso na memória digital de Imbituba,
 oferecendo contexto histórico e cultural que nenhum guia local digital tem.
+Foco inicial em Imbituba. Garopaba será contemplada em versão futura dedicada.
 
 **Estrutura planejada:**
+
+História dentro do Explorar:
+- [ ] Redesenhar a tela Explorar para incluir seção "Conheça a região" 
+      no topo, além das categorias existentes
+- [ ] Card "História de Imbituba" abrindo página dedicada com texto rico, 
+      fotos históricas e linha do tempo
+- [ ] Página de história com seções: Origens, Influência Açoriana, 
+      O Porto, A Pesca Artesanal, Crescimento do Turismo
+
+História dentro do detalhe de cada local:
 - [ ] Campo `historia` e `curiosidades` na tabela lugares (banco + admin)
-- [ ] Seção "Sabia que..." na página de detalhe de cada lugar
-- [ ] Categoria "Cultura" com filtro por lugares com história cadastrada
-- [ ] Linha do tempo interativa da cidade na home ou seção dedicada
-- [ ] Roteiro histórico com IA — filtro "Monte um roteiro histórico"
-- [ ] Áudio guia — narração em áudio gerada a partir do campo história (Text-to-Speech)
+- [ ] Seção "História e curiosidades" colapsável na página de detalhe 
+      de cada lugar, com visual diferenciado (fundo levemente diferente, 
+      ícone de livro)
+- [ ] Integração com roteiro de IA — filtro "Monte um roteiro histórico 
+      de Imbituba"
+- [ ] Áudio guia futuro — narração gerada a partir do campo história 
+      via Text-to-Speech
 
 **Conteúdo prioritário para cadastrar:**
 - Farol de Imbituba
-- Porto de Imbituba
+- Porto de Imbituba  
 - Centro histórico
 - Praias com lendas e histórias locais
-- Influência açoriana na arquitetura e culinária
+- Influência açoriana na arquitetura e culinária local
 
 **Impacto esperado:**
-Diferencial único no mercado — nenhum app local conta a história dos 
-lugares de forma acessível para o turista que está no ponto.
-Potencial de parceria com prefeitura, secretaria de cultura e historiadores locais.
+Diferencial único — o app como memória digital viva de Imbituba.
+Potencial de parceria com prefeitura, secretaria de cultura e 
+historiadores locais.
 
 ### Outras features planejadas
 - [ ] Notificações Push

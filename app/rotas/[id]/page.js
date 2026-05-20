@@ -1,8 +1,11 @@
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
-import { getCapaFromRota } from "@/lib/fotos";
+import RotaGaleria from "@/components/rotas/RotaGaleria";
+import { getFotosFromRota } from "@/lib/fotos";
+import { getGoogleMapsDirectionsUrlForRota } from "@/lib/rotaMaps";
+import { getDetalhesFromPonto } from "@/lib/rotaPontos";
+import { getCategoriaRotaMeta } from "@/lib/rotas";
+import { getTagsFromRota } from "@/lib/tags";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -59,34 +62,12 @@ function IconSend({ className = "h-5 w-5" }) {
 }
 
 /**
- * Bookmark icon for save action (placeholder).
- * @param {{ className?: string }} props - Optional Tailwind classes.
- * @returns {import("react").ReactElement}
- */
-function IconBookmark({ className = "h-5 w-5" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <path d="M6 3h12a1 1 0 011 1v18l-7-4-7 4V4a1 1 0 011-1z" />
-    </svg>
-  );
-}
-
-/**
  * Display title for a route record.
  * @param {object} rota - Route row.
  * @returns {string} Route name.
  */
 function getRotaNome(rota) {
   return rota.nome || rota.titulo || "Rota sem nome";
-}
-
-/**
- * Cover image URL for a route.
- * @param {object} rota - Route row.
- * @returns {string|undefined} Image URL.
- */
-function getFotoCapa(rota) {
-  return getCapaFromRota(rota);
 }
 
 /**
@@ -136,32 +117,6 @@ function dificuldadeClass(value) {
 }
 
 /**
- * Full-bleed hero cover for route detail.
- * @param {{ rota: object }} props
- * @returns {import("react").ReactElement}
- */
-function Cover({ rota }) {
-  const foto = getFotoCapa(rota);
-
-  if (!foto) {
-    return <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />;
-  }
-
-  return (
-    <div className="absolute inset-0">
-      <Image
-        src={foto}
-        alt={getRotaNome(rota)}
-        fill
-        sizes="100vw"
-        className="object-cover"
-        priority
-      />
-    </div>
-  );
-}
-
-/**
  * Single metric block on the route detail page.
  * @param {{ label: string, value: string, Icon: (props: { className?: string }) => import("react").ReactElement, valueClassName?: string }} props
  * @returns {import("react").ReactElement}
@@ -191,7 +146,7 @@ export default async function RotaDetalhePage({ params }) {
 
   const { data: rota } = await supabase
     .from("rotas")
-    .select("*")
+    .select("*, rotas_tags(tags(*))")
     .eq("id", id)
     .maybeSingle();
 
@@ -199,46 +154,57 @@ export default async function RotaDetalhePage({ params }) {
 
   const { data: pontosData } = await supabase
     .from("rota_pontos")
+    .select("*, rota_ponto_detalhes(id, texto, ordem)")
+    .eq("rota_id", id)
+    .order("ordem", { ascending: true });
+
+  const { data: dicasData } = await supabase
+    .from("rota_dicas")
     .select("*")
     .eq("rota_id", id)
     .order("ordem", { ascending: true });
 
+  const { data: localizacao } = await supabase
+    .from("rotas_localizacoes")
+    .select("*")
+    .eq("rota_id", id)
+    .maybeSingle();
+
   const pontos = pontosData ?? [];
+  const dicas = dicasData ?? [];
   const nome = getRotaNome(rota);
-  const cidade = rota.cidade || "Imbituba";
-  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${nome} ${cidade}`)}`;
+  const categoria = getCategoriaRotaMeta(rota.categoria);
+  const tags = getTagsFromRota(rota);
+  const fotos = getFotosFromRota(rota);
+  const mapsHref = getGoogleMapsDirectionsUrlForRota(rota, localizacao);
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md">
-        <section className="relative h-64 overflow-hidden bg-[#1a4a3a]">
-          <Cover rota={rota} />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/15 to-transparent" />
-
-          <Link
-            href="/rotas"
-            className="absolute left-4 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/75 text-2xl font-semibold text-[#1a2e28] shadow-md backdrop-blur"
-            aria-label="Voltar para rotas"
-          >
-            ←
-          </Link>
-          <button
-            type="button"
-            className="absolute right-4 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/75 text-[#1a2e28] shadow-md backdrop-blur"
-            aria-label="Salvar rota"
-          >
-            <IconBookmark />
-          </button>
-        </section>
+        <RotaGaleria nome={nome} imagens={fotos} />
 
         <main className="px-4 pb-28 pt-6">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#1a4a3a]">
-            <IconPin className="h-3.5 w-3.5" />
-            {rota.categoria || "Rota"}
+            <span aria-hidden>{categoria.icone}</span>
+            {categoria.nome}
           </p>
           <h1 className="mt-2 text-[30px] font-extrabold leading-tight tracking-tight">
             {nome}
           </h1>
+
+          {tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#1a4a3a] shadow-sm"
+                >
+                  {tag.icone ? `${tag.icone} ` : ""}
+                  {tag.nome}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="mt-6 flex gap-4 border-b border-[#e3e9e6] pb-5">
             <Metric label="Duração" value={formatDuracao(rota)} Icon={IconClock} />
@@ -273,7 +239,10 @@ export default async function RotaDetalhePage({ params }) {
               <h2 className="text-xl font-bold">Pontos do percurso</h2>
               <div className="relative mt-5 grid gap-5">
                 <div className="absolute bottom-6 left-5 top-6 w-px bg-[#e3e9e6]" />
-                {pontos.map((ponto, index) => (
+                {pontos.map((ponto, index) => {
+                  const detalhes = getDetalhesFromPonto(ponto);
+
+                  return (
                   <div key={ponto.id} className="relative flex gap-4">
                     <div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a4a3a] text-sm font-bold text-white">
                       {ponto.ordem || index + 1}
@@ -282,15 +251,47 @@ export default async function RotaDetalhePage({ params }) {
                       <h3 className="font-bold text-[#1a2e28]">
                         {ponto.nome || ponto.titulo || `Ponto ${index + 1}`}
                       </h3>
-                      {ponto.descricao && (
-                        <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
-                          {ponto.descricao}
-                        </p>
+                      {detalhes.length > 0 && (
+                        <ol className="mt-3 grid list-none gap-2 p-0">
+                          {detalhes.map((detalhe, detalheIndex) => (
+                            <li
+                              key={detalhe.id || `${ponto.id}-${detalheIndex}`}
+                              className="flex gap-2 text-sm leading-relaxed text-[#5a6b66]"
+                            >
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#eef5f2] text-[11px] font-bold text-[#1a4a3a]">
+                                {detalhe.ordem || detalheIndex + 1}
+                              </span>
+                              <span className="min-w-0 flex-1 pt-0.5">{detalhe.texto}</span>
+                            </li>
+                          ))}
+                        </ol>
                       )}
                     </article>
                   </div>
-                ))}
+                  );
+                })}
               </div>
+            </section>
+          )}
+
+          {dicas.length > 0 && (
+            <section className="mt-9">
+              <h2 className="text-xl font-bold">Dicas</h2>
+              <ol className="mt-4 grid list-none gap-3 p-0">
+                {dicas.map((dica, index) => (
+                  <li
+                    key={dica.id}
+                    className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d4ede8] text-sm font-bold text-[#1a4a3a]">
+                      {dica.ordem || index + 1}
+                    </span>
+                    <p className="min-w-0 flex-1 text-sm leading-relaxed text-[#5a6b66]">
+                      {dica.texto}
+                    </p>
+                  </li>
+                ))}
+              </ol>
             </section>
           )}
 

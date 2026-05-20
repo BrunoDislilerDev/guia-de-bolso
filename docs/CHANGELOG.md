@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Place taxonomy cleanup** — broad subcategorias only (e.g. Natureza → Praias); Surfe, pôr do sol, mergulho, etc. as **tags** (`supabase/taxonomia_lugares_cleanup.sql`). Removed redundant `subcategoria_surf.sql`.
+- **Daily AI limit reset fix** — `isSameUsageDay()` now matches only exact `YYYY-MM-DD` (legacy `YYYY-MM` no longer blocks midnight reset); `usePremiumUsage` refreshes at SP midnight and when the tab becomes visible on a new day.
+- **Route step details** — multiple ordered descriptions per `rota_pontos` via `rota_ponto_detalhes`; removed place link on steps.
+- **Route map location** — admin `EnderecoAutocomplete` + `rotas_localizacoes` table; **Abrir no Maps** opens navigation to saved coordinates (no textual address on route page).
+- **Route taxonomy** — fixed route types in `lib/rotas.js` (Trilha, Passeio urbano, Roteiro de praias, Cultural / histórico, Gastronômico, Mirantes e panorâmicos); `rotas_tags` junction + `tags.aplica_em_rotas`; optional `rota_pontos.lugar_id` (migration `supabase/rotas_taxonomia.sql`).
+- **`RotasCatalogo`** — category filter chips on `/rotas`; tags and type badge on route cards.
+- **Admin `RotaForm`** — route type select, tag picker (max 3), optional place link per step.
+
+### Changed
+
+- **`/rotas/[id]`** — shows category icon, tag chips, and “Ver no guia” link on steps linked to a place.
+
 ## [0.4.0] - 2026-05-20
 
 ### Added

@@ -247,7 +247,8 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `lugaresVisitados.js` | Client | Recent places in `localStorage` for search browse |
 | `clima.js` | Shared | Open-Meteo weather/marine; `fetchClimaApisCached`, `lugarExibeClima`; home phrase + hero temp + `LugarClimaWidget` |
 | `fotos.js` / `photoItems.js` | Shared | Cover URL helpers for places and routes |
-| `tags.js` | Shared | Tag chips from `lugares_tags` joins |
+| `tags.js` | Shared | Tag chips from `lugares_tags` / `rotas_tags` joins |
+| `rotas.js` | Shared | Fixed route type catalog (`CATEGORIAS_ROTA`) |
 | `adminRoles.js` | Shared | `canAccessAdmin`, role chips, `user` → `usuario` normalization |
 | `roteiroMarkdown.js` / `roteiroLugares.js` | Server/shared | Itinerary formatting and catalog filtering for AI |
 | `usePremiumUsage.js` | Client | Premium quota hook + `localStorage` cache |

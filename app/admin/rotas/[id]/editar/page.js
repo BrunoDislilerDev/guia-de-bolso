@@ -16,6 +16,9 @@ export default function EditarRotaPage() {
   const { id } = useParams();
   const [rota, setRota] = useState(null);
   const [pontos, setPontos] = useState([]);
+  const [dicas, setDicas] = useState([]);
+  const [localizacao, setLocalizacao] = useState(null);
+  const [tagIds, setTagIds] = useState([]);
   const [loadingRota, setLoadingRota] = useState(true);
 
   useEffect(() => {
@@ -26,12 +29,22 @@ export default function EditarRotaPage() {
       supabase.from("rotas").select("*").eq("id", id).maybeSingle(),
       supabase
         .from("rota_pontos")
+        .select("*, rota_ponto_detalhes(texto, ordem)")
+        .eq("rota_id", id)
+        .order("ordem", { ascending: true }),
+      supabase
+        .from("rota_dicas")
         .select("*")
         .eq("rota_id", id)
         .order("ordem", { ascending: true }),
-    ]).then(([rotaRes, pontosRes]) => {
+      supabase.from("rotas_localizacoes").select("*").eq("rota_id", id).maybeSingle(),
+      supabase.from("rotas_tags").select("tag_id").eq("rota_id", id),
+    ]).then(([rotaRes, pontosRes, dicasRes, localizacaoRes, tagsRes]) => {
       setRota(rotaRes.data);
       setPontos(pontosRes.data ?? []);
+      setDicas(dicasRes.data ?? []);
+      setLocalizacao(localizacaoRes.data);
+      setTagIds((tagsRes.data ?? []).map((item) => String(item.tag_id)));
       setLoadingRota(false);
     });
   }, [loading, id]);
@@ -53,7 +66,14 @@ export default function EditarRotaPage() {
         ← Voltar para Rotas
       </Link>
       {rota ? (
-        <RotaForm initialData={rota} initialPontos={pontos} editingId={rota.id} />
+        <RotaForm
+          initialData={rota}
+          initialPontos={pontos}
+          initialDicas={dicas}
+          initialLocalizacao={localizacao}
+          initialTagIds={tagIds}
+          editingId={rota.id}
+        />
       ) : (
         <p className="rounded-2xl bg-white p-5 text-sm text-[#5a6b66] shadow-sm">
           Rota não encontrada.

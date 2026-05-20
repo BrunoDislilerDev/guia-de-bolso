@@ -424,15 +424,16 @@ Personalize account appearance.
 ## 20. Curated routes (admin-published trails)
 
 **Description**  
-Editorial routes at `/rotas` and `/rotas/[id]`: cover, difficulty, duration, distance, ordered **pontos** (steps). Featured route highlighted.
+Editorial routes at `/rotas` and `/rotas/[id]`: cover, **tipo de rota** (categorias fixas em `lib/rotas.js`), **tags** (subset compartilhado do catálogo), difficulty, duration, distance, ordered **pontos** (steps) with optional link to a **lugar**. Featured route highlighted; list page supports filter chips by route type.
 
 **User goal**  
 Follow a predefined trail or city walk with guidance.
 
 **Main flows**
-1. `/rotas` (server-rendered) lists routes with app palette (`#f0f4f3` / `#1a4a3a`); cover images via `next/image`; featured card if `destaque=true`.
-2. Tap route → detail with step list and metrics (same visual system, difficulty labels use higher-contrast amber where needed).
-3. No login required to **view** list/detail (public read).
+1. `/rotas` (server-rendered) lists routes with app palette (`#f0f4f3` / `#1a4a3a`); cover images via `next/image`; featured card if `destaque=true`; horizontal chips filter by route type when multiple categories exist.
+2. Tap route → detail with category icon, tag chips, step list with **ordered description lines per point**, **ordered tips** at the bottom, and metrics.
+3. Admin `RotaForm`: route type, tags, multiple descriptions per step (no place link), map start point, dicas.
+4. No login required to **view** list/detail (public read).
 
 **Edge cases**
 - Empty DB → empty state (“Nenhuma rota cadastrada ainda”) with map illustration.
