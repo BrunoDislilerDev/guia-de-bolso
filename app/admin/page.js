@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
-import { createClient } from "@/lib/supabase";
 import {
+  formatLogDateTime,
   formatarDetalhesLog,
-  getLogAcaoBadge,
-} from "@/lib/logs";
+  getLogAcaoBadgeAdmin,
+} from "@/lib/adminLogs";
+import { formatarAcaoLog } from "@/lib/logs";
+import { createClient } from "@/lib/supabase";
 
 /**
  * ISO timestamp for metrics comparison N days ago.
@@ -225,14 +228,13 @@ export default function AdminDashboard() {
     favoritos: { total: 0, variation: { text: "Sem variação", className: "text-gray-500" } },
   });
   const [pendentes, setPendentes] = useState([]);
-  const [logs, setLogs] = useState([]);
+  const [logsRecentes, setLogsRecentes] = useState([]);
   const [perfis, setPerfis] = useState([]);
-  const [logsPage, setLogsPage] = useState(0);
 
   useEffect(() => {
     if (loading) return;
     loadDashboard();
-  }, [loading, logsPage, period]);
+  }, [loading, period]);
 
   /** Loads metrics, pending reviews, logs, and profiles for the dashboard. @returns {Promise<void>} */
   async function loadDashboard() {
@@ -270,7 +272,7 @@ export default function AdminDashboard() {
         .from("logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .range(logsPage * 20, logsPage * 20 + 19),
+        .limit(3),
       supabase.from("perfis").select("id, nome"),
     ]);
 
@@ -298,7 +300,7 @@ export default function AdminDashboard() {
     });
 
     setPendentes(avaliacoes.data ?? []);
-    setLogs(logsRes.data ?? []);
+    setLogsRecentes(logsRes.data ?? []);
     setPerfis(perfisRes.data ?? []);
   }
 
@@ -419,80 +421,51 @@ export default function AdminDashboard() {
       </section>
 
       <section className="mt-8 rounded-2xl bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-bold text-[#1a2e28]">Logs recentes</h2>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={logsPage === 0}
-              onClick={() => setLogsPage((page) => Math.max(0, page - 1))}
-              className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 disabled:opacity-40"
-            >
-              Anterior
-            </button>
-            <button
-              type="button"
-              disabled={logs.length < 20}
-              onClick={() => setLogsPage((page) => page + 1)}
-              className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 disabled:opacity-40"
-            >
-              Próximo
-            </button>
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-bold text-[#1a2e28]">Atividade recente</h2>
+          <Link
+            href="/admin/logs"
+            className="text-sm font-semibold text-[#1a4a3a] underline-offset-2 hover:underline"
+          >
+            Ver todos os logs →
+          </Link>
         </div>
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-gray-100">
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500">
-              <tr>
-                <th className="px-4 py-3">Usuário</th>
-                <th className="px-4 py-3">Ação</th>
-                <th className="px-4 py-3">Detalhes</th>
-                <th className="px-4 py-3">Data/Hora</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                    Nenhum log encontrado.
-                  </td>
-                </tr>
-              ) : (
-                logs.map((log, index) => {
-                  const perfil = perfis.find((p) => p.id === log.user_id);
-                  const nomeUsuario = perfil?.nome || "Visitante";
-                  const badge = getLogAcaoBadge(log.acao);
+        <div className="mt-4 space-y-3">
+          {logsRecentes.length === 0 ? (
+            <p className="text-sm text-[#5a6b66]">Nenhuma atividade registrada.</p>
+          ) : (
+            logsRecentes.map((log) => {
+              const perfil = perfis.find((p) => p.id === log.user_id);
+              const nomeUsuario =
+                log.user_nome || perfil?.nome || log.user_email || "Visitante";
+              const badge = getLogAcaoBadgeAdmin(log.acao);
+              const { relativo } = formatLogDateTime(log.created_at);
 
-                  return (
-                    <tr
-                      key={log.id}
-                      className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+              return (
+                <article
+                  key={log.id}
+                  className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[#eef3f1] p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#1a2e28]">{nomeUsuario}</p>
+                    <p className="mt-0.5 text-sm text-[#5a6b66]">{formatarAcaoLog(log)}</p>
+                    <p className="mt-0.5 text-xs text-[#9aa8a3]">
+                      {formatarDetalhesLog(log.detalhes)}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${badge.className}`}
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {nomeUsuario}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${badge.className}`}
-                        >
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {formatarDetalhesLog(log.detalhes)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {log.created_at
-                          ? new Date(log.created_at).toLocaleString("pt-BR")
-                          : "—"}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                      {badge.label}
+                    </span>
+                    <span className="text-xs text-[#9aa8a3]">{relativo}</span>
+                  </div>
+                </article>
+              );
+            })
+          )}
         </div>
       </section>
     </AdminShell>
