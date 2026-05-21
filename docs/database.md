@@ -212,10 +212,12 @@ User reviews with moderation.
 | `user_id` | `uuid` FK | |
 | `nota` | `integer` | 1–5 |
 | `comentario` | `text` | Optional |
+| `aspectos` | `jsonb` | Selected aspect labels from structured form (default `[]`) |
+| `sugestao_ia` | `text` | Claude pre-moderation hint (`aprovar` / `rejeitar` / `revisar` + reason) |
 | `status` | `text` | `pendente`, `aprovada`, `rejeitada` |
 | `created_at` | `timestamptz` | |
 
-Public reads: `status = 'aprovada'`. Inserts default to `pendente`. Admin approves/rejects.
+Public reads: `status = 'aprovada'`. Inserts default to `pendente`. After insert, client calls `POST /api/avaliacoes/analisar`. Admin approves/rejects. Migration: `supabase/avaliacoes_moderacao.sql`.
 
 Some selects join `profiles:user_id(...)` (Supabase view); fallback select uses `*` only.
 
@@ -348,8 +350,8 @@ Commercial highlight **pricing tiers** (Básico, Padrão, Premium).
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | (serial) | PK — app uses numeric ids in admin forms |
-| `nome` | `text` | Plan name |
-| `frequencia` | `text` | e.g. 2x semana, diário |
+| `nome` | `text` | Plan name — app V1 uses single row **Parceiro** (R$ 199/mês) via `lib/planoComercial.js` |
+| `frequencia` | `text` | e.g. `mensal` |
 | `preco` | `numeric` | BRL |
 
 ---
@@ -523,6 +525,9 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | 14 | `rotas_policies.sql` | RLS on `rotas`, `rota_pontos`, `rota_dicas`, `rotas_tags` (admin write) |
 | 15 | `rotas_localizacoes.sql` | Structured address/coords for routes (`rotas_localizacoes`) |
 | 16 | `rota_ponto_detalhes.sql` | Multiple ordered descriptions per route step |
+| 17 | `avaliacoes_moderacao.sql` | `aspectos`, `sugestao_ia` on `avaliacoes` |
+| 18 | `plano_comercial_unico.sql` | Normalize single **Parceiro** commercial plan |
+| 19 | `premium_uso_dia_fix.sql` | Optional: documents/fixes daily `uso_ia_mes` semantics |
 
 ---
 
@@ -534,7 +539,8 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 |----------|--------|
 | Active places (hero) | `lugares` `.select("*, localizacoes(*), lugares_tags(tags(*))")` `.eq("status","ativo")` `.limit(50)` — phase 1 |
 | Trending (“Em alta”) | `fetchLugaresPopulares` (`lib/lugaresPopulares.js`): reads `favoritos`, then active `lugares` by top IDs — phase 1 |
-| “Perto de você” | Same select as above `.eq("destaque", false)` `.limit(6)` — phase 2 |
+| “Perto de você” | Active `lugares` `.limit(20)`, exclude hero/trending IDs client-side, `.slice(0, 6)`, sort by GPS |
+| Parceiros carousel | `destaques` vigentes + active `lugares`; `buildParceiroIdSet` / `enrichLugaresComParceiro` (`lib/destaques.js`) |
 | Favorites on home | `favoritos` `.select("lugar_id")` `.eq("user_id", user.id)` |
 | AI search | **Not SQL** — `POST /api/buscar` loads catalog server-side |
 
@@ -548,7 +554,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Tags | `lugares_tags` `.select("tags(*)")` |
 | Reviews | `avaliacoes` `.eq("status","aprovada")` `.order("created_at")` |
 | Favorite / review state | `favoritos` / `avaliacoes` by `user_id` + `lugar_id` |
-| Submit review | `avaliacoes` `.insert({ status: "pendente" })` |
+| Submit review | `avaliacoes` `.insert({ status: "pendente", aspectos })` → `POST /api/avaliacoes/analisar` |
 
 ### Consumer — favorites (`app/favoritos/page.js`)
 
@@ -597,7 +603,9 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Reviews moderation | `avaliacoes` `.update({ status })` |
 | Highlights | `destaques` + joins `lugares`, `planos` |
 | Users | `perfis` `.select("*")` `.update({ role })` |
-| Dashboard metrics | `count` head requests on `lugares`, `favoritos`, `avaliacoes`, `perfis`; `logs` recent rows |
+| Dashboard (`/admin`) | `fetchCount` / `fetchCountInPeriod` (`lib/adminDashboard.js`): active `lugares`, pending `avaliacoes`, `perfis` created in period, `logs` with `acao = ir_agora` in period, `em_analise` count; `fetchDestaquesVigentes` + expiring-within-7d; `countPremiumAtivos`; recent `logs` (3 rows); pending review list (5 rows) |
+| Logs admin (`/admin/logs`) | `logs` paginated/filtered via `lib/adminLogs.js` (`acao`, date range, `user_id`, text search on `user_nome` / `user_email` / `detalhes.lugar_nome`) |
+| Taxonomia admin | `subcategorias` insert/update/delete (usage count on `lugares.categoria` + `lugares.subcategoria`); `tags` CRUD + `lugares_tags` / `rotas_tags` usage checks |
 
 ### Premium usage
 
@@ -614,8 +622,9 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 |-------|-------------|-------------------|
 | OAuth callback | `login` | `{ provider }` |
 | Favorite toggle | `favoritou` / `desfavoritou` | `{ lugar_id, lugar_nome }` |
-| Navigation CTA | `ir_agora` | `{ app: google\|apple\|waze }` |
+| Navigation CTA | `ir_agora` | `{ lugar_id, lugar_nome, app: google\|apple\|waze }` |
 | App open | `acessou_app` | `{ pagina }` |
+| Account deletion | `deletou_conta` | (profile request; surfaced in admin alerts → `/admin/logs?acao=deletou_conta`) |
 
 ---
 

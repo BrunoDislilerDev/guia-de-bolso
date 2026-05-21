@@ -17,6 +17,9 @@ New to the project? Start with the [root README](../README.md), then follow the 
 | [**Deployment**](./deployment.md) | Vercel + Supabase: env vars, build steps, CI/CD, production checklist |
 | [**Contributing**](./contributing.md) | Local setup, conventions, branching, and pull request guidelines |
 | [**Changelog**](./CHANGELOG.md) | Release history (Semantic Versioning) |
+| [**Testing checklist**](./TESTING-CHECKLIST.md) | Manual QA on mobile (flows, edge cases, regression) |
+| [**Costs & revenue**](./CUSTOS.md) | Monthly costs (R$), AI usage, B2B/B2C projections — edit with [`custos-planilha.csv`](./custos-planilha.csv) |
+| [**Place taxonomy**](./taxonomia-lugares.md) | Subcategorias vs tags; admin `/admin/taxonomia` |
 
 ---
 
@@ -63,10 +66,16 @@ README (root) → Architecture → Database → API → Contributing → Feature
 Deployment → Database (migrations) → Architecture (env & services)
 ```
 
+**For finance / launch planning**
+
+```text
+CUSTOS.md → custos-planilha.csv (Excel/Sheets)
+```
+
 **For product / QA**
 
 ```text
-Features → API (limits & auth) → Deployment (preview URLs)
+Features → TESTING-CHECKLIST → API (limits & auth) → Deployment (preview URLs)
 ```
 
 ---
@@ -113,6 +122,8 @@ flowchart TB
   INDEX --> DEP[deployment.md]
   INDEX --> CONTRIB[contributing.md]
   INDEX --> CHANGELOG[CHANGELOG.md]
+  INDEX --> TAX[taxonomia-lugares.md]
+  INDEX --> CUSTOS[CUSTOS.md]
   ARCH --> API
   ARCH --> DB
   DB --> DEP

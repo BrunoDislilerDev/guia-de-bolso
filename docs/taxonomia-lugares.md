@@ -49,10 +49,16 @@ Tags que já existiam e cobrem o caso: **Pôr do sol imperdível**, **Nascer do 
 
 ## Cadastro no admin
 
+**Dia a dia:** use **`/admin/taxonomia`** to add, rename, or retire subcategorias and tags (with usage guards and place migration on rename). No SQL required for routine edits.
+
+**Formulário de lugar** (`/admin/locais`):
+
 1. Categoria → ex. Natureza  
 2. Subcategoria → ex. **Praias** (não “Surf”)  
-3. Tags → ex. **Surfe** + **Pôr do sol imperdível** + **Mar agitado**
+3. Tags → ex. **Surfe** + **Pôr do sol imperdível** + **Mar agitado** (máx. 3)
 
-## Aplicar no Supabase
+Tags com **`aplica_em_rotas`** also appear on route forms after `supabase/rotas_taxonomia.sql`.
 
-Rode `supabase/taxonomia_lugares_cleanup.sql` no SQL Editor (idempotente).
+## Aplicar no Supabase (bootstrap)
+
+Rode `supabase/taxonomia_lugares_cleanup.sql` no SQL Editor (idempotente) em ambientes novos ou para reset canônico. Depois, mantenha o vocabulário via `/admin/taxonomia`.

@@ -145,7 +145,25 @@ Get a single strong recommendation without searching.
 
 ---
 
-## 7. Home — “Em alta hoje”
+## 7. Home — Parceiros comerciais
+
+**Description**  
+Horizontal carousel of places with an **active commercial highlight** (`destaques` + plano Parceiro). Shown between the hero and “Em alta hoje”.
+
+**User goal**  
+Discover official partner businesses promoted in the guide.
+
+**Main flows**
+1. Home loads active places and vigent `destaques` → `ParceirosCarrossel` lists partner places with distance when GPS is available.
+2. Partner cards show badge/tags via `ehParceiro`; tap → place detail.
+
+**Edge cases**
+- No active highlights → carousel omitted (not an error state).
+- Same partner visibility rules apply in AI search and category cards (`lib/destaques.js`, `lib/lugarVisibilidade.js`).
+
+---
+
+## 8. Home — “Em alta hoje”
 
 **Description**  
 Horizontal list of popular places (by favorite count), with distance when GPS is available.
@@ -165,7 +183,7 @@ See what others save most often.
 
 ---
 
-## 8. Home — “Planos rápidos”
+## 9. Home — “Planos rápidos”
 
 **Description**  
 Preset experience cards (morning, romantic afternoon, rainy day, nightlife, quick trip) that launch an AI search with a fixed query and filter.
@@ -183,7 +201,7 @@ One-tap inspiration for common trip moods.
 
 ---
 
-## 9. Home — “Perto de você”
+## 10. Home — “Perto de você”
 
 **Description**  
 Bottom section listing nearby active places, sorted by calculated distance.
@@ -203,7 +221,7 @@ Discover what is close right now.
 
 ---
 
-## 10. Bottom navigation
+## 11. Bottom navigation
 
 **Description**  
 Floating glass nav: **Início**, **Explorar** (`/categorias`), **Rotas**, **Favoritos**, **Perfil**.
@@ -222,19 +240,20 @@ Move between main app areas with one thumb.
 
 ---
 
-## 11. Category exploration
+## 12. Category exploration (Explorar)
 
 **Description**  
-Nine fixed categories with live counts; each opens a filtered grid with optional **subcategory chips**.
+Dedicated **Explorar** screen at `/categorias`: sticky header with live totals, AI search entry (`ExplorarBuscaBar`), mood shortcuts (`ExplorarAtalhos`), featured category carousel (`ExplorarDestaqueCard`), and full category grid (`ExplorarCategoriaCard`). Catalog metadata in `lib/categorias.js`.
 
 **User goal**  
 Browse by type (Nature, Food, Night, etc.) when not using AI search.
 
 **Main flows**
-1. `/categorias` → **one** query `select("categoria")` on active `lugares`, counts aggregated client-side → tap → `/categoria/[slug]`.
+1. `/categorias` → **one** query `select("categoria, imagem_url, fotos")` on active `lugares`, counts + cover thumbnails aggregated client-side → tap → `/categoria/[slug]`.
 2. Category page loads active places + `subcategorias` for slug; loading shows six `PlaceCardSkeleton` placeholders.
 3. “Todos” or a subcategory chip filters client-side list.
 4. `PlaceCard` → detail; geolocation sorts by distance when available.
+5. Mood shortcut or search bar can deep-link to home AI search with a preset query (same login/quota rules as smart search).
 
 **Edge cases**
 - Invalid/empty slug → empty list after load.
@@ -244,7 +263,7 @@ Browse by type (Nature, Food, Night, etc.) when not using AI search.
 
 ---
 
-## 12. Place detail
+## 13. Place detail
 
 **Description**  
 Conversion-focused page for a single active place: photo carousel, persuasion copy, quick actions, tags, optional hours, optional **weather widget** (outdoor categories), optional address/map, about, reviews, fixed navigation CTA.
@@ -278,7 +297,7 @@ Decide to go now, contact the business, or navigate.
 
 ---
 
-## 13. Favorites
+## 14. Favorites
 
 **Description**  
 Per-user saved places synced in Supabase; available from home (toggle), detail, and `/favoritos`.
@@ -301,28 +320,29 @@ Build a personal shortlist for the trip.
 
 ---
 
-## 14. Reviews (ratings & comments)
+## 15. Reviews (ratings & comments)
 
 **Description**  
-Logged-in users submit 1–5 stars + optional comment; moderation before public display.
+Logged-in users submit 1–5 stars, optional **aspect chips** (category-aware via `lib/avaliacaoAspectos.js`), and optional comment. Claude pre-moderation runs via `POST /api/avaliacoes/analisar` and stores a hint on `sugestao_ia` for operators. Public list shows distribution, aspects, and recommendation summary after admin approval.
 
 **User goal**  
 Share experience and read social proof.
 
 **Main flows**
-1. Detail → “Avaliar” → modal → insert `status: pendente`.
-2. Approved reviews appear in list with recommendation summary.
-3. Admin approves/rejects (see Admin CMS).
+1. Detail → “Avaliar” → `AvaliacaoForm` → insert `status: pendente` with `aspectos` jsonb → fire-and-forget AI analysis.
+2. Approved reviews appear in `LugarAvaliacoesSection` with star histogram and aspect tags.
+3. Admin approves/rejects with IA suggestion badge (see Admin CMS).
 
 **Edge cases**
 - Guest → `LoginModal` (`avaliar`).
 - One review per user per place.
 - Toast confirms submission; content hidden until approved.
 - Aggregate rating on hero uses only approved reviews.
+- AI analysis failure does not block submission; admin can still moderate manually.
 
 ---
 
-## 15. Share place
+## 16. Share place
 
 **Description**  
 Share current place URL via native share sheet or copy link.
@@ -339,7 +359,7 @@ Send a place to friends or save for later.
 
 ---
 
-## 16. Navigation (“Ir agora” / maps preference)
+## 17. Navigation (“Ir agora” / maps preference)
 
 **Description**  
 Open Google Maps, Apple Maps, or Waze with coordinates or address; optional default app.
@@ -359,7 +379,7 @@ Start turn-by-turn navigation immediately.
 
 ---
 
-## 17. Authentication
+## 18. Authentication
 
 **Description**  
 Sign-in via **Google OAuth** or **SMS OTP** (Brazil +55, 11 digits). Used on `/login`, profile (guest), and `LoginModal` for gated actions.
@@ -382,27 +402,26 @@ Access favorites, reviews, AI features, and saved roteiros.
 
 ---
 
-## 18. Profile
+## 19. Profile
 
 **Description**  
-`/perfil` shows guest benefits + inline `AuthFlow`, or logged-in avatar, stats, settings, logout, delete account.
+`/perfil` uses modular `components/perfil/*`: guest benefits + inline `AuthFlow`, or logged-in hero (`PerfilHero`), live stats (`PerfilStats` — favorites, reviews, saved roteiros), quick links, Premium card, and grouped settings with bottom sheets.
 
 **User goal**  
 Manage identity, preferences, and session.
 
 **Main flows**
 1. Guest → benefit list + login + “Continuar sem login”.
-2. Logged in → favorite count, linked provider, edit profile link, nav app preference, logout, delete.
+2. Logged in → parallel Supabase counts for favorites, `avaliacoes`, and `roteiros`; edit profile link; nav app preference sheet; logout; delete.
 3. Logout → confirm → `signOut` → log → home.
 
 **Edge cases**
-- “Avaliações” stat hardcoded `0` (not loaded from DB).
-- **Notificações** row removed from UI until push notifications ship.
-- Delete account: confirmation copy warns permanence; signs out without guaranteed backend erasure.
+- **Notificações** row hidden until push notifications ship.
+- Delete account: confirmation copy warns permanence; signs out and logs `deletou_conta` — does not call Supabase admin delete API (manual follow-up implied).
 
 ---
 
-## 19. Edit profile
+## 20. Edit profile
 
 **Description**  
 `/perfil/editar` — update display name and upload avatar to Storage (`imagens` bucket).
@@ -421,7 +440,7 @@ Personalize account appearance.
 
 ---
 
-## 20. Curated routes (admin-published trails)
+## 21. Curated routes (admin-published trails)
 
 **Description**  
 Editorial routes at `/rotas` and `/rotas/[id]`: cover, **tipo de rota** (categorias fixas em `lib/rotas.js`), **tags** (subset compartilhado do catálogo), difficulty, duration, distance, ordered **pontos** (steps) with optional link to a **lugar**. Featured route highlighted; list page supports filter chips by route type.
@@ -443,7 +462,7 @@ Follow a predefined trail or city walk with guidance.
 
 ---
 
-## 21. AI trip roteiro (personalized itinerary)
+## 22. AI trip roteiro (personalized itinerary)
 
 **Description**  
 Multi-step form (days, traveler profile, interests) → Claude generates markdown itinerary → optional save to `roteiros`.
@@ -468,7 +487,7 @@ Get a custom day-by-day plan for the region.
 
 ---
 
-## 22. Guia Premium (paywall)
+## 23. Guia Premium (paywall)
 
 **Description**  
 Subscription at **R$ 9,90/mo** for **unlimited** AI search and roteiros (no daily cap). Free tier: **3 buscas + 2 roteiros per day**, resetting at **midnight** (`America/Sao_Paulo`). `PremiumPaywallSheet` explains the daily limit; `DailyLimitCountdown` shows time until reset (`HH:MM:SS`, updates every second).
@@ -490,7 +509,7 @@ Understand the daily free quota, when it renews, or upgrade for unlimited use.
 
 ---
 
-## 23. Geolocation & distance
+## 24. Geolocation & distance
 
 **Description**  
 Browser GPS used on home, category lists, and place detail to compute Haversine distance (`distancia_calculada`).
@@ -509,7 +528,7 @@ Understand how far places are from current position.
 
 ---
 
-## 24. Opening hours & open/now status
+## 25. Opening hours & open/now status
 
 **Description**  
 Weekly `horarios` json on each place; real-time open/closed for establishments and AI filters.
@@ -528,7 +547,7 @@ Know if a business is open before going.
 
 ---
 
-## 25. Loading states, errors & accessibility (cross-cutting)
+## 26. Loading states, errors & accessibility (cross-cutting)
 
 **Description**  
 Shared UX patterns from the UI/UX audit: resilient data loading, visible failures, skeleton placeholders, image optimization, and baseline accessibility.
@@ -555,7 +574,7 @@ Understand when content failed vs. is empty; navigate with keyboard/screen reade
 
 ---
 
-## 26. Weather context
+## 27. Weather context
 
 **Description**  
 **Open-Meteo** (forecast + marine) via `lib/clima.js`.
@@ -582,7 +601,7 @@ Plan beach/outdoor time with local weather awareness at decision time (especiall
 
 ---
 
-## 27. Dedicated login page
+## 28. Dedicated login page
 
 **Description**  
 Marketing-style `/login` with background photo and `AuthFlow` in a green panel.
@@ -599,10 +618,10 @@ Sign in from a focused screen (bookmark, redirect, marketing link).
 
 ---
 
-## 28. Activity logging (user-visible impact: minimal)
+## 29. Activity logging (user-visible impact: minimal)
 
 **Description**  
-Server/client inserts into `logs` for login, logout, favorites, `ir_agora`, app open. Drives **admin dashboard**, not end-user UI.
+Server/client inserts into `logs` for login, logout, favorites, `ir_agora`, app open, account deletion request (`deletou_conta`). Drives **`/admin`** summary and **`/admin/logs`**, not end-user UI.
 
 **User goal**  
 (N/A — operational/analytics.)
@@ -621,16 +640,21 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 
 | Area | Description | User goal (operator) |
 |------|-------------|----------------------|
-| Dashboard | Counts, trends, recent logs, quick review actions | Monitor app health |
+| Dashboard (`/admin`) | Hero greeting + operational summary; KPI cards (pending reviews, active places, live partners, new users, IR AGORA in period, places in review); work queue with approve/reject; operational shortcuts; activity timeline; week/month period toggle | Monitor health and clear the moderation queue |
 | Locais (`/admin/locais`) | CRUD, photos, hours, tags, address autocomplete, `mostrar_endereco` / `mostrar_horarios` toggles | Keep catalog accurate |
 | Rotas | CRUD, steps, featured flag | Publish trails |
-| Avaliações | Approve/reject pending | Moderate UGC |
-| Destaques | Link place + commercial plan + date range | Run paid highlights |
-| Usuários | Change roles | Access control |
+| Avaliações | Approve/reject pending; deep links from alerts (`?tab=`) | Moderate UGC |
+| Destaques | Single commercial plan (Parceiro); vigência dates; `?status=expirando` \| `expirado` | Run paid highlights |
+| Usuários | Roles, Premium IA status, engagement sheet; link to user logs | Access control |
+| Logs (`/admin/logs`) | Filter by action, period, user (`?user_id=`); deep links to place edit | Investigate behavior |
+| Taxonomia (`/admin/taxonomia`) | CRUD `subcategorias` (per fixed category) and `tags` (`categorias` jsonb, `aplica_em_rotas`); block delete when in use; migrate places on rename | Maintain catalog vocabulary without SQL |
 
 **Edge cases**
 - Client-side gate only — misconfigured RLS could block writes.
+- Admin nav: sidebar on desktop (`lg+`), drawer on tablet/phone; bell shows cross-page alerts (not a substitute for `/admin/logs`).
+- Dashboard uses `showPageHeading={false}` — title/subtitle live in `DashboardHero`, not the shell heading block.
 - Primary CMS path is `/admin/locais`; `/admin/lugares` re-exports the same grid (legacy URL, not in nav).
+- Taxonomia requires `rotas_taxonomia.sql` for `tags.aplica_em_rotas` and `rotas_tags`; app degrades gracefully if the column is missing.
 - Address is stored in `localizacoes` only; run `lugares_visibilidade.sql` if visibility toggles fail to save.
 - `EnderecoAutocomplete` locks the search field after selection so the dropdown does not reopen on the same text.
 - Destaques form casts ids with `Number()` — must match DB id types (uuid vs serial).
@@ -644,7 +668,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Apple Sign-In | Removed pending Apple Developer Program |
 | WhatsApp Auth | Waiting Meta approval |
 | Asaas billing & establishment self-service portal | Documented in business model, not built |
-| Commercial carousel on home (`destaques` table) | Admin exists; consumer carousel removed from home redesign |
+| Legacy multi-plan destaques carousel | Replaced by **Parceiros** carousel (`ParceirosCarrossel`) for vigent highlights only |
 | In-app notifications | Profile row placeholder only |
 | `ClimaCard` on home | Component exists; weather on detail via `LugarClimaWidget` instead |
 
@@ -663,7 +687,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | AI roteiro | `/rotas` (sheet) |
 | Profile | `/perfil`, `/perfil/editar` |
 | Login | `/login`, modal, `/auth/callback` |
-| Admin | `/admin/*` |
+| Admin | `/admin`, `/admin/logs`, `/admin/taxonomia`, … |
 
 ---
 

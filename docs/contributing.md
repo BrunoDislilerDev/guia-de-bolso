@@ -137,7 +137,8 @@ npm run lint    # ESLint
 | RLS | Test as anonymous, user, and admin |
 | Place type detection | `isLugarPublico()` in `lib/lugarDetalhe.js` — beaches vs restaurants |
 | Geolocation | Features degrade gracefully without GPS permission |
-| Admin | Confirm `role` is `admin` or `dev` on your test profile |
+| Admin | Confirm `role` is `admin` or `dev`; test `/admin`, `/admin/logs`, `/admin/taxonomia` after taxonomy SQL |
+| Reviews IA | `POST /api/avaliacoes/analisar` needs `ANTHROPIC_API_KEY`; run `avaliacoes_moderacao.sql` for `aspectos` / `sugestao_ia` |
 
 ---
 

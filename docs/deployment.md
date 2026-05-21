@@ -262,20 +262,23 @@ https://*.vercel.app/auth/callback
 
 ### 3. SQL migrations
 
-Run scripts from [`/supabase`](../supabase) in the **SQL Editor** in order. See [Database → Migration checklist](./database.md#migration-checklist-new-environment).
+Run scripts from [`/supabase`](../supabase) in the **SQL Editor** in order. **Authoritative order:** [Database → Migration checklist](./database.md#migration-checklist-new-environment) (steps 1–19, including routes taxonomy, reviews moderation, and commercial plan).
+
+Minimum for a legacy DB that already has base schema:
 
 | Order | File |
 |-------|------|
 | 1 | Base schema (tables created in dashboard / legacy scripts) |
 | 2 | `premium_usuario.sql` |
 | 3 | `increment_uso_ia.sql` |
-| 3b | `premium_uso_diario.sql` *(optional)* — `COMMENT ON COLUMN` only; safe before or after step 3 |
+| 3b | `premium_uso_diario.sql` *(optional)* — `COMMENT ON COLUMN` only |
 | 4 | `perfis_premium_policies.sql` |
 | 5 | `perfis_role_check.sql` |
 | 6 | `tags_categorias.sql` |
 | 7 | `fotos_migration.sql` |
 | 8 | `storage-policies.sql` |
 | 9 | `logs_policies.sql` |
+| 10+ | See [database.md](./database.md#migration-checklist-new-environment) for `lugares_visibilidade`, taxonomy, routes, `avaliacoes_moderacao`, `plano_comercial_unico`, etc. |
 
 After migrations:
 
@@ -355,6 +358,7 @@ Use this list for **first launch** and **each major release**.
 - [ ] AI roteiro on `/rotas` — generate and save
 - [ ] Maps CTA on place detail opens Google / Apple / Waze
 - [ ] Admin `/admin` — dashboard, edit place, moderate review
+- [ ] Admin `/admin/logs` and `/admin/taxonomia` (admin role)
 - [ ] Images load from Supabase Storage URLs
 
 ### Security
@@ -391,6 +395,8 @@ Use this list for **first launch** and **each major release**.
 | 5 | `/favoritos` | List or empty state when logged in |
 | 6 | `/rotas` → create roteiro | Sheet works; save appears in list |
 | 7 | `/admin` as admin | Dashboard metrics load |
+| 8 | `/admin/logs` | Filter logs; open place from `ir_agora` row |
+| 9 | `/categorias` | Explorar grid; submit review → pending + IA hint in admin |
 
 ---
 

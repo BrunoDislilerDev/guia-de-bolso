@@ -97,13 +97,15 @@ Requires `perfis.role` ∈ `admin`, `dev` (`lib/adminRoles.js` → `canAccessAdm
 
 | Route | Purpose |
 |-------|---------|
-| `/admin` | Dashboard metrics and recent logs |
+| `/admin` | Dashboard (hero, KPI grid, moderation queue, operational summary, activity timeline) |
 | `/admin/locais`, `/admin/locais/novo`, `/admin/locais/[id]/editar` | Place CRUD |
 | `/admin/lugares` | Legacy alias of locais grid |
 | `/admin/rotas`, `/admin/rotas/nova`, `/admin/rotas/[id]/editar` | Curated route CRUD |
-| `/admin/avaliacoes` | Review moderation |
-| `/admin/destaques` | Commercial highlights |
-| `/admin/usuarios` | Role management |
+| `/admin/avaliacoes` | Review moderation (`?tab=` for filter chips) |
+| `/admin/destaques` | Commercial highlights (`?status=expirando` \| `expirado`) |
+| `/admin/usuarios` | User management, roles, Premium IA |
+| `/admin/logs` | Activity log browser (`?acao=`, `?user_id=`, period filters) |
+| `/admin/taxonomia` | CRUD for `subcategorias` and `tags` (no manual SQL) |
 
 ### Component organization
 
@@ -111,9 +113,11 @@ Components are grouped by **domain**, not by atomic design tier:
 
 ```
 components/
-├── home/                  # Home (header, search, hero, trending, plans)
+├── home/                  # Home (header, search, hero, ParceirosCarrossel, trending, plans)
+├── explorar/              # Explorar screen (/categorias): busca, atalhos, category cards
+├── perfil/                # Profile hero, stats, settings groups, sheets
 ├── lugar/                 # Place detail (hero, actions, climate widget, reviews, CTA)
-├── admin/                 # CMS forms, grid, AdminShell
+├── admin/                 # CMS: shell (sidebar/drawer/top bar), dashboard, grids, taxonomia, logs
 ├── rotas/                 # RoteiroSection, RoteiroContent, bottom sheet
 ├── BottomNav.js           # Consumer bottom navigation
 ├── LoginModal.js
@@ -187,13 +191,28 @@ Bottom sheets on place detail and profile use **`role="dialog"`**, **`aria-modal
 
 ### Admin frontend
 
-Admin pages wrap content in `AdminShell`, which uses `useAdminAuth()`:
+Admin pages wrap content in **`AdminShell`**, which uses `useAdminAuth()`:
 
 1. Load session via browser Supabase client.
 2. Fetch `perfis` row for current user.
 3. Redirect to `/` if unauthenticated or `role` is not admin-capable (`lib/adminRoles.js`).
 
 There is **no server-side admin layout guard**; protection is client-side plus RLS on writes.
+
+**Layout (`AdminShell` + subcomponents):**
+
+| Piece | Role |
+|-------|------|
+| `AdminSidebar.js` | Fixed green nav (`#1a4a3a`) on `lg+`; collapsible to icon-only (~72px); SVG nav from `adminNavConfig.js` |
+| `AdminNavDrawer.js` | Slide-over nav on `< lg` (replaces horizontal chip nav) |
+| `AdminTopBar.js` | Sticky bar: breadcrumb `Admin / {title}`, `AdminAlertsBell`, optional `headerAction` slot |
+| `useAdminAuth` | Exported from `AdminShell.js` (unchanged contract) |
+
+Shell props: `title`, `subtitle`, `headerAction`, `contentClassName`, `children`, and optional **`showPageHeading`** (default `true`; dashboard sets `false` and uses `DashboardHero` for the title block).
+
+**Dashboard-only components** (`app/admin/page.js`): `DashboardHero`, `DashboardMetricCard`, `DashboardPendentesSection`, `DashboardOperacionalSidebar`, `DashboardAtividadeSection`, `DashboardSkeleton`; metrics helpers in `lib/adminDashboard.js`.
+
+**Other admin libs:** `lib/adminLogs.js` (log listing/filters), `lib/adminTaxonomia.js` (subcategoria/tag CRUD), `lib/adminAlertas.js` + `AdminAlertsBell.js` (operational alerts, `localStorage` read state).
 
 ---
 
@@ -250,6 +269,15 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `tags.js` | Shared | Tag chips from `lugares_tags` / `rotas_tags` joins |
 | `rotas.js` | Shared | Fixed route type catalog (`CATEGORIAS_ROTA`) |
 | `adminRoles.js` | Shared | `canAccessAdmin`, role chips, `user` → `usuario` normalization |
+| `adminDashboard.js` | Client | Dashboard KPI counts, period variation, hero summary (`buildResumoOperacional`) |
+| `adminLogs.js` | Client | Admin log filters, pagination, badges (`getLogAcaoBadgeAdmin`) |
+| `adminTaxonomia.js` | Client | Subcategoria/tag CRUD, usage guards, `tags.aplica_em_rotas` fallback |
+| `adminAlertas.js` | Client | Aggregated admin alerts (reviews, places, destaques, account deletion) |
+| `destaques.js` | Shared | Vigent highlights, `ehParceiro` enrichment for home/search/AI |
+| `planoComercial.js` | Shared | Single Parceiro plan fetch/ensure (`PLANO_COMERCIAL_PRECO`) |
+| `categorias.js` | Shared | Explorar category catalog, sort, featured picks |
+| `perfil.js` | Shared | Profile quick-link definitions |
+| `avaliacaoAspectos.js` | Shared | Aspect chip options per place category |
 | `roteiroMarkdown.js` / `roteiroLugares.js` | Server/shared | Itinerary formatting and catalog filtering for AI |
 | `usePremiumUsage.js` | Client | Premium quota hook + `localStorage` cache |
 | `googleMaps.js` | Client | Admin map picker helpers |

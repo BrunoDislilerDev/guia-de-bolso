@@ -69,12 +69,13 @@ The product combines a curated place catalog, live context (opening hours, geolo
 
 ### Consumer experience
 
-- **Decision-oriented home** — contextual header, AI search with quick prompts, hero suggestion (“what to do now”), trending places, preset itineraries, nearby discovery; two-phase loading with per-section fallback when data fails
+- **Decision-oriented home** — contextual header, AI search with quick prompts, hero suggestion (“what to do now”), **Parceiros** carousel (active commercial highlights), trending places, preset itineraries, nearby discovery; two-phase loading with per-section fallback when data fails
+- **Explorar** (`/categorias`) — category discovery with mood shortcuts, featured categories, and AI search entry
 - **Conversion-focused place pages** — immersive hero, persuasive copy, quick actions (establishments vs. public venues), reviews summary, fixed navigation CTA
 - **Category exploration** — full taxonomy via `/categorias` and filtered listings
 - **Authentication** — Google OAuth and SMS OTP (Supabase Auth + Twilio)
 - **Engagement** — favorites, moderated reviews, share, onboarding flow
-- **Resilient UX** — skeleton loaders, visible error banners, optimized images via `next/image`, shared design tokens and focus styles (see [`docs/features.md`](./docs/features.md) §25)
+- **Resilient UX** — skeleton loaders, visible error banners, optimized images via `next/image`, shared design tokens and focus styles (see [`docs/features.md`](./docs/features.md) §26)
 
 ### Guia Premium (subscription)
 
@@ -88,7 +89,7 @@ The product combines a curated place catalog, live context (opening hours, geolo
 
 ### Operations & admin
 
-Role-gated console at `/admin`: place and route CRUD, photo uploads, map pinning, hours editor, tag management, review moderation, highlight/plan management, analytics logs, user roles (`admin`, `dev`, `estabelecimento`).
+Role-gated console at `/admin`: operational dashboard, place and route CRUD, review moderation, commercial highlights (Parceiro plan), user roles, **activity logs** (`/admin/logs`), and **taxonomy** CRUD for subcategorias/tags (`/admin/taxonomia`). Responsive shell: sidebar (desktop), drawer (mobile/tablet), alert bell.
 
 ---
 

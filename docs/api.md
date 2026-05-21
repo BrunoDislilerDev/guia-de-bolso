@@ -128,6 +128,49 @@ Required: `titulo`, `dias`, `perfil`, `conteudo` (trimmed strings). `interesses`
 
 ---
 
+### `POST /api/avaliacoes/analisar`
+
+Claude pre-moderation for a newly submitted review. Called from the client after `avaliacoes` insert; result is stored on `sugestao_ia` for the admin queue.
+
+**Auth:** Required (must own the review row)
+
+**Request body:**
+
+```json
+{
+  "avaliacao_id": "uuid"
+}
+```
+
+**Success response:**
+
+```json
+{
+  "ok": true,
+  "sugestao_ia": "aprovar: experiência genuína e detalhada"
+}
+```
+
+**Error responses:**
+
+| HTTP | Meaning |
+|------|---------|
+| 400 | Missing `avaliacao_id` |
+| 401 | Not signed in |
+| 403 | Review belongs to another user |
+| 404 | Review not found |
+| 500 | Claude or server error (submission already saved) |
+
+**Flow:**
+
+1. Load `avaliacoes` with `lugares(nome, categoria)`.
+2. Build prompt from `nota`, `comentario`, `aspectos`.
+3. Parse JSON `{ sugestao, motivo }` from Claude → persist `sugestao_ia`.
+
+Uses `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`).
+
+---
+
 ### `GET /api/uso-premium`
 
 Returns current user's premium status and **daily** AI usage (with optional `resetsAt` / `msUntilReset` for countdown UI).
@@ -178,14 +221,14 @@ Not all data goes through `/api`. The browser Supabase client reads public data 
 |-----------|------|
 | List places | `supabase.from("lugares")` |
 | Favorites CRUD | `supabase.from("favoritos")` |
-| Submit review | `supabase.from("avaliacoes").insert()` |
-| Admin CRUD | Admin pages + RLS for `admin`/`dev` roles |
+| Submit review | `supabase.from("avaliacoes").insert()` then `POST /api/avaliacoes/analisar` |
+| Admin CRUD | Admin pages + RLS for `admin`/`dev` roles (no dedicated `/api/admin/*`; dashboard/logs/taxonomia query Supabase from the browser) |
 
 ## Environment variables (API)
 
 | Variable | Required by |
 |----------|-------------|
-| `ANTHROPIC_API_KEY` | `/api/buscar`, `/api/roteiro` |
+| `ANTHROPIC_API_KEY` | `/api/buscar`, `/api/roteiro`, `/api/avaliacoes/analisar` |
 | `ANTHROPIC_MODEL` | Model id (default `claude-sonnet-4-5`) |
 | `NEXT_PUBLIC_SUPABASE_URL` | Auth session |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth session |
