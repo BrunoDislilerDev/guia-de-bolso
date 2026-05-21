@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia de Bolso — Apresentação Parceria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f0f4f3;
+      --green: #1a4a3a;
+      --green-light: #d4ede8;
+      --text: #1a2e28;
+      --text-muted: #5a6b66;
+      --card-shadow: 0 8px 32px rgba(26, 74, 58, 0.08);
+      --slide-w: min(96vw, 1280px);
+      --slide-h: min(54vw, 720px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: "Inter", system-ui, sans-serif;
+      background: #0d1f19;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    h1, h2, .font-display {
+      font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    }
+
+    /* —— Deck shell —— */
+    #deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 0%, #1a4a3a22 0%, transparent 60%), #0d1f19;
+    }
+
+    .slide-viewport {
+      width: var(--slide-w);
+      height: var(--slide-h);
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      padding: clamp(28px, 4vw, 56px) clamp(32px, 5vw, 64px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(40px);
+      transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .slide.prev { transform: translateX(-40px); }
+
+    .slide--dark {
+      background: linear-gradient(145deg, #1a4a3a 0%, #0f2e24 100%);
+      color: #f0f4f3;
+    }
+
+    .slide--dark .text-muted { color: #a8c4bc; }
+
+    /* —— Typography —— */
+    .tagline {
+      font-size: clamp(1.5rem, 3.2vw, 2.4rem);
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .slide-title {
+      font-size: clamp(1.35rem, 2.6vw, 2rem);
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .slide--dark .slide-title { color: #fff; }
+
+    .subtitle {
+      font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .slide--dark .subtitle { color: #a8c4bc; }
+
+    ul.bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    ul.bullets li {
+      font-size: clamp(0.8rem, 1.35vw, 1rem);
+      color: var(--text);
+      padding-left: 1.25rem;
+      position: relative;
+      line-height: 1.45;
+    }
+
+    ul.bullets li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .slide--dark ul.bullets li { color: #e8f2ef; }
+    .slide--dark ul.bullets li::before { background: #7ec4a8; }
+
+    /* —— Chips —— */
+    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .chip {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+    }
+    .chip-natureza { background: #d4ede8; color: #1a4a3a; }
+    .chip-gastro { background: #f0e4d4; color: #6b5344; }
+    .chip-noite { background: #e4d4f0; color: #5c4a6e; }
+    .chip-servicos { background: #c5dff5; color: #2a5a7a; }
+    .chip-hospedagem { background: #f5e6b8; color: #7a6520; }
+
+    /* —— Layout helpers —— */
+    .cols-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 1rem;
+      padding: 1rem 1.1rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid #e3ebe7;
+    }
+
+    .card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 0.35rem;
+    }
+
+    .card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .tour-row {
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: 1.5rem;
+      align-items: center;
+      flex: 1;
+    }
+
+    @media (max-width: 900px) {
+      .cols-3 { grid-template-columns: 1fr; }
+      .tour-row { grid-template-columns: 1fr; }
+    }
+
+    /* —— Phone mockup + screenshot placeholder —— */
+    .phone {
+      width: 180px;
+      margin: 0 auto;
+      background: #1a2e28;
+      border-radius: 28px;
+      padding: 10px 8px 14px;
+      box-shadow: 0 16px 40px rgba(26,74,58,0.25);
+    }
+
+    .phone-notch {
+      width: 60px;
+      height: 5px;
+      background: #333;
+      border-radius: 3px;
+      margin: 0 auto 8px;
+    }
+
+    .screenshot-placeholder {
+      aspect-ratio: 9/16;
+      background: linear-gradient(160deg, #e8f0ed 0%, #d4ede8 50%, #c5e0d8 100%);
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border: 2px dashed #1a4a3a44;
+      text-align: center;
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .screenshot-placeholder span {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--green);
+      opacity: 0.85;
+      line-height: 1.3;
+    }
+
+    .screenshot-placeholder .icon {
+      font-size: 1.75rem;
+      opacity: 0.5;
+    }
+
+    /* Substituir placeholder: <img src="/screenshots/home.png" alt="Home" class="screenshot-img" /> */
+    .screenshot-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 16px;
+    }
+
+    /* —— Slide 1 hero —— */
+    .hero-logo {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: -0.03em;
+      margin-bottom: 0.25rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      margin-top: 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: #fff;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid #e3ebe7;
+    }
+
+    /* —— Slide 5 MVP —— */
+    .mvp-box {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #1a4a3a;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .badge-live::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .app-url {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      font-weight: 700;
+      color: var(--green);
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .app-url:hover { text-decoration: underline; }
+
+    .qr-placeholder {
+      width: 120px;
+      height: 120px;
+      background: #fff;
+      border-radius: 12px;
+      border: 2px dashed #1a4a3a55;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* —— Plan cards slide 11 —— */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.65rem;
+      margin-top: 0.75rem;
+    }
+
+    @media (max-width: 1000px) {
+      .plans-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .plan-card {
+      background: #fff;
+      border-radius: 1rem;
+      padding: 0.75rem 0.85rem;
+      border: 1px solid #e3ebe7;
+      font-size: 0.68rem;
+      line-height: 1.35;
+    }
+
+    .plan-card h4 {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 0.2rem;
+    }
+
+    .plan-card .price {
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      font-size: 0.65rem;
+    }
+
+    .plan-card ul {
+      list-style: none;
+      color: var(--text-muted);
+    }
+
+    .plan-card ul li {
+      padding-left: 0.65rem;
+      position: relative;
+      margin-bottom: 0.15rem;
+    }
+
+    .plan-card ul li::before {
+      content: "·";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    .plan-card--gold {
+      border-color: #c9a227;
+      background: linear-gradient(180deg, #fffef8 0%, #fff 100%);
+    }
+
+    .plan-card--gold h4 { color: #7a6520; }
+
+    .partnership-note {
+      margin-top: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: var(--green-light);
+      padding: 0.65rem 0.9rem;
+      border-radius: 0.75rem;
+    }
+
+    /* —— Checklist slide 13 —— */
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.35rem 1.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .checklist li {
+      font-size: 0.78rem;
+      color: var(--text);
+      padding-left: 1.4rem;
+      position: relative;
+    }
+
+    .checklist li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    /* —— Slide 15 CTA —— */
+    .cta-big {
+      font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin: 0.75rem 0 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .cta-contact {
+      font-size: 1rem;
+      color: #d4ede8;
+      margin-top: 0.5rem;
+    }
+
+    .cta-contact a { color: #fff; font-weight: 600; }
+
+    .cta-piloto {
+      display: inline-block;
+      margin-top: 1rem;
+      background: #fff;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.65rem 1.25rem;
+      border-radius: 999px;
+    }
+
+    /* —— Controls —— */
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      background: rgba(26, 46, 40, 0.92);
+      backdrop-filter: blur(8px);
+      padding: 8px 16px;
+      border-radius: 999px;
+      transition: opacity 0.3s;
+    }
+
+    body.fullscreen-present .controls { opacity: 0; pointer-events: none; }
+    body.fullscreen-present .controls:hover { opacity: 1; pointer-events: auto; }
+
+    .controls button {
+      background: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: background 0.2s;
+    }
+
+    .controls button:hover { background: rgba(255,255,255,0.12); }
+
+    .counter {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #a8c4bc;
+      min-width: 48px;
+      text-align: center;
+    }
+
+    .dots {
+      display: flex;
+      gap: 5px;
+      max-width: 200px;
+      overflow: hidden;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #5a6b66;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .dot.active { background: #7ec4a8; transform: scale(1.25); }
+
+    .top-bar {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+    }
+
+    .top-bar button {
+      background: rgba(26, 46, 40, 0.85);
+      color: #fff;
+      border: none;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .top-bar button:hover { background: var(--green); }
+
+    /* —— Speaker notes —— */
+    #notes-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 28vh;
+      background: #1a2e28;
+      color: #e8f2ef;
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      transform: translateY(100%);
+      transition: transform 0.3s;
+      z-index: 90;
+      overflow-y: auto;
+      border-top: 2px solid var(--green);
+    }
+
+    #notes-panel.open { transform: translateY(0); }
+
+    #notes-panel kbd {
+      background: #2d4a42;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+
+    body.fullscreen-present #notes-panel { display: none !important; }
+
+    /* —— Side nav (optional) —— */
+    .side-nav {
+      position: fixed;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 50;
+      opacity: 0.4;
+      transition: opacity 0.2s;
+    }
+
+    .side-nav:hover { opacity: 1; }
+
+    @media (max-width: 700px) { .side-nav { display: none; } }
+
+    body.fullscreen-present .side-nav { display: none; }
+
+    .side-nav button {
+      width: 4px;
+      height: 16px;
+      border: none;
+      border-radius: 2px;
+      background: #5a6b66;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .side-nav button.active { background: #7ec4a8; height: 24px; }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--green);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="deck">
+    <div class="slide-viewport">
+
+      <!-- SLIDE 1 -->
+      <!-- Nota: Abrir com energia — “Imbituba merece um guia no bolso de todo mundo.” ~45s -->
+      <section class="slide active" data-slide="1" data-notes="Abrir com energia: Imbituba merece um guia no bolso de todo mundo. Apresente-se em 20s. Deixe claro que a reunião é para fechar parceria — prefeitura + comércio.">
+        <div class="logo-mark">
+          <div class="logo-icon">🗺️</div>
+          <div>
+            <h1 class="hero-logo font-display">Guia de Bolso</h1>
+            <p class="tagline">O que fazer em Imbituba, agora.</p>
+          </div>
+        </div>
+        <p class="subtitle" style="margin-top: 1rem;">Parceria institucional + comércio local · Santa Catarina</p>
+        <span class="hero-badge">Prefeitura de Imbituba · Estabelecimentos · Turismo</span>
+        <div class="chips">
+          <span class="chip chip-natureza">Natureza</span>
+          <span class="chip chip-gastro">Gastronomia</span>
+          <span class="chip chip-noite">Noite</span>
+          <span class="chip chip-servicos">Serviços</span>
+          <span class="chip chip-hospedagem">Hospedagem</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 2 -->
+      <!-- Nota: Problema em 3 frases — não culpar ninguém, mostrar oportunidade. ~50s -->
+      <section class="slide" data-slide="2" data-notes="Problema em 3 frases. Não culpar — mostrar oportunidade. Turista chega sem saber o que está aberto; morador não tem um lugar oficial; comércio depende de indicação boca a boca.">
+        <h2 class="slide-title font-display">O problema</h2>
+        <p class="subtitle">Três dores que o Guia de Bolso resolve juntas</p>
+        <ul class="bullets">
+          <li><strong>Turistas e moradores</strong> perdidos entre dezenas de opções — sem saber o que está aberto, perto ou faz sentido agora.</li>
+          <li><strong>Comércio local</strong> sem um canal digital oficial e unificado para ser encontrado na hora certa.</li>
+          <li><strong>A cidade</strong> sem uma vitrine turística moderna, curada e mobile, em um só lugar.</li>
+        </ul>
+      </section>
+
+      <!-- SLIDE 3 -->
+      <!-- Nota: Solução = uma frase + 4 pilares. ~45s -->
+      <section class="slide" data-slide="3" data-notes="Solução em uma frase: um guia no bolso. Quatro pilares: descoberta curada, contexto em tempo real, IA em linguagem natural, ação imediata (ir, ligar, favoritar).">
+        <h2 class="slide-title font-display">A solução</h2>
+        <p class="tagline" style="margin-bottom: 1rem;">Um guia no bolso de Imbituba</p>
+        <ul class="bullets">
+          <li><strong>Descoberta curada</strong> — praias, restaurantes, trilhas, serviços em categorias claras.</li>
+          <li><strong>Contexto em tempo real</strong> — horários, distância, clima.</li>
+          <li><strong>Busca inteligente</strong> — pergunte em linguagem natural, a IA entende.</li>
+          <li><strong>Ação na hora</strong> — ir (Maps/Waze), ligar, favoritar, compartilhar.</li>
+        </ul>
+      </section>
+
+      <!-- SLIDE 4 -->
+      <!-- Nota: Três colunas — fale olhando para cada público na mesa. ~50s -->
+      <section class="slide" data-slide="4" data-notes="Três colunas — olhe para cada público na mesa. Turista: decide rápido. Morador: redescobre a cidade. Estabelecimento: visibilidade no mapa oficial.">
+        <h2 class="slide-title font-display">Para quem é</h2>
+        <p class="subtitle">Um produto, três ganhos diretos</p>
+        <div class="cols-3">
+          <div class="card">
+            <h3>🏖️ Turistas</h3>
+            <p>Decidir o que fazer agora — com contexto local e busca em português natural.</p>
+          </div>
+          <div class="card">
+            <h3>🏠 Moradores</h3>
+            <p>Redescobrir Imbituba: o que abriu, o que está perto, o que está em alta.</p>
+          </div>
+          <div class="card">
+            <h3>🏪 Estabelecimentos</h3>
+            <p>Aparecer no guia oficial — busca, categorias e caminho para mais visibilidade.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5 -->
+      <!-- Nota: Momento “uau” — abra o app no celular ou peça para escanearem. ~60s -->
+      <section class="slide" data-slide="5" data-notes="Momento uau: não é mockup. Abra o app no celular ou peça para escanearem o QR. URL em voz alta. Badge em produção na Vercel.">
+        <h2 class="slide-title font-display">MVP ao vivo</h2>
+        <span class="badge-live">Em produção</span>
+        <div class="mvp-box">
+          <div>
+            <p class="subtitle" style="margin-bottom: 0.5rem;">Já no ar — teste agora</p>
+            <a class="app-url" href="https://guia-de-bolso-puce.vercel.app" target="_blank" rel="noopener">guia-de-bolso-puce.vercel.app</a>
+            <ul class="bullets" style="margin-top: 1rem;">
+              <li>App web mobile-first — funciona no celular sem instalar</li>
+              <li>Deploy automático na Vercel · dados no Supabase</li>
+              <li>Catálogo curado de Imbituba — em crescimento</li>
+            </ul>
+          </div>
+          <div class="qr-placeholder" title="Substituir por QR real apontando para a URL">
+            [QR Code]<br />app em produção
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6 -->
+      <!-- Nota: Tour home — scroll mental: destaque, perto, categorias. ~55s -->
+      <section class="slide" data-slide="6" data-notes="Tour Home: o que fazer agora, perto de você, em alta, chips de categoria. Aponte para o placeholder da screenshot.">
+        <div class="tour-row">
+          <div>
+            <h2 class="slide-title font-display">Tour — Home</h2>
+            <p class="subtitle">A primeira tela responde: “o que faço agora?”</p>
+            <ul class="bullets">
+              <li>Destaques da semana e clima local</li>
+              <li>Seção “Perto de você” com distância real</li>
+              <li>Em alta e chips por categoria</li>
+              <li>Navegação rápida: Início, Favoritos, Perfil</li>
+            </ul>
+          </div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <!-- <img src="screenshots/home.png" alt="Home" class="screenshot-img" /> -->
+            <div class="screenshot-placeholder" data-caption="Home">
+              <span class="icon">📱</span>
+              <span>[Screenshot: Home]</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7 -->
+      <!-- Nota: Demo busca — leia um exemplo de pergunta em voz alta. ~55s -->
+      <section class="slide" data-slide="7" data-notes="Busca IA: leia em voz alta “praia aberta agora perto de mim”. Explique que usa todos os lugares do banco como contexto. Não precisa demo ao vivo se a rede falhar.">
+        <div class="tour-row">
+          <div>
+            <h2 class="slide-title font-display">Tour — Busca inteligente</h2>
+            <p class="subtitle">Pergunte como falaria com um morador local</p>
+            <ul class="bullets">
+              <li>“Praia aberta agora perto de mim”</li>
+              <li>“Jantar romântico em Imbituba”</li>
+              <li>“Café com vista para o mar”</li>
+              <li>IA (Claude) cruza tags, horários e catálogo curado</li>
+            </ul>
+          </div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <!-- <img src="screenshots/busca-ia.png" alt="Busca IA" class="screenshot-img" /> -->
+            <div class="screenshot-placeholder">
+              <span class="icon">✨</span>
+              <span>[Screenshot: Busca IA]</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8 -->
+      <!-- Nota: Detalhe do lugar — IR AGORA é o diferencial. ~55s -->
+      <section class="slide" data-slide="8" data-notes="Detalhe: fotos, aberto/fechado, IR AGORA (Google/Apple/Waze). Avaliações moderadas. Compartilhar e ações rápidas.">
+        <div class="tour-row">
+          <div>
+            <h2 class="slide-title font-display">Tour — Página do lugar</h2>
+            <p class="subtitle">Tudo para decidir e agir em segundos</p>
+            <ul class="bullets">
+              <li>Carrossel de fotos · status aberto/fechado</li>
+              <li>Distância real · horários completos</li>
+              <li><strong>IR AGORA</strong> — Google Maps, Apple Maps ou Waze</li>
+              <li>Avaliações aprovadas · Ligar, Instagram, cardápio</li>
+            </ul>
+          </div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <!-- <img src="screenshots/lugar-detalhe.png" alt="Detalhe lugar" class="screenshot-img" /> -->
+            <div class="screenshot-placeholder">
+              <span class="icon">📍</span>
+              <span>[Screenshot: Página do lugar]</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9 -->
+      <!-- Nota: Categorias + rotas (login). Curadoria humana + IA. ~50s -->
+      <section class="slide" data-slide="9" data-notes="Explorar por tipo; rotas/roteiros para usuários logados. Curadoria + IA nas sugestões futuras para parceiros.">
+        <div class="tour-row">
+          <div>
+            <h2 class="slide-title font-display">Tour — Categorias e rotas</h2>
+            <p class="subtitle">Explorar por tipo · roteiros curados</p>
+            <ul class="bullets">
+              <li>Grid de categorias e subcategorias (Natureza, Cultura, Aventura…)</li>
+              <li>Filtros por subcategoria na listagem</li>
+              <li>Rotas com etapas — acesso para usuários logados</li>
+              <li>Tags visuais entram no contexto da busca por IA</li>
+            </ul>
+          </div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <!-- <img src="screenshots/categorias.png" alt="Categorias" class="screenshot-img" /> -->
+            <div class="screenshot-placeholder">
+              <span class="icon">🗂️</span>
+              <span>[Screenshot: Categorias / Rotas]</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10 -->
+      <!-- Nota: Fale direto com donos de bar/restaurante na sala. ~50s -->
+      <section class="slide" data-slide="10" data-notes="Olhe para estabelecimentos: estar no mapa oficial, busca, categorias, planos de visibilidade. Sem prometer CRM ou portal hoje.">
+        <h2 class="slide-title font-display">Para estabelecimentos</h2>
+        <p class="subtitle">Como o app funciona para o seu negócio</p>
+        <ul class="bullets">
+          <li><strong>Cadastro no guia</strong> — nome, endereço, horário, telefone, foto</li>
+          <li><strong>Aparece na busca e nas categorias</strong> — turistas te encontram na hora certa</li>
+          <li><strong>Avaliações de visitantes</strong> — com moderação para qualidade</li>
+          <li><strong>Planos de visibilidade</strong> — do gratuito ao destaque no carrossel (evolução comercial)</li>
+          <li>Métricas do piloto — a definir com parceiros iniciais</li>
+        </ul>
+      </section>
+
+      <!-- SLIDE 11 -->
+      <!-- Nota: Modelo win-win — gratuito massivo, pago visibilidade. Prefeitura institucional. ~60s -->
+      <section class="slide" data-slide="11" data-notes="Gratuito para massa de cadastros. Planos pagos = visibilidade, não bloqueio. Prefeitura: divulgação, validação, dados agregados — sem prometer CRM.">
+        <h2 class="slide-title font-display">Modelo de parceria</h2>
+        <p class="subtitle">Gratuito para entrar · planos pagos para destacar</p>
+        <div class="plans-grid">
+          <div class="plan-card">
+            <h4>Gratuito</h4>
+            <p class="price">R$ 0</p>
+            <ul>
+              <li>Cadastro no guia</li>
+              <li>Busca e categorias</li>
+              <li>Avaliações · info básica</li>
+            </ul>
+          </div>
+          <div class="plan-card">
+            <h4>Estabelecido</h4>
+            <p class="price">R$ 99/mês</p>
+            <ul>
+              <li>Galeria · links sociais</li>
+              <li>Badge verificado ✓</li>
+              <li>Seções na home</li>
+            </ul>
+          </div>
+          <div class="plan-card">
+            <h4>Destaque</h4>
+            <p class="price">R$ 149/mês</p>
+            <ul>
+              <li>Carrossel 3×/semana</li>
+              <li>Prioridade na busca</li>
+              <li>Resposta a avaliações</li>
+            </ul>
+          </div>
+          <div class="plan-card plan-card--gold">
+            <h4>Parceiro Oficial</h4>
+            <p class="price">R$ 229/mês</p>
+            <ul>
+              <li>Carrossel diário · badge ouro</li>
+              <li>Rotas sugeridas pela IA</li>
+              <li>QR no estabelecimento</li>
+            </ul>
+          </div>
+        </div>
+        <p class="partnership-note"><strong>Prefeitura como parceira institucional:</strong> divulgação oficial, validação do guia, indicação a comércios e associações, dados agregados de uso (sem dados pessoais sensíveis).</p>
+      </section>
+
+      <!-- SLIDE 12 -->
+      <!-- Nota: O que a prefeitura ganha — 5 bullets, pedidos concretos. ~55s -->
+      <section class="slide" data-slide="12" data-notes="Foco prefeitura: turismo digital, imagem conectada, apoio ao comércio. Pedidos: redes oficiais, indicação a estabelecimentos, selo guia oficial, piloto em praias prioritárias.">
+        <h2 class="slide-title font-display">O que a prefeitura ganha</h2>
+        <p class="subtitle">Turismo digital com o comércio na mesa</p>
+        <ul class="bullets">
+          <li><strong>Vitrine turística moderna</strong> — um link oficial para visitantes e moradores</li>
+          <li><strong>Imagem de cidade conectada</strong> — inovação com foco local</li>
+          <li><strong>Canal direto</strong> com quem está na cidade agora</li>
+          <li><strong>Apoio ao comércio</strong> — visibilidade sem depender só de redes sociais</li>
+          <li><strong>Possível selo “Guia oficial”</strong> em materiais turísticos e eventos</li>
+        </ul>
+        <p class="partnership-note" style="margin-top: 0.75rem;">Pedido: apoio à divulgação (redes, turismo, eventos) · indicação a estabelecimentos · piloto com N parceiros em bairros/praias prioritários.</p>
+      </section>
+
+      <!-- SLIDE 13 -->
+      <!-- Nota: Checklist — mostre confiança técnica sem jargão. ~50s -->
+      <section class="slide" data-slide="13" data-notes="MVP pronto — liste rápido. 25+ lugares, auth, admin, moderação. Não invente métricas de usuários.">
+        <h2 class="slide-title font-display">O que já está pronto</h2>
+        <p class="subtitle">MVP em produção — não é promessa, é produto</p>
+        <ul class="checklist">
+          <li>Home contextual · busca IA · detalhe de lugar · categorias</li>
+          <li>Favoritos · avaliações moderadas · compartilhar</li>
+          <li>Auth Google + SMS OTP</li>
+          <li>Geolocalização e distância real · clima</li>
+          <li>Horários aberto/fechado em tempo real</li>
+          <li>Carrossel de destaques e planos (admin)</li>
+          <li>Painel admin: locais, rotas, avaliações, destaques, usuários</li>
+          <li>Logs de uso · deploy Vercel + Supabase</li>
+        </ul>
+        <p class="subtitle" style="margin-top: 0.75rem; font-size: 0.75rem;">Stack (referência): Next.js 16 · Supabase · Claude API</p>
+      </section>
+
+      <!-- SLIDE 14 -->
+      <!-- Nota: Roadmap honesto — sem datas para Asaas/portal. ~45s -->
+      <section class="slide" data-slide="14" data-notes="Roadmap enxuto. Mais estabelecimentos, parceria formal, QR nos pontos. Portal e Asaas sem data fechada. WhatsApp quando Meta aprovar.">
+        <h2 class="slide-title font-display">Próximos passos</h2>
+        <p class="subtitle">Evolução conjunta — roadmap realista</p>
+        <ul class="bullets">
+          <li>Expandir cadastro com apoio da prefeitura e associações comerciais</li>
+          <li>Formalizar parceria e selo de guia oficial de Imbituba</li>
+          <li>QR Code nos pontos turísticos e parceiros do piloto</li>
+          <li>Portal do estabelecimento + pagamentos recorrentes (Asaas) — sem prazo fixo agora</li>
+          <li>WhatsApp Auth — quando aprovado pela Meta</li>
+        </ul>
+      </section>
+
+      <!-- SLIDE 15 -->
+      <!-- Nota: Fechamento memorável — “Imbituba no bolso de todo mundo.” Peça próximo passo: piloto + data. ~60s -->
+      <section class="slide slide--dark" data-slide="15" data-notes="Fechamento: Imbituba no bolso de todo mundo. Próximo passo concreto: piloto, data da próxima reunião, contato. Aplaudir e abrir Q&A.">
+        <p class="subtitle">Próximo passo</p>
+        <h2 class="cta-big font-display">Vamos conversar?</h2>
+        <p class="text-muted" style="color: #c5ddd6; font-size: 0.95rem; max-width: 520px;">
+          Fechamos um <strong style="color:#fff;">piloto</strong> com estabelecimentos em praias e bairros prioritários — com apoio institucional para divulgar o guia que já está no ar.
+        </p>
+        <span class="cta-piloto">Agendar piloto + termo de parceria</span>
+        <p class="cta-contact">
+          Bruno Disliler · <a href="https://brunodisliler.com" target="_blank" rel="noopener">brunodisliler.com</a><br />
+          <a href="https://github.com/BrunoDislilerDev/guia-de-bolso" target="_blank" rel="noopener">github.com/BrunoDislilerDev/guia-de-bolso</a>
+        </p>
+        <div class="mvp-box" style="margin-top: 1.25rem;">
+          <a class="app-url" href="https://guia-de-bolso-puce.vercel.app" target="_blank" rel="noopener" style="color: #d4ede8;">guia-de-bolso-puce.vercel.app</a>
+          <div class="qr-placeholder" style="border-color: #7ec4a8; background: #ffffff18; color: #d4ede8;">
+            [QR Code]<br />testar agora
+          </div>
+        </div>
+        <p class="cta-big font-display" style="font-size: clamp(1.1rem, 2vw, 1.5rem); margin-top: 1.25rem; opacity: 0.95;">
+          Imbituba no bolso de todo mundo. 🌊
+        </p>
+      </section>
+
+    </div>
+  </div>
+
+  <nav class="side-nav" id="side-nav" aria-label="Slides"></nav>
+
+  <div class="top-bar">
+    <button type="button" id="btn-notes" title="Notas do apresentador (N)">Notas</button>
+    <button type="button" id="btn-fs" title="Tela cheia (F)">Fullscreen</button>
+  </div>
+
+  <div class="controls" id="controls">
+    <button type="button" id="btn-prev" aria-label="Anterior">←</button>
+    <div class="dots" id="dots"></div>
+    <span class="counter" id="counter">1 / 15</span>
+    <button type="button" id="btn-next" aria-label="Próximo">→</button>
+  </div>
+
+  <aside id="notes-panel" aria-live="polite">
+    <strong>Notas do slide</strong> — pressione <kbd>N</kbd> para ocultar · ocultas em fullscreen
+    <p id="notes-text"></p>
+  </aside>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const total = slides.length;
+      let current = 0;
+      let touchStartX = 0;
+
+      const counter = document.getElementById("counter");
+      const dotsEl = document.getElementById("dots");
+      const sideNav = document.getElementById("side-nav");
+      const notesPanel = document.getElementById("notes-panel");
+      const notesText = document.getElementById("notes-text");
+
+      function buildNav() {
+        slides.forEach((_, i) => {
+          const dot = document.createElement("button");
+          dot.className = "dot" + (i === 0 ? " active" : "");
+          dot.type = "button";
+          dot.setAttribute("aria-label", "Slide " + (i + 1));
+          dot.addEventListener("click", () => goTo(i));
+          dotsEl.appendChild(dot);
+
+          const side = document.createElement("button");
+          side.type = "button";
+          side.setAttribute("aria-label", "Slide " + (i + 1));
+          if (i === 0) side.classList.add("active");
+          side.addEventListener("click", () => goTo(i));
+          sideNav.appendChild(side);
+        });
+      }
+
+      function updateNotes() {
+        const notes = slides[current].dataset.notes || "";
+        notesText.textContent = notes;
+      }
+
+      function goTo(index) {
+        if (index < 0 || index >= total) return;
+        slides.forEach((s, i) => {
+          s.classList.remove("active", "prev");
+          if (i === index) s.classList.add("active");
+          else if (i < index) s.classList.add("prev");
+        });
+        dotsEl.querySelectorAll(".dot").forEach((d, i) => d.classList.toggle("active", i === index));
+        sideNav.querySelectorAll("button").forEach((b, i) => b.classList.toggle("active", i === index));
+        current = index;
+        counter.textContent = (index + 1) + " / " + total;
+        updateNotes();
+      }
+
+      function next() { goTo(Math.min(current + 1, total - 1)); }
+      function prev() { goTo(Math.max(current - 1, 0)); }
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen?.();
+          document.body.classList.add("fullscreen-present");
+        } else {
+          document.exitFullscreen?.();
+          document.body.classList.remove("fullscreen-present");
+        }
+      }
+
+      document.getElementById("btn-prev").addEventListener("click", prev);
+      document.getElementById("btn-next").addEventListener("click", next);
+      document.getElementById("btn-fs").addEventListener("click", toggleFullscreen);
+
+      document.getElementById("btn-notes").addEventListener("click", () => {
+        notesPanel.classList.toggle("open");
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+          e.preventDefault();
+          next();
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault();
+          prev();
+        } else if (e.key === "f" || e.key === "F") {
+          toggleFullscreen();
+        } else if (e.key === "n" || e.key === "N") {
+          notesPanel.classList.toggle("open");
+        } else if (e.key === "Home") goTo(0);
+        else if (e.key === "End") goTo(total - 1);
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement) document.body.classList.remove("fullscreen-present");
+      });
+
+      const viewport = document.querySelector(".slide-viewport");
+      viewport.addEventListener("touchstart", (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+      viewport.addEventListener("touchend", (e) => {
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        if (Math.abs(dx) > 50) dx < 0 ? next() : prev();
+      }, { passive: true });
+
+      buildNav();
+      updateNotes();
+    })();
+  </script>
+</body>
+</html>
