@@ -1,0 +1,70 @@
+"use client";
+
+import Link from "next/link";
+
+/**
+ * Resumo operacional (atalhos clicáveis) — sem duplicar timeline de logs.
+ * @param {object} props
+ * @param {{ emAnalise: number, destaquesExpirando: number, premiumAtivos: number }} props.counts
+ * @returns {import("react").JSX.Element}
+ */
+export default function DashboardOperacionalSidebar({ counts }) {
+  const items = [
+    {
+      label: "Locais em análise",
+      value: counts.emAnalise,
+      href: "/admin/locais?status=em_analise",
+      accent: "text-amber-700",
+      bg: "bg-amber-50",
+    },
+    {
+      label: "Destaques expirando (7d)",
+      value: counts.destaquesExpirando,
+      href: "/admin/destaques?status=expirando",
+      accent: "text-orange-700",
+      bg: "bg-orange-50",
+    },
+    {
+      label: "Premium IA ativos",
+      value: counts.premiumAtivos,
+      href: "/admin/usuarios",
+      hint: "Usuários com assinatura ativa",
+      accent: "text-[#7a6520]",
+      bg: "bg-[#f5e6b8]/50",
+    },
+  ];
+
+  return (
+    <section className="flex h-full flex-col rounded-3xl bg-white p-5 shadow-md ring-1 ring-black/5 md:p-6">
+      <h2 className="text-lg font-bold text-[#1a2e28]">Resumo operacional</h2>
+      <p className="mt-1 text-sm text-[#5a6b66]">Pendências e atalhos do dia</p>
+
+      <div className="mt-4 flex flex-1 flex-col gap-3">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center justify-between rounded-2xl p-4 transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a4a3a]/30 ${item.bg}`}
+          >
+            <div className="min-w-0 pr-3">
+              <p className="text-sm font-semibold text-[#1a2e28]">{item.label}</p>
+              {item.hint && (
+                <p className="mt-0.5 text-[11px] text-[#9aa8a3]">{item.hint}</p>
+              )}
+            </div>
+            <span className={`shrink-0 text-3xl font-bold tabular-nums ${item.accent}`}>
+              {item.value}
+            </span>
+          </Link>
+        ))}
+      </div>
+
+      <Link
+        href="/admin/logs"
+        className="mt-4 block rounded-xl bg-[#eef8f4] px-4 py-3 text-center text-sm font-semibold text-[#1a4a3a] transition hover:bg-[#d4ede8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a4a3a]/30"
+      >
+        Ver atividade e logs →
+      </Link>
+    </section>
+  );
+}

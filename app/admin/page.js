@@ -1,200 +1,49 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
+import DashboardAtividadeSection from "@/components/admin/DashboardAtividadeSection";
+import DashboardHero from "@/components/admin/DashboardHero";
+import DashboardMetricCard from "@/components/admin/DashboardMetricCard";
+import DashboardOperacionalSidebar from "@/components/admin/DashboardOperacionalSidebar";
+import DashboardPendentesSection from "@/components/admin/DashboardPendentesSection";
+import DashboardSkeleton from "@/components/admin/DashboardSkeleton";
 import {
-  formatLogDateTime,
-  formatarDetalhesLog,
-  getLogAcaoBadgeAdmin,
-} from "@/lib/adminLogs";
-import { formatarAcaoLog } from "@/lib/logs";
+  IconClipboard,
+  IconNavigation,
+  IconPin,
+  IconSparkles,
+  IconStar,
+  IconUserPlus,
+} from "@/components/admin/dashboardIcons";
+import {
+  buildResumoOperacional,
+  calcVariation,
+  countDestaquesExpirando7d,
+  countPremiumAtivos,
+  fetchCount,
+  fetchCountInPeriod,
+  getCutoffIso,
+  getSaudacao,
+} from "@/lib/adminDashboard";
+import { fetchDestaquesVigentes } from "@/lib/destaques";
 import { createClient } from "@/lib/supabase";
 
 /**
- * ISO timestamp for metrics comparison N days ago.
- * @param {number} days - Days to subtract from today.
- * @returns {string} ISO date string.
- */
-function getCutoffIso(days) {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return date.toISOString();
-}
-
-/**
- * Computes period-over-period percent change label and color class.
- * @param {number} total - Count in current period.
- * @param {number} past - Count before cutoff.
- * @param {string} periodLabel - Label suffix (e.g. "esta semana").
- * @returns {{ text: string, className: string }} Variation display props.
- */
-function calcVariation(total, past, periodLabel) {
-  if (past === 0) {
-    if (total === 0) {
-      return { text: "Sem variação", className: "text-gray-500" };
-    }
-    return {
-      text: `+ 100% ${periodLabel}`,
-      className: "text-emerald-600",
-    };
-  }
-
-  const percent = ((total - past) / past) * 100;
-  const rounded = Math.round(percent);
-
-  if (rounded === 0) {
-    return { text: "Sem variação", className: "text-gray-500" };
-  }
-
-  if (rounded > 0) {
-    return {
-      text: `+ ${rounded}% ${periodLabel}`,
-      className: "text-emerald-600",
-    };
-  }
-
-  return {
-    text: `- ${Math.abs(rounded)}% ${periodLabel}`,
-    className: "text-red-500",
-  };
-}
-
-/**
- * Fetches total and past-period row counts for dashboard metrics.
- * @param {import("@supabase/supabase-js").SupabaseClient} supabase - Supabase client.
- * @param {string} table - Table name.
- * @param {{ eq?: { field: string, value: unknown }, ltCreatedAt?: string }} [options] - Filters.
- * @returns {Promise<{ total: number, past: number }>} Counts.
- */
-async function fetchCount(supabase, table, options = {}) {
-  const { eq, ltCreatedAt } = options;
-
-  let totalQuery = supabase.from(table).select("id", { count: "exact", head: true });
-  let pastQuery = supabase.from(table).select("id", { count: "exact", head: true });
-
-  if (eq) {
-    totalQuery = totalQuery.eq(eq.field, eq.value);
-    pastQuery = pastQuery.eq(eq.field, eq.value);
-  }
-
-  if (ltCreatedAt) {
-    pastQuery = pastQuery.lt("created_at", ltCreatedAt);
-  }
-
-  const [totalRes, pastRes] = await Promise.all([totalQuery, pastQuery]);
-
-  return {
-    total: totalRes.count ?? 0,
-    past: pastRes.count ?? 0,
-  };
-}
-
-/**
- * Pin icon for dashboard metric cards.
- * @param {{ className?: string }} props - Optional Tailwind classes.
- * @returns {import("react").ReactElement}
- */
-function IconPin({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-    </svg>
-  );
-}
-
-/**
- * User icon for dashboard metric cards.
- * @param {{ className?: string }} props - Optional Tailwind classes.
- * @returns {import("react").ReactElement}
- */
-function IconUser({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z" />
-    </svg>
-  );
-}
-
-/**
- * Star icon for dashboard metric cards.
- * @param {{ className?: string }} props - Optional Tailwind classes.
- * @returns {import("react").ReactElement}
- */
-function IconStar({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.2 22 12 18.56 5.8 22 7 14.14l-5-4.87 7.1-1.01L12 2z" />
-    </svg>
-  );
-}
-
-/**
- * Heart icon for favorites metric card.
- * @param {{ className?: string }} props - Optional Tailwind classes.
- * @returns {import("react").ReactElement}
- */
-function IconHeart({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-    </svg>
-  );
-}
-
-/**
- * Dashboard KPI card with icon and period variation.
- * @param {{ label: string, value: number, icon: (props: { className?: string }) => import("react").ReactElement, iconWrap: string, iconColor: string, variation: { text: string, className: string } }} props
- * @returns {import("react").ReactElement}
- */
-function MetricCard({ label, value, icon: Icon, iconWrap, iconColor, variation }) {
-  return (
-    <article className="rounded-2xl bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-3xl font-bold tracking-tight text-gray-900">{value}</p>
-          <p className="mt-1 text-sm font-medium text-gray-500">{label}</p>
-        </div>
-        <div className={`rounded-xl p-3 ${iconWrap}`}>
-          <Icon className={`h-6 w-6 ${iconColor}`} />
-        </div>
-      </div>
-      <div className="mt-5 border-t border-gray-100 pt-4">
-        <p className={`text-sm font-semibold ${variation.className}`}>{variation.text}</p>
-      </div>
-    </article>
-  );
-}
-
-/**
- * Renders filled and empty star characters for a rating.
- * @param {number|string} value - Star count 0–5.
- * @returns {import("react").ReactElement}
- */
-function Stars({ value }) {
-  return (
-    <span className="text-[#e8a838]">
-      {"★".repeat(Number(value) || 0)}
-      <span className="text-zinc-300">{"★".repeat(5 - (Number(value) || 0))}</span>
-    </span>
-  );
-}
-
-/**
- * Week vs month toggle for dashboard metrics period.
+ * Seletor de período para métricas do dashboard.
  * @param {{ period: string, onChange: (period: string) => void }} props
- * @returns {import("react").ReactElement}
+ * @returns {import("react").JSX.Element}
  */
 function PeriodSelector({ period, onChange }) {
   return (
-    <div className="inline-flex rounded-xl bg-white p-1 shadow-sm">
+    <div className="inline-flex rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/5">
       <button
         type="button"
         onClick={() => onChange("semana")}
-        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a4a3a]/30 ${
           period === "semana"
             ? "bg-[#1a4a3a] text-white"
-            : "text-gray-600 hover:bg-gray-50"
+            : "text-[#5a6b66] hover:bg-[#f7faf9]"
         }`}
       >
         Esta semana
@@ -202,10 +51,10 @@ function PeriodSelector({ period, onChange }) {
       <button
         type="button"
         onClick={() => onChange("mes")}
-        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a4a3a]/30 ${
           period === "mes"
             ? "bg-[#1a4a3a] text-white"
-            : "text-gray-600 hover:bg-gray-50"
+            : "text-[#5a6b66] hover:bg-[#f7faf9]"
         }`}
       >
         Este mês
@@ -215,39 +64,49 @@ function PeriodSelector({ period, onChange }) {
 }
 
 /**
- * Admin dashboard: metrics, pending reviews, and activity logs.
- * @returns {import("react").ReactElement}
+ * Admin dashboard: métricas, moderação e atividade.
+ * @returns {import("react").JSX.Element}
  */
 export default function AdminDashboard() {
-  const { loading } = useAdminAuth();
+  const { loading: authLoading, user, perfil } = useAdminAuth();
   const [period, setPeriod] = useState("semana");
+  const [dataLoading, setDataLoading] = useState(true);
+
   const [metrics, setMetrics] = useState({
-    lugares: { total: 0, variation: { text: "Sem variação", className: "text-gray-500" } },
-    usuarios: { total: 0, variation: { text: "Sem variação", className: "text-gray-500" } },
-    avaliacoesPendentes: { total: 0, variation: { text: "Sem variação", className: "text-gray-500" } },
-    favoritos: { total: 0, variation: { text: "Sem variação", className: "text-gray-500" } },
+    avaliacoesPendentes: { total: 0, variation: { text: "", className: "", direction: "flat" } },
+    lugaresAtivos: { total: 0, variation: { text: "", className: "", direction: "flat" } },
+    parceirosVigentes: { total: 0, variation: { text: "Parceiros ativos hoje", className: "text-[#5a6b66]", direction: "flat" } },
+    usuariosNovos: { total: 0, variation: { text: "", className: "", direction: "flat" } },
+    irAgora: { total: 0, variation: { text: "", className: "", direction: "flat" } },
+    emAnalise: { total: 0, variation: { text: "Aguardando publicação", className: "text-[#5a6b66]", direction: "flat" } },
   });
+
+  const [operacional, setOperacional] = useState({
+    emAnalise: 0,
+    destaquesExpirando: 0,
+    premiumAtivos: 0,
+  });
+
   const [pendentes, setPendentes] = useState([]);
   const [logsRecentes, setLogsRecentes] = useState([]);
   const [perfis, setPerfis] = useState([]);
 
-  useEffect(() => {
-    if (loading) return;
-    loadDashboard();
-  }, [loading, period]);
-
-  /** Loads metrics, pending reviews, logs, and profiles for the dashboard. @returns {Promise<void>} */
-  async function loadDashboard() {
+  const loadDashboard = useCallback(async () => {
+    setDataLoading(true);
     const supabase = createClient();
     const days = period === "mes" ? 30 : 7;
-    const periodLabel = period === "mes" ? "este mês" : "esta semana";
+    const periodLabel = period === "mes" ? "período anterior" : "semana anterior";
     const cutoff = getCutoffIso(days);
 
     const [
       lugaresCounts,
-      usuariosCounts,
       avaliacoesCounts,
-      favoritosCounts,
+      emAnaliseCounts,
+      usuariosNovosCounts,
+      irAgoraCounts,
+      destaquesVigentes,
+      destaquesExpirando,
+      premiumAtivos,
       avaliacoes,
       logsRes,
       perfisRes,
@@ -256,12 +115,20 @@ export default function AdminDashboard() {
         eq: { field: "status", value: "ativo" },
         ltCreatedAt: cutoff,
       }),
-      fetchCount(supabase, "perfis", { ltCreatedAt: cutoff }),
       fetchCount(supabase, "avaliacoes", {
         eq: { field: "status", value: "pendente" },
         ltCreatedAt: cutoff,
       }),
-      fetchCount(supabase, "favoritos", { ltCreatedAt: cutoff }),
+      fetchCount(supabase, "lugares", {
+        eq: { field: "status", value: "em_analise" },
+      }),
+      fetchCountInPeriod(supabase, "perfis", days),
+      fetchCountInPeriod(supabase, "logs", days, {
+        eq: { field: "acao", value: "ir_agora" },
+      }),
+      fetchDestaquesVigentes(supabase),
+      countDestaquesExpirando7d(supabase),
+      countPremiumAtivos(supabase),
       supabase
         .from("avaliacoes")
         .select("*, lugares(nome)")
@@ -277,14 +144,6 @@ export default function AdminDashboard() {
     ]);
 
     setMetrics({
-      lugares: {
-        total: lugaresCounts.total,
-        variation: calcVariation(lugaresCounts.total, lugaresCounts.past, periodLabel),
-      },
-      usuarios: {
-        total: usuariosCounts.total,
-        variation: calcVariation(usuariosCounts.total, usuariosCounts.past, periodLabel),
-      },
       avaliacoesPendentes: {
         total: avaliacoesCounts.total,
         variation: calcVariation(
@@ -293,21 +152,89 @@ export default function AdminDashboard() {
           periodLabel
         ),
       },
-      favoritos: {
-        total: favoritosCounts.total,
-        variation: calcVariation(favoritosCounts.total, favoritosCounts.past, periodLabel),
+      lugaresAtivos: {
+        total: lugaresCounts.total,
+        variation: calcVariation(lugaresCounts.total, lugaresCounts.past, periodLabel),
       },
+      parceirosVigentes: {
+        total: destaquesVigentes.length,
+        variation: {
+          text: "Parceiros com destaque vigente",
+          className: "text-[#5a6b66]",
+          direction: "flat",
+        },
+      },
+      usuariosNovos: {
+        total: usuariosNovosCounts.total,
+        variation: calcVariation(
+          usuariosNovosCounts.total,
+          usuariosNovosCounts.past,
+          periodLabel
+        ),
+      },
+      irAgora: {
+        total: irAgoraCounts.total,
+        variation: calcVariation(irAgoraCounts.total, irAgoraCounts.past, periodLabel),
+      },
+      emAnalise: {
+        total: emAnaliseCounts.total,
+        variation: {
+          text: "Cadastros aguardando revisão",
+          className: "text-[#5a6b66]",
+          direction: "flat",
+        },
+      },
+    });
+
+    setOperacional({
+      emAnalise: emAnaliseCounts.total,
+      destaquesExpirando,
+      premiumAtivos,
     });
 
     setPendentes(avaliacoes.data ?? []);
     setLogsRecentes(logsRes.data ?? []);
     setPerfis(perfisRes.data ?? []);
-  }
+    setDataLoading(false);
+  }, [period]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    loadDashboard();
+  }, [authLoading, loadDashboard]);
+
+  const resumoHero = useMemo(
+    () =>
+      buildResumoOperacional({
+        avaliacoesPendentes: metrics.avaliacoesPendentes.total,
+        emAnalise: operacional.emAnalise,
+        destaquesExpirando: operacional.destaquesExpirando,
+      }),
+    [metrics.avaliacoesPendentes.total, operacional]
+  );
+
+  const nomeAdmin =
+    perfil?.nome ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Admin";
+
+  const dataFormatada = useMemo(() => {
+    const raw = new Intl.DateTimeFormat("pt-BR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date());
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }, []);
+
+  const periodoHint = period === "mes" ? "Neste mês" : "Nesta semana";
 
   /**
-   * Approves or rejects a review from the dashboard queue.
-   * @param {string} id - Review id.
-   * @param {string} status - New status (`aprovado` | `rejeitado`).
+   * @param {string} id
+   * @param {string} status
    * @returns {Promise<void>}
    */
   async function updateStatus(id, status) {
@@ -323,9 +250,9 @@ export default function AdminDashboard() {
     }));
   }
 
-  if (loading) {
+  if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 text-[#5a6b66]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando admin...
       </div>
     );
@@ -335,139 +262,107 @@ export default function AdminDashboard() {
     <AdminShell
       title="Dashboard"
       subtitle="Visão geral do Guia de Bolso"
-      contentClassName="bg-gray-50"
+      showPageHeading={false}
       headerAction={<PeriodSelector period={period} onChange={setPeriod} />}
     >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Total de Lugares"
-          value={metrics.lugares.total}
-          icon={IconPin}
-          iconWrap="bg-emerald-100"
-          iconColor="text-emerald-600"
-          variation={metrics.lugares.variation}
-        />
-        <MetricCard
-          label="Usuários"
-          value={metrics.usuarios.total}
-          icon={IconUser}
-          iconWrap="bg-blue-100"
-          iconColor="text-blue-600"
-          variation={metrics.usuarios.variation}
-        />
-        <MetricCard
-          label="Avaliações Pendentes"
-          value={metrics.avaliacoesPendentes.total}
-          icon={IconStar}
-          iconWrap="bg-amber-100"
-          iconColor="text-amber-600"
-          variation={metrics.avaliacoesPendentes.variation}
-        />
-        <MetricCard
-          label="Favoritos"
-          value={metrics.favoritos.total}
-          icon={IconHeart}
-          iconWrap="bg-purple-100"
-          iconColor="text-purple-600"
-          variation={metrics.favoritos.variation}
-        />
-      </div>
+      {dataLoading ? (
+        <DashboardSkeleton />
+      ) : (
+        <div className="space-y-6 md:space-y-8">
+          <DashboardHero
+            saudacao={getSaudacao()}
+            nome={nomeAdmin}
+            dataFormatada={dataFormatada}
+            resumo={resumoHero}
+            subtitle="Visão geral do Guia de Bolso"
+          />
 
-      <section className="mt-8 rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-bold text-[#1a2e28]">
-          Últimas avaliações pendentes
-        </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+            <DashboardMetricCard
+              hero
+              className="sm:col-span-2 lg:col-span-6"
+              label="Avaliações pendentes"
+              hint="Aguardam moderação"
+              value={metrics.avaliacoesPendentes.total}
+              icon={IconStar}
+              iconWrap="bg-amber-100"
+              iconColor="text-amber-600"
+              variation={metrics.avaliacoesPendentes.variation}
+              href="/admin/avaliacoes?tab=pendente"
+            />
+            <DashboardMetricCard
+              className="sm:col-span-1 lg:col-span-3"
+              label="Locais publicados"
+              hint="Status ativo"
+              value={metrics.lugaresAtivos.total}
+              icon={IconPin}
+              iconWrap="bg-[#d4ede8]"
+              iconColor="text-[#1a4a3a]"
+              variation={metrics.lugaresAtivos.variation}
+              href="/admin/locais"
+            />
+            <DashboardMetricCard
+              className="sm:col-span-1 lg:col-span-3"
+              label="Parceiros vigentes"
+              hint="Destaques ativos hoje"
+              value={metrics.parceirosVigentes.total}
+              icon={IconSparkles}
+              iconWrap="bg-amber-100"
+              iconColor="text-amber-700"
+              variation={metrics.parceirosVigentes.variation}
+              href="/admin/destaques"
+            />
+            <DashboardMetricCard
+              className="sm:col-span-1 lg:col-span-4"
+              label="Usuários novos"
+              hint={periodoHint}
+              value={metrics.usuariosNovos.total}
+              icon={IconUserPlus}
+              iconWrap="bg-blue-100"
+              iconColor="text-blue-600"
+              variation={metrics.usuariosNovos.variation}
+              href="/admin/usuarios"
+            />
+            <DashboardMetricCard
+              className="sm:col-span-1 lg:col-span-4"
+              label="IR AGORA"
+              hint={periodoHint}
+              value={metrics.irAgora.total}
+              icon={IconNavigation}
+              iconWrap="bg-emerald-100"
+              iconColor="text-emerald-700"
+              variation={metrics.irAgora.variation}
+              href="/admin/logs?acao=ir_agora"
+            />
+            <DashboardMetricCard
+              className="sm:col-span-2 lg:col-span-4"
+              label="Em análise"
+              hint="Locais não publicados"
+              value={metrics.emAnalise.total}
+              icon={IconClipboard}
+              iconWrap="bg-orange-100"
+              iconColor="text-orange-700"
+              variation={metrics.emAnalise.variation}
+              href="/admin/locais?status=em_analise"
+            />
+          </div>
 
-        <div className="mt-4 grid gap-3">
-          {pendentes.length === 0 ? (
-            <p className="text-sm text-[#5a6b66]">Nenhuma avaliação pendente.</p>
-          ) : (
-            pendentes.map((avaliacao) => (
-              <article
-                key={avaliacao.id}
-                className="rounded-xl border border-[#eef3f1] p-4"
-              >
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="font-semibold text-[#1a2e28]">
-                      {avaliacao.lugares?.nome || "Lugar"}
-                    </p>
-                    <Stars value={avaliacao.nota} />
-                    <p className="mt-2 text-sm text-[#5a6b66]">
-                      {avaliacao.comentario || "Sem comentário"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateStatus(avaliacao.id, "aprovado")}
-                      className="rounded-lg bg-[#1a4a3a] px-3 py-2 text-sm font-semibold text-white"
-                    >
-                      Aprovar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateStatus(avaliacao.id, "rejeitado")}
-                      className="rounded-lg bg-[#d9534f] px-3 py-2 text-sm font-semibold text-white"
-                    >
-                      Rejeitar
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))
-          )}
+          <div className="grid gap-6 lg:grid-cols-5 lg:items-start lg:gap-8">
+            <div className="min-w-0 lg:col-span-3">
+              <DashboardPendentesSection
+                pendentes={pendentes}
+                totalPendentes={metrics.avaliacoesPendentes.total}
+                onUpdateStatus={updateStatus}
+              />
+            </div>
+            <div className="min-w-0 lg:col-span-2">
+              <DashboardOperacionalSidebar counts={operacional} />
+            </div>
+          </div>
+
+          <DashboardAtividadeSection logs={logsRecentes} perfis={perfis} />
         </div>
-      </section>
-
-      <section className="mt-8 rounded-2xl bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-bold text-[#1a2e28]">Atividade recente</h2>
-          <Link
-            href="/admin/logs"
-            className="text-sm font-semibold text-[#1a4a3a] underline-offset-2 hover:underline"
-          >
-            Ver todos os logs →
-          </Link>
-        </div>
-
-        <div className="mt-4 space-y-3">
-          {logsRecentes.length === 0 ? (
-            <p className="text-sm text-[#5a6b66]">Nenhuma atividade registrada.</p>
-          ) : (
-            logsRecentes.map((log) => {
-              const perfil = perfis.find((p) => p.id === log.user_id);
-              const nomeUsuario =
-                log.user_nome || perfil?.nome || log.user_email || "Visitante";
-              const badge = getLogAcaoBadgeAdmin(log.acao);
-              const { relativo } = formatLogDateTime(log.created_at);
-
-              return (
-                <article
-                  key={log.id}
-                  className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[#eef3f1] p-4"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-[#1a2e28]">{nomeUsuario}</p>
-                    <p className="mt-0.5 text-sm text-[#5a6b66]">{formatarAcaoLog(log)}</p>
-                    <p className="mt-0.5 text-xs text-[#9aa8a3]">
-                      {formatarDetalhesLog(log.detalhes)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${badge.className}`}
-                    >
-                      {badge.label}
-                    </span>
-                    <span className="text-xs text-[#9aa8a3]">{relativo}</span>
-                  </div>
-                </article>
-              );
-            })
-          )}
-        </div>
-      </section>
+      )}
     </AdminShell>
   );
 }

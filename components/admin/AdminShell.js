@@ -70,6 +70,7 @@ export function useAdminAuth() {
  * @param {string} [props.subtitle] - Subtítulo opcional abaixo do título.
  * @param {import("react").ReactNode} [props.headerAction] - Ação extra alinhada à direita do header.
  * @param {string} [props.contentClassName] - Classes extras no `<main>`.
+ * @param {boolean} [props.showPageHeading=true] - Exibe bloco título/subtítulo abaixo da top bar.
  * @param {import("react").ReactNode} props.children - Conteúdo da página.
  * @returns {import("react").JSX.Element}
  */
@@ -78,6 +79,7 @@ export default function AdminShell({
   subtitle,
   headerAction,
   contentClassName = "",
+  showPageHeading = true,
   children,
 }) {
   const pathname = usePathname();
@@ -137,16 +139,22 @@ export default function AdminShell({
           />
 
           <main className={`flex-1 ${contentClassName}`}>
-            <div className="border-b border-transparent px-4 pb-4 pt-5 md:px-6 md:pb-5 md:pt-6 lg:px-8 lg:pt-8">
-              <h1 className="text-2xl font-bold tracking-tight text-[#1a2e28] md:text-3xl">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="mt-1 max-w-2xl text-sm text-[#5a6b66] md:text-base">{subtitle}</p>
-              )}
-            </div>
+            {showPageHeading && (
+              <div className="border-b border-[#dce5e2]/60 px-4 pb-4 pt-5 md:px-6 md:pb-5 md:pt-6 lg:px-8 lg:pt-6">
+                <h1 className="text-2xl font-bold tracking-tight text-[#1a2e28] md:text-3xl">
+                  {title}
+                </h1>
+                {subtitle && (
+                  <p className="mt-1 max-w-2xl text-sm text-[#5a6b66] md:text-base">{subtitle}</p>
+                )}
+              </div>
+            )}
 
-            <div className="mx-auto w-full max-w-7xl px-4 pb-8 md:px-6 lg:px-8">
+            <div
+              className={`mx-auto w-full max-w-7xl px-4 pb-8 md:px-6 lg:px-8 ${
+                showPageHeading ? "pt-6 md:pt-8" : "pt-4 md:pt-6"
+              }`}
+            >
               {children}
             </div>
           </main>

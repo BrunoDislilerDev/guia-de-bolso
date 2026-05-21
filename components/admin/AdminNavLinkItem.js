@@ -20,12 +20,18 @@ export default function AdminNavLinkItem({ link, pathname, collapsed = false, on
       onClick={onNavigate}
       title={collapsed ? link.label : undefined}
       aria-current={active ? "page" : undefined}
-      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4ede8]/60 ${
+      className={`group relative flex items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4ede8]/60 ${
         active
-          ? "border-l-[3px] border-[#d4ede8] bg-white/12 pl-[9px] text-white shadow-sm ring-1 ring-inset ring-white/10"
-          : "border-l-[3px] border-transparent text-white/72 hover:bg-white/8 hover:text-white"
+          ? "bg-white/12 pl-3 pr-3 text-white shadow-sm ring-1 ring-inset ring-white/10"
+          : "px-3 text-white/72 hover:bg-white/8 hover:text-white"
       } ${collapsed ? "justify-center px-2" : ""}`}
     >
+      {active && (
+        <span
+          className="absolute bottom-2 left-0 top-2 w-1 rounded-r-full bg-[#d4ede8]"
+          aria-hidden
+        />
+      )}
       <span
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
           active ? "bg-white/15 text-white" : "text-white/80 group-hover:bg-white/10 group-hover:text-white"
