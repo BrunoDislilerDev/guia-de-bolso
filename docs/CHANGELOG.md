@@ -6,19 +6,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-21
+
 ### Added
 
-- **Place taxonomy cleanup** — broad subcategorias only (e.g. Natureza → Praias); Surfe, pôr do sol, mergulho, etc. as **tags** (`supabase/taxonomia_lugares_cleanup.sql`). Removed redundant `subcategoria_surf.sql`.
-- **Daily AI limit reset fix** — `isSameUsageDay()` now matches only exact `YYYY-MM-DD` (legacy `YYYY-MM` no longer blocks midnight reset); `usePremiumUsage` refreshes at SP midnight and when the tab becomes visible on a new day.
-- **Route step details** — multiple ordered descriptions per `rota_pontos` via `rota_ponto_detalhes`; removed place link on steps.
-- **Route map location** — admin `EnderecoAutocomplete` + `rotas_localizacoes` table; **Abrir no Maps** opens navigation to saved coordinates (no textual address on route page).
-- **Route taxonomy** — fixed route types in `lib/rotas.js` (Trilha, Passeio urbano, Roteiro de praias, Cultural / histórico, Gastronômico, Mirantes e panorâmicos); `rotas_tags` junction + `tags.aplica_em_rotas`; optional `rota_pontos.lugar_id` (migration `supabase/rotas_taxonomia.sql`).
-- **`RotasCatalogo`** — category filter chips on `/rotas`; tags and type badge on route cards.
-- **Admin `RotaForm`** — route type select, tag picker (max 3), optional place link per step.
+- **Reviews (structured + AI assist)** — aspect chips on submit (`AvaliacaoForm`, `lib/avaliacaoAspectos.js`); `POST /api/avaliacoes/analisar` stores Claude moderation hint on `sugestao_ia`; detail shows star distribution and aspect tags (`LugarAvaliacoesSection`); admin queue shows IA suggestion badges (`supabase/avaliacoes_moderacao.sql`).
+- **Explorar redesign** (`/categorias`) — `components/explorar/*`, `lib/categorias.js`: search bar, mood shortcuts, featured category carousel, category grid with cover thumbnails.
+- **Profile redesign** — `components/perfil/*`, `lib/perfil.js`: hero, live stats (favorites, reviews, roteiros), settings groups, bottom sheets; removed placeholder “Notificações” row.
+- **Home — Parceiros** — `ParceirosCarrossel` for places with an active commercial highlight; `ehParceiro` on cards, search results, and AI context (`lib/destaques.js`, `lib/planoComercial.js`, `lib/lugarVisibilidade.js`).
+- **Admin shell** — responsive sidebar + mobile drawer + top bar (`AdminSidebar`, `AdminNavDrawer`, `AdminTopBar`, `adminNavConfig.js`); alert bell (`AdminAlertsBell`, `lib/adminAlertas.js`).
+- **`/admin/logs`** — filterable activity log (`lib/adminLogs.js`, `LogsGridPage`); dashboard shortcuts and `?user_id=` deep links from Usuários.
+- **`/admin/taxonomia`** — CRUD for `subcategorias` and `tags` without SQL (`lib/adminTaxonomia.js`, `TaxonomiaPage`).
+- **Admin dashboard redesign** — hero, asymmetric KPI grid, moderation queue, operational sidebar, activity timeline (`lib/adminDashboard.js`, `Dashboard*` components).
+- **Admin usuários redesign** — engagement sheet and log deep links (`UsuariosGridPage`).
+- **Route taxonomy & catalog** — fixed route types (`lib/rotas.js`); `rotas_tags` + `tags.aplica_em_rotas`; optional `rota_pontos.lugar_id`; `RotasCatalogo` filter chips; `rota_ponto_detalhes`, `rota_dicas`, `rotas_localizacoes` (`supabase/rotas_taxonomia.sql` and related scripts).
+- **Place taxonomy cleanup** — canonical subcategorias + detail tags (`supabase/taxonomia_lugares_cleanup.sql`).
+- **Static presentation** — `public/apresentacao.html` for stakeholder demos.
+- **Commercial plan migration** — single Parceiro plan seed/normalize (`supabase/plano_comercial_unico.sql`).
 
 ### Changed
 
-- **`/rotas/[id]`** — shows category icon, tag chips, and “Ver no guia” link on steps linked to a place.
+- **Destaques comerciais** — admin and consumer flows use one plan (**Parceiro**, R$ 199/mês); legacy multi-tier UI removed; AI search and roteiro catalog prioritize active partners.
+- **Admin `RotaForm`** — route type, tags (max 3), optional place per step, map location via `EnderecoAutocomplete`.
+- **`/rotas/[id]`** — category icon, tag chips, ordered descriptions and tips per step, “Ver no guia” when `lugar_id` is set.
+- **Daily AI limits** — `isSameUsageDay()` matches exact `YYYY-MM-DD` only; `usePremiumUsage` refreshes at SP midnight and on tab focus after day change (`supabase/premium_uso_dia_fix.sql`).
+- **Admin dashboard** — period selector in top bar; deep links to locais, avaliações, destaques, logs; Destaques nav icon (sparkles).
+- **Admin taxonomia** — degrades gracefully if `tags.aplica_em_rotas` is missing until `rotas_taxonomia.sql` runs.
+
+### Fixed
+
+- **Admin dashboard KPI grid** — column spans summed to 12 (was 21); metric card grid classes on the `Link` wrapper, not inner `<article>`.
+- **Duplicate activity block** on dashboard — sidebar points to full timeline section only.
+- **`AdminTopBar`** — flex-wrap on narrow viewports so period controls do not overflow.
+- **`AdminNavLinkItem`** — active route indicator JSX after shell refactor.
+
+### Documentation
+
+- Changelog **0.5.0**; full `/docs` pass (architecture, features, database, API, deployment, taxonomia, index).
 
 ## [0.4.0] - 2026-05-20
 
@@ -118,6 +142,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Initial production release: home, place detail, categories, auth (Google + SMS), favorites, reviews, admin panel, AI search and roteiros (Guia Premium with monthly-style usage counters), routes, and Vercel deploy.
 
+[0.5.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/BrunoDislilerDev/guia-de-bolso/releases/tag/v0.1.0
