@@ -1,19 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import AdminNavDrawer from "@/components/admin/AdminNavDrawer";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminTopBar from "@/components/admin/AdminTopBar";
 import { canAccessAdmin } from "@/lib/adminRoles";
 import { createClient } from "@/lib/supabase";
-
-const links = [
-  { href: "/admin", label: "Dashboard", icon: "📊" },
-  { href: "/admin/locais", label: "Locais", icon: "📍" },
-  { href: "/admin/rotas", label: "Rotas", icon: "🗺️" },
-  { href: "/admin/avaliacoes", label: "Avaliações", icon: "⭐" },
-  { href: "/admin/destaques", label: "Destaques", icon: "✨" },
-  { href: "/admin/usuarios", label: "Usuários", icon: "👥" },
-];
 
 /**
  * Hook que valida sessão Supabase e role admin; redireciona para home se não autorizado.
@@ -71,7 +64,7 @@ export function useAdminAuth() {
 }
 
 /**
- * Layout do painel admin com sidebar (desktop), chips de navegação (mobile) e área de conteúdo.
+ * Layout do painel admin: sidebar verde (desktop), drawer (mobile/tablet) e top bar sticky.
  * @param {object} props
  * @param {string} props.title - Título da página no header.
  * @param {string} [props.subtitle] - Subtítulo opcional abaixo do título.
@@ -88,65 +81,76 @@ export default function AdminShell({
   children,
 }) {
   const pathname = usePathname();
+  const [adminUserId, setAdminUserId] = useState(null);
+  const [adminPerfil, setAdminPerfil] = useState(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(async ({ data }) => {
+      const id = data.user?.id ?? null;
+      setAdminUserId(id);
+
+      if (!id) {
+        setAdminPerfil(null);
+        return;
+      }
+
+      const { data: perfilData } = await supabase
+        .from("perfis")
+        .select("nome, foto_url")
+        .eq("id", id)
+        .maybeSingle();
+
+      setAdminPerfil(perfilData);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 shrink-0 border-r border-black/5 bg-[#1a4a3a] p-6 text-white md:block">
-          <Link href="/" className="block text-2xl font-bold">
-            Guia de bolso.
-          </Link>
-          <p className="mt-1 text-sm text-white/65">Painel administrativo</p>
+        <AdminSidebar
+          pathname={pathname}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((value) => !value)}
+          perfil={adminPerfil}
+        />
 
-          <nav className="mt-8 grid gap-2">
-            {links.map((link) => {
-              const active =
-                link.href === "/admin"
-                  ? pathname === "/admin"
-                  : pathname.startsWith(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                    active ? "bg-white text-[#1a4a3a]" : "text-white/75 hover:bg-white/10"
-                  }`}
-                >
-                  <span className="mr-2">{link.icon}</span>
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
+        <AdminNavDrawer
+          open={mobileNavOpen}
+          onClose={closeMobileNav}
+          pathname={pathname}
+          perfil={adminPerfil}
+        />
 
-        <main className={`flex-1 p-4 md:p-8 ${contentClassName}`}>
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-[#1a4a3a]">
-                Admin
-              </p>
-              <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <AdminTopBar
+            title={title}
+            adminUserId={adminUserId}
+            headerAction={headerAction}
+            onOpenMobileNav={() => setMobileNavOpen(true)}
+            onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
+            showSidebarToggle
+          />
+
+          <main className={`flex-1 ${contentClassName}`}>
+            <div className="border-b border-transparent px-4 pb-4 pt-5 md:px-6 md:pb-5 md:pt-6 lg:px-8 lg:pt-8">
+              <h1 className="text-2xl font-bold tracking-tight text-[#1a2e28] md:text-3xl">
+                {title}
+              </h1>
               {subtitle && (
-                <p className="mt-1 text-sm text-[#5a6b66]">{subtitle}</p>
+                <p className="mt-1 max-w-2xl text-sm text-[#5a6b66] md:text-base">{subtitle}</p>
               )}
             </div>
-            {headerAction && <div className="shrink-0">{headerAction}</div>}
-          </div>
-          <div className="mb-4 flex gap-2 overflow-x-auto md:hidden">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#1a4a3a] shadow-sm"
-                >
-                  <span className="mr-1">{link.icon}</span>
-                  {link.label}
-                </Link>
-              ))}
+
+            <div className="mx-auto w-full max-w-7xl px-4 pb-8 md:px-6 lg:px-8">
+              {children}
             </div>
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );

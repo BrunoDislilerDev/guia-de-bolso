@@ -1,0 +1,168 @@
+/**
+ * Links e ícones SVG do menu admin.
+ * @typedef {{ href: string, label: string, icon: string }} AdminNavLink
+ */
+
+/** @type {AdminNavLink[]} */
+export const ADMIN_NAV_LINKS = [
+  { href: "/admin", label: "Dashboard", icon: "dashboard" },
+  { href: "/admin/locais", label: "Locais", icon: "locais" },
+  { href: "/admin/rotas", label: "Rotas", icon: "rotas" },
+  { href: "/admin/avaliacoes", label: "Avaliações", icon: "avaliacoes" },
+  { href: "/admin/destaques", label: "Destaques", icon: "destaques" },
+  { href: "/admin/usuarios", label: "Usuários", icon: "usuarios" },
+  { href: "/admin/logs", label: "Logs", icon: "logs" },
+  { href: "/admin/taxonomia", label: "Taxonomia", icon: "taxonomia" },
+];
+
+/**
+ * @param {string} pathname
+ * @param {string} href
+ * @returns {boolean}
+ */
+export function isAdminNavActive(pathname, href) {
+  if (href === "/admin") return pathname === "/admin";
+  return pathname.startsWith(href);
+}
+
+/**
+ * @param {object} props
+ * @param {string} props.name
+ * @param {string} [props.className]
+ * @returns {import("react").JSX.Element}
+ */
+export function AdminNavIcon({ name, className = "h-5 w-5" }) {
+  const shared = {
+    className,
+    fill: "none",
+    viewBox: "0 0 24 24",
+    stroke: "currentColor",
+    strokeWidth: 1.75,
+    "aria-hidden": true,
+  };
+
+  switch (name) {
+    case "dashboard":
+      return (
+        <svg {...shared}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h4v12H4V6zm6 0h4v8h-4V6zm6 0h4v14h-4V6z" />
+        </svg>
+      );
+    case "locais":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 21s7-4.5 7-10a7 7 0 10-14 0c0 5.5 7 10 7 10z"
+          />
+        </svg>
+      );
+    case "rotas":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 20l-5.447-2.724A2 2 0 013 15.382V6.618a2 2 0 011.553-1.948L12 2l7.447 2.67A2 2 0 0121 6.618v8.764a2 2 0 01-1.553 1.948L15 20"
+          />
+        </svg>
+      );
+    case "avaliacoes":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 3.5l2.09 4.24 4.68.68-3.385 3.3.799 4.66L12 14.9l-4.174 2.19.799-4.66-3.385-3.3 4.68-.68L12 3.5z"
+          />
+        </svg>
+      );
+    case "destaques":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 3l2.2 4.5 4.9.7-3.55 3.46.84 4.88L12 14.3 7.61 16.54l.84-4.88L4.9 8.2l4.9-.7L12 3z"
+          />
+        </svg>
+      );
+    case "usuarios":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 19v-1a4 4 0 00-4-4H8a4 4 0 00-4 4v1M12 11a3 3 0 100-6 3 3 0 000 6zm8 8v-1a3 3 0 00-2-2.83M16 4.17a3 3 0 010 5.66"
+          />
+        </svg>
+      );
+    case "logs":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
+        </svg>
+      );
+    case "taxonomia":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"
+          />
+        </svg>
+      );
+    case "menu":
+      return (
+        <svg {...shared}>
+          <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+      );
+    case "collapse":
+      return (
+        <svg {...shared}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      );
+    case "home":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 10.5L12 4l9 6.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z"
+          />
+        </svg>
+      );
+    default:
+      return (
+        <svg {...shared}>
+          <circle cx="12" cy="12" r="2" />
+        </svg>
+      );
+  }
+}
+
+/**
+ * @param {string} [nome]
+ * @returns {string}
+ */
+export function getAdminInitials(nome) {
+  return String(nome || "A")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
