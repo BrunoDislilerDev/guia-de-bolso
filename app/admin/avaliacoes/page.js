@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import {
   AVALIACAO_STATUS,
@@ -122,9 +123,15 @@ function AdminModal({ isOpen, title, children, onClose }) {
  * Admin moderation UI for reviews.
  * @returns {import("react").JSX.Element}
  */
-export default function AdminAvaliacoesPage() {
+const TAB_IDS = new Set(TABS.map((tab) => tab.id));
+
+function AdminAvaliacoesPage() {
   const { loading } = useAdminAuth();
-  const [activeTab, setActiveTab] = useState(AVALIACAO_STATUS.PENDENTE);
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const initialTab =
+    tabFromUrl && TAB_IDS.has(tabFromUrl) ? tabFromUrl : AVALIACAO_STATUS.PENDENTE;
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [counts, setCounts] = useState({});
   const [contagemAprovadasPorUsuario, setContagemAprovadasPorUsuario] = useState({});
@@ -195,6 +202,12 @@ export default function AdminAvaliacoesPage() {
     },
     []
   );
+
+  useEffect(() => {
+    if (tabFromUrl && TAB_IDS.has(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl, activeTab]);
 
   useEffect(() => {
     if (loading) return;
@@ -504,5 +517,19 @@ export default function AdminAvaliacoesPage() {
         </button>
       </AdminModal>
     </AdminShell>
+  );
+}
+
+export default function AdminAvaliacoesPageWithSuspense() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
+          Carregando admin...
+        </div>
+      }
+    >
+      <AdminAvaliacoesPage />
+    </Suspense>
   );
 }

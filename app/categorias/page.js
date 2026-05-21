@@ -6,7 +6,6 @@ import ExplorarAtalhos from "@/components/explorar/ExplorarAtalhos";
 import ExplorarBuscaBar from "@/components/explorar/ExplorarBuscaBar";
 import ExplorarCategoriaCard from "@/components/explorar/ExplorarCategoriaCard";
 import ExplorarDestaqueCard from "@/components/explorar/ExplorarDestaqueCard";
-import ExplorarMoodChips from "@/components/explorar/ExplorarMoodChips";
 import ExplorarSkeleton from "@/components/explorar/ExplorarSkeleton";
 import {
   CATEGORIAS_EXPLORE,
@@ -24,7 +23,6 @@ export default function CategoriasPage() {
   const [counts, setCounts] = useState({});
   const [capas, setCapas] = useState({});
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -69,18 +67,6 @@ export default function CategoriasPage() {
     [counts]
   );
 
-  const categoriasFiltradas = useMemo(() => {
-    const termo = filtro.trim().toLowerCase();
-    if (!termo) return categoriasOrdenadas;
-
-    return categoriasOrdenadas.filter(
-      (item) =>
-        item.nome.toLowerCase().includes(termo) ||
-        item.descricao.toLowerCase().includes(termo) ||
-        item.descricaoCurta.toLowerCase().includes(termo)
-    );
-  }, [categoriasOrdenadas, filtro]);
-
   const categoriasComLugares = useMemo(
     () => categoriasOrdenadas.filter((item) => (counts[item.nome] || 0) > 0).length,
     [categoriasOrdenadas, counts]
@@ -110,7 +96,6 @@ export default function CategoriasPage() {
         ) : (
           <div className="space-y-8">
             <ExplorarBuscaBar />
-            <ExplorarMoodChips />
 
             {destaques.length > 0 && (
               <section aria-labelledby="explorar-destaques-title">
@@ -127,7 +112,7 @@ export default function CategoriasPage() {
                     </h2>
                   </div>
                 </div>
-                <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
                   {destaques.map((categoria, index) => (
                     <ExplorarDestaqueCard
                       key={categoria.nome}
@@ -151,49 +136,18 @@ export default function CategoriasPage() {
                 >
                   Todas as categorias
                 </h2>
-                <p className="mt-0.5 text-sm text-[#5a6b66]">
-                  Toque para ver lugares e filtrar por tipo
-                </p>
               </div>
 
-              <label className="relative mb-4 block">
-                <span className="sr-only">Filtrar categorias</span>
-                <svg
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9aa8a3]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-3-3" strokeLinecap="round" />
-                </svg>
-                <input
-                  type="search"
-                  value={filtro}
-                  onChange={(event) => setFiltro(event.target.value)}
-                  placeholder="Filtrar categorias…"
-                  className="w-full rounded-xl border-0 bg-white py-3 pl-10 pr-4 text-sm text-[#1a2e28] shadow-sm ring-1 ring-[#e8eeee] placeholder:text-[#9aa8a3] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30"
-                />
-              </label>
-
-              {categoriasFiltradas.length === 0 ? (
-                <p className="rounded-2xl bg-white p-6 text-center text-sm text-[#5a6b66] shadow-sm">
-                  Nenhuma categoria encontrada para &quot;{filtro}&quot;
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {categoriasFiltradas.map((categoria) => (
-                    <ExplorarCategoriaCard
-                      key={categoria.nome}
-                      categoria={categoria}
-                      count={counts[categoria.nome] || 0}
-                      imagemUrl={capas[categoria.nome]}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-3">
+                {categoriasOrdenadas.map((categoria) => (
+                  <ExplorarCategoriaCard
+                    key={categoria.nome}
+                    categoria={categoria}
+                    count={counts[categoria.nome] || 0}
+                    imagemUrl={capas[categoria.nome]}
+                  />
+                ))}
+              </div>
             </section>
 
             <ExplorarAtalhos />
