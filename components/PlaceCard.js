@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getStatusFuncionamento } from "@/lib/horarios";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { getBadgeParceiroLabel } from "@/lib/destaques";
 import { getTagsFromLugar } from "@/lib/tags";
 
 /**
@@ -71,7 +72,7 @@ export default function PlaceCard({
 }) {
   const status = getStatusFuncionamento(lugar.horarios, lugar.mostrar_horarios);
   const distancia = lugar.distancia_calculada || lugar.distancia;
-  const tags = getTagsFromLugar(lugar).slice(0, 2);
+  const tags = lugar.ehParceiro ? getTagsFromLugar(lugar).slice(0, 2) : [];
   const rating = getRatingMedio(lugar);
   const imagemUrl = getCapaFromLugar(lugar);
 
@@ -100,6 +101,11 @@ export default function PlaceCard({
         <span className="rounded-full bg-[#d4ede8] px-3 py-1 text-xs font-semibold text-[#1a4a3a]">
           {lugar.categoria}
         </span>
+        {lugar.ehParceiro && (
+          <span className="rounded-full bg-[#f5e6b8] px-3 py-1 text-xs font-bold text-[#7a6520]">
+            {getBadgeParceiroLabel()}
+          </span>
+        )}
       </div>
       {status && (
         <span

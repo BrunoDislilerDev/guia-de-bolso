@@ -40,7 +40,6 @@ export const emptyLocalForm = {
   descricao: "",
   categoria: "Natureza",
   subcategoria: "",
-  destaque: false,
   telefone: "",
   instagram: "",
   cardapio_url: "",
@@ -126,9 +125,11 @@ export default function LocalForm({
   const [tagLimitMessage, setTagLimitMessage] = useState("");
   const [photoItems, setPhotoItems] = useState(() => getInitialPhotoItems(initialData));
   const [photoError, setPhotoError] = useState("");
+  const { destaque: _destaqueLegado, ...initialSemDestaque } = initialData ?? {};
+
   const [form, setForm] = useState({
     ...emptyLocalForm,
-    ...initialData,
+    ...initialSemDestaque,
     horarios: initialData?.horarios || emptyHorario,
     telefone: formatTelefone(initialData?.telefone),
     mostrar_endereco: initialData?.mostrar_endereco ?? true,
@@ -234,11 +235,11 @@ export default function LocalForm({
       imagem_url: _imagemUrl,
       fotos: _fotos,
       endereco: _endereco,
+      destaque: _destaqueCampo,
       ...formFields
     } = form;
     const payload = {
       ...formFields,
-      destaque: Boolean(form.destaque),
       mostrar_endereco: Boolean(form.mostrar_endereco),
       mostrar_horarios: Boolean(form.mostrar_horarios),
       horarios: form.horarios,
@@ -396,11 +397,15 @@ export default function LocalForm({
         <Input label="Instagram" value={form.instagram || ""} onChange={(e) => setForm({ ...form, instagram: e.target.value })} />
         <Input label="Cardápio URL" value={form.cardapio_url || ""} onChange={(e) => setForm({ ...form, cardapio_url: e.target.value })} />
         <Input label="Site URL" value={form.site_url || ""} onChange={(e) => setForm({ ...form, site_url: e.target.value })} />
-        <label className="flex items-center gap-2 text-sm font-semibold text-[#1a2e28]">
-          <input type="checkbox" checked={Boolean(form.destaque)} onChange={(e) => setForm({ ...form, destaque: e.target.checked })} />
-          Destaque
-        </label>
       </div>
+
+      <p className="mt-4 rounded-xl bg-[#eef8f4] px-3 py-2 text-xs text-[#5a6b66]">
+        Destaque comercial (carrossel e perfil completo no app) é gerenciado em{" "}
+        <a href="/admin/destaques" className="font-semibold text-[#1a4a3a] underline">
+          Admin → Destaques
+        </a>
+        .
+      </p>
 
       <PhotoUploader
         items={photoItems}

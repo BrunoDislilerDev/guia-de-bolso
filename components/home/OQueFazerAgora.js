@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { getBadgeParceiroLabel } from "@/lib/destaques";
 import { getTempoExperiencia, isEmAlta } from "@/lib/homeContext";
 
 /**
@@ -159,7 +160,12 @@ export default function OQueFazerAgora({
 
         <div className="absolute left-4 right-4 top-4 flex items-start justify-between gap-2">
           <div className="flex flex-wrap gap-2">
-            {emAlta && (
+            {lugar.ehParceiro && (
+              <span className="rounded-full bg-[#f5e6b8] px-3 py-1 text-xs font-bold text-[#7a6520]">
+                {getBadgeParceiroLabel()}
+              </span>
+            )}
+            {emAlta && !lugar.ehParceiro && (
               <span className="rounded-full bg-[#f5d76e] px-3 py-1 text-xs font-bold text-[#5c4200]">
                 Em alta hoje 🔥
               </span>

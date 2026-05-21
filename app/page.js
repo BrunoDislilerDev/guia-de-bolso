@@ -10,6 +10,7 @@ import PremiumPaywallSheet from "@/components/PremiumPaywallSheet";
 import EmAltaHoje from "@/components/home/EmAltaHoje";
 import HomeContextHeader from "@/components/home/HomeContextHeader";
 import OQueFazerAgora from "@/components/home/OQueFazerAgora";
+import ParceirosCarrossel from "@/components/home/ParceirosCarrossel";
 import PertoDeVoce from "@/components/home/PertoDeVoce";
 import PlanosRapidos from "@/components/home/PlanosRapidos";
 import SearchBrowsePanel from "@/components/home/SearchBrowsePanel";
@@ -24,6 +25,12 @@ import {
   pickHeroLugar,
   sortLugaresPorDistancia,
 } from "@/lib/homeContext";
+import {
+  buildParceiroIdSet,
+  enrichLugaresComParceiro,
+  fetchDestaquesVigentes,
+  lugaresFromDestaquesVigentes,
+} from "@/lib/destaques";
 import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
 import { getLugaresVisitados } from "@/lib/lugaresVisitados";
 import { withDistanciaDinamica } from "@/lib/localizacao";
@@ -66,20 +73,21 @@ async function fetchLugaresAtivos(limit = 50) {
 }
 
 /**
- * Loads non-featured active places for the "Perto de você" section.
- * @returns {Promise<object[]>} Nearby candidate places.
+ * Loads nearby candidates, excluding partner spotlight ids.
+ * @param {string[]} [excludeIds] - Lugar ids já em destaque/hero.
+ * @returns {Promise<object[]>}
  */
-async function fetchLugaresProximos() {
+async function fetchLugaresProximos(excludeIds = []) {
   const supabase = createClient();
+  const exclude = new Set(excludeIds.map(String));
   const { data, error } = await supabase
     .from("lugares")
     .select(LUGAR_SELECT)
     .eq("status", "ativo")
-    .eq("destaque", false)
-    .limit(6);
+    .limit(20);
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).filter((l) => !exclude.has(String(l.id))).slice(0, 6);
 }
 
 /**
@@ -125,6 +133,8 @@ function Home() {
   const [lugaresAtivos, setLugaresAtivos] = useState([]);
   const [lugaresPopulares, setLugaresPopulares] = useState([]);
   const [lugaresProximos, setLugaresProximos] = useState([]);
+  const [parceiroIds, setParceiroIds] = useState(() => new Set());
+  const [lugaresParceiros, setLugaresParceiros] = useState([]);
   const [contextualPhrase, setContextualPhrase] = useState(
     "Descubra o melhor da região agora"
   );
@@ -171,10 +181,15 @@ function Home() {
     [lugaresPopulares]
   );
 
+  const parceiroIdsKey = useMemo(
+    () => Array.from(parceiroIds).sort().join(","),
+    [parceiroIds]
+  );
+
   const heroLugar = useMemo(() => {
     const withDist = lugaresAtivos.map((l) => withDistanciaDinamica(l, userPosition));
-    return pickHeroLugar(withDist, userPosition, popularIds);
-  }, [lugaresAtivos, userPosition, popularIds]);
+    return pickHeroLugar(withDist, userPosition, popularIds, parceiroIds);
+  }, [lugaresAtivos, userPosition, popularIds, parceiroIds]);
 
   const emAltaExibidos = useMemo(() => {
     return lugaresPopulares
@@ -238,23 +253,34 @@ function Home() {
 
     async function loadPrimary() {
       try {
-        const [ativosResult, popularesResult] = await Promise.allSettled([
+        const [ativosResult, popularesResult, destaquesResult] = await Promise.allSettled([
           fetchLugaresAtivos(),
           fetchLugaresPopularesHome(supabase, 8),
+          fetchDestaquesVigentes(supabase),
         ]);
 
         if (cancelled) return;
 
         const errors = { hero: false, emAlta: false };
 
+        const destaquesVigentes =
+          destaquesResult.status === "fulfilled" ? destaquesResult.value : [];
+        const idsParceiros = buildParceiroIdSet(destaquesVigentes);
+        setParceiroIds(idsParceiros);
+
         if (ativosResult.status === "fulfilled") {
-          setLugaresAtivos(ativosResult.value);
+          const enriched = enrichLugaresComParceiro(ativosResult.value, idsParceiros);
+          setLugaresAtivos(enriched);
+          setLugaresParceiros(lugaresFromDestaquesVigentes(destaquesVigentes, enriched));
         } else {
           errors.hero = true;
+          setLugaresParceiros(lugaresFromDestaquesVigentes(destaquesVigentes));
         }
 
         if (popularesResult.status === "fulfilled") {
-          setLugaresPopulares(popularesResult.value);
+          setLugaresPopulares(
+            enrichLugaresComParceiro(popularesResult.value, idsParceiros)
+          );
         } else {
           errors.emAlta = true;
         }
@@ -288,15 +314,19 @@ function Home() {
 
     async function loadSecondary() {
       try {
+        const exclude = [...parceiroIds];
+        if (heroLugar?.id) exclude.push(String(heroLugar.id));
         const [proximosResult, climaResult] = await Promise.allSettled([
-          fetchLugaresProximos(),
+          fetchLugaresProximos(exclude),
           fetchClimaApis(IMBITUBA_COORDS.latitude, IMBITUBA_COORDS.longitude),
         ]);
 
         if (cancelled) return;
 
         if (proximosResult.status === "fulfilled") {
-          setLugaresProximos(proximosResult.value);
+          setLugaresProximos(
+            enrichLugaresComParceiro(proximosResult.value, parceiroIds)
+          );
           setSectionErrors((prev) => ({ ...prev, perto: false }));
         } else {
           setSectionErrors((prev) => ({ ...prev, perto: true }));
@@ -321,7 +351,7 @@ function Home() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading]);
+  }, [authLoading, parceiroIdsKey, parceiroIds, heroLugar?.id]);
 
   useEffect(() => {
     if (searchMode !== "browse") return undefined;
@@ -690,6 +720,11 @@ function Home() {
                   isFavorito={isFavorito}
                 />
               )}
+              <ParceirosCarrossel
+                lugares={lugaresParceiros.map((l) =>
+                  withDistanciaDinamica(l, userPosition)
+                )}
+              />
               {sectionErrors.emAlta ? (
                 <SectionUnavailable title="🔥 Em alta hoje" />
               ) : (

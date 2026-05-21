@@ -5,6 +5,7 @@ import {
   filtrarLugaresPorStatus,
   getFiltroStatusLabel,
 } from "@/lib/busca";
+import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
 import { checkBuscaAccess, getAuthUser } from "@/lib/premiumServer";
 import { supabase } from "@/lib/supabase";
 
@@ -18,7 +19,8 @@ Use exatamente os IDs fornecidos na lista de lugares. Se nenhum lugar for releva
 Cada lugar inclui "abertoAgora" (true/false) com base no horário atual em America/Sao_Paulo.
 - Se a busca pedir lugares abertos, retorne só IDs com abertoAgora=true.
 - Se a busca pedir lugares fechados, retorne só IDs com abertoAgora=false.
-- Caso contrário, priorize relevância e não exclua por horário.`;
+- Caso contrário, priorize relevância e não exclua por horário.
+- Lugares marcados como parceiroComercial devem ter prioridade quando forem relevantes à busca.`;
 
 /**
  * Parses a JSON array of place IDs from Claude API text, with fallback extraction.
@@ -84,16 +86,23 @@ export async function POST(request) {
       );
     }
 
-    const { data: lugares, error } = await supabase
-      .from("lugares")
-      .select("*, localizacoes(*), lugares_tags(tags(*))")
-      .eq("status", "ativo");
+    const [{ data: lugares, error }, destaquesVigentes] = await Promise.all([
+      supabase
+        .from("lugares")
+        .select("*, localizacoes(*), lugares_tags(tags(*))")
+        .eq("status", "ativo"),
+      fetchDestaquesVigentes(supabase),
+    ]);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const lugaresAtivos = lugares ?? [];
+    const parceiroIds = buildParceiroIdSet(destaquesVigentes);
+    const lugaresAtivos = (lugares ?? []).map((lugar) => ({
+      ...lugar,
+      ehParceiro: parceiroIds.has(String(lugar.id)),
+    }));
     const lugaresParaBusca = filtrarLugaresPorStatus(lugaresAtivos, filtroStatus);
 
     if (
@@ -116,8 +125,11 @@ export async function POST(request) {
           resumo.abertoAgora ? "ABERTO AGORA" : "FECHADO AGORA"
         } (${resumo.statusDetail}) - tags: ${
           resumo.tags.length > 0 ? resumo.tags.join(", ") : "sem tags"
-        } - ${resumo.descricao} - categoria: ${resumo.categoria}`,
+        } - ${resumo.descricao} - categoria: ${resumo.categoria}${
+          lugar.ehParceiro ? " - parceiroComercial: true" : ""
+        }`,
         abertoAgora: resumo.abertoAgora,
+        parceiroComercial: Boolean(lugar.ehParceiro),
       };
     });
 
@@ -169,6 +181,7 @@ Busca do usuário: ${queryUsuario}`,
       .filter(Boolean);
 
     filtrados = filtrarLugaresPorStatus(filtrados, filtroStatus);
+    filtrados.sort((a, b) => (b.ehParceiro ? 1 : 0) - (a.ehParceiro ? 1 : 0));
 
     return NextResponse.json({
       lugares: filtrados,

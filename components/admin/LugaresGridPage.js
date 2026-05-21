@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
+import { buildParceiroIdSet, fetchDestaquesVigentes, isLugarParceiroVigente } from "@/lib/destaques";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase";
 
@@ -169,9 +171,9 @@ function LugarCard({ lugar, onDeactivate }) {
               {lugar.categoria}
             </span>
           )}
-          {lugar.destaque && (
+          {lugar.ehParceiroVigente && (
             <span className="rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-amber-950 shadow-sm">
-              ✨ Destaque
+              ✨ Parceiro vigente
             </span>
           )}
         </div>
@@ -245,23 +247,34 @@ function LugarCard({ lugar, onDeactivate }) {
  * Página admin de listagem de lugares com métricas, filtros e cards interativos.
  * @returns {import("react").JSX.Element}
  */
+const STATUS_FROM_URL = {
+  em_analise: "Em análise",
+};
+
 export default function LugaresGridPage() {
   const { loading } = useAdminAuth();
+  const searchParams = useSearchParams();
+  const statusFromUrl = searchParams.get("status");
   const [lugares, setLugares] = useState([]);
+  const [parceiroIds, setParceiroIds] = useState(() => new Set());
   const [search, setSearch] = useState("");
   const [categoria, setCategoria] = useState("Todas");
-  const [status, setStatus] = useState("Todos");
+  const [status, setStatus] = useState(
+    STATUS_FROM_URL[statusFromUrl] || "Todos"
+  );
   const [cidade, setCidade] = useState("Todas");
   const [message, setMessage] = useState("");
 
   const loadLugares = useCallback(async () => {
     const supabase = createClient();
-    const { data } = await supabase
-      .from("lugares")
-      .select("*, localizacoes(cidade)")
-      .order("nome");
+    const [lugaresRes, destaquesVigentes] = await Promise.all([
+      supabase.from("lugares").select("*, localizacoes(cidade)").order("nome"),
+      fetchDestaquesVigentes(supabase),
+    ]);
 
-    setLugares(data ?? []);
+    const ids = buildParceiroIdSet(destaquesVigentes);
+    setParceiroIds(ids);
+    setLugares(lugaresRes.data ?? []);
   }, []);
 
   useEffect(() => {
@@ -283,6 +296,11 @@ export default function LugaresGridPage() {
     return () => clearTimeout(timer);
   }, [message]);
 
+  useEffect(() => {
+    const mapped = STATUS_FROM_URL[statusFromUrl];
+    if (mapped) setStatus(mapped);
+  }, [statusFromUrl]);
+
   /**
    * @param {object} lugar
    */
@@ -302,7 +320,9 @@ export default function LugaresGridPage() {
   const stats = useMemo(() => {
     const ativos = lugares.filter((l) => isAtivo(l)).length;
     const emAnalise = lugares.filter((l) => l.status === "em_analise").length;
-    const destaques = lugares.filter((l) => l.destaque && isAtivo(l)).length;
+    const destaques = lugares.filter(
+      (l) => isAtivo(l) && isLugarParceiroVigente(l.id, parceiroIds)
+    ).length;
     return {
       total: lugares.length,
       ativos,
@@ -310,7 +330,7 @@ export default function LugaresGridPage() {
       emAnalise,
       destaques,
     };
-  }, [lugares]);
+  }, [lugares, parceiroIds]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -330,7 +350,9 @@ export default function LugaresGridPage() {
         (status === "Ativos" && ativo) ||
         (status === "Inativos" && !ativo && lugar.status !== "em_analise") ||
         (status === "Em análise" && lugar.status === "em_analise") ||
-        (status === "Destaque" && lugar.destaque && ativo);
+        (status === "Parceiro vigente" &&
+          ativo &&
+          isLugarParceiroVigente(lugar.id, parceiroIds));
       const matchesCidade = cidade === "Todas" || getCidade(lugar) === cidade;
 
       return matchesSearch && matchesCategoria && matchesStatus && matchesCidade;
@@ -386,9 +408,9 @@ export default function LugaresGridPage() {
           accent="text-emerald-700"
         />
         <StatCard
-          label="Em destaque"
+          label="Parceiros vigentes"
           value={stats.destaques}
-          hint="plano comercial"
+          hint="destaques ativos"
           accent="text-amber-700"
         />
         <StatCard
@@ -438,7 +460,7 @@ export default function LugaresGridPage() {
               Status
             </p>
             <div className="flex flex-wrap gap-2">
-              {["Todos", "Ativos", "Inativos", "Em análise", "Destaque"].map((item) => (
+              {["Todos", "Ativos", "Inativos", "Em análise", "Parceiro vigente"].map((item) => (
                 <FilterChip
                   key={item}
                   active={status === item}
@@ -482,7 +504,14 @@ export default function LugaresGridPage() {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((lugar) => (
-            <LugarCard key={lugar.id} lugar={lugar} onDeactivate={() => handleDelete(lugar)} />
+            <LugarCard
+              key={lugar.id}
+              lugar={{
+                ...lugar,
+                ehParceiroVigente: isLugarParceiroVigente(lugar.id, parceiroIds),
+              }}
+              onDeactivate={() => handleDelete(lugar)}
+            />
           ))}
         </div>
       )}

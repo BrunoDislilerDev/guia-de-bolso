@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
 import { checkRoteiroAccess, getAuthUser } from "@/lib/premiumServer";
 import { selecionarLugaresParaRoteiro } from "@/lib/roteiroLugares";
 import { supabase } from "@/lib/supabase";
@@ -69,16 +70,25 @@ export async function POST(request) {
       );
     }
 
-    const { data: lugaresRaw, error } = await supabase
-      .from("lugares")
-      .select("id, nome, descricao, categoria, subcategoria, destaque, lugares_tags(tags(nome))")
-      .eq("status", "ativo");
+    const [{ data: lugaresRaw, error }, destaquesVigentes] = await Promise.all([
+      supabase
+        .from("lugares")
+        .select("id, nome, descricao, categoria, subcategoria, lugares_tags(tags(nome))")
+        .eq("status", "ativo"),
+      fetchDestaquesVigentes(supabase),
+    ]);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const lugares = selecionarLugaresParaRoteiro(lugaresRaw, interesses);
+    const parceiroIds = buildParceiroIdSet(destaquesVigentes);
+    const lugaresComParceiro = (lugaresRaw ?? []).map((lugar) => ({
+      ...lugar,
+      ehParceiro: parceiroIds.has(String(lugar.id)),
+    }));
+
+    const lugares = selecionarLugaresParaRoteiro(lugaresComParceiro, interesses);
 
     const interessesTexto = Array.isArray(interesses)
       ? interesses.join(", ")

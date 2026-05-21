@@ -16,6 +16,12 @@ import LugarQuickActions from "@/components/lugar/LugarQuickActions";
 import LugarTags from "@/components/lugar/LugarTags";
 import { getCapaFromLugar, getFotosFromLugar } from "@/lib/fotos";
 import { saveLugarVisitado } from "@/lib/lugaresVisitados";
+import { fetchLugarEhParceiroVigente, getBadgeParceiroLabel } from "@/lib/destaques";
+import {
+  getFotosParaExibicao,
+  getTextoSobre,
+  getVisibilidadePerfil,
+} from "@/lib/lugarVisibilidade";
 import {
   getAcoesRapidasEstabelecimento,
   getAcoesRapidasLocais,
@@ -212,6 +218,7 @@ export default function LugarPage() {
   const [subcategoria, setSubcategoria] = useState(null);
   const [tags, setTags] = useState([]);
   const [userPosition, setUserPosition] = useState(null);
+  const [ehParceiro, setEhParceiro] = useState(false);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -309,6 +316,8 @@ export default function LugarPage() {
       .then(({ data }) => {
         setTags((data ?? []).map((item) => item.tags).filter(Boolean));
       });
+
+    fetchLugarEhParceiroVigente(supabase, id).then(setEhParceiro);
   }, [id]);
 
   useEffect(() => {
@@ -517,7 +526,14 @@ export default function LugarPage() {
 
   const badgeStyle =
     categoriaStyles[lugar.categoria] ?? "bg-white text-[#1a4a3a]";
-  const imagens = fotos.length > 0 ? fotos : getFotosFromLugar(lugar);
+  const visibilidade = getVisibilidadePerfil(ehParceiro);
+  const capaUrl = getCapaFromLugar(lugar);
+  const fotosCompletas = fotos.length > 0 ? fotos : getFotosFromLugar(lugar);
+  const imagens = getFotosParaExibicao(
+    fotosCompletas,
+    capaUrl,
+    visibilidade.showGaleriaCompleta
+  );
   const status = getStatusFuncionamento(lugar.horarios);
   const diaAtual = getDiaAtualKey();
   const enderecoExibicao = (
@@ -525,7 +541,7 @@ export default function LugarPage() {
     lugar.endereco?.trim() ||
     ""
   );
-  const descricaoLonga = lugar.descricao_longa || lugar.descricao;
+  const descricaoLonga = getTextoSobre(lugar, visibilidade.showDescricaoLonga);
   const totalAvaliacoes = avaliacoes.length;
   const mediaAvaliacoes =
     totalAvaliacoes > 0
@@ -535,7 +551,11 @@ export default function LugarPage() {
 
   const lugarParaDistancia = { ...lugar, localizacoes: localizacao };
   const distancia = getDistanciaLugar(lugarParaDistancia, userPosition);
-  const fraseConvencimento = getFraseConvencimento(lugar, tags);
+  const tagsExibidas = visibilidade.showTags ? tags : [];
+  const fraseConvencimento = getFraseConvencimento(
+    { ...lugar, ehParceiro },
+    tagsExibidas
+  );
   const resumoAvaliacoes = getResumoAvaliacoes(avaliacoes, lugar.categoria);
   const horarioResumo = getHorarioResumo(status);
   const ehEstabelecimento = isLugarEstabelecimento(lugar);
@@ -543,14 +563,16 @@ export default function LugarPage() {
   const staticMapSrc = getStaticMapUrl(localizacao);
   const mapsLink = googleMapsUrl(lugar, localizacao);
   const acoesRapidasBase = ehEstabelecimento
-    ? getAcoesRapidasEstabelecimento({
-        telefone: lugar.telefone?.trim() || undefined,
-        instagramHref: lugar.instagram?.trim()
-          ? instagramUrl(lugar.instagram)
-          : null,
-        cardapioUrl: lugar.cardapio_url?.trim() || undefined,
-        siteUrl: lugar.site_url?.trim() || undefined,
-      })
+    ? visibilidade.showAcoesRapidasEstabelecimento
+      ? getAcoesRapidasEstabelecimento({
+          telefone: lugar.telefone?.trim() || undefined,
+          instagramHref: lugar.instagram?.trim()
+            ? instagramUrl(lugar.instagram)
+            : null,
+          cardapioUrl: lugar.cardapio_url?.trim() || undefined,
+          siteUrl: lugar.site_url?.trim() || undefined,
+        })
+      : []
     : getAcoesRapidasLocais(lugar, tags, distancia);
   const acoesRapidas = ehEstabelecimento
     ? acoesRapidasBase.filter((acao) => acao.href)
@@ -649,13 +671,20 @@ export default function LugarPage() {
         />
 
         <div className="px-4 pb-8 pt-5">
+          {visibilidade.showBadgeParceiro && (
+            <span className="mb-3 inline-flex rounded-full bg-[#f5e6b8] px-3 py-1 text-xs font-bold text-[#7a6520]">
+              {getBadgeParceiroLabel()}
+            </span>
+          )}
           <p className="text-base font-semibold leading-snug text-[#1a4a3a]">
             {fraseConvencimento}
           </p>
 
-          <LugarQuickActions modo={modoAcoes} acoes={acoesRapidas} />
+          {acoesRapidas.length > 0 && (
+            <LugarQuickActions modo={modoAcoes} acoes={acoesRapidas} />
+          )}
 
-          <LugarTags tags={tags} />
+          {tagsExibidas.length > 0 && <LugarTags tags={tagsExibidas} />}
 
           {lugar.mostrar_horarios && (
             <LugarHorariosCompact
