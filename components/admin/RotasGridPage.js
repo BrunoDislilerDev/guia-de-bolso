@@ -3,51 +3,53 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
-import { getCapaFromLugar } from "@/lib/fotos";
+import { getCapaFromRota } from "@/lib/fotos";
+import { CATEGORIAS_ROTA, getCategoriaRotaMeta, normalizeCategoriaRota } from "@/lib/rotas";
 import { createClient } from "@/lib/supabase";
 
-/** Categorias fixas do app (chips de filtro). */
-const CATEGORIAS_LUGAR = [
-  { nome: "Natureza", icone: "🌿" },
-  { nome: "Gastronomia", icone: "🍽️" },
-  { nome: "Noite", icone: "🌙" },
-  { nome: "Serviços", icone: "🔧" },
-  { nome: "Hospedagem", icone: "🏠" },
-  { nome: "Cultura", icone: "🏛️" },
-  { nome: "Aventura", icone: "🧗" },
-  { nome: "Bem-estar", icone: "🧘" },
-  { nome: "Compras", icone: "🛍️" },
-];
-
-const categoryStyles = {
-  Natureza: "bg-[#d4ede8] text-[#1a4a3a]",
-  Gastronomia: "bg-[#f0e4d4] text-[#6b5344]",
-  Noite: "bg-[#e4d4f0] text-[#5c4a6e]",
-  Serviços: "bg-[#c5dff5] text-[#2a5a7a]",
-  Hospedagem: "bg-[#f5e6b8] text-[#7a6520]",
-  Cultura: "bg-purple-100 text-purple-700",
-  Aventura: "bg-orange-100 text-orange-700",
-  "Bem-estar": "bg-pink-100 text-pink-700",
-  Compras: "bg-blue-100 text-blue-700",
-};
-
 /**
- * @param {object} lugar
+ * @param {number|null|undefined} minutos
  * @returns {string}
  */
-function getFoto(lugar) {
-  return getCapaFromLugar(lugar) || lugar.foto_url || "";
+function formatDuracao(minutos) {
+  if (minutos === null || minutos === undefined) return "—";
+  const total = Number(minutos);
+  if (!Number.isFinite(total)) return "—";
+  const horas = Math.floor(total / 60);
+  const mins = total % 60;
+  return horas > 0 ? `${horas}h ${mins > 0 ? `${mins}m` : ""}`.trim() : `${mins}m`;
 }
 
 /**
- * @param {object} lugar
+ * @param {object} rota
  * @returns {string}
  */
-function getCidade(lugar) {
-  const localizacao = Array.isArray(lugar.localizacoes)
-    ? lugar.localizacoes[0]
-    : lugar.localizacoes;
-  return lugar.cidade || localizacao?.cidade || "";
+function getRotaNome(rota) {
+  return rota.nome || rota.titulo || "Rota sem nome";
+}
+
+/**
+ * @param {object} rota
+ * @returns {number}
+ */
+function getPontosCount(rota) {
+  const row = rota?.rota_pontos;
+  if (Array.isArray(row) && row[0]?.count != null) return Number(row[0].count) || 0;
+  if (row && typeof row === "object" && "count" in row) return Number(row.count) || 0;
+  return 0;
+}
+
+/**
+ * @param {string} [value]
+ * @returns {string}
+ */
+function dificuldadeBadgeClass(value) {
+  const d = String(value || "").toLowerCase();
+  if (d.includes("dif")) return "bg-red-100 text-red-700";
+  if (d.includes("mod") || d.includes("méd") || d.includes("med")) {
+    return "bg-amber-100 text-amber-800";
+  }
+  return "bg-[#d4ede8] text-[#1a4a3a]";
 }
 
 /**
@@ -61,28 +63,6 @@ function getInitials(nome) {
     .slice(0, 2)
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
-}
-
-/**
- * @param {object} lugar
- * @returns {boolean}
- */
-function isAtivo(lugar) {
-  return lugar.status === "ativo" || lugar.ativa === true;
-}
-
-/**
- * @param {object} lugar
- * @returns {{ label: string, className: string }}
- */
-function getStatusMeta(lugar) {
-  if (lugar.status === "em_analise") {
-    return { label: "Em análise", className: "bg-amber-100 text-amber-800" };
-  }
-  if (isAtivo(lugar)) {
-    return { label: "Publicado", className: "bg-[#d4ede8] text-[#1a4a3a]" };
-  }
-  return { label: "Inativo", className: "bg-red-50 text-red-600" };
 }
 
 /**
@@ -128,48 +108,44 @@ function FilterChip({ active, onClick, children }) {
 
 /**
  * @param {object} props
- * @param {object} props.lugar
+ * @param {object} props.rota
+ * @param {() => void} props.onToggleDestaque
  * @param {() => void} props.onDeactivate
  * @returns {import("react").JSX.Element}
  */
-function LugarCard({ lugar, onDeactivate }) {
-  const foto = getFoto(lugar);
-  const cidade = getCidade(lugar);
-  const ativo = isAtivo(lugar);
-  const statusMeta = getStatusMeta(lugar);
-  const categoriaClass =
-    categoryStyles[lugar.categoria] || "bg-gray-100 text-gray-600";
+function RotaCard({ rota, onToggleDestaque, onDeactivate }) {
+  const capa = getCapaFromRota(rota);
+  const meta = getCategoriaRotaMeta(rota.categoria);
+  const pontos = getPontosCount(rota);
+  const nome = getRotaNome(rota);
+  const ativa = rota.ativa !== false;
 
   return (
     <article
       className={`group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 transition-all hover:shadow-lg ${
-        ativo ? "ring-black/5 hover:ring-[#1a4a3a]/15" : "opacity-90 ring-red-100"
+        ativa ? "ring-black/5 hover:ring-[#1a4a3a]/15" : "opacity-90 ring-red-100"
       }`}
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700">
-        {foto ? (
+      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]">
+        {capa ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={foto}
+            src={capa}
             alt=""
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-white/90">
-            {getInitials(lugar.nome)}
+            {getInitials(nome)}
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-          {lugar.categoria && (
-            <span
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm backdrop-blur-sm ${categoriaClass}`}
-            >
-              {lugar.categoria}
-            </span>
-          )}
-          {lugar.destaque && (
+          <span className="rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#1a4a3a] shadow-sm backdrop-blur-sm">
+            {meta.icone} {meta.nome}
+          </span>
+          {rota.destaque && (
             <span className="rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-amber-950 shadow-sm">
               ✨ Destaque
             </span>
@@ -177,41 +153,60 @@ function LugarCard({ lugar, onDeactivate }) {
         </div>
 
         <div className="absolute bottom-3 left-3 right-3">
-          <h2 className="line-clamp-2 text-lg font-bold leading-snug text-white">
-            {lugar.nome}
-          </h2>
+          <h2 className="line-clamp-2 text-lg font-bold leading-snug text-white">{nome}</h2>
           <p className="mt-0.5 text-xs text-white/80">
-            {cidade || "Cidade não informada"}
-            {lugar.subcategoria ? ` · ${lugar.subcategoria}` : ""}
+            {rota.cidade || "Cidade não informada"}
+            {pontos > 0 && ` · ${pontos} ${pontos === 1 ? "ponto" : "pontos"}`}
           </p>
         </div>
       </div>
 
       <div className="p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {lugar.plano && (
-            <span className="rounded-lg bg-[#f7faf9] px-2 py-1 text-xs font-semibold text-[#5a6b66]">
-              Plano: {lugar.plano}
+        <div className="flex flex-wrap items-center gap-2 text-sm text-[#5a6b66]">
+          <span className="inline-flex items-center gap-1 rounded-lg bg-[#f7faf9] px-2 py-1 text-xs font-semibold">
+            <span aria-hidden>⏱</span>
+            {formatDuracao(rota.duracao_minutos)}
+          </span>
+          {rota.distancia_km != null && Number.isFinite(Number(rota.distancia_km)) && (
+            <span className="inline-flex items-center gap-1 rounded-lg bg-[#f7faf9] px-2 py-1 text-xs font-semibold">
+              <span aria-hidden>📍</span>
+              {Number(rota.distancia_km).toFixed(1)} km
             </span>
           )}
-          {lugar.telefone && (
-            <span className="rounded-lg bg-[#f7faf9] px-2 py-1 text-xs font-semibold text-[#5a6b66]">
-              📞 Contato
-            </span>
-          )}
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${dificuldadeBadgeClass(
+              rota.dificuldade
+            )}`}
+          >
+            {rota.dificuldade || "Fácil"}
+          </span>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#eef3f1] pt-3">
           <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${statusMeta.className}`}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              ativa ? "bg-[#d4ede8] text-[#1a4a3a]" : "bg-red-50 text-red-600"
+            }`}
           >
-            {statusMeta.label}
+            {ativa ? "Publicada" : "Inativa"}
           </span>
 
           <div className="flex flex-wrap items-center gap-2">
-            {ativo && (
+            <button
+              type="button"
+              onClick={onToggleDestaque}
+              title={rota.destaque ? "Remover destaque" : "Marcar como destaque"}
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
+                rota.destaque
+                  ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                  : "bg-[#f0f4f3] text-[#5a6b66] hover:bg-[#e3e9e6]"
+              }`}
+            >
+              {rota.destaque ? "★ Destaque" : "☆ Destacar"}
+            </button>
+            {ativa && (
               <Link
-                href={`/lugares/${lugar.id}`}
+                href={`/rotas/${rota.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-xl bg-[#f0f4f3] px-3 py-1.5 text-xs font-semibold text-[#1a4a3a] hover:bg-[#e3e9e6]"
@@ -220,12 +215,12 @@ function LugarCard({ lugar, onDeactivate }) {
               </Link>
             )}
             <Link
-              href={`/admin/locais/${lugar.id}/editar`}
+              href={`/admin/rotas/${rota.id}/editar`}
               className="rounded-xl bg-[#1a4a3a] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#153d31]"
             >
               Editar
             </Link>
-            {ativo && (
+            {ativa && (
               <button
                 type="button"
                 onClick={onDeactivate}
@@ -242,40 +237,40 @@ function LugarCard({ lugar, onDeactivate }) {
 }
 
 /**
- * Página admin de listagem de lugares com métricas, filtros e cards interativos.
+ * Listagem admin de rotas com métricas, filtros e cards interativos.
  * @returns {import("react").JSX.Element}
  */
-export default function LugaresGridPage() {
+export default function RotasGridPage() {
   const { loading } = useAdminAuth();
-  const [lugares, setLugares] = useState([]);
+  const [rotas, setRotas] = useState([]);
   const [search, setSearch] = useState("");
   const [categoria, setCategoria] = useState("Todas");
-  const [status, setStatus] = useState("Todos");
+  const [status, setStatus] = useState("Todas");
   const [cidade, setCidade] = useState("Todas");
   const [message, setMessage] = useState("");
 
-  const loadLugares = useCallback(async () => {
+  const loadRotas = useCallback(async () => {
     const supabase = createClient();
     const { data } = await supabase
-      .from("lugares")
-      .select("*, localizacoes(cidade)")
-      .order("nome");
+      .from("rotas")
+      .select("*, rota_pontos(count)")
+      .order("created_at", { ascending: false });
 
-    setLugares(data ?? []);
+    setRotas(data ?? []);
   }, []);
 
   useEffect(() => {
     if (loading) return undefined;
 
     const timer = setTimeout(() => {
-      loadLugares();
+      loadRotas();
       const params = new URLSearchParams(window.location.search);
-      if (params.get("success") === "created") setMessage("Local criado com sucesso.");
-      if (params.get("success") === "updated") setMessage("Local atualizado com sucesso.");
+      if (params.get("success") === "created") setMessage("Rota criada com sucesso.");
+      if (params.get("success") === "updated") setMessage("Rota atualizada com sucesso.");
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [loading, loadLugares]);
+  }, [loading, loadRotas]);
 
   useEffect(() => {
     if (!message) return undefined;
@@ -284,66 +279,74 @@ export default function LugaresGridPage() {
   }, [message]);
 
   /**
-   * @param {object} lugar
+   * @param {object} rota
    */
-  async function handleDelete(lugar) {
-    const confirmed = window.confirm(`Desativar "${lugar.nome}"?`);
+  async function toggleDestaque(rota) {
+    const supabase = createClient();
+    setRotas((items) =>
+      items.map((item) => ({ ...item, destaque: item.id === rota.id }))
+    );
+    await supabase.from("rotas").update({ destaque: false }).neq("id", rota.id);
+    await supabase.from("rotas").update({ destaque: true }).eq("id", rota.id);
+  }
+
+  /**
+   * @param {object} rota
+   */
+  async function softDelete(rota) {
+    const confirmed = window.confirm(`Desativar a rota "${getRotaNome(rota)}"?`);
     if (!confirmed) return;
 
     const supabase = createClient();
-    await supabase.from("lugares").update({ status: "desativado" }).eq("id", lugar.id);
-    setLugares((items) =>
-      items.map((item) =>
-        item.id === lugar.id ? { ...item, status: "desativado", ativa: false } : item
-      )
+    setRotas((items) =>
+      items.map((item) => (item.id === rota.id ? { ...item, ativa: false } : item))
     );
+    await supabase.from("rotas").update({ ativa: false }).eq("id", rota.id);
   }
 
   const stats = useMemo(() => {
-    const ativos = lugares.filter((l) => isAtivo(l)).length;
-    const emAnalise = lugares.filter((l) => l.status === "em_analise").length;
-    const destaques = lugares.filter((l) => l.destaque && isAtivo(l)).length;
+    const ativas = rotas.filter((r) => r.ativa !== false).length;
+    const destaque = rotas.filter((r) => r.destaque && r.ativa !== false).length;
     return {
-      total: lugares.length,
-      ativos,
-      inativos: lugares.length - ativos - emAnalise,
-      emAnalise,
-      destaques,
+      total: rotas.length,
+      ativas,
+      inativas: rotas.length - ativas,
+      destaque,
     };
-  }, [lugares]);
+  }, [rotas]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
 
-    return lugares.filter((lugar) => {
-      const nome = String(lugar.nome || "").toLowerCase();
-      const sub = String(lugar.subcategoria || "").toLowerCase();
+    return rotas.filter((rota) => {
+      const nome = getRotaNome(rota).toLowerCase();
       const matchesSearch =
         !term ||
         nome.includes(term) ||
-        sub.includes(term) ||
-        getCidade(lugar).toLowerCase().includes(term);
-      const matchesCategoria = categoria === "Todas" || lugar.categoria === categoria;
-      const ativo = isAtivo(lugar);
+        String(rota.cidade || "")
+          .toLowerCase()
+          .includes(term);
+      const cat = normalizeCategoriaRota(rota.categoria);
+      const matchesCategoria = categoria === "Todas" || cat === categoria;
+      const ativa = rota.ativa !== false;
       const matchesStatus =
-        status === "Todos" ||
-        (status === "Ativos" && ativo) ||
-        (status === "Inativos" && !ativo && lugar.status !== "em_analise") ||
-        (status === "Em análise" && lugar.status === "em_analise") ||
-        (status === "Destaque" && lugar.destaque && ativo);
-      const matchesCidade = cidade === "Todas" || getCidade(lugar) === cidade;
+        status === "Todas" ||
+        (status === "Ativas" && ativa) ||
+        (status === "Inativas" && !ativa) ||
+        (status === "Destaque" && rota.destaque && ativa);
+      const matchesCidade = cidade === "Todas" || rota.cidade === cidade;
 
       return matchesSearch && matchesCategoria && matchesStatus && matchesCidade;
     });
-  }, [lugares, search, categoria, status, cidade]);
+  }, [rotas, search, categoria, status, cidade]);
 
-  const novoLugarLink = (
+  const novaRotaLink = (
     <Link
-      href="/admin/locais/novo"
+      href="/admin/rotas/nova"
       className="inline-flex items-center gap-2 rounded-xl bg-[#1a4a3a] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#1a4a3a]/25 transition hover:bg-[#153d31]"
     >
       <span className="text-lg leading-none">+</span>
-      Novo local
+      Nova rota
     </Link>
   );
 
@@ -357,9 +360,9 @@ export default function LugaresGridPage() {
 
   return (
     <AdminShell
-      title="Locais"
-      subtitle="Estabelecimentos e pontos do guia na região"
-      headerAction={novoLugarLink}
+      title="Rotas"
+      subtitle="Trilhas, roteiros e percursos curados para o app"
+      headerAction={novaRotaLink}
     >
       {message && (
         <div
@@ -377,26 +380,21 @@ export default function LugaresGridPage() {
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total" value={stats.total} accent="text-[#1a4a3a]" />
         <StatCard
-          label="Publicados"
-          value={stats.ativos}
+          label="Publicadas"
+          value={stats.ativas}
           hint="visíveis no app"
           accent="text-emerald-700"
         />
         <StatCard
           label="Em destaque"
-          value={stats.destaques}
-          hint="plano comercial"
+          value={stats.destaque}
+          hint="carrossel da home"
           accent="text-amber-700"
         />
-        <StatCard
-          label="Em análise"
-          value={stats.emAnalise}
-          accent="text-amber-600"
-        />
-        <StatCard label="Inativos" value={stats.inativos} accent="text-[#5a6b66]" />
+        <StatCard label="Inativas" value={stats.inativas} accent="text-[#5a6b66]" />
       </div>
 
       <div className="mb-5 space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
@@ -407,20 +405,20 @@ export default function LugaresGridPage() {
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por nome, subcategoria ou cidade..."
+            placeholder="Buscar por nome ou cidade..."
             className="w-full rounded-xl bg-[#f0f4f3] py-2.5 pl-10 pr-3 text-sm outline-none ring-[#1a4a3a]/20 focus:ring-2"
           />
         </div>
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9aa8a3]">
-            Categoria
+            Tipo de rota
           </p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             <FilterChip active={categoria === "Todas"} onClick={() => setCategoria("Todas")}>
               Todas
             </FilterChip>
-            {CATEGORIAS_LUGAR.map((item) => (
+            {CATEGORIAS_ROTA.map((item) => (
               <FilterChip
                 key={item.nome}
                 active={categoria === item.nome}
@@ -438,7 +436,7 @@ export default function LugaresGridPage() {
               Status
             </p>
             <div className="flex flex-wrap gap-2">
-              {["Todos", "Ativos", "Inativos", "Em análise", "Destaque"].map((item) => (
+              {["Todas", "Ativas", "Inativas", "Destaque"].map((item) => (
                 <FilterChip
                   key={item}
                   active={status === item}
@@ -463,27 +461,32 @@ export default function LugaresGridPage() {
 
       <p className="mb-4 text-sm text-[#5a6b66]">
         Exibindo <strong className="text-[#1a4a3a]">{filtered.length}</strong> de{" "}
-        {lugares.length} locais
+        {rotas.length} rotas
       </p>
 
       {filtered.length === 0 ? (
         <div className="rounded-2xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
-          <p className="text-4xl">📍</p>
-          <h2 className="mt-3 text-lg font-bold text-[#1a2e28]">Nenhum local encontrado</h2>
+          <p className="text-4xl">🗺️</p>
+          <h2 className="mt-3 text-lg font-bold text-[#1a2e28]">Nenhuma rota encontrada</h2>
           <p className="mt-2 text-sm text-[#5a6b66]">
-            Ajuste os filtros ou cadastre o primeiro lugar do guia.
+            Ajuste os filtros ou crie a primeira rota do guia.
           </p>
           <Link
-            href="/admin/locais/novo"
+            href="/admin/rotas/nova"
             className="mt-6 inline-flex rounded-xl bg-[#1a4a3a] px-5 py-2.5 text-sm font-semibold text-white"
           >
-            Criar local
+            Criar rota
           </Link>
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((lugar) => (
-            <LugarCard key={lugar.id} lugar={lugar} onDeactivate={() => handleDelete(lugar)} />
+          {filtered.map((rota) => (
+            <RotaCard
+              key={rota.id}
+              rota={rota}
+              onToggleDestaque={() => toggleDestaque(rota)}
+              onDeactivate={() => softDelete(rota)}
+            />
           ))}
         </div>
       )}

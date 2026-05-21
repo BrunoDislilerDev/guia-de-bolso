@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import AvaliacaoForm from "@/components/AvaliacaoForm";
 import LoginModal from "@/components/LoginModal";
 import LugarAvaliacoesSection from "@/components/lugar/LugarAvaliacoesSection";
+import { AVALIACAO_STATUS_APROVADOS } from "@/lib/avaliacoes";
 import LugarCtaFixo from "@/components/lugar/LugarCtaFixo";
 import LugarHero from "@/components/lugar/LugarHero";
 import LugarClimaWidget from "@/components/lugar/LugarClimaWidget";
@@ -111,20 +113,6 @@ function instagramUrl(value) {
 }
 
 /**
- * Display name for a review author from joined profile data.
- * @param {object} avaliacao - Review with optional `profiles` / `perfis`.
- * @returns {string} Reviewer name or anonymous fallback.
- */
-function getReviewerName(avaliacao) {
-  return (
-    avaliacao.profiles?.full_name ||
-    avaliacao.profiles?.nome ||
-    avaliacao.perfis?.nome ||
-    "Usuário anônimo"
-  );
-}
-
-/**
  * Bottom sheet for hours, navigation choice, and review form on place detail.
  * @param {{ isOpen: boolean, onClose: () => void, title: string, children: import("react").ReactNode }} props
  * @returns {import("react").ReactElement|null}
@@ -217,10 +205,7 @@ export default function LugarPage() {
   const [sobreExpandido, setSobreExpandido] = useState(false);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [jaAvaliou, setJaAvaliou] = useState(false);
-  const [showAvaliacao, setShowAvaliacao] = useState(false);
-  const [nota, setNota] = useState(0);
-  const [comentario, setComentario] = useState("");
-  const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
+  const [showAvaliacaoForm, setShowAvaliacaoForm] = useState(false);
   const [toast, setToast] = useState("");
   const [motivoModal, setMotivoModal] = useState("favoritar");
   const [localizacao, setLocalizacao] = useState(null);
@@ -378,9 +363,9 @@ export default function LugarPage() {
 
     supabase
       .from("avaliacoes")
-      .select("*, profiles:user_id(full_name,nome)")
+      .select("*, perfis:user_id(nome, foto_url, created_at)")
       .eq("lugar_id", id)
-      .eq("status", "aprovada")
+      .in("status", AVALIACAO_STATUS_APROVADOS)
       .order("created_at", { ascending: false })
       .then(async ({ data, error }) => {
         if (!error) {
@@ -392,7 +377,7 @@ export default function LugarPage() {
           .from("avaliacoes")
           .select("*")
           .eq("lugar_id", id)
-          .eq("status", "aprovada")
+          .in("status", AVALIACAO_STATUS_APROVADOS)
           .order("created_at", { ascending: false });
 
         setAvaliacoes(fallbackData ?? []);
@@ -470,37 +455,19 @@ export default function LugarPage() {
       return;
     }
 
-    setShowAvaliacao(true);
+    setShowAvaliacaoForm(true);
   }
 
   /**
-   * Submits a pending review for moderation.
-   * @returns {Promise<void>}
+   * Após envio do formulário de avaliação.
+   * @returns {void}
    */
-  async function handleEnviarAvaliacao() {
-    if (!user || !lugar || nota === 0) return;
-
-    setEnviandoAvaliacao(true);
-
-    const supabase = createClient();
-    const { error } = await supabase.from("avaliacoes").insert({
-      lugar_id: lugar.id,
-      user_id: user.id,
-      nota,
-      comentario: comentario.trim(),
-      status: "pendente",
-    });
-
-    setEnviandoAvaliacao(false);
-
-    if (error) return;
-
-    setShowAvaliacao(false);
+  function handleAvaliacaoEnviada() {
     setJaAvaliou(true);
-    setNota(0);
-    setComentario("");
-    setToast("Avaliação enviada! Aparecerá após aprovação.");
-    setTimeout(() => setToast(""), 3500);
+    setToast(
+      "Obrigado! Sua avaliação será analisada pela nossa equipe e publicada em breve."
+    );
+    setTimeout(() => setToast(""), 4000);
   }
 
   if (loading) {
@@ -749,12 +716,9 @@ export default function LugarPage() {
 
           <LugarAvaliacoesSection
             avaliacoes={avaliacoes}
-            mediaAvaliacoes={mediaAvaliacoes}
-            totalAvaliacoes={totalAvaliacoes}
-            resumo={resumoAvaliacoes}
-            getReviewerName={getReviewerName}
             jaAvaliou={jaAvaliou}
             onAvaliar={handleOpenAvaliacao}
+            toast={toast}
           />
         </div>
       </div>
@@ -814,43 +778,17 @@ export default function LugarPage() {
         </div>
       </BottomSheet>
 
-      <BottomSheet
-        isOpen={showAvaliacao}
-        onClose={() => setShowAvaliacao(false)}
-        title="Sua avaliação"
-      >
-        <div className="flex justify-center gap-1">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setNota(value)}
-              className={`text-4xl ${
-                value <= nota ? "text-[#e8a838]" : "text-[#d8dfdc]"
-              }`}
-              aria-label={`${value} estrelas`}
-            >
-              ★
-            </button>
-          ))}
-        </div>
-
-        <textarea
-          value={comentario}
-          onChange={(event) => setComentario(event.target.value)}
-          placeholder="Conte sua experiência..."
-          className="mt-5 min-h-28 w-full rounded-2xl bg-[#f0f4f3] p-4 text-sm text-[#1a2e28] placeholder:text-[#9aa8a3] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30"
-        />
-
-        <button
-          type="button"
-          onClick={handleEnviarAvaliacao}
-          disabled={nota === 0 || enviandoAvaliacao}
-          className="mt-4 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528] disabled:opacity-60"
-        >
-          {enviandoAvaliacao ? "Enviando..." : "Enviar avaliação"}
-        </button>
-      </BottomSheet>
+      <AvaliacaoForm
+        isOpen={showAvaliacaoForm}
+        onClose={() => setShowAvaliacaoForm(false)}
+        lugar={{
+          id: lugar.id,
+          nome: lugar.nome,
+          categoria: lugar.categoria,
+          subcategoria: lugar.subcategoria,
+        }}
+        onSuccess={handleAvaliacaoEnviada}
+      />
 
       <LoginModal
         isOpen={isModalOpen}

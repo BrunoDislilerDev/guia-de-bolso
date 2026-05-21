@@ -1,30 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
+import {
+  AVALIACAO_STATUS,
+  AVALIACAO_STATUS_APROVADOS,
+  getIniciaisAutor,
+  getNomeAutorAvaliacao,
+  getSentimentoEmoji,
+  parseAspectos,
+  parseSugestaoIa,
+} from "@/lib/avaliacoes";
+import { getCategoriaChipClass } from "@/lib/avaliacaoAspectos";
 import { createClient } from "@/lib/supabase";
 
-const tabs = ["pendente", "aprovada", "rejeitada"];
+const TABS = [
+  { id: AVALIACAO_STATUS.PENDENTE, label: "Pendentes" },
+  { id: AVALIACAO_STATUS.APROVADO, label: "Aprovadas", legacy: "aprovada" },
+  { id: AVALIACAO_STATUS.REJEITADO, label: "Rejeitadas", legacy: "rejeitada" },
+  {
+    id: AVALIACAO_STATUS.AGUARDANDO_EDICAO,
+    label: "Aguardando edição",
+  },
+];
+
+const MOTIVOS_REJEICAO = [
+  "Conteúdo inapropriado",
+  "Spam ou propaganda",
+  "Irrelevante para o lugar",
+  "Linguagem ofensiva",
+  "Outro",
+];
 
 /**
- * Renders filled and empty star characters for a rating.
- * @param {number|string} value - Star count 0–5.
- * @returns {import("react").ReactElement}
+ * @param {number|string} value
+ * @returns {import("react").JSX.Element}
  */
 function Stars({ value }) {
   const nota = Number(value) || 0;
   return (
-    <span className="text-[#e8a838]">
-      {"★".repeat(nota)}
-      <span className="text-zinc-300">{"★".repeat(5 - nota)}</span>
+    <span className="text-lg">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          className={star <= nota ? "text-amber-400" : "text-gray-200"}
+        >
+          ★
+        </span>
+      ))}
     </span>
   );
 }
 
 /**
- * Formats an ISO date for display in pt-BR.
- * @param {string} [value] - ISO timestamp.
- * @returns {string} Formatted date or empty string.
+ * @param {string} [value]
+ * @returns {string}
  */
 function formatDate(value) {
   if (!value) return "";
@@ -36,54 +66,200 @@ function formatDate(value) {
 }
 
 /**
- * Admin moderation UI for reviews by status tab.
- * @returns {import("react").ReactElement}
+ * @param {string} [createdAt]
+ * @returns {boolean}
+ */
+function isNovoUsuario(createdAt) {
+  if (!createdAt) return false;
+  const created = new Date(createdAt);
+  const diff = Date.now() - created.getTime();
+  return diff < 7 * 24 * 60 * 60 * 1000;
+}
+
+/**
+ * @param {string|null} tipo
+ * @returns {{ label: string, className: string }}
+ */
+function getSugestaoBadge(tipo) {
+  if (tipo === "aprovar") {
+    return { label: "✓ Aprovar", className: "bg-emerald-100 text-emerald-800" };
+  }
+  if (tipo === "rejeitar") {
+    return { label: "✗ Rejeitar", className: "bg-red-100 text-red-800" };
+  }
+  if (tipo === "revisar") {
+    return { label: "⚠ Revisar", className: "bg-amber-100 text-amber-800" };
+  }
+  return { label: "IA", className: "bg-gray-100 text-gray-600" };
+}
+
+/**
+ * @param {object} props
+ * @returns {import("react").JSX.Element|null}
+ */
+function AdminModal({ isOpen, title, children, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <h3 className="text-lg font-bold text-[#1a2e28]">{title}</h3>
+        <div className="mt-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Admin moderation UI for reviews.
+ * @returns {import("react").JSX.Element}
  */
 export default function AdminAvaliacoesPage() {
   const { loading } = useAdminAuth();
-  const [activeTab, setActiveTab] = useState("pendente");
+  const [activeTab, setActiveTab] = useState(AVALIACAO_STATUS.PENDENTE);
   const [avaliacoes, setAvaliacoes] = useState([]);
+  const [counts, setCounts] = useState({});
+  const [contagemAprovadasPorUsuario, setContagemAprovadasPorUsuario] = useState({});
+  const [rejectModal, setRejectModal] = useState(null);
+  const [editModal, setEditModal] = useState(null);
+  const [motivoSelect, setMotivoSelect] = useState(MOTIVOS_REJEICAO[0]);
+  const [motivoDetalhe, setMotivoDetalhe] = useState("");
+  const [instrucaoEdicao, setInstrucaoEdicao] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  const loadCounts = useCallback(async () => {
+    const supabase = createClient();
+    const next = {};
+
+    await Promise.all(
+      TABS.map(async (tab) => {
+        const statuses = tab.legacy ? [tab.id, tab.legacy] : [tab.id];
+        const { count } = await supabase
+          .from("avaliacoes")
+          .select("id", { count: "exact", head: true })
+          .in("status", statuses);
+        next[tab.id] = count ?? 0;
+      })
+    );
+
+    setCounts(next);
+  }, []);
+
+  const loadContagemAprovadas = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("avaliacoes")
+      .select("user_id")
+      .in("status", AVALIACAO_STATUS_APROVADOS);
+
+    const map = {};
+    for (const row of data ?? []) {
+      if (!row.user_id) continue;
+      map[row.user_id] = (map[row.user_id] || 0) + 1;
+    }
+    setContagemAprovadasPorUsuario(map);
+  }, []);
+
+  const loadAvaliacoes = useCallback(
+    async (status) => {
+      const supabase = createClient();
+      const tab = TABS.find((item) => item.id === status);
+      const statuses = tab?.legacy ? [status, tab.legacy] : [status];
+
+      const { data, error } = await supabase
+        .from("avaliacoes")
+        .select("*, lugares(nome, categoria), perfis:user_id(nome, foto_url, created_at)")
+        .in("status", statuses)
+        .order("created_at", { ascending: false });
+
+      if (!error) {
+        setAvaliacoes(data ?? []);
+        return;
+      }
+
+      const fallback = await supabase
+        .from("avaliacoes")
+        .select("*, lugares(nome, categoria)")
+        .in("status", statuses)
+        .order("created_at", { ascending: false });
+
+      setAvaliacoes(fallback.data ?? []);
+    },
+    []
+  );
 
   useEffect(() => {
-    if (!loading) loadAvaliacoes(activeTab);
-  }, [loading, activeTab]);
+    if (loading) return;
+    loadCounts();
+    loadContagemAprovadas();
+    loadAvaliacoes(activeTab);
+  }, [loading, activeTab, loadAvaliacoes, loadCounts, loadContagemAprovadas]);
 
   /**
-   * Loads reviews for the given moderation status.
-   * @param {string} status - `pendente`, `aprovada`, or `rejeitada`.
-   * @returns {Promise<void>}
+   * @param {string} id
+   * @param {object} payload
    */
-  async function loadAvaliacoes(status) {
+  async function salvarModeracao(id, payload) {
+    setSalvando(true);
     const supabase = createClient();
-    const { data, error } = await supabase
+    await supabase
       .from("avaliacoes")
-      .select("*, lugares(nome), profiles:user_id(full_name,nome)")
-      .eq("status", status)
-      .order("created_at", { ascending: false });
+      .update({
+        ...payload,
+        moderado_em: new Date().toISOString(),
+      })
+      .eq("id", id);
 
-    if (!error) {
-      setAvaliacoes(data ?? []);
-      return;
-    }
-
-    const fallback = await supabase
-      .from("avaliacoes")
-      .select("*")
-      .eq("status", status)
-      .order("created_at", { ascending: false });
-    setAvaliacoes(fallback.data ?? []);
+    setSalvando(false);
+    setAvaliacoes((items) => items.filter((item) => item.id !== id));
+    loadCounts();
+    loadContagemAprovadas();
   }
 
   /**
-   * Updates review status and removes it from the current list.
-   * @param {string} id - Review id.
-   * @param {string} status - New status.
-   * @returns {Promise<void>}
+   * @param {string} id
    */
-  async function updateStatus(id, status) {
-    const supabase = createClient();
-    await supabase.from("avaliacoes").update({ status }).eq("id", id);
-    setAvaliacoes((items) => items.filter((item) => item.id !== id));
+  async function aprovar(id) {
+    await salvarModeracao(id, { status: AVALIACAO_STATUS.APROVADO });
+  }
+
+  /**
+   * @param {string} id
+   */
+  async function confirmarRejeicao(id) {
+    const motivo = motivoDetalhe.trim()
+      ? `${motivoSelect}: ${motivoDetalhe.trim()}`
+      : motivoSelect;
+
+    await salvarModeracao(id, {
+      status: AVALIACAO_STATUS.REJEITADO,
+      motivo_rejeicao: motivo,
+    });
+    setRejectModal(null);
+    setMotivoSelect(MOTIVOS_REJEICAO[0]);
+    setMotivoDetalhe("");
+  }
+
+  /**
+   * @param {string} id
+   */
+  async function confirmarEdicao(id) {
+    if (!instrucaoEdicao.trim()) return;
+
+    await salvarModeracao(id, {
+      status: AVALIACAO_STATUS.AGUARDANDO_EDICAO,
+      motivo_rejeicao: instrucaoEdicao.trim(),
+    });
+    setEditModal(null);
+    setInstrucaoEdicao("");
   }
 
   if (loading) {
@@ -96,19 +272,28 @@ export default function AdminAvaliacoesPage() {
 
   return (
     <AdminShell title="Avaliações">
-      <div className="mb-5 flex gap-2">
-        {tabs.map((tab) => (
+      <div className="mb-5 flex flex-wrap gap-2">
+        {TABS.map((tab) => (
           <button
-            key={tab}
+            key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold capitalize ${
-              activeTab === tab
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${
+              activeTab === tab.id
                 ? "bg-[#1a4a3a] text-white"
-                : "bg-white text-[#1a4a3a]"
+                : "bg-white text-[#1a4a3a] shadow-sm"
             }`}
           >
-            {tab}s
+            {tab.label}
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs ${
+                activeTab === tab.id
+                  ? "bg-white/20 text-white"
+                  : "bg-[#f0f4f3] text-[#5a6b66]"
+              }`}
+            >
+              {counts[tab.id] ?? 0}
+            </span>
           </button>
         ))}
       </div>
@@ -119,48 +304,205 @@ export default function AdminAvaliacoesPage() {
             Nenhuma avaliação nessa aba.
           </p>
         ) : (
-          avaliacoes.map((avaliacao) => (
-            <article key={avaliacao.id} className="rounded-2xl bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className="font-bold text-[#1a2e28]">
+          avaliacoes.map((avaliacao) => {
+            const nome = getNomeAutorAvaliacao(avaliacao);
+            const fotoUrl = avaliacao.perfis?.foto_url;
+            const perfilCreated = avaliacao.perfis?.created_at;
+            const aprovadasUsuario =
+              contagemAprovadasPorUsuario[avaliacao.user_id] || 0;
+            const aspectos = parseAspectos(avaliacao.aspectos);
+            const { tipo, motivo } = parseSugestaoIa(avaliacao.sugestao_ia);
+            const sugestaoBadge = getSugestaoBadge(tipo);
+            const categoria = avaliacao.lugares?.categoria;
+
+            return (
+              <article
+                key={avaliacao.id}
+                className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#e8eeee]/80"
+              >
+                <div className="flex flex-wrap items-start gap-3">
+                  {fotoUrl ? (
+                    <img
+                      src={fotoUrl}
+                      alt=""
+                      className="h-11 w-11 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#d4ede8] text-sm font-bold text-[#1a4a3a]">
+                      {getIniciaisAutor(nome)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-[#1a2e28]">{nome}</p>
+                      {isNovoUsuario(perfilCreated) && (
+                        <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">
+                          Novo usuário
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#9aa8a3]">
+                      Cadastro: {formatDate(perfilCreated)} ·{" "}
+                      {aprovadasUsuario}{" "}
+                      {aprovadasUsuario === 1 ? "avaliação" : "avaliações"}
+                    </p>
+                  </div>
+                  <p className="text-xs text-[#9aa8a3]">
+                    {formatDate(avaliacao.created_at)}
+                  </p>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-[#1a2e28]">
                     {avaliacao.lugares?.nome || "Lugar"}
                   </p>
-                  <p className="text-sm text-[#5a6b66]">
-                    {avaliacao.profiles?.full_name ||
-                      avaliacao.profiles?.nome ||
-                      "Usuário anônimo"}{" "}
-                    · {formatDate(avaliacao.created_at)}
-                  </p>
+                  {categoria && (
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${getCategoriaChipClass(categoria)}`}
+                    >
+                      {categoria}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3">
                   <Stars value={avaliacao.nota} />
+                  {aspectos.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {aspectos.map((aspecto) => (
+                        <span
+                          key={aspecto}
+                          className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-700"
+                        >
+                          {aspecto}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <p className="mt-2 text-sm leading-relaxed text-[#5a6b66]">
                     {avaliacao.comentario || "Sem comentário"}
                   </p>
                 </div>
 
-                {activeTab === "pendente" && (
-                  <div className="flex gap-2">
+                {avaliacao.sugestao_ia && (
+                  <div className="mt-4 rounded-xl bg-[#f0f4f3] p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${sugestaoBadge.className}`}
+                      >
+                        {sugestaoBadge.label}
+                      </span>
+                      <span className="text-base" title={avaliacao.sentimento || ""}>
+                        {getSentimentoEmoji(avaliacao.sentimento)}
+                      </span>
+                    </div>
+                    {motivo && (
+                      <p className="mt-1.5 text-xs text-[#5a6b66]">{motivo}</p>
+                    )}
+                  </div>
+                )}
+
+                {(activeTab === AVALIACAO_STATUS.PENDENTE ||
+                  activeTab === AVALIACAO_STATUS.AGUARDANDO_EDICAO) && (
+                  <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => updateStatus(avaliacao.id, "aprovada")}
-                      className="rounded-lg bg-[#1a4a3a] px-3 py-2 text-sm font-semibold text-white"
+                      disabled={salvando}
+                      onClick={() => aprovar(avaliacao.id)}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       Aprovar
                     </button>
                     <button
                       type="button"
-                      onClick={() => updateStatus(avaliacao.id, "rejeitada")}
-                      className="rounded-lg bg-[#d9534f] px-3 py-2 text-sm font-semibold text-white"
+                      disabled={salvando}
+                      onClick={() => {
+                        setRejectModal(avaliacao);
+                        setMotivoSelect(MOTIVOS_REJEICAO[0]);
+                        setMotivoDetalhe("");
+                      }}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       Rejeitar
                     </button>
+                    <button
+                      type="button"
+                      disabled={salvando}
+                      onClick={() => {
+                        setEditModal(avaliacao);
+                        setInstrucaoEdicao("");
+                      }}
+                      className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                    >
+                      Solicitar edição
+                    </button>
                   </div>
                 )}
-              </div>
-            </article>
-          ))
+              </article>
+            );
+          })
         )}
       </div>
+
+      <AdminModal
+        isOpen={Boolean(rejectModal)}
+        title="Motivo da rejeição"
+        onClose={() => setRejectModal(null)}
+      >
+        <label className="block text-sm font-medium text-[#1a2e28]">
+          Motivo
+          <select
+            value={motivoSelect}
+            onChange={(event) => setMotivoSelect(event.target.value)}
+            className="mt-1 w-full rounded-xl border border-[#e8eeee] bg-white px-3 py-2 text-sm"
+          >
+            {MOTIVOS_REJEICAO.map((motivo) => (
+              <option key={motivo} value={motivo}>
+                {motivo}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="mt-3 block text-sm font-medium text-[#1a2e28]">
+          Detalhes (opcional)
+          <textarea
+            value={motivoDetalhe}
+            onChange={(event) => setMotivoDetalhe(event.target.value)}
+            rows={3}
+            className="mt-1 w-full rounded-xl border border-[#e8eeee] bg-white px-3 py-2 text-sm"
+          />
+        </label>
+        <button
+          type="button"
+          disabled={salvando}
+          onClick={() => rejectModal && confirmarRejeicao(rejectModal.id)}
+          className="mt-4 w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          Confirmar rejeição
+        </button>
+      </AdminModal>
+
+      <AdminModal
+        isOpen={Boolean(editModal)}
+        title="Solicitar edição ao usuário"
+        onClose={() => setEditModal(null)}
+      >
+        <textarea
+          value={instrucaoEdicao}
+          onChange={(event) => setInstrucaoEdicao(event.target.value)}
+          placeholder="Ex: Seu comentário está muito vago. Pode descrever melhor sua experiência?"
+          rows={4}
+          className="w-full rounded-xl border border-[#e8eeee] bg-white px-3 py-2 text-sm"
+        />
+        <button
+          type="button"
+          disabled={salvando || !instrucaoEdicao.trim()}
+          onClick={() => editModal && confirmarEdicao(editModal.id)}
+          className="mt-4 w-full rounded-xl bg-amber-500 py-3 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          Enviar solicitação
+        </button>
+      </AdminModal>
     </AdminShell>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PlaceCard from "@/components/PlaceCard";
 import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
 import { createClient } from "@/lib/supabase";
@@ -107,6 +107,26 @@ export default function CategoriaPage() {
     return () => clearTimeout(timer);
   }, [categoria]);
 
+  /** Só exibe chips de subcategorias com pelo menos um local ativo nesta categoria. */
+  const subcategoriasComLocais = useMemo(() => {
+    const nomesEmUso = new Set(
+      lugares
+        .map((lugar) => lugar.subcategoria?.trim())
+        .filter(Boolean)
+    );
+
+    return subcategorias.filter((item) => nomesEmUso.has(item.nome));
+  }, [lugares, subcategorias]);
+
+  useEffect(() => {
+    if (
+      subcategoriaSelecionada !== "Todos" &&
+      !subcategoriasComLocais.some((item) => item.nome === subcategoriaSelecionada)
+    ) {
+      setSubcategoriaSelecionada("Todos");
+    }
+  }, [subcategoriasComLocais, subcategoriaSelecionada]);
+
   const lugaresFiltrados =
     subcategoriaSelecionada === "Todos"
       ? lugares
@@ -147,16 +167,16 @@ export default function CategoriaPage() {
           />
         )}
 
-        {subcategorias.length > 0 && (
+        {subcategoriasComLocais.length > 0 && (
           <div className="mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
             {[
               { id: "todos", nome: "Todos", icone: "" },
-              ...subcategorias,
+              ...subcategoriasComLocais,
             ].map((subcategoria) => {
               const selected = subcategoriaSelecionada === subcategoria.nome;
               return (
                 <button
-                  key={subcategoria.id}
+                  key={subcategoria.id ?? subcategoria.nome}
                   type="button"
                   onClick={() => setSubcategoriaSelecionada(subcategoria.nome)}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${

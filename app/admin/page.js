@@ -305,7 +305,7 @@ export default function AdminDashboard() {
   /**
    * Approves or rejects a review from the dashboard queue.
    * @param {string} id - Review id.
-   * @param {string} status - New status (`aprovada` | `rejeitada`).
+   * @param {string} status - New status (`aprovado` | `rejeitado`).
    * @returns {Promise<void>}
    */
   async function updateStatus(id, status) {
@@ -398,14 +398,14 @@ export default function AdminDashboard() {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => updateStatus(avaliacao.id, "aprovada")}
+                      onClick={() => updateStatus(avaliacao.id, "aprovado")}
                       className="rounded-lg bg-[#1a4a3a] px-3 py-2 text-sm font-semibold text-white"
                     >
                       Aprovar
                     </button>
                     <button
                       type="button"
-                      onClick={() => updateStatus(avaliacao.id, "rejeitada")}
+                      onClick={() => updateStatus(avaliacao.id, "rejeitado")}
                       className="rounded-lg bg-[#d9534f] px-3 py-2 text-sm font-semibold text-white"
                     >
                       Rejeitar
