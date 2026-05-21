@@ -718,7 +718,6 @@ export default function RotaForm({
             onChange={(event) => setForm({ ...form, cidade: event.target.value })}
             className={inputClass()}
           >
-            <option>Garopaba</option>
             <option>Imbituba</option>
           </select>
         </Field>

@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
-const SYSTEM_PROMPT = `Você é um assistente do app Guia de Bolso, um guia local de Garopaba e Imbituba.
+const SYSTEM_PROMPT = `Você é um assistente do app Guia de Bolso, um guia local de Imbituba, Santa Catarina.
 Com base nos lugares disponíveis, retorne os IDs dos lugares mais relevantes para a busca do usuário.
 Responda APENAS com um array JSON de IDs, ex: ["uuid-1", "uuid-2"].
 Use exatamente os IDs fornecidos na lista de lugares. Se nenhum lugar for relevante, retorne [].

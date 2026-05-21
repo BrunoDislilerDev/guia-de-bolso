@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
@@ -114,7 +115,8 @@ function SectionUnavailable({ title }) {
  * Home page: contextual feed, smart search, favorites, and premium gates.
  * @returns {import("react").ReactElement}
  */
-export default function Home() {
+function Home() {
+  const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
@@ -538,6 +540,30 @@ export default function Home() {
     executarBusca(plano.query, plano.filtro);
   }
 
+  useEffect(() => {
+    if (!onboardingChecked || showOnboarding || authLoading) return undefined;
+
+    const abrirBusca = searchParams.get("busca") === "1";
+    const query = searchParams.get("q")?.trim();
+
+    if (!abrirBusca && !query) return undefined;
+
+    if (query) {
+      setTermoBusca(query);
+      setFiltroBuscaStatus(FILTRO_STATUS_BUSCA.TODOS);
+      executarBusca(query);
+      return undefined;
+    }
+
+    setVisitadosRecentes(getLugaresVisitados());
+    setSearchMode("browse");
+    const focusTimer = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 200);
+
+    return () => window.clearTimeout(focusTimer);
+  }, [onboardingChecked, showOnboarding, authLoading, searchParams]);
+
   const isFavorito = (lugar) => favoritos.includes(String(lugar.id));
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const buscaLimiteDiarioAtingido =
@@ -722,5 +748,22 @@ export default function Home() {
         }}
       />
     </div>
+  );
+}
+
+/**
+ * @returns {import("react").ReactElement}
+ */
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
+          Carregando...
+        </div>
+      }
+    >
+      <Home />
+    </Suspense>
   );
 }

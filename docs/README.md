@@ -1,6 +1,6 @@
 # Documentation
 
-Technical documentation for **[Guia de Bolso](https://guia-de-bolso-puce.vercel.app)** — a mobile-first local discovery app for Garopaba and Imbituba (SC, Brazil).
+Technical documentation for **[Guia de Bolso](https://guia-de-bolso-puce.vercel.app)** — a mobile-first local discovery app for Imbituba (SC, Brazil).
 
 New to the project? Start with the [root README](../README.md), then follow the [recommended reading order](#recommended-reading-order) below.
 

@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
-const SYSTEM_PROMPT = `Você é um especialista local em Imbituba e Garopaba, Santa Catarina.
+const SYSTEM_PROMPT = `Você é um especialista local em Imbituba, Santa Catarina.
 Monte um roteiro personalizado usando APENAS os lugares da lista (nome exato).
 Use EXATAMENTE este formato markdown:
 

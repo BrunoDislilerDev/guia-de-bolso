@@ -1,6 +1,6 @@
 # Features
 
-User-facing product reference for **Guia de Bolso** (Garopaba & Imbituba, SC). Behavior is derived from the current codebase; implementation details live in [Architecture](./architecture.md) and [API](./api.md).
+User-facing product reference for **Guia de Bolso** (Imbituba, SC). Behavior is derived from the current codebase; implementation details live in [Architecture](./architecture.md) and [API](./api.md).
 
 **Product question the app answers:** *“What should I do right now?”*
 

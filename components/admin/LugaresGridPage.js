@@ -455,7 +455,6 @@ export default function LugaresGridPage() {
             className="w-full rounded-xl bg-[#f0f4f3] px-3 py-2 text-sm font-semibold text-[#1a4a3a] outline-none ring-[#1a4a3a]/20 focus:ring-2 sm:w-44"
           >
             <option>Todas</option>
-            <option>Garopaba</option>
             <option>Imbituba</option>
           </select>
         </div>

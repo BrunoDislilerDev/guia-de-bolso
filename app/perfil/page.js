@@ -1,156 +1,84 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AuthFlow from "@/components/AuthFlow";
 import BottomNav from "@/components/BottomNav";
+import PremiumPaywallSheet from "@/components/PremiumPaywallSheet";
+import PerfilHero from "@/components/perfil/PerfilHero";
+import PerfilLoggedOut from "@/components/perfil/PerfilLoggedOut";
+import PerfilNavAppSheet from "@/components/perfil/PerfilNavAppSheet";
+import PerfilPremiumCard from "@/components/perfil/PerfilPremiumCard";
+import PerfilQuickLinks from "@/components/perfil/PerfilQuickLinks";
+import PerfilSettingsGroup from "@/components/perfil/PerfilSettingsGroup";
+import PerfilSkeleton from "@/components/perfil/PerfilSkeleton";
+import PerfilStats from "@/components/perfil/PerfilStats";
+import PerfilBottomSheet from "@/components/perfil/PerfilBottomSheet";
+import {
+  MAP_PREFERENCE_STORAGE_KEY,
+  getNavAppLabel,
+  getUserName,
+  providerName,
+  resolveAvatarUrl,
+} from "@/lib/perfil";
+import { isPremiumActive } from "@/lib/premium";
+import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 
 /**
- * Person silhouette icon for logged-out profile state.
- * @param {{ className?: string }} props - Optional Tailwind classes.
- * @returns {import("react").ReactElement}
- */
-function IconPerson({ className = "h-16 w-16" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-    </svg>
-  );
-}
-
-const navigationApps = [
-  { key: "google", label: "Google Maps" },
-  { key: "apple", label: "Apple Maps" },
-  { key: "waze", label: "Waze" },
-];
-
-/**
- * Human-readable auth provider label.
- * @param {import("@supabase/supabase-js").User | null} user - Auth user.
- * @returns {string} Provider display name.
- */
-function providerName(user) {
-  const provider = user?.app_metadata?.provider;
-  if (provider === "google") return "Google";
-  return provider || "Conta";
-}
-
-/**
- * Resolves display name from user metadata or email.
- * @param {import("@supabase/supabase-js").User | null} user - Auth user.
- * @returns {string} Display name.
- */
-function getUserName(user) {
-  return (
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email ||
-    "Usuário"
-  );
-}
-
-/**
- * First letter of the user's display name.
- * @param {import("@supabase/supabase-js").User | null} user - Auth user.
- * @returns {string} Uppercase initial.
- */
-function getInitial(user) {
-  return getUserName(user).charAt(0).toUpperCase();
-}
-
-/**
- * Modal bottom sheet for profile settings and confirmations.
- * @param {{ isOpen: boolean, onClose: () => void, title: string, children: import("react").ReactNode }} props
- * @returns {import("react").ReactElement|null}
- */
-function BottomSheet({ isOpen, onClose, title, children }) {
-  const titleId = useId();
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="w-full rounded-t-[24px] bg-white px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-        style={{ animation: "sheetIn 220ms ease-out" }}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-      >
-        <style>{`
-          @keyframes sheetIn {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-          }
-        `}</style>
-        <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-[#d8dfdc]" />
-        <h2 id={titleId} className="mb-4 text-lg font-bold text-[#1a2e28]">
-          {title}
-        </h2>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Tappable settings row with optional subtitle and danger styling.
- * @param {{ icon: string, label: string, detail?: string, danger?: boolean, onClick?: () => void }} props
- * @returns {import("react").ReactElement}
- */
-function SettingRow({ icon, label, detail, danger = false, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm transition-shadow hover:shadow-md"
-    >
-      <span className="text-xl">{icon}</span>
-      <span className={`flex-1 text-sm font-semibold ${danger ? "text-[#d9534f]" : "text-[#1a2e28]"}`}>
-        {label}
-        {detail && (
-          <span className="mt-0.5 block text-xs font-medium text-[#5a6b66]">
-            {detail}
-          </span>
-        )}
-      </span>
-      <span className={danger ? "text-[#d9534f]" : "text-[#1a4a3a]"}>→</span>
-    </button>
-  );
-}
-
-/**
- * User profile, settings, logout, and account deletion flows.
- * @returns {import("react").ReactElement}
+ * Aba Perfil — conta, preferências e estatísticas.
+ * @returns {import("react").JSX.Element}
  */
 export default function PerfilPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [perfil, setPerfil] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [favoritosCount, setFavoritosCount] = useState(0);
+  const [avaliacoesCount, setAvaliacoesCount] = useState(0);
+  const [roteirosCount, setRoteirosCount] = useState(0);
   const [navPreference, setNavPreference] = useState("google");
   const [showNavSheet, setShowNavSheet] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [deleteMessage, setDeleteMessage] = useState("");
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+
+  const { usage: premiumUsage } = usePremiumUsage(user);
+  const isPremium = isPremiumActive(perfil) || Boolean(premiumUsage?.premium);
 
   useEffect(() => {
-    const preferenceTimer = setTimeout(() => {
-      setNavPreference(localStorage.getItem("map_app_preferido") || "google");
-    }, 0);
+    const stored =
+      typeof window !== "undefined"
+        ? localStorage.getItem(MAP_PREFERENCE_STORAGE_KEY)
+        : null;
+
+    if (stored) setNavPreference(stored);
 
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
+    supabase.auth.getUser().then(async ({ data: { user: currentUser } }) => {
       setUser(currentUser);
       setAuthLoading(false);
+
+      if (currentUser) {
+        const { data: perfilData } = await supabase
+          .from("perfis")
+          .select("*")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+
+        if (perfilData) {
+          setPerfil(perfilData);
+          if (perfilData.maps_preferido) {
+            setNavPreference(perfilData.maps_preferido);
+            localStorage.setItem(
+              MAP_PREFERENCE_STORAGE_KEY,
+              perfilData.maps_preferido
+            );
+          }
+        }
+      }
     });
 
     const {
@@ -158,222 +86,232 @@ export default function PerfilPage() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
+      if (!session?.user) {
+        setPerfil(null);
+        setFavoritosCount(0);
+        setAvaliacoesCount(0);
+        setRoteirosCount(0);
+      }
     });
 
-    return () => {
-      clearTimeout(preferenceTimer);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) return undefined;
 
     const supabase = createClient();
 
-    supabase
-      .from("favoritos")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .then(({ count }) => setFavoritosCount(count ?? 0));
+    Promise.all([
+      supabase
+        .from("favoritos")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id),
+      supabase
+        .from("avaliacoes")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id),
+      supabase
+        .from("roteiros")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id),
+    ]).then(([favoritosRes, avaliacoesRes, roteirosRes]) => {
+      setFavoritosCount(favoritosRes.count ?? 0);
+      setAvaliacoesCount(avaliacoesRes.count ?? 0);
+      setRoteirosCount(roteirosRes.count ?? 0);
+    });
+
+    return undefined;
   }, [user]);
 
-  /** Signs out the user, logs the event, and redirects to home. @returns {Promise<void>} */
+  /** @returns {Promise<void>} */
   async function handleLogout() {
     const supabase = createClient();
     await registrarLog(supabase, user, "logout");
     await supabase.auth.signOut();
     setUser(null);
+    setPerfil(null);
+    setShowLogoutConfirm(false);
     router.push("/");
   }
 
-  /** Logs account deletion, signs out, and shows confirmation. @returns {Promise<void>} */
+  /** @returns {Promise<void>} */
   async function handleDeleteAccountRequest() {
     const supabase = createClient();
     await registrarLog(supabase, user, "deletou_conta");
     await supabase.auth.signOut();
     setUser(null);
-    setDeleteMessage("Exclusão solicitada. Saímos da sua conta por segurança.");
+    setPerfil(null);
+    setFeedbackMessage(
+      "Exclusão solicitada. Saímos da sua conta por segurança."
+    );
     setShowDeleteConfirm(false);
     router.push("/");
   }
 
   /**
-   * Persists preferred maps app in localStorage.
-   * @param {string} value - One of `google`, `apple`, `waze`.
+   * @param {string} value
    */
-  function handleSelectNavigationApp(value) {
-    localStorage.setItem("map_app_preferido", value);
+  async function handleSelectNavigationApp(value) {
+    localStorage.setItem(MAP_PREFERENCE_STORAGE_KEY, value);
     setNavPreference(value);
     setShowNavSheet(false);
+
+    if (!user) return;
+
+    const supabase = createClient();
+    await supabase
+      .from("perfis")
+      .upsert({ id: user.id, maps_preferido: value }, { onConflict: "id" });
   }
 
-  const selectedNavLabel =
-    navigationApps.find((app) => app.key === navPreference)?.label || "Google Maps";
+  const nome = getUserName(user, perfil);
+  const avatarUrl = resolveAvatarUrl(user, perfil);
+  const membroDesde = perfil?.created_at || user?.created_at;
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
-        Carregando...
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
-        <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 pb-28 text-center">
-          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[#d4ede8] text-[#1a4a3a]">
-            <IconPerson />
+      <div className="min-h-screen bg-[#f0f4f3]">
+        <header className="px-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
+          <div className="mx-auto max-w-md">
+            <h1 className="text-2xl font-bold text-[#1a2e28]">Perfil</h1>
           </div>
-          <h1 className="mt-6 text-2xl font-bold text-[#1a4a3a]">
-            Sua experiência personalizada
-          </h1>
-
-          <div className="mt-7 grid gap-3 text-left">
-            {[
-              ["❤️", "Salve seus lugares favoritos"],
-              ["📍", "Veja lugares perto de você em tempo real"],
-              ["⭐", "Avalie e compartilhe experiências"],
-              ["🗺️", "Acesse rotas exclusivas"],
-            ].map(([icon, text]) => (
-              <div
-                key={text}
-                className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
-              >
-                <span className="text-xl">{icon}</span>
-                <span className="text-sm font-semibold text-[#1a2e28]">
-                  {text}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 rounded-3xl bg-white p-5 text-left shadow-sm">
-            <AuthFlow compact />
-          </div>
-
-          <Link
-            href="/"
-            className="mt-5 text-sm font-medium text-[#5a6b66] underline underline-offset-2 transition-colors hover:text-[#1a4a3a]"
-          >
-            Continuar sem login
-          </Link>
-        </div>
-
+        </header>
+        <main className="mx-auto max-w-md px-4 pb-28 pt-5">
+          <PerfilSkeleton />
+        </main>
         <BottomNav />
       </div>
     );
   }
 
-  const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
-      <div className="mx-auto max-w-md px-4 pb-28 pt-6">
-        <header className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt={`${getUserName(user) || "Foto de perfil"}`}
-                className="h-20 w-20 rounded-full object-cover ring-4 ring-[#d4ede8]"
-              />
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#1a4a3a] text-2xl font-bold text-white ring-4 ring-[#d4ede8]">
-                {getInitial(user)}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-2xl font-bold text-[#1a2e28]">
-                {getUserName(user)}
-              </h1>
-              <p className="truncate text-sm text-[#5a6b66]">{user.email}</p>
-              <Link
-                href="/perfil/editar"
-                className="mt-3 rounded-full bg-[#d4ede8] px-3 py-1 text-xs font-semibold text-[#1a4a3a]"
-              >
-                Editar perfil
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        <section className="mt-5 grid grid-cols-2 overflow-hidden rounded-3xl bg-white shadow-sm">
-          <div className="border-r border-[#f0f4f3] p-5 text-center">
-            <p className="text-2xl font-bold text-[#1a4a3a]">{favoritosCount}</p>
-            <p className="mt-1 text-xs font-medium text-[#5a6b66]">Favoritos</p>
-          </div>
-          <div className="p-5 text-center">
-            <p className="text-2xl font-bold text-[#1a4a3a]">0</p>
-            <p className="mt-1 text-xs font-medium text-[#5a6b66]">Avaliações</p>
-          </div>
-        </section>
-
-        <section className="mt-6 grid gap-3">
-          {/* Notificações — oculto até implementação */}
-          <SettingRow
-            icon="🗺️"
-            label="App de navegação preferido"
-            detail={selectedNavLabel}
-            onClick={() => setShowNavSheet(true)}
-          />
-          <SettingRow
-            icon="📱"
-            label="Conta vinculada"
-            detail={providerName(user)}
-          />
-          <SettingRow
-            icon="🗑️"
-            label="Excluir conta"
-            danger
-            onClick={() => setShowDeleteConfirm(true)}
-          />
-          <SettingRow icon="🚪" label="Sair" onClick={() => setShowLogoutConfirm(true)} />
-        </section>
-        {deleteMessage && (
-          <p className="mt-4 rounded-2xl bg-white p-4 text-sm text-[#5a6b66] shadow-sm">
-            {deleteMessage}
+      <header className="sticky top-0 z-30 border-b border-[#e8eeee]/80 bg-[#f0f4f3]/90 px-4 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur-md">
+        <div className="mx-auto max-w-md">
+          <h1 className="text-2xl font-bold tracking-tight text-[#1a2e28]">
+            Perfil
+          </h1>
+          <p className="mt-1 text-sm text-[#5a6b66]">
+            {user
+              ? "Sua conta e preferências na região"
+              : "Entre para salvar favoritos e avaliar lugares"}
           </p>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-md px-4 pb-32 pt-5">
+        {!user ? (
+          <PerfilLoggedOut />
+        ) : (
+          <div className="space-y-6">
+            <PerfilHero
+              nome={nome}
+              email={user.email}
+              avatarUrl={avatarUrl}
+              membroDesde={membroDesde}
+              isPremium={isPremium}
+            />
+
+            <PerfilStats
+              favoritos={favoritosCount}
+              avaliacoes={avaliacoesCount}
+              roteiros={roteirosCount}
+            />
+
+            <PerfilPremiumCard
+              isPremium={isPremium}
+              usage={premiumUsage}
+              onUpgrade={() => setPaywallOpen(true)}
+            />
+
+            <PerfilQuickLinks />
+
+            <PerfilSettingsGroup
+              title="Preferências"
+              items={[
+                {
+                  key: "nav",
+                  icon: "🗺️",
+                  label: "App de navegação",
+                  detail: getNavAppLabel(navPreference),
+                  onClick: () => setShowNavSheet(true),
+                },
+              ]}
+            />
+
+            <PerfilSettingsGroup
+              title="Conta"
+              items={[
+                {
+                  key: "editar",
+                  icon: "✏️",
+                  label: "Editar perfil",
+                  detail: "Nome e foto",
+                  href: "/perfil/editar",
+                },
+                {
+                  key: "provider",
+                  icon: "📱",
+                  label: "Conta vinculada",
+                  detail: providerName(user),
+                },
+              ]}
+            />
+
+            <PerfilSettingsGroup
+              title="Sessão"
+              items={[
+                {
+                  key: "logout",
+                  icon: "🚪",
+                  label: "Sair",
+                  onClick: () => setShowLogoutConfirm(true),
+                },
+                {
+                  key: "delete",
+                  icon: "🗑️",
+                  label: "Excluir conta",
+                  detail: "Ação permanente",
+                  danger: true,
+                  onClick: () => setShowDeleteConfirm(true),
+                },
+              ]}
+            />
+
+            {feedbackMessage && (
+              <p
+                className="rounded-2xl bg-white p-4 text-sm text-[#5a6b66] shadow-sm ring-1 ring-[#e8eeee]"
+                role="status"
+              >
+                {feedbackMessage}
+              </p>
+            )}
+
+            <p className="pb-2 text-center text-[10px] text-[#9aa8a3]">
+              Guia de Bolso · Imbituba
+            </p>
+          </div>
         )}
-      </div>
+      </main>
 
       <BottomNav />
 
-      <BottomSheet
+      <PerfilNavAppSheet
         isOpen={showNavSheet}
         onClose={() => setShowNavSheet(false)}
-        title="App de navegação preferido"
-      >
-        <div className="grid gap-2">
-          {navigationApps.map((app) => {
-            const selected = app.key === navPreference;
-            return (
-              <button
-                key={app.key}
-                type="button"
-                onClick={() => handleSelectNavigationApp(app.key)}
-                className="flex items-center justify-between rounded-2xl bg-[#f0f4f3] px-4 py-3 text-left"
-              >
-                <span className="font-medium text-[#1a2e28]">{app.label}</span>
-                {selected && (
-                  <span className="text-lg font-bold text-[#1a4a3a]">✓</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </BottomSheet>
+        selected={navPreference}
+        onSelect={handleSelectNavigationApp}
+      />
 
-      <BottomSheet
+      <PerfilBottomSheet
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title="Excluir conta"
       >
         <p className="text-sm leading-relaxed text-[#5a6b66]">
-          Esta ação é permanente e não pode ser desfeita. Todos os seus favoritos
-          e avaliações serão removidos.
+          Esta ação é permanente. Seus favoritos, avaliações e roteiros serão
+          removidos.
         </p>
         <button
           type="button"
@@ -389,9 +327,9 @@ export default function PerfilPage() {
         >
           Cancelar
         </button>
-      </BottomSheet>
+      </PerfilBottomSheet>
 
-      <BottomSheet
+      <PerfilBottomSheet
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         title="Sair da conta"
@@ -413,7 +351,14 @@ export default function PerfilPage() {
         >
           Cancelar
         </button>
-      </BottomSheet>
+      </PerfilBottomSheet>
+
+      <PremiumPaywallSheet
+        isOpen={paywallOpen}
+        feature="geral"
+        onClose={() => setPaywallOpen(false)}
+        onLogin={() => setPaywallOpen(false)}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>AI-powered local discovery for Brazil’s southern coast</strong><br />
-  Real-time recommendations for Garopaba & Imbituba, Santa Catarina
+  Real-time recommendations for Imbituba, Santa Catarina
 </p>
 
 <p align="center">
@@ -51,7 +51,7 @@ The product combines a curated place catalog, live context (opening hours, geolo
 | | |
 |---|---|
 | **Production URL** | https://guia-de-bolso-puce.vercel.app |
-| **Service region** | Garopaba & Imbituba, SC, Brazil |
+| **Service region** | Imbituba, SC, Brazil |
 | **Primary interface** | Portuguese (pt-BR) |
 | **Target devices** | Mobile web (optimized ~390px viewport) |
 
@@ -351,7 +351,7 @@ Contributions are welcome. Please read [`docs/contributing.md`](./docs/contribut
 ### História e Cultura
 Transformar o Guia de Bolso na memória digital de Imbituba,
 oferecendo contexto histórico e cultural que nenhum guia local digital tem.
-Foco inicial em Imbituba. Garopaba será contemplada em versão futura dedicada.
+Foco em Imbituba como guia oficial da cidade.
 
 **Estrutura planejada:**
 

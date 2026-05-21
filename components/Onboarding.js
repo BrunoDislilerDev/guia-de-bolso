@@ -240,7 +240,7 @@ export default function Onboarding({ onComplete }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://picsum.photos/seed/praia/400/600"
-          alt="Praia em Garopaba e Imbituba"
+          alt="Praia em Imbituba"
           className="h-[60vh] w-full object-cover"
         />
 

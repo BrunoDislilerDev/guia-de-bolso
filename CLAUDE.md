@@ -6,7 +6,7 @@ Este arquivo fornece contexto completo do projeto para o agente de IA. Leia ante
 
 ## Sobre o projeto
 
-**Guia de Bolso** é um app de descoberta local para Garopaba e Imbituba, Santa Catarina, Brasil. Permite que moradores e turistas encontrem praias, restaurantes, trilhas e serviços da região com busca por linguagem natural via IA, rotas detalhadas e navegação integrada.
+**Guia de Bolso** é um app de descoberta local para Imbituba, Santa Catarina, Brasil. Permite que moradores e turistas encontrem praias, restaurantes, trilhas e serviços da cidade com busca por linguagem natural via IA, rotas detalhadas e navegação integrada.
 
 **URLs:**
 - Produção: https://guia-de-bolso-puce.vercel.app
@@ -240,7 +240,7 @@ guia-de-bolso/
 
 ### Contexto estratégico
 
-- Parceria com prefeitura de Imbituba/Garopaba como guia turístico oficial
+- Parceria com prefeitura de Imbituba como guia turístico oficial
 - Plano gratuito garante adesão em massa de todos os estabelecimentos
 - Planos pagos vendem ferramentas de gestão e visibilidade
 - Cobrança futura via Asaas (plataforma brasileira de pagamentos)

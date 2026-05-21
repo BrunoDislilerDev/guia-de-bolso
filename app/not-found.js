@@ -55,7 +55,7 @@ export default function NotFound() {
         </Link>
 
         <p className="mt-6 text-center text-xs text-[#8a9a95]">
-          Imbituba & Garopaba · Santa Catarina
+          Imbituba · Santa Catarina
         </p>
       </div>
     </div>

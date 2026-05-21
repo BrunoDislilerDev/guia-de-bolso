@@ -1,6 +1,6 @@
 # System architecture
 
-Guia de Bolso is a **mobile-first web application** for local discovery in Garopaba and Imbituba (Santa Catarina, Brazil). The system helps users decide what to do in real time by combining curated place data, live context (hours, geolocation, weather-aware copy), moderated reviews, and **Anthropic Claude**–powered search and trip planning.
+Guia de Bolso is a **mobile-first web application** for local discovery in Imbituba (Santa Catarina, Brazil). The system helps users decide what to do in real time by combining curated place data, live context (hours, geolocation, weather-aware copy), moderated reviews, and **Anthropic Claude**–powered search and trip planning.
 
 This document describes how the frontend, backend, data plane, authentication, and external services fit together in production.
 

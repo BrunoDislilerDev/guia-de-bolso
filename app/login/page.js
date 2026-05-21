@@ -54,9 +54,9 @@ export default function LoginPage() {
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage:
-                "url('https://picsum.photos/seed/garopaba/430/600')",
+                "url('https://picsum.photos/seed/imbituba/430/600')",
             }}
-            aria-label="Paisagem de Garopaba"
+            aria-label="Paisagem de Imbituba"
             role="img"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-black/80" />
