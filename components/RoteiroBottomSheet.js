@@ -170,6 +170,7 @@ export default function RoteiroBottomSheet({
           return;
         }
         if (data.code === "LIMIT_REACHED") {
+          onUsageRefresh?.(data.usage ?? null);
           onLimitReached?.();
           setView("form");
           return;

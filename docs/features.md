@@ -505,7 +505,7 @@ Understand the daily free quota, when it renews, or upgrade for unlimited use.
 - Paywall is informational today — no in-app purchase flow.
 - Premium users see unlimited counters in UI (`null` remaining).
 - Countdown (`DailyLimitCountdown`): ticks every second via `getMsUntilDailyReset()`; may seed from `usage.msUntilReset` after API/RPC. Compact mode on `/rotas` inherits parent text color (timer visible on dark card).
-- Legacy `uso_ia_mes` values `YYYY-MM` are honored on **read** via `isSameUsageDay()` (same calendar month); RPC increments use exact `YYYY-MM-DD` only.
+- Legacy `uso_ia_mes` (`YYYY-MM`) or a previous day’s key: UI shows **0/N** for the new day; server realigns counters on read/increment so limits are not blocked by stale rows. After quota is used, UI and API both show `used === limit`.
 
 ---
 

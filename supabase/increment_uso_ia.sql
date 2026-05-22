@@ -71,6 +71,7 @@ BEGIN
     );
   END IF;
 
+  -- Dia corrente SP apenas; chave legada YYYY-MM ou outro dia → contadores do dia = 0
   v_used := CASE
     WHEN v_perfil.uso_ia_mes = v_day THEN COALESCE(v_perfil.buscas_ia, 0)
     ELSE 0

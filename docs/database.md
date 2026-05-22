@@ -77,7 +77,7 @@ One row per registered user. Extends auth with app profile, admin role, and AI/p
 | `created_at` | `timestamptz` | Profile creation |
 | `premium_ativo` | `boolean` | Subscription flag *(migration: `premium_usuario.sql`)* |
 | `premium_ate` | `timestamptz` | Expiry; `NULL` = no end date *(migration)* |
-| `uso_ia_mes` | `text` | **Day bucket** `YYYY-MM-DD` (America/Sao_Paulo); column name is legacy. `isSameUsageDay()` in `lib/premium.js` also accepts legacy `YYYY-MM` on **read** and in server fallback increments; RPC `increment_*_ia` compares exact `YYYY-MM-DD` only *(migration)* |
+| `uso_ia_mes` | `text` | **Day bucket** `YYYY-MM-DD` (America/Sao_Paulo); column name is legacy. `getEffectiveUsageCounters()` / `isSameUsageDay()` count usage only when the key equals today (SP). Legacy `YYYY-MM` or stale days show **0** on read and are realigned via `alignPerfilUsageToDay()` on `GET /api/uso-premium` and before increment. RPC `increment_*_ia` uses exact `YYYY-MM-DD` only. |
 | `buscas_ia` | `integer` | AI searches used **today** *(migration)* |
 | `roteiros_ia` | `integer` | AI itineraries used **today** *(migration)* |
 

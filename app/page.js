@@ -499,7 +499,18 @@ function Home() {
       return;
     }
 
-    const access = canUseBusca(premiumUsage, Boolean(user));
+    let usageForGate = premiumUsage;
+    let usageSyncedForGate = premiumUsageSynced;
+
+    if (!premiumUsageSynced || premiumUsageLoading) {
+      usageForGate = (await refreshPremiumUsage()) ?? premiumUsage;
+      usageSyncedForGate = true;
+    }
+
+    const access = canUseBusca(usageForGate, Boolean(user), {
+      synced: usageSyncedForGate,
+    });
+
     if (!access.allowed) {
       if (access.code === "LIMIT_REACHED") abrirPaywall("busca");
       else if (access.code === "LOGIN_REQUIRED") {
@@ -536,8 +547,9 @@ function Home() {
           return;
         }
         if (data.code === "LIMIT_REACHED") {
+          if (data.usage) setPremiumUsage(data.usage);
+          else await refreshPremiumUsage();
           abrirPaywall("busca");
-          await refreshPremiumUsage();
           setSearchMode("browse");
           return;
         }

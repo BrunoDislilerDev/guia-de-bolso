@@ -121,13 +121,24 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
   /**
    * Abre o sheet de criação ou exibe login/paywall conforme sessão e limites premium.
    */
-  function handleAbrirCriar() {
+  async function handleAbrirCriar() {
     if (!isLoggedIn || !user) {
       setLoginOpen(true);
       return;
     }
 
-    const access = canUseRoteiro(usage, Boolean(user));
+    let usageForGate = usage;
+    let usageSyncedForGate = usageSynced;
+
+    if (!usageSynced || usageLoading) {
+      usageForGate = (await refreshUsage()) ?? usage;
+      usageSyncedForGate = true;
+    }
+
+    const access = canUseRoteiro(usageForGate, Boolean(user), {
+      synced: usageSyncedForGate,
+    });
+
     if (!access.allowed) {
       if (access.code === "LIMIT_REACHED") {
         setPaywallOpen(true);

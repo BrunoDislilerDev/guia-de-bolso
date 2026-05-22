@@ -185,7 +185,7 @@ Returns current user's premium status and **daily** AI usage (with optional `res
 | Anonymous | `{ "loggedIn": false, "usage": null }` | 200 |
 | Server error | `{ "loggedIn": false, "usage": null, "error": "..." }` | 500 |
 
-`usage` comes from `getPerfilUsage()` → `normalizeUsageFromPerfil()` (uses `isSameUsageDay()` for `uso_ia_mes`). **No** synthetic `0/3` fallback on read errors — the client keeps same-day `localStorage` cache instead.
+`usage` comes from `getPerfilUsage()` → `alignPerfilUsageToDay()` → `normalizeUsageFromPerfil()` (only `uso_ia_mes === YYYY-MM-DD` today, SP). **No** synthetic `0/3` on API errors; client syncs via `usePremiumUsage` and applies `usage` from `LIMIT_REACHED` responses.
 
 **Response example:**
 
@@ -236,7 +236,7 @@ Not all data goes through `/api`. The browser Supabase client reads public data 
 ## Rate limits and cost control
 
 - Free-tier limits are **per calendar day** (America/Sao_Paulo): 3 buscas, 2 roteiros; enforced in `lib/premiumServer.js` and RPC `increment_*_ia` before AI calls.
-- Read path (`GET /api/uso-premium`, `normalizeUsageFromPerfil`) uses `isSameUsageDay()` so legacy `uso_ia_mes` values `YYYY-MM` still count within the same calendar month. RPC `increment_*_ia` matches exact `YYYY-MM-DD` only.
+- Read path realigns stale or legacy `YYYY-MM` keys before normalize; RPC `increment_*_ia` matches exact `YYYY-MM-DD` only. Client must not trust `localStorage` over server when counts diverge.
 - `LIMIT_REACHED` responses include `usage`; RPC JSON uses `resets_at`, client-normalized `usage` uses camelCase `resetsAt` / `msUntilReset`.
 - Roteiro generation uses a filtered place list (`lib/roteiroLugares.js`) to reduce tokens.
 - Search sends summarized place context (`lib/busca.js` → `buildLugarBuscaResumo`).
