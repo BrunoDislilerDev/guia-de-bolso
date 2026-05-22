@@ -10,7 +10,7 @@ export default function ExplorarBuscaBar() {
   return (
     <Link
       href="/?busca=1"
-      className="group flex items-center gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-sm ring-1 ring-[#e8eeee] transition-all active:scale-[0.99] hover:ring-[#1a4a3a]/20"
+      className="group flex items-center gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_14px_-4px_rgba(26,46,40,0.08)] outline-none transition-all focus-visible:outline-none active:scale-[0.99] active:shadow-[0_4px_18px_-4px_rgba(26,46,40,0.12)]"
       aria-label="Buscar lugares com inteligência artificial"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#d4ede8] text-[#1a4a3a]">

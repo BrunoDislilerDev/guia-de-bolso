@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import AvaliacaoForm from "@/components/AvaliacaoForm";
+import IconBack from "@/components/IconBack";
 import LoginModal from "@/components/LoginModal";
 import LugarAvaliacoesSection from "@/components/lugar/LugarAvaliacoesSection";
 import { AVALIACAO_STATUS_APROVADOS } from "@/lib/avaliacoes";
@@ -514,9 +515,10 @@ export default function LugarPage() {
         <div className="mx-auto max-w-md">
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-sm font-medium text-[#1a4a3a] transition-opacity hover:opacity-80"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1a4a3a] transition-opacity hover:opacity-80"
           >
-            ← Voltar
+            <IconBack className="h-4 w-4" />
+            Voltar
           </Link>
           <p className="mt-8 text-sm text-[#5a6b66]">Lugar não encontrado.</p>
         </div>

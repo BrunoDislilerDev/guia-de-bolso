@@ -17,7 +17,7 @@ New to the project? Start with the [root README](../README.md), then follow the 
 | [**Deployment**](./deployment.md) | Vercel + Supabase: env vars, build steps, CI/CD, production checklist |
 | [**Contributing**](./contributing.md) | Local setup, conventions, branching, and pull request guidelines |
 | [**Changelog**](./CHANGELOG.md) | Release history (Semantic Versioning) |
-| [**Testing checklist**](./TESTING-CHECKLIST.md) | Manual QA on mobile (flows, edge cases, regression) |
+| [**Testing checklist**](./TESTING-CHECKLIST.md) | Manual QA — interactive checklist at [`/checklist-testes.html`](../public/checklist-testes.html) (145 cases, mobile/tablet/desktop) |
 | [**Costs & revenue**](./CUSTOS.md) | Monthly costs (R$), AI usage, B2B/B2C projections — edit with [`custos-planilha.csv`](./custos-planilha.csv) |
 | [**Place taxonomy**](./taxonomia-lugares.md) | Subcategorias vs tags; admin `/admin/taxonomia` |
 

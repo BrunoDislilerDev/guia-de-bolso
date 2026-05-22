@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import IconBack from "@/components/IconBack";
 import PlaceCard from "@/components/PlaceCard";
 import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
 import { createClient } from "@/lib/supabase";
@@ -138,10 +139,10 @@ export default function CategoriaPage() {
         <header className="mb-6 flex items-center gap-3">
           <Link
             href="/"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl font-semibold text-[#1a4a3a] shadow-sm"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-sm"
             aria-label="Voltar"
           >
-            ←
+            <IconBack />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-[#1a2e28]">{categoria}</h1>
@@ -159,9 +160,10 @@ export default function CategoriaPage() {
             action={
               <Link
                 href="/categorias"
-                className="inline-flex text-sm font-semibold text-red-800 underline"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-800 underline"
               >
-                ← Voltar
+                <IconBack className="h-4 w-4" />
+                Voltar
               </Link>
             }
           />

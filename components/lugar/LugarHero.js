@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import IconBack from "@/components/IconBack";
 
 /**
  * Ícone de coração para favoritar ou indicar favorito ativo.
@@ -125,10 +126,10 @@ export default function LugarHero({
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <Link
           href="/"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-lg font-semibold text-white backdrop-blur-md"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md"
           aria-label="Voltar"
         >
-          ←
+          <IconBack />
         </Link>
         <div className="flex gap-2">
           <button

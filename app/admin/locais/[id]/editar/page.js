@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import LocalForm from "@/components/admin/LocalForm";
+import IconBack from "@/components/IconBack";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -51,8 +52,12 @@ export default function EditarLocalPage() {
 
   return (
     <AdminShell title={`Editar ${local?.nome || "local"}`}>
-      <Link href="/admin/locais" className="mb-5 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#1a4a3a] shadow-sm">
-        ← Voltar para Locais
+      <Link
+        href="/admin/locais"
+        className="mb-5 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#1a4a3a] shadow-sm"
+      >
+        <IconBack className="h-4 w-4" />
+        Voltar para Locais
       </Link>
       {local ? (
         <LocalForm

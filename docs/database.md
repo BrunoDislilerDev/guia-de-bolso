@@ -201,6 +201,21 @@ Unique constraint expected on `(user_id, lugar_id)` for idempotent favoriting.
 
 ---
 
+### `rotas_favoritas`
+
+User bookmarks for **curated routes** (`rotas`), not `roteiros` (IA). Migration: `supabase/rotas_favoritas.sql`.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` FK | → `auth.users` |
+| `rota_id` | `uuid` FK | → `rotas` |
+| `created_at` | `timestamptz` | |
+
+Unique `(user_id, rota_id)`. RLS: authenticated users CRUD own rows. Listing in `/favoritos` is not implemented yet.
+
+---
+
 ### `avaliacoes`
 
 User reviews with moderation.

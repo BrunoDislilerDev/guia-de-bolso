@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import IconBack from "@/components/IconBack";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -244,8 +245,15 @@ export default function AuthFlow({ compact = false }) {
   if (screen === "phone") {
     return (
       <div>
-        <button type="button" onClick={() => setScreen("main")} className={compact ? "mb-5 text-sm font-semibold text-[#1a4a3a]" : "mb-5 text-sm font-semibold text-white/80"}>
-          ← Voltar
+        <button
+          type="button"
+          onClick={() => setScreen("main")}
+          className={`mb-5 inline-flex items-center gap-1.5 text-sm font-semibold ${
+            compact ? "text-[#1a4a3a]" : "text-white/80"
+          }`}
+        >
+          <IconBack className="h-4 w-4" />
+          Voltar
         </button>
         <h2 className={titleClass}>Entrar com SMS</h2>
         <p className={subtitleClass}>Digite seu telefone para receber um código de acesso</p>
@@ -283,8 +291,15 @@ export default function AuthFlow({ compact = false }) {
     const maxResends = resendCount >= 3;
     return (
       <div>
-        <button type="button" onClick={resetPhone} className={compact ? "mb-5 text-sm font-semibold text-[#1a4a3a]" : "mb-5 text-sm font-semibold text-white/80"}>
-          ← Usar outro número
+        <button
+          type="button"
+          onClick={resetPhone}
+          className={`mb-5 inline-flex items-center gap-1.5 text-sm font-semibold ${
+            compact ? "text-[#1a4a3a]" : "text-white/80"
+          }`}
+        >
+          <IconBack className="h-4 w-4" />
+          Usar outro número
         </button>
         <h2 className={titleClass}>Código enviado!</h2>
         <p className={subtitleClass}>Digite o código de 6 dígitos enviado para {phone}</p>

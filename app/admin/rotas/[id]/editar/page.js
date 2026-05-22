@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import RotaForm from "@/components/admin/RotaForm";
+import IconBack from "@/components/IconBack";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -61,9 +62,10 @@ export default function EditarRotaPage() {
     <AdminShell title={`Editar ${rota?.nome || rota?.titulo || "rota"}`}>
       <Link
         href="/admin/rotas"
-        className="mb-5 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#1a4a3a] shadow-sm"
+        className="mb-5 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#1a4a3a] shadow-sm"
       >
-        ← Voltar para Rotas
+        <IconBack className="h-4 w-4" />
+        Voltar para Rotas
       </Link>
       {rota ? (
         <RotaForm

@@ -181,7 +181,12 @@ export default async function RotaDetalhePage({ params }) {
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md">
-        <RotaGaleria nome={nome} imagens={fotos} />
+        <RotaGaleria
+          rotaId={id}
+          nome={nome}
+          imagens={fotos}
+          descricao={rota.descricao || ""}
+        />
 
         <main className="px-4 pb-28 pt-6">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#1a4a3a]">

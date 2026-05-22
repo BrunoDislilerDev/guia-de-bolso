@@ -1,0 +1,4480 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-22T12:46:03.080Z",
+  "sections": [
+    {
+      "id": "A",
+      "title": "A. Preparação",
+      "subtitle": "Ambiente e dados de teste"
+    },
+    {
+      "id": "B",
+      "title": "B. Onboarding e navegação",
+      "subtitle": "Primeira visita e bottom nav"
+    },
+    {
+      "id": "C",
+      "title": "C. Login e cadastro",
+      "subtitle": "Google, SMS e perfil novo"
+    },
+    {
+      "id": "D",
+      "title": "D. Home",
+      "subtitle": "Rota /"
+    },
+    {
+      "id": "E",
+      "title": "E. Explorar",
+      "subtitle": "Rota /categorias"
+    },
+    {
+      "id": "F",
+      "title": "F. Categoria",
+      "subtitle": "Rota /categoria/[slug]"
+    },
+    {
+      "id": "G",
+      "title": "G. Detalhe do lugar",
+      "subtitle": "Rota /lugares/[id]"
+    },
+    {
+      "id": "H",
+      "title": "H. Favoritos",
+      "subtitle": "Rota /favoritos"
+    },
+    {
+      "id": "I",
+      "title": "I. Rotas",
+      "subtitle": "/rotas e /rotas/[id]"
+    },
+    {
+      "id": "J",
+      "title": "J. Perfil",
+      "subtitle": "/perfil e /perfil/editar"
+    },
+    {
+      "id": "K",
+      "title": "K. Casos extremos",
+      "subtitle": "Rede, limites e deep links"
+    },
+    {
+      "id": "L",
+      "title": "L. Admin",
+      "subtitle": "Conta admin ou dev"
+    },
+    {
+      "id": "M",
+      "title": "M. Regressão pós-release",
+      "subtitle": "Smoke de alto impacto"
+    }
+  ],
+  "items": [
+    {
+      "id": "a-01",
+      "sectionId": "A",
+      "title": "App abre em produção ou localhost na rede do celular",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "setup"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Acesse URL Vercel ou http://IP:3000 na mesma Wi‑Fi.",
+          "Aguarde home sem erro fatal."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Acesse URL Vercel ou http://IP:3000 na mesma Wi‑Fi.",
+          "Aguarde home sem erro fatal."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Acesse URL Vercel ou http://IP:3000 na mesma Wi‑Fi.",
+          "Aguarde home sem erro fatal."
+        ]
+      },
+      "expected": "Home abre mobile-first, sem tela branca permanente.",
+      "warnings": [
+        "Celular não alcança localhost do PC sem IP LAN."
+      ]
+    },
+    {
+      "id": "a-02",
+      "sectionId": "A",
+      "title": "Limpar localStorage ou aba anônima para testar onboarding",
+      "route": null,
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "setup",
+        "onboarding"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Aba anônima ou apague onboarding_visto.",
+          "Abra /."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Aba anônima ou apague onboarding_visto.",
+          "Abra /."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Aba anônima ou apague onboarding_visto.",
+          "Abra /."
+        ]
+      },
+      "expected": "Onboarding 3 telas na primeira visita.",
+      "warnings": [
+        "Usuário logado pode alterar fluxo visual."
+      ]
+    },
+    {
+      "id": "a-03",
+      "sectionId": "A",
+      "title": "Dados: sem foto, sem horário, parceiro ativo, praia com coords",
+      "route": null,
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "setup"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Identifique/crie 4 lugares no admin.",
+          "Anote IDs para testes G e D."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Identifique/crie 4 lugares no admin.",
+          "Anote IDs para testes G e D."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Identifique/crie 4 lugares no admin.",
+          "Anote IDs para testes G e D."
+        ]
+      },
+      "expected": "Quatro perfis de lugar disponíveis para QA.",
+      "warnings": [
+        "Obrigatório para detalhe, parceiros, clima e chips."
+      ]
+    },
+    {
+      "id": "a-04",
+      "sectionId": "A",
+      "title": "Conta admin com role = admin no Supabase",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "setup",
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Login com perfis.role admin ou dev.",
+          "Abra /admin."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Login com perfis.role admin ou dev.",
+          "Abra /admin."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Login com perfis.role admin ou dev.",
+          "Abra /admin."
+        ]
+      },
+      "expected": "Painel admin acessível.",
+      "warnings": [
+        "Ajuste em Supabase → perfis se necessário."
+      ]
+    },
+    {
+      "id": "a-05",
+      "sectionId": "A",
+      "title": "Migrations aplicadas (taxonomia, rotas, avaliações)",
+      "route": null,
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "setup"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Siga docs/database.md e scripts em /supabase."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Siga docs/database.md e scripts em /supabase."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Siga docs/database.md e scripts em /supabase."
+        ]
+      },
+      "expected": "Taxonomia, rotas e moderação sem erro 500.",
+      "warnings": [
+        "Inclui rotas_taxonomia.sql antes de aplica_em_rotas."
+      ]
+    },
+    {
+      "id": "b-01",
+      "sectionId": "B",
+      "title": "Onboarding 3 telas → não reaparece ao recarregar",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "onboarding"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "localStorage limpo → /.",
+          "Conclua onboarding.",
+          "Recarregue."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "localStorage limpo → /.",
+          "Conclua onboarding.",
+          "Recarregue."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "localStorage limpo → /.",
+          "Conclua onboarding.",
+          "Recarregue."
+        ]
+      },
+      "expected": "Onboarding não reaparece; onboarding_visto salvo.",
+      "warnings": []
+    },
+    {
+      "id": "b-02",
+      "sectionId": "B",
+      "title": "Bottom nav: abas e estado ativo corretos",
+      "route": null,
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "nav"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Toque Início, Explorar, Rotas, Favoritos, Perfil.",
+          "Verifique aba ativa."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Clique Início, Explorar, Rotas, Favoritos, Perfil.",
+          "Verifique aba ativa."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Toque Início, Explorar, Rotas, Favoritos, Perfil.",
+          "Verifique aba ativa."
+        ]
+      },
+      "expected": "Navegação OK; destaque na rota atual.",
+      "warnings": []
+    },
+    {
+      "id": "b-03",
+      "sectionId": "B",
+      "title": "URL inválida → 404 amigável",
+      "route": null,
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "nav"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Acesse /rota-inexistente-xyz."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Acesse /rota-inexistente-xyz."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Acesse /rota-inexistente-xyz."
+        ]
+      },
+      "expected": "Página not-found amigável.",
+      "warnings": []
+    },
+    {
+      "id": "c-g-01",
+      "sectionId": "C",
+      "title": "/login → Google → logado na home",
+      "route": "/login",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "auth",
+        "google"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "/login → Continuar com Google.",
+          "Complete OAuth."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "/login → Continuar com Google.",
+          "Complete OAuth."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "/login → Continuar com Google.",
+          "Complete OAuth."
+        ]
+      },
+      "expected": "Redireciona para / logado.",
+      "warnings": [
+        "Google OAuth no Supabase."
+      ]
+    },
+    {
+      "id": "c-g-02",
+      "sectionId": "C",
+      "title": "Avatar ou inicial no header da home",
+      "route": "/",
+      "roles": [
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "auth"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Logado, abra /.",
+          "Veja header."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Logado, abra /.",
+          "Veja header."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Logado, abra /.",
+          "Veja header."
+        ]
+      },
+      "expected": "Avatar ou inicial visível.",
+      "warnings": []
+    },
+    {
+      "id": "c-g-03",
+      "sectionId": "C",
+      "title": "/login logado → redireciona para /",
+      "route": "/login",
+      "roles": [
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "auth"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Sessão ativa → /login."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Sessão ativa → /login."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Sessão ativa → /login."
+        ]
+      },
+      "expected": "Redirect automático para /.",
+      "warnings": []
+    },
+    {
+      "id": "c-g-04",
+      "sectionId": "C",
+      "title": "Erro OAuth → /login?error=auth",
+      "route": "/login",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "auth"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Cancele OAuth ou simule erro."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Cancele OAuth ou simule erro."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Cancele OAuth ou simule erro."
+        ]
+      },
+      "expected": "URL ?error=auth e mensagem de erro.",
+      "warnings": [
+        "Cancele popup Google para simular."
+      ]
+    },
+    {
+      "id": "c-s-01",
+      "sectionId": "C",
+      "title": "Telefone inválido → mensagem de erro",
+      "route": "/login",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "auth",
+        "sms"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "SMS com <11 dígitos."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "SMS com <11 dígitos."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "SMS com <11 dígitos."
+        ]
+      },
+      "expected": "Erro de validação claro.",
+      "warnings": []
+    },
+    {
+      "id": "c-s-02",
+      "sectionId": "C",
+      "title": "OTP correto → home ~1,5s",
+      "route": "/login",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "auth",
+        "sms"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "OTP válido 6 dígitos."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "OTP válido 6 dígitos."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "OTP válido 6 dígitos."
+        ]
+      },
+      "expected": "Sucesso e redirect ~1,5s.",
+      "warnings": [
+        "Twilio número de teste."
+      ]
+    },
+    {
+      "id": "c-s-03",
+      "sectionId": "C",
+      "title": "OTP errado → limpa e mensagem",
+      "route": "/login",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "auth",
+        "sms"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Código incorreto."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Código incorreto."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Código incorreto."
+        ]
+      },
+      "expected": "Mensagem inválido; campos limpos.",
+      "warnings": []
+    },
+    {
+      "id": "c-s-04",
+      "sectionId": "C",
+      "title": "OTP expirado → mensagem adequada",
+      "route": "/login",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "auth",
+        "sms"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Use código após expirar."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Use código após expirar."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Use código após expirar."
+        ]
+      },
+      "expected": "Mensagem de expiração.",
+      "warnings": []
+    },
+    {
+      "id": "c-s-05",
+      "sectionId": "C",
+      "title": "Reenviar OTP: cooldown 30s; bloqueio após 3",
+      "route": "/login",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "auth",
+        "sms"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Reenviar antes de 30s.",
+          "Após 3 reenvios, 4º bloqueado."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Reenviar antes de 30s.",
+          "Após 3 reenvios, 4º bloqueado."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Reenviar antes de 30s.",
+          "Após 3 reenvios, 4º bloqueado."
+        ]
+      },
+      "expected": "Cooldown e bloqueio corretos.",
+      "warnings": []
+    },
+    {
+      "id": "c-c-01",
+      "sectionId": "C",
+      "title": "Conta nova favorita após login",
+      "route": "/",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "favoritos"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Conta nova → coração em card."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Conta nova → coração em card."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Conta nova → coração em card."
+        ]
+      },
+      "expected": "Favorito salvo; aparece em /favoritos.",
+      "warnings": []
+    },
+    {
+      "id": "c-c-02",
+      "sectionId": "C",
+      "title": "/perfil/editar: nome e foto persistem",
+      "route": "/perfil/editar",
+      "roles": [
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Altere nome e foto.",
+          "Reload."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Altere nome e foto.",
+          "Reload."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Altere nome e foto.",
+          "Reload."
+        ]
+      },
+      "expected": "Dados persistem no Storage imagens.",
+      "warnings": [
+        "RLS Storage."
+      ]
+    },
+    {
+      "id": "c-c-03",
+      "sectionId": "C",
+      "title": "Linha em perfis no Supabase",
+      "route": null,
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Supabase → perfis após login novo."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Supabase → perfis após login novo."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Supabase → perfis após login novo."
+        ]
+      },
+      "expected": "Registro perfis para user id.",
+      "warnings": []
+    },
+    {
+      "id": "d-01",
+      "sectionId": "D",
+      "title": "Seções carregam sem travar página inteira",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Scroll home completa."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Scroll home completa."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Scroll home completa."
+        ]
+      },
+      "expected": "Seções independentes/skeletons; sem freeze total.",
+      "warnings": []
+    },
+    {
+      "id": "d-02",
+      "sectionId": "D",
+      "title": "Falha Supabase: Conteúdo indisponível",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Simule falha hero/em alta."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Simule falha hero/em alta."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Simule falha hero/em alta."
+        ]
+      },
+      "expected": "Mensagem na seção; resto usável.",
+      "warnings": [
+        "Modo avião após primeiro load."
+      ]
+    },
+    {
+      "id": "d-03",
+      "sectionId": "D",
+      "title": "Frase contextual clima ou fallback",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Frase contextual clima ou fallback"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Frase contextual clima ou fallback"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Frase contextual clima ou fallback"
+        ]
+      },
+      "expected": "Frase no header coerente ou fallback horário.",
+      "warnings": []
+    },
+    {
+      "id": "d-04",
+      "sectionId": "D",
+      "title": "Temperatura hero °C ou --°C",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Temperatura hero °C ou --°C"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Temperatura hero °C ou --°C"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Temperatura hero °C ou --°C"
+        ]
+      },
+      "expected": "Temperatura ou placeholder sem quebrar layout.",
+      "warnings": []
+    },
+    {
+      "id": "d-05",
+      "sectionId": "D",
+      "title": "Hero: métricas 2×2 e EXPLORAR → detalhe",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Card O que fazer agora.",
+          "Toque EXPLORAR."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Card O que fazer agora.",
+          "Clique EXPLORAR."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Card O que fazer agora.",
+          "Toque EXPLORAR."
+        ]
+      },
+      "expected": "Abre /lugares/[id].",
+      "warnings": []
+    },
+    {
+      "id": "d-06",
+      "sectionId": "D",
+      "title": "Favoritar hero: logado / guest modal",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Teste coração logado e guest."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Teste coração logado e guest."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Teste coração logado e guest."
+        ]
+      },
+      "expected": "Toggle favorito ou LoginModal.",
+      "warnings": [
+        "Duas sessões."
+      ]
+    },
+    {
+      "id": "d-07",
+      "sectionId": "D",
+      "title": "Carrossel parceiros com destaque vigente",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Carrossel parceiros com destaque vigente"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Carrossel parceiros com destaque vigente"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Carrossel parceiros com destaque vigente"
+        ]
+      },
+      "expected": "Seção Parceiros com scroll horizontal.",
+      "warnings": [
+        "Prep parceiro ativo A-03."
+      ]
+    },
+    {
+      "id": "d-08",
+      "sectionId": "D",
+      "title": "Sem destaques: carrossel omitido",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Sem destaques: carrossel omitido"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Sem destaques: carrossel omitido"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Sem destaques: carrossel omitido"
+        ]
+      },
+      "expected": "Sem seção ou vazia sem erro console.",
+      "warnings": []
+    },
+    {
+      "id": "d-09",
+      "sectionId": "D",
+      "title": "Card parceiro → detalhe com badge",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Toque card parceiro."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Clique card parceiro."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Toque card parceiro."
+        ]
+      },
+      "expected": "Detalhe com badge parceiro.",
+      "warnings": []
+    },
+    {
+      "id": "d-10",
+      "sectionId": "D",
+      "title": "Em alta: scroll horizontal → detalhe",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Em alta: scroll horizontal → detalhe"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Em alta: scroll horizontal → detalhe"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Em alta: scroll horizontal → detalhe"
+        ]
+      },
+      "expected": "Cards abrem lugar.",
+      "warnings": []
+    },
+    {
+      "id": "d-11",
+      "sectionId": "D",
+      "title": "Chip aberto/fechado só com horários",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Chip aberto/fechado só com horários"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Chip aberto/fechado só com horários"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Chip aberto/fechado só com horários"
+        ]
+      },
+      "expected": "Chip só com mostrar_horarios + horários cadastrados.",
+      "warnings": [
+        "Lugar sem horário A-03."
+      ]
+    },
+    {
+      "id": "d-12",
+      "sectionId": "D",
+      "title": "Planos rápidos: busca ou login",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Planos rápidos: busca ou login"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Planos rápidos: busca ou login"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Planos rápidos: busca ou login"
+        ]
+      },
+      "expected": "Guest LoginModal; logado dispara busca.",
+      "warnings": []
+    },
+    {
+      "id": "d-13",
+      "sectionId": "D",
+      "title": "Perto de você: loading depois cards",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Perto de você: loading depois cards"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Perto de você: loading depois cards"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Perto de você: loading depois cards"
+        ]
+      },
+      "expected": "Loading local depois cards.",
+      "warnings": []
+    },
+    {
+      "id": "d-14",
+      "sectionId": "D",
+      "title": "Com GPS: distância coerente",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Permita localização."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Permita localização."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Permita localização."
+        ]
+      },
+      "expected": "Km plausíveis nos cards.",
+      "warnings": []
+    },
+    {
+      "id": "d-15",
+      "sectionId": "D",
+      "title": "Sem GPS: lista aparece",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "home"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Negue localização."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Negue localização."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Negue localização."
+        ]
+      },
+      "expected": "Lista Perto de você visível.",
+      "warnings": []
+    },
+    {
+      "id": "d-16",
+      "sectionId": "D",
+      "title": "Guest buscar → LoginModal busca",
+      "route": "/",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Busca IA sem login."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Busca IA sem login."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Busca IA sem login."
+        ]
+      },
+      "expected": "LoginModal motivo busca; sem API.",
+      "warnings": []
+    },
+    {
+      "id": "d-17",
+      "sectionId": "D",
+      "title": "Logado: browse ao focar busca vazia",
+      "route": "/",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Logado: browse ao focar busca vazia"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Logado: browse ao focar busca vazia"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Logado: browse ao focar busca vazia"
+        ]
+      },
+      "expected": "Recentes/populares no painel.",
+      "warnings": []
+    },
+    {
+      "id": "d-18",
+      "sectionId": "D",
+      "title": "Busca com resultado abre lugar",
+      "route": "/",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Busque termo com match.",
+          "Toque resultado."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Busque termo com match.",
+          "Clique resultado."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Busque termo com match.",
+          "Toque resultado."
+        ]
+      },
+      "expected": "Lista e navegação ao detalhe.",
+      "warnings": []
+    },
+    {
+      "id": "d-19",
+      "sectionId": "D",
+      "title": "Busca sem resultado: mensagem clara",
+      "route": "/",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Busca sem resultado: mensagem clara"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Busca sem resultado: mensagem clara"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Busca sem resultado: mensagem clara"
+        ]
+      },
+      "expected": "Mensagem amigável; zero cards.",
+      "warnings": []
+    },
+    {
+      "id": "d-20",
+      "sectionId": "D",
+      "title": "Filtro Abertos / Fechados / Todos",
+      "route": "/",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Filtro Abertos / Fechados / Todos"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Filtro Abertos / Fechados / Todos"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Filtro Abertos / Fechados / Todos"
+        ]
+      },
+      "expected": "Filtros alteram resultados por horário.",
+      "warnings": []
+    },
+    {
+      "id": "d-21",
+      "sectionId": "D",
+      "title": "X/3 buscas; 4ª → paywall countdown",
+      "route": "/",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "ia",
+        "premium"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "X/3 buscas; 4ª → paywall countdown"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "X/3 buscas; 4ª → paywall countdown"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "X/3 buscas; 4ª → paywall countdown"
+        ]
+      },
+      "expected": "Contador visível; 4ª abre PremiumPaywallSheet.",
+      "warnings": [
+        "Meia-noite America/Sao_Paulo renova."
+      ]
+    },
+    {
+      "id": "d-22",
+      "sectionId": "D",
+      "title": "/?busca=1 abre busca pós-onboarding",
+      "route": "/?busca=1",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Limpe onboarding.",
+          "Abra /?busca=1."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Limpe onboarding.",
+          "Abra /?busca=1."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Limpe onboarding.",
+          "Abra /?busca=1."
+        ]
+      },
+      "expected": "Painel busca abre após onboarding.",
+      "warnings": []
+    },
+    {
+      "id": "d-23",
+      "sectionId": "D",
+      "title": "/?q=praia busca automática",
+      "route": "/?q=praia",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "/?q=praia busca automática"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "/?q=praia busca automática"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "/?q=praia busca automática"
+        ]
+      },
+      "expected": "Busca praia ao carregar.",
+      "warnings": []
+    },
+    {
+      "id": "d-24",
+      "sectionId": "D",
+      "title": "Parceiros priorizados nos resultados",
+      "route": "/",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Parceiros priorizados nos resultados"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Parceiros priorizados nos resultados"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Parceiros priorizados nos resultados"
+        ]
+      },
+      "expected": "Badge ou ordem prioritária para parceiros.",
+      "warnings": []
+    },
+    {
+      "id": "e-01",
+      "sectionId": "E",
+      "title": "Contagem total e por categoria",
+      "route": "/categorias",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "explorar"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Contagem total e por categoria"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Contagem total e por categoria"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Contagem total e por categoria"
+        ]
+      },
+      "expected": "Números corretos no topo.",
+      "warnings": []
+    },
+    {
+      "id": "e-02",
+      "sectionId": "E",
+      "title": "Carrossel Mais visitadas agora",
+      "route": "/categorias",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "explorar"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Carrossel Mais visitadas agora"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Carrossel Mais visitadas agora"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Carrossel Mais visitadas agora"
+        ]
+      },
+      "expected": "Carrossel se houver dados.",
+      "warnings": []
+    },
+    {
+      "id": "e-03",
+      "sectionId": "E",
+      "title": "Atalhos humor → home busca",
+      "route": "/categorias",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "explorar"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Atalhos humor → home busca"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Atalhos humor → home busca"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Atalhos humor → home busca"
+        ]
+      },
+      "expected": "Atalho leva à busca (login se guest).",
+      "warnings": []
+    },
+    {
+      "id": "e-04",
+      "sectionId": "E",
+      "title": "Barra busca → /?busca=1",
+      "route": "/categorias",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "explorar"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Toque O que você procura."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Clique O que você procura."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Toque O que você procura."
+        ]
+      },
+      "expected": "Navega /?busca=1.",
+      "warnings": []
+    },
+    {
+      "id": "e-05",
+      "sectionId": "E",
+      "title": "Grid categorias → /categoria/[slug]",
+      "route": "/categorias",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "explorar"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Grid categorias → /categoria/[slug]"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Grid categorias → /categoria/[slug]"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Grid categorias → /categoria/[slug]"
+        ]
+      },
+      "expected": "Cada card abre slug correto.",
+      "warnings": []
+    },
+    {
+      "id": "e-06",
+      "sectionId": "E",
+      "title": "ExplorarSkeleton no loading",
+      "route": "/categorias",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "explorar"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "ExplorarSkeleton no loading"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "ExplorarSkeleton no loading"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "ExplorarSkeleton no loading"
+        ]
+      },
+      "expected": "Skeleton antes do conteúdo.",
+      "warnings": []
+    },
+    {
+      "id": "f-01",
+      "sectionId": "F",
+      "title": "Lista lugares status ativo",
+      "route": "/categoria/natureza",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "categoria"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Lista lugares status ativo"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Lista lugares status ativo"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Lista lugares status ativo"
+        ]
+      },
+      "expected": "Só lugares ativos.",
+      "warnings": []
+    },
+    {
+      "id": "f-02",
+      "sectionId": "F",
+      "title": "Chips subcategoria filtram",
+      "route": "/categoria/gastronomia",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "categoria"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Chips subcategoria filtram"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Chips subcategoria filtram"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Chips subcategoria filtram"
+        ]
+      },
+      "expected": "Filtro por subcategoria.",
+      "warnings": []
+    },
+    {
+      "id": "f-03",
+      "sectionId": "F",
+      "title": "Chip Todos restaura lista",
+      "route": "/categoria/natureza",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "categoria"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Chip Todos restaura lista"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Chip Todos restaura lista"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Chip Todos restaura lista"
+        ]
+      },
+      "expected": "Todos mostra lista completa.",
+      "warnings": []
+    },
+    {
+      "id": "f-04",
+      "sectionId": "F",
+      "title": "Erro Supabase → banner e voltar",
+      "route": "/categoria/natureza",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "categoria"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Erro Supabase → banner e voltar"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Erro Supabase → banner e voltar"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Erro Supabase → banner e voltar"
+        ]
+      },
+      "expected": "Banner vermelho; link /categorias.",
+      "warnings": [
+        "Simule rede/Supabase down."
+      ]
+    },
+    {
+      "id": "f-05",
+      "sectionId": "F",
+      "title": "Cards com distância (GPS)",
+      "route": "/categoria/natureza",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "categoria"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "GPS ligado."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "GPS ligado."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "GPS ligado."
+        ]
+      },
+      "expected": "Distância nos cards.",
+      "warnings": []
+    },
+    {
+      "id": "g-01",
+      "sectionId": "G",
+      "title": "Lugar ativo abre completo",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Abra lugar ativo."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Abra lugar ativo."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Abra lugar ativo."
+        ]
+      },
+      "expected": "Todas seções principais visíveis.",
+      "warnings": []
+    },
+    {
+      "id": "g-02",
+      "sectionId": "G",
+      "title": "ID inválido → Lugar não encontrado",
+      "route": "/lugares/invalid",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "ID inválido → Lugar não encontrado"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "ID inválido → Lugar não encontrado"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "ID inválido → Lugar não encontrado"
+        ]
+      },
+      "expected": "Mensagem Lugar não encontrado.",
+      "warnings": []
+    },
+    {
+      "id": "g-03",
+      "sectionId": "G",
+      "title": "Erro rede → ErrorBanner retry",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Modo avião no detalhe."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Modo avião no detalhe."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Modo avião no detalhe."
+        ]
+      },
+      "expected": "ErrorBanner e Tentar novamente.",
+      "warnings": []
+    },
+    {
+      "id": "g-04",
+      "sectionId": "G",
+      "title": "Sem foto: placeholder aceitável",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Sem foto: placeholder aceitável"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Sem foto: placeholder aceitável"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Sem foto: placeholder aceitável"
+        ]
+      },
+      "expected": "Gradiente/placeholder sem broken image.",
+      "warnings": [
+        "Lugar sem foto A-03."
+      ]
+    },
+    {
+      "id": "g-05",
+      "sectionId": "G",
+      "title": "Várias fotos: carrossel 1/N",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Várias fotos: carrossel 1/N"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Várias fotos: carrossel 1/N"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Várias fotos: carrossel 1/N"
+        ]
+      },
+      "expected": "Carrossel com indicador.",
+      "warnings": []
+    },
+    {
+      "id": "g-06",
+      "sectionId": "G",
+      "title": "Parceiro: badge e conteúdo extra",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Parceiro: badge e conteúdo extra"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Parceiro: badge e conteúdo extra"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Parceiro: badge e conteúdo extra"
+        ]
+      },
+      "expected": "Badge parceiro; galeria/descrição.",
+      "warnings": []
+    },
+    {
+      "id": "g-07",
+      "sectionId": "G",
+      "title": "Compartilhar nativo ou Link copiado",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Compartilhar nativo ou Link copiado"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Compartilhar nativo ou Link copiado"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Compartilhar nativo ou Link copiado"
+        ]
+      },
+      "expected": "Share sheet ou toast.",
+      "warnings": []
+    },
+    {
+      "id": "g-08",
+      "sectionId": "G",
+      "title": "Restaurante: ações só com dados",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Restaurante: ações só com dados"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Restaurante: ações só com dados"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Restaurante: ações só com dados"
+        ]
+      },
+      "expected": "Ligar/IG/Cardápio/Site condicionais.",
+      "warnings": []
+    },
+    {
+      "id": "g-09",
+      "sectionId": "G",
+      "title": "Praia/trilha: sem menu fictício",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Praia/trilha: sem menu fictício"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Praia/trilha: sem menu fictício"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Praia/trilha: sem menu fictício"
+        ]
+      },
+      "expected": "Sem cardápio em lugar público.",
+      "warnings": []
+    },
+    {
+      "id": "g-10",
+      "sectionId": "G",
+      "title": "Com horários: badge e sheet",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Com horários: badge e sheet"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Com horários: badge e sheet"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Com horários: badge e sheet"
+        ]
+      },
+      "expected": "Badge e sheet horários.",
+      "warnings": []
+    },
+    {
+      "id": "g-11",
+      "sectionId": "G",
+      "title": "Sem horários: sem badge Abre enganoso",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Sem horários: sem badge Abre enganoso"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Sem horários: sem badge Abre enganoso"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Sem horários: sem badge Abre enganoso"
+        ]
+      },
+      "expected": "Sem badge Abre incorreto.",
+      "warnings": [
+        "Lugar sem horário A-03."
+      ]
+    },
+    {
+      "id": "g-12",
+      "sectionId": "G",
+      "title": "mostrar_endereco false: sem mapa",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "mostrar_endereco false: sem mapa"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "mostrar_endereco false: sem mapa"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "mostrar_endereco false: sem mapa"
+        ]
+      },
+      "expected": "Mapa estático oculto.",
+      "warnings": []
+    },
+    {
+      "id": "g-13",
+      "sectionId": "G",
+      "title": "Mapa estático ou link Maps",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Mapa estático ou link Maps"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Mapa estático ou link Maps"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Mapa estático ou link Maps"
+        ]
+      },
+      "expected": "Mapa ou link externo.",
+      "warnings": []
+    },
+    {
+      "id": "g-14",
+      "sectionId": "G",
+      "title": "Widget clima mini visível",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe",
+        "clima"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Widget clima mini visível"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Widget clima mini visível"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Widget clima mini visível"
+        ]
+      },
+      "expected": "LugarClimaWidget em Natureza+coords.",
+      "warnings": [
+        "Praia com coords A-03."
+      ]
+    },
+    {
+      "id": "g-15",
+      "sectionId": "G",
+      "title": "Guest Ver mais → LoginModal clima",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "detalhe",
+        "clima"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Guest Ver mais → LoginModal clima"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Guest Ver mais → LoginModal clima"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Guest Ver mais → LoginModal clima"
+        ]
+      },
+      "expected": "LoginModal motivo clima.",
+      "warnings": []
+    },
+    {
+      "id": "g-16",
+      "sectionId": "G",
+      "title": "Logado: ClimaSheet completo",
+      "route": "/lugares/[id]",
+      "roles": [
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe",
+        "clima"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Logado: ClimaSheet completo"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Logado: ClimaSheet completo"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Logado: ClimaSheet completo"
+        ]
+      },
+      "expected": "Sheet previsão completa.",
+      "warnings": []
+    },
+    {
+      "id": "g-17",
+      "sectionId": "G",
+      "title": "API clima fora: página estável",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "API clima fora: página estável"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "API clima fora: página estável"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "API clima fora: página estável"
+        ]
+      },
+      "expected": "Widget some/erro local; página OK.",
+      "warnings": []
+    },
+    {
+      "id": "g-18",
+      "sectionId": "G",
+      "title": "Favoritar toggle ou modal guest",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Favoritar toggle ou modal guest"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Favoritar toggle ou modal guest"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Favoritar toggle ou modal guest"
+        ]
+      },
+      "expected": "Comportamento por sessão.",
+      "warnings": []
+    },
+    {
+      "id": "g-19",
+      "sectionId": "G",
+      "title": "Avaliar: nota aspectos comentário",
+      "route": "/lugares/[id]",
+      "roles": [
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Avaliar: nota aspectos comentário"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Avaliar: nota aspectos comentário"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Avaliar: nota aspectos comentário"
+        ]
+      },
+      "expected": "Envio com toast sucesso.",
+      "warnings": []
+    },
+    {
+      "id": "g-20",
+      "sectionId": "G",
+      "title": "Avaliação oculta até aprovação admin",
+      "route": "/lugares/[id]",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Avaliação oculta até aprovação admin"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Avaliação oculta até aprovação admin"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Avaliação oculta até aprovação admin"
+        ]
+      },
+      "expected": "Não aparece na lista pública até aprovar.",
+      "warnings": []
+    },
+    {
+      "id": "g-21",
+      "sectionId": "G",
+      "title": "Segunda avaliação bloqueada",
+      "route": "/lugares/[id]",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Segunda avaliação bloqueada"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Segunda avaliação bloqueada"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Segunda avaliação bloqueada"
+        ]
+      },
+      "expected": "jaAvaliou impede novo envio.",
+      "warnings": []
+    },
+    {
+      "id": "g-22",
+      "sectionId": "G",
+      "title": "Admin: sugestão IA em avaliações",
+      "route": "/admin/avaliacoes",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Admin: sugestão IA em avaliações"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Admin: sugestão IA em avaliações"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Admin: sugestão IA em avaliações"
+        ]
+      },
+      "expected": "Badge sugestão IA na fila.",
+      "warnings": []
+    },
+    {
+      "id": "g-23",
+      "sectionId": "G",
+      "title": "Ir agora: sheet apps sem preferência",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Limpe maps_preferido.",
+          "Toque Ir agora."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Limpe maps_preferido.",
+          "Clique Ir agora."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Limpe maps_preferido.",
+          "Toque Ir agora."
+        ]
+      },
+      "expected": "Sheet Google/Apple/Waze.",
+      "warnings": []
+    },
+    {
+      "id": "g-24",
+      "sectionId": "G",
+      "title": "Preferência Maps do perfil reutilizada",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "detalhe"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Defina app em /perfil.",
+          "Ir agora de novo."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Defina app em /perfil.",
+          "Ir agora de novo."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Defina app em /perfil.",
+          "Ir agora de novo."
+        ]
+      },
+      "expected": "Abre app preferido direto.",
+      "warnings": []
+    },
+    {
+      "id": "g-25",
+      "sectionId": "G",
+      "title": "Log ir_agora em /admin/logs",
+      "route": "/lugares/[id]",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Ir agora.",
+          "Confira /admin/logs."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Ir agora.",
+          "Confira /admin/logs."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Ir agora.",
+          "Confira /admin/logs."
+        ]
+      },
+      "expected": "Evento ir_agora registrado.",
+      "warnings": []
+    },
+    {
+      "id": "h-01",
+      "sectionId": "H",
+      "title": "Guest: CTA e login",
+      "route": "/favoritos",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "favoritos"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Guest: CTA e login"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Guest: CTA e login"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Guest: CTA e login"
+        ]
+      },
+      "expected": "CTA login; sem lista.",
+      "warnings": []
+    },
+    {
+      "id": "h-02",
+      "sectionId": "H",
+      "title": "Logado: lista e remover item",
+      "route": "/favoritos",
+      "roles": [
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "favoritos"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Remova um favorito."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Remova um favorito."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Remova um favorito."
+        ]
+      },
+      "expected": "Lista atualiza; rollback se falhar rede.",
+      "warnings": []
+    },
+    {
+      "id": "h-03",
+      "sectionId": "H",
+      "title": "Logado vazio: empty state",
+      "route": "/favoritos",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "favoritos"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Logado vazio: empty state"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Logado vazio: empty state"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Logado vazio: empty state"
+        ]
+      },
+      "expected": "Estado vazio amigável.",
+      "warnings": []
+    },
+    {
+      "id": "h-04",
+      "sectionId": "H",
+      "title": "Erro fetch: banner retry",
+      "route": "/favoritos",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "favoritos"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Erro fetch: banner retry"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Erro fetch: banner retry"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Erro fetch: banner retry"
+        ]
+      },
+      "expected": "Banner e retry.",
+      "warnings": [
+        "Simule offline."
+      ]
+    },
+    {
+      "id": "h-05",
+      "sectionId": "H",
+      "title": "Lugar desativado some da lista",
+      "route": "/favoritos",
+      "roles": [
+        "admin",
+        "user"
+      ],
+      "tags": [
+        "favoritos"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Lugar desativado some da lista"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Lugar desativado some da lista"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Lugar desativado some da lista"
+        ]
+      },
+      "expected": "Favorito de lugar inativo não listado.",
+      "warnings": [
+        "Desative lugar no admin."
+      ]
+    },
+    {
+      "id": "i-01",
+      "sectionId": "I",
+      "title": "Guest vê rotas curadas",
+      "route": "/rotas",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Guest vê rotas curadas"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Guest vê rotas curadas"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Guest vê rotas curadas"
+        ]
+      },
+      "expected": "Lista rotas curadas visível.",
+      "warnings": []
+    },
+    {
+      "id": "i-02",
+      "sectionId": "I",
+      "title": "Criar roteiro → login se guest",
+      "route": "/rotas",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "rotas",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Criar roteiro → login se guest"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Criar roteiro → login se guest"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Criar roteiro → login se guest"
+        ]
+      },
+      "expected": "LoginModal ou redirect login.",
+      "warnings": []
+    },
+    {
+      "id": "i-03",
+      "sectionId": "I",
+      "title": "Chips tipo filtram",
+      "route": "/rotas",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Chips tipo filtram"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Chips tipo filtram"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Chips tipo filtram"
+        ]
+      },
+      "expected": "Filtro por tipo se >1.",
+      "warnings": []
+    },
+    {
+      "id": "i-04",
+      "sectionId": "I",
+      "title": "Zero rotas: empty state",
+      "route": "/rotas",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Zero rotas: empty state"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Zero rotas: empty state"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Zero rotas: empty state"
+        ]
+      },
+      "expected": "Empty state sem crash.",
+      "warnings": [
+        "Ambiente sem rotas cadastradas."
+      ]
+    },
+    {
+      "id": "i-05",
+      "sectionId": "I",
+      "title": "Formulário roteiro IA",
+      "route": "/rotas",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "rotas",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Criar roteiro → preencha dias/perfil/interesses."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Criar roteiro → preencha dias/perfil/interesses."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Criar roteiro → preencha dias/perfil/interesses."
+        ]
+      },
+      "expected": "Form válido aceita submit.",
+      "warnings": []
+    },
+    {
+      "id": "i-06",
+      "sectionId": "I",
+      "title": "Geração → preview markdown",
+      "route": "/rotas",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "rotas",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Geração → preview markdown"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Geração → preview markdown"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Geração → preview markdown"
+        ]
+      },
+      "expected": "Preview markdown após gerar.",
+      "warnings": []
+    },
+    {
+      "id": "i-07",
+      "sectionId": "I",
+      "title": "Salvar → Meus roteiros",
+      "route": "/rotas",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "rotas",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Salvar → Meus roteiros"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Salvar → Meus roteiros"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Salvar → Meus roteiros"
+        ]
+      },
+      "expected": "Roteiro na lista Meus roteiros.",
+      "warnings": []
+    },
+    {
+      "id": "i-08",
+      "sectionId": "I",
+      "title": "Free 2/dia; 3º paywall",
+      "route": "/rotas",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "rotas",
+        "ia",
+        "premium"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Free 2/dia; 3º paywall"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Free 2/dia; 3º paywall"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Free 2/dia; 3º paywall"
+        ]
+      },
+      "expected": "Paywall na 3ª geração do dia.",
+      "warnings": [
+        "America/Sao_Paulo meia-noite."
+      ]
+    },
+    {
+      "id": "i-09",
+      "sectionId": "I",
+      "title": "Abrir roteiro salvo no modal",
+      "route": "/rotas",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Abrir roteiro salvo no modal"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Abrir roteiro salvo no modal"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Abrir roteiro salvo no modal"
+        ]
+      },
+      "expected": "Modal com conteúdo salvo.",
+      "warnings": []
+    },
+    {
+      "id": "i-10",
+      "sectionId": "I",
+      "title": "Detalhe: capa tags tipo dificuldade",
+      "route": "/rotas/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Detalhe: capa tags tipo dificuldade"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Detalhe: capa tags tipo dificuldade"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Detalhe: capa tags tipo dificuldade"
+        ]
+      },
+      "expected": "Metadados visíveis.",
+      "warnings": []
+    },
+    {
+      "id": "i-11",
+      "sectionId": "I",
+      "title": "Etapas ordenadas com dicas",
+      "route": "/rotas/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Etapas ordenadas com dicas"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Etapas ordenadas com dicas"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Etapas ordenadas com dicas"
+        ]
+      },
+      "expected": "Etapas em ordem com textos.",
+      "warnings": []
+    },
+    {
+      "id": "i-12",
+      "sectionId": "I",
+      "title": "Ver no guia se lugar_id",
+      "route": "/rotas/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Ver no guia se lugar_id"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Ver no guia se lugar_id"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Ver no guia se lugar_id"
+        ]
+      },
+      "expected": "Link para lugar quando etapa tem lugar.",
+      "warnings": []
+    },
+    {
+      "id": "i-13",
+      "sectionId": "I",
+      "title": "Abrir no Maps rotas_localizacoes",
+      "route": "/rotas/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "rotas"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Abrir no Maps rotas_localizacoes"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Abrir no Maps rotas_localizacoes"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Abrir no Maps rotas_localizacoes"
+        ]
+      },
+      "expected": "Abre mapa externo com pontos.",
+      "warnings": []
+    },
+    {
+      "id": "j-01",
+      "sectionId": "J",
+      "title": "Guest: benefícios e login",
+      "route": "/perfil",
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Guest: benefícios e login"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Guest: benefícios e login"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Guest: benefícios e login"
+        ]
+      },
+      "expected": "Benefícios + CTA login.",
+      "warnings": []
+    },
+    {
+      "id": "j-02",
+      "sectionId": "J",
+      "title": "Logado: hero email membro desde",
+      "route": "/perfil",
+      "roles": [
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Logado: hero email membro desde"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Logado: hero email membro desde"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Logado: hero email membro desde"
+        ]
+      },
+      "expected": "Dados do usuário visíveis.",
+      "warnings": []
+    },
+    {
+      "id": "j-03",
+      "sectionId": "J",
+      "title": "Stats favoritos avaliações roteiros",
+      "route": "/perfil",
+      "roles": [
+        "user",
+        "premium"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Stats favoritos avaliações roteiros"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Stats favoritos avaliações roteiros"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Stats favoritos avaliações roteiros"
+        ]
+      },
+      "expected": "Números coerentes com uso.",
+      "warnings": []
+    },
+    {
+      "id": "j-04",
+      "sectionId": "J",
+      "title": "Card Premium / paywall",
+      "route": "/perfil",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "perfil",
+        "premium"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Card Premium / paywall"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Card Premium / paywall"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Card Premium / paywall"
+        ]
+      },
+      "expected": "CTA upgrade visível para free.",
+      "warnings": []
+    },
+    {
+      "id": "j-05",
+      "sectionId": "J",
+      "title": "App navegação reflete no detalhe",
+      "route": "/perfil",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Troque Maps preferido.",
+          "Ir agora em lugar."
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Troque Maps preferido.",
+          "Ir agora em lugar."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Troque Maps preferido.",
+          "Ir agora em lugar."
+        ]
+      },
+      "expected": "Preferência aplicada no Ir agora.",
+      "warnings": []
+    },
+    {
+      "id": "j-06",
+      "sectionId": "J",
+      "title": "Editar nome e avatar",
+      "route": "/perfil/editar",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Editar nome e avatar"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Editar nome e avatar"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Editar nome e avatar"
+        ]
+      },
+      "expected": "Upload e nome salvos.",
+      "warnings": []
+    },
+    {
+      "id": "j-07",
+      "sectionId": "J",
+      "title": "Logout com confirmação",
+      "route": "/perfil",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Logout com confirmação"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Logout com confirmação"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Logout com confirmação"
+        ]
+      },
+      "expected": "Confirma e desloga.",
+      "warnings": []
+    },
+    {
+      "id": "j-08",
+      "sectionId": "J",
+      "title": "Excluir conta e log deletou_conta",
+      "route": "/perfil",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "perfil"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Excluir conta e log deletou_conta"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Excluir conta e log deletou_conta"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Excluir conta e log deletou_conta"
+        ]
+      },
+      "expected": "Conta removida; log no admin.",
+      "warnings": [
+        "Use conta descartável.",
+        "Irreversível."
+      ]
+    },
+    {
+      "id": "k-01",
+      "sectionId": "K",
+      "title": "GPS negado: home e detalhe usáveis",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "edge"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "GPS negado: home e detalhe usáveis"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "GPS negado: home e detalhe usáveis"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "GPS negado: home e detalhe usáveis"
+        ]
+      },
+      "expected": "App funciona sem coords.",
+      "warnings": []
+    },
+    {
+      "id": "k-02",
+      "sectionId": "K",
+      "title": "Modo avião home: degradação",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "edge"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Modo avião home: degradação"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Modo avião home: degradação"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Modo avião home: degradação"
+        ]
+      },
+      "expected": "Mensagens por seção; não branco total.",
+      "warnings": []
+    },
+    {
+      "id": "k-03",
+      "sectionId": "K",
+      "title": "Modo avião busca IA: erro rede",
+      "route": "/",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "edge",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Modo avião busca IA: erro rede"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Modo avião busca IA: erro rede"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Modo avião busca IA: erro rede"
+        ]
+      },
+      "expected": "Erro de rede claro na busca.",
+      "warnings": []
+    },
+    {
+      "id": "k-04",
+      "sectionId": "K",
+      "title": "Busca termo sem match",
+      "route": "/",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "edge"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Busca termo sem match"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Busca termo sem match"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Busca termo sem match"
+        ]
+      },
+      "expected": "Zero resultados + mensagem.",
+      "warnings": []
+    },
+    {
+      "id": "k-05",
+      "sectionId": "K",
+      "title": "API Claude indisponível: erro busca/roteiro",
+      "route": "/",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "edge",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "API Claude indisponível: erro busca/roteiro"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "API Claude indisponível: erro busca/roteiro"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "API Claude indisponível: erro busca/roteiro"
+        ]
+      },
+      "expected": "Mensagem erro; app estável.",
+      "warnings": [
+        "Simule 500 ou chave inválida em staging."
+      ]
+    },
+    {
+      "id": "k-06",
+      "sectionId": "K",
+      "title": "Guest bloqueado: favoritos busca avaliar roteiro clima",
+      "route": null,
+      "roles": [
+        "guest"
+      ],
+      "tags": [
+        "edge"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Guest bloqueado: favoritos busca avaliar roteiro clima"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Guest bloqueado: favoritos busca avaliar roteiro clima"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Guest bloqueado: favoritos busca avaliar roteiro clima"
+        ]
+      },
+      "expected": "LoginModal ou CTA em todas ações.",
+      "warnings": []
+    },
+    {
+      "id": "k-07",
+      "sectionId": "K",
+      "title": "Onboarding antes de ?busca=1 e ?q=",
+      "route": "/?busca=1",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "edge",
+        "onboarding"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Onboarding antes de ?busca=1 e ?q="
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Onboarding antes de ?busca=1 e ?q="
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Onboarding antes de ?busca=1 e ?q="
+        ]
+      },
+      "expected": "Onboarding primeiro; depois deep link.",
+      "warnings": []
+    },
+    {
+      "id": "k-08",
+      "sectionId": "K",
+      "title": "Meia-noite SP: contador IA renova",
+      "route": "/",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "edge",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Meia-noite SP: contador IA renova"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Meia-noite SP: contador IA renova"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Meia-noite SP: contador IA renova"
+        ]
+      },
+      "expected": "Após meia-noite SP, contador 0/3 e 0/2.",
+      "warnings": [
+        "Teste difícil em QA; validar RPC ou mudar data sistema."
+      ]
+    },
+    {
+      "id": "l-01",
+      "sectionId": "L",
+      "title": "User comum /admin → redirect /",
+      "route": "/admin",
+      "roles": [
+        "user",
+        "guest"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "User comum /admin → redirect /"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "User comum /admin → redirect /"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "User comum /admin → redirect /"
+        ]
+      },
+      "expected": "Redirect para home.",
+      "warnings": []
+    },
+    {
+      "id": "l-02",
+      "sectionId": "L",
+      "title": "Shell: sidebar desktop drawer mobile",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Shell: sidebar desktop drawer mobile"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Largura >1024: sidebar fixa.",
+          "Mobile: menu hamburger drawer."
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Shell: sidebar desktop drawer mobile"
+        ]
+      },
+      "expected": "Layout responsivo admin.",
+      "warnings": []
+    },
+    {
+      "id": "l-03",
+      "sectionId": "L",
+      "title": "Sino alertas com links operacionais",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Sino alertas com links operacionais"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Sino alertas com links operacionais"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Sino alertas com links operacionais"
+        ]
+      },
+      "expected": "Links avaliações destaques logs.",
+      "warnings": []
+    },
+    {
+      "id": "l-04",
+      "sectionId": "L",
+      "title": "Dashboard KPIs semana/mês",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Dashboard KPIs semana/mês"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Dashboard KPIs semana/mês"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Dashboard KPIs semana/mês"
+        ]
+      },
+      "expected": "KPIs mudam ao alternar período.",
+      "warnings": []
+    },
+    {
+      "id": "l-05",
+      "sectionId": "L",
+      "title": "Aprovar/rejeitar fila inline",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Aprovar/rejeitar fila inline"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Aprovar/rejeitar fila inline"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Aprovar/rejeitar fila inline"
+        ]
+      },
+      "expected": "Ações na fila funcionam.",
+      "warnings": []
+    },
+    {
+      "id": "l-06",
+      "sectionId": "L",
+      "title": "Timeline atividade",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Timeline atividade"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Timeline atividade"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Timeline atividade"
+        ]
+      },
+      "expected": "Timeline com eventos recentes.",
+      "warnings": []
+    },
+    {
+      "id": "l-07",
+      "sectionId": "L",
+      "title": "Atalhos operacionais dashboard",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Atalhos operacionais dashboard"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Atalhos operacionais dashboard"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Atalhos operacionais dashboard"
+        ]
+      },
+      "expected": "Links logs destaques expirando.",
+      "warnings": []
+    },
+    {
+      "id": "l-08",
+      "sectionId": "L",
+      "title": "Locais: listar criar editar",
+      "route": "/admin/locais",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Locais: listar criar editar"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Locais: listar criar editar"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Locais: listar criar editar"
+        ]
+      },
+      "expected": "CRUD locais OK.",
+      "warnings": []
+    },
+    {
+      "id": "l-09",
+      "sectionId": "L",
+      "title": "EnderecoAutocomplete sem reabrir dropdown",
+      "route": "/admin/locais",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "EnderecoAutocomplete sem reabrir dropdown"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "EnderecoAutocomplete sem reabrir dropdown"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "EnderecoAutocomplete sem reabrir dropdown"
+        ]
+      },
+      "expected": "Seleção endereço estável.",
+      "warnings": []
+    },
+    {
+      "id": "l-10",
+      "sectionId": "L",
+      "title": "Fotos e toggles endereço/horários",
+      "route": "/admin/locais",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Fotos e toggles endereço/horários"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Fotos e toggles endereço/horários"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Fotos e toggles endereço/horários"
+        ]
+      },
+      "expected": "Upload e toggles salvam.",
+      "warnings": []
+    },
+    {
+      "id": "l-11",
+      "sectionId": "L",
+      "title": "Tags máx 3 e subcategoria",
+      "route": "/admin/locais",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Tags máx 3 e subcategoria"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Tags máx 3 e subcategoria"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Tags máx 3 e subcategoria"
+        ]
+      },
+      "expected": "Limite 3 tags; subcategoria OK.",
+      "warnings": []
+    },
+    {
+      "id": "l-12",
+      "sectionId": "L",
+      "title": "Rotas admin CRUD completo",
+      "route": "/admin/rotas",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Rotas admin CRUD completo"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Rotas admin CRUD completo"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Rotas admin CRUD completo"
+        ]
+      },
+      "expected": "Tipo tags pontos mapa destaque.",
+      "warnings": []
+    },
+    {
+      "id": "l-13",
+      "sectionId": "L",
+      "title": "Avaliações pendentes e badge IA",
+      "route": "/admin/avaliacoes",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Avaliações pendentes e badge IA"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Avaliações pendentes e badge IA"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Avaliações pendentes e badge IA"
+        ]
+      },
+      "expected": "Fila pendentes com sugestão IA.",
+      "warnings": []
+    },
+    {
+      "id": "l-14",
+      "sectionId": "L",
+      "title": "Aprovar público / rejeitar oculto",
+      "route": "/admin/avaliacoes",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Aprovar público / rejeitar oculto"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Aprovar público / rejeitar oculto"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Aprovar público / rejeitar oculto"
+        ]
+      },
+      "expected": "Aprovada no app; rejeitada oculta.",
+      "warnings": []
+    },
+    {
+      "id": "l-15",
+      "sectionId": "L",
+      "title": "Destaques plano Parceiro vigência",
+      "route": "/admin/destaques",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Destaques plano Parceiro vigência"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Destaques plano Parceiro vigência"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Destaques plano Parceiro vigência"
+        ]
+      },
+      "expected": "CRUD vigência Parceiro.",
+      "warnings": []
+    },
+    {
+      "id": "l-16",
+      "sectionId": "L",
+      "title": "Novo destaque → home Parceiros",
+      "route": "/admin/destaques",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Novo destaque → home Parceiros"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Novo destaque → home Parceiros"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Novo destaque → home Parceiros"
+        ]
+      },
+      "expected": "Carrossel e badge após vigente.",
+      "warnings": []
+    },
+    {
+      "id": "l-17",
+      "sectionId": "L",
+      "title": "Destaques ?status=expirando expirado",
+      "route": "/admin/destaques",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Destaques ?status=expirando expirado"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Destaques ?status=expirando expirado"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Destaques ?status=expirando expirado"
+        ]
+      },
+      "expected": "Filtros URL funcionam.",
+      "warnings": []
+    },
+    {
+      "id": "l-18",
+      "sectionId": "L",
+      "title": "Usuários role e premium IA",
+      "route": "/admin/usuarios",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Usuários role e premium IA"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Usuários role e premium IA"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Usuários role e premium IA"
+        ]
+      },
+      "expected": "Edição role e flag premium.",
+      "warnings": []
+    },
+    {
+      "id": "l-19",
+      "sectionId": "L",
+      "title": "Link logs ?user_id=",
+      "route": "/admin/usuarios",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Link logs ?user_id="
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Link logs ?user_id="
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Link logs ?user_id="
+        ]
+      },
+      "expected": "Abre logs filtrados.",
+      "warnings": []
+    },
+    {
+      "id": "l-20",
+      "sectionId": "L",
+      "title": "Logs filtros ação período usuário",
+      "route": "/admin/logs",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Logs filtros ação período usuário"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Logs filtros ação período usuário"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Logs filtros ação período usuário"
+        ]
+      },
+      "expected": "Filtros aplicam corretamente.",
+      "warnings": []
+    },
+    {
+      "id": "l-21",
+      "sectionId": "L",
+      "title": "Deep link lugar em ir_agora",
+      "route": "/admin/logs",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Deep link lugar em ir_agora"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Deep link lugar em ir_agora"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Deep link lugar em ir_agora"
+        ]
+      },
+      "expected": "Link para lugar no log.",
+      "warnings": []
+    },
+    {
+      "id": "l-22",
+      "sectionId": "L",
+      "title": "Taxonomia CRUD subcategorias tags",
+      "route": "/admin/taxonomia",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Taxonomia CRUD subcategorias tags"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Taxonomia CRUD subcategorias tags"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Taxonomia CRUD subcategorias tags"
+        ]
+      },
+      "expected": "CRUD sem erro.",
+      "warnings": []
+    },
+    {
+      "id": "l-23",
+      "sectionId": "L",
+      "title": "Renomear com migração lugares",
+      "route": "/admin/taxonomia",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Renomear com migração lugares"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Renomear com migração lugares"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Renomear com migração lugares"
+        ]
+      },
+      "expected": "Lugares atualizados ao renomear.",
+      "warnings": []
+    },
+    {
+      "id": "l-24",
+      "sectionId": "L",
+      "title": "Excluir em uso bloqueado",
+      "route": "/admin/taxonomia",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Excluir em uso bloqueado"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Excluir em uso bloqueado"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Excluir em uso bloqueado"
+        ]
+      },
+      "expected": "Exclusão impedida se em uso.",
+      "warnings": []
+    },
+    {
+      "id": "l-25",
+      "sectionId": "L",
+      "title": "aplica_em_rotas após migration",
+      "route": "/admin/taxonomia",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "aplica_em_rotas após migration"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "aplica_em_rotas após migration"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "aplica_em_rotas após migration"
+        ]
+      },
+      "expected": "Campo aplica_em_rotas visível e funcional.",
+      "warnings": [
+        "Requer rotas_taxonomia.sql."
+      ]
+    },
+    {
+      "id": "m-01",
+      "sectionId": "M",
+      "title": "Smoke: home hero → parceiros → em alta → planos → perto",
+      "route": "/",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "smoke"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Smoke: home hero → parceiros → em alta → planos → perto"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Smoke: home hero → parceiros → em alta → planos → perto"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Smoke: home hero → parceiros → em alta → planos → perto"
+        ]
+      },
+      "expected": "Todas seções principais na ordem sem regressão.",
+      "warnings": []
+    },
+    {
+      "id": "m-02",
+      "sectionId": "M",
+      "title": "Smoke: busca login limite parceiros ranking",
+      "route": "/",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "smoke",
+        "ia"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Smoke: busca login limite parceiros ranking"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Smoke: busca login limite parceiros ranking"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Smoke: busca login limite parceiros ranking"
+        ]
+      },
+      "expected": "Fluxo busca completo OK.",
+      "warnings": []
+    },
+    {
+      "id": "m-03",
+      "sectionId": "M",
+      "title": "Smoke: detalhe horários endereço clima",
+      "route": "/lugares/[id]",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "smoke"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Smoke: detalhe horários endereço clima"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Smoke: detalhe horários endereço clima"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Smoke: detalhe horários endereço clima"
+        ]
+      },
+      "expected": "Detalhe sem regressão nas 3 áreas.",
+      "warnings": []
+    },
+    {
+      "id": "m-04",
+      "sectionId": "M",
+      "title": "Smoke: Explorar → /?busca=1",
+      "route": "/categorias",
+      "roles": [
+        "guest",
+        "user",
+        "premium",
+        "admin"
+      ],
+      "tags": [
+        "smoke"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Smoke: Explorar → /?busca=1"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Smoke: Explorar → /?busca=1"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Smoke: Explorar → /?busca=1"
+        ]
+      },
+      "expected": "Barra busca abre busca na home.",
+      "warnings": []
+    },
+    {
+      "id": "m-05",
+      "sectionId": "M",
+      "title": "Smoke: perfil stats logout",
+      "route": "/perfil",
+      "roles": [
+        "user"
+      ],
+      "tags": [
+        "smoke"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Smoke: perfil stats logout"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Smoke: perfil stats logout"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Smoke: perfil stats logout"
+        ]
+      },
+      "expected": "Stats e logout OK.",
+      "warnings": []
+    },
+    {
+      "id": "m-06",
+      "sectionId": "M",
+      "title": "Smoke: aprovação dashboard = admin avaliações",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "smoke",
+        "admin"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Smoke: aprovação dashboard = admin avaliações"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Smoke: aprovação dashboard = admin avaliações"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Smoke: aprovação dashboard = admin avaliações"
+        ]
+      },
+      "expected": "Mesma avaliação aprovada inline aparece aprovada em /admin/avaliacoes.",
+      "warnings": []
+    }
+  ]
+}

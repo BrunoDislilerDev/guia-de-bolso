@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia de Bolso — Checklist de testes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f0f4f3;
+      --green: #1a4a3a;
+      --green-light: #d4ede8;
+      --green-expected: #e8f5f0;
+      --amber: #fff8e6;
+      --amber-border: #e6c84a;
+      --text: #1a2e28;
+      --muted: #5a6b66;
+      --pass: #1a7a4a;
+      --fail: #b42318;
+      --pending: #8a9a94;
+      --radius: 12px;
+      --shadow: 0 4px 20px rgba(26, 74, 58, 0.08);
+      --header-h: auto;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-padding-top: 140px; }
+
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    h1, h2, .font-display {
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+    }
+
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--green);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    }
+
+    .top-bar-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0.75rem 1rem 1rem;
+    }
+
+    .top-bar h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .top-bar h1 a {
+      color: #d4ede8;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-left: 0.5rem;
+    }
+
+    .counters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .counter strong {
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .counter--pass strong { color: #7dffb8; }
+    .counter--fail strong { color: #ffb4ab; }
+    .counter--pending strong { color: #c8d8d2; }
+
+    .progress-wrap {
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 0.65rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #7dffb8;
+      border-radius: 99px;
+      transition: width 0.25s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill { transition: none; }
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .btn {
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    .btn--ghost {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+
+    .btn--ghost:hover { background: rgba(255,255,255,0.25); }
+
+    .layout {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 900px) {
+      .layout {
+        grid-template-columns: 200px 1fr;
+        align-items: start;
+      }
+    }
+
+    .sidebar {
+      display: none;
+    }
+
+    @media (min-width: 900px) {
+      .sidebar {
+        display: block;
+        position: sticky;
+        top: 120px;
+      }
+      .sidebar nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .sidebar a {
+        font-size: 0.78rem;
+        color: var(--green);
+        text-decoration: none;
+        padding: 0.35rem 0.5rem;
+        border-radius: 6px;
+      }
+      .sidebar a:hover { background: var(--green-light); }
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .panel h2 {
+      font-size: 0.95rem;
+      color: var(--green);
+      margin-bottom: 0.75rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    @media (min-width: 600px) {
+      .meta-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      font: inherit;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.6rem;
+      border: 1px solid #c5d5d0;
+      border-radius: 8px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .filters input[type="search"] {
+      flex: 1;
+      min-width: 160px;
+      font: inherit;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid #c5d5d0;
+      border-radius: 8px;
+    }
+
+    .filter-chip {
+      font-size: 0.72rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 99px;
+      border: 1px solid #c5d5d0;
+      background: #fff;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .filter-chip[aria-pressed="true"] {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    .section-jump {
+      width: 100%;
+      font: inherit;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #c5d5d0;
+      margin-bottom: 1rem;
+    }
+
+    @media (min-width: 900px) {
+      .section-jump { display: none; }
+    }
+
+    .section-block {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-block h3 {
+      font-size: 1rem;
+      color: var(--green);
+      margin-bottom: 0.15rem;
+    }
+
+    .section-block .sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .test-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 0.65rem;
+      border-left: 4px solid var(--pending);
+      overflow: hidden;
+    }
+
+    .test-card[data-status="pass"] { border-left-color: var(--pass); }
+    .test-card[data-status="fail"] { border-left-color: var(--fail); }
+
+    .test-card summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .test-card summary::-webkit-details-marker { display: none; }
+
+    .test-card summary::after {
+      content: "▾";
+      margin-left: auto;
+      color: var(--muted);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .test-card[open] summary::after { transform: rotate(180deg); }
+
+    .test-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .badge--pending { background: #eef2f0; color: var(--pending); }
+    .badge--pass { background: #d4f5e4; color: var(--pass); }
+    .badge--fail { background: #fde8e6; color: var(--fail); }
+
+    .route-tag {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: ui-monospace, monospace;
+    }
+
+    .card-body {
+      padding: 0 1rem 1rem;
+      border-top: 1px solid #eef2f0;
+    }
+
+    .device-tabs {
+      display: flex;
+      gap: 0.25rem;
+      margin: 0.75rem 0 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .device-tab {
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.35rem 0.65rem;
+      border: 1px solid #c5d5d0;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .device-tab[aria-selected="true"] {
+      background: var(--green-light);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .steps-panel ol {
+      margin: 0.5rem 0 0 1.1rem;
+      font-size: 0.85rem;
+    }
+
+    .steps-panel li { margin-bottom: 0.35rem; }
+
+    .expected {
+      margin-top: 0.85rem;
+      padding: 0.65rem 0.85rem;
+      background: var(--green-expected);
+      border: 1px solid #9fd4c4;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    .expected strong {
+      display: block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--pass);
+      margin-bottom: 0.25rem;
+    }
+
+    .warnings {
+      margin-top: 0.65rem;
+      padding: 0.65rem 0.85rem;
+      background: var(--amber);
+      border: 1px solid var(--amber-border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+
+    .warnings strong {
+      display: block;
+      font-size: 0.7rem;
+      color: #8a6d00;
+      margin-bottom: 0.25rem;
+    }
+
+    .warnings ul {
+      margin: 0.25rem 0 0 1rem;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #eef2f0;
+    }
+
+    .btn--pass {
+      background: var(--pass);
+      color: #fff;
+    }
+
+    .btn--fail {
+      background: var(--fail);
+      color: #fff;
+    }
+
+    .btn--reset {
+      background: #eef2f0;
+      color: var(--text);
+    }
+
+    .loading, .error-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+
+    .error-state { color: var(--fail); }
+
+    .hidden { display: none !important; }
+
+    #export-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    #export-modal.open { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: var(--radius);
+      max-width: 560px;
+      width: 100%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .modal-box textarea {
+      flex: 1;
+      min-height: 240px;
+      font: ui-monospace, monospace;
+      font-size: 0.75rem;
+      margin: 0.75rem 0;
+      padding: 0.65rem;
+      border-radius: 8px;
+      border: 1px solid #c5d5d0;
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <h1>Checklist QA <a href="/">← App</a></h1>
+      <div class="counters" id="counters" aria-live="polite">
+        <span class="counter">Total <strong id="cnt-total">0</strong></span>
+        <span class="counter counter--pass">Passou <strong id="cnt-pass">0</strong></span>
+        <span class="counter counter--fail">Falhou <strong id="cnt-fail">0</strong></span>
+        <span class="counter counter--pending">Pendente <strong id="cnt-pending">0</strong></span>
+      </div>
+      <div class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="top-actions">
+        <button type="button" class="btn btn--ghost" id="btn-export">Exportar resultado</button>
+        <button type="button" class="btn btn--ghost" id="btn-reset-all">Resetar tudo</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Seções"></aside>
+
+    <main id="main">
+      <div class="loading" id="loading">Carregando checklist…</div>
+      <div class="error-state hidden" id="load-error"></div>
+
+      <div id="app" class="hidden">
+        <section class="panel" aria-labelledby="meta-heading">
+          <h2 id="meta-heading">Sessão de teste</h2>
+          <div class="meta-grid">
+            <div class="field">
+              <label for="meta-device">Dispositivo</label>
+              <input type="text" id="meta-device" placeholder="Ex: iPhone 14, Pixel 8" />
+            </div>
+            <div class="field">
+              <label for="meta-date">Data</label>
+              <input type="date" id="meta-date" />
+            </div>
+            <div class="field">
+              <label for="meta-url">Build / URL</label>
+              <input type="url" id="meta-url" placeholder="https://… ou localhost:3000" />
+            </div>
+            <div class="field">
+              <label for="meta-account">Conta teste</label>
+              <select id="meta-account">
+                <option value="">—</option>
+                <option value="guest">Guest</option>
+                <option value="user">User free</option>
+                <option value="premium">Premium</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <select class="section-jump" id="section-jump" aria-label="Ir para seção"></select>
+
+        <div class="filters">
+          <input type="search" id="search" placeholder="Buscar teste…" aria-label="Buscar teste" />
+          <button type="button" class="filter-chip" data-filter="pending" aria-pressed="false">Só pendentes</button>
+          <button type="button" class="filter-chip" data-filter="fail" aria-pressed="false">Só falhas</button>
+          <button type="button" class="filter-chip" data-filter-role="guest" aria-pressed="false">Guest</button>
+          <button type="button" class="filter-chip" data-filter-role="user" aria-pressed="false">Logado</button>
+          <button type="button" class="filter-chip" data-filter-role="admin" aria-pressed="false">Admin</button>
+        </div>
+
+        <div id="sections"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="export-modal" role="dialog" aria-labelledby="export-title" aria-modal="true">
+    <div class="modal-box">
+      <h2 id="export-title" class="font-display" style="font-size:1rem;color:var(--green)">Exportar resultado</h2>
+      <p style="font-size:0.8rem;color:var(--muted)">Cole em Bloqueadores/Observações do checklist ou salve como evidência.</p>
+      <textarea id="export-text" readonly></textarea>
+      <div style="display:flex;gap:0.5rem;justify-content:flex-end">
+        <button type="button" class="btn btn--reset" id="export-close">Fechar</button>
+        <button type="button" class="btn btn--pass" id="export-copy">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "guia_checklist_v1";
+
+    let data = null;
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return { meta: {}, results: {} };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateCounters();
+      document.querySelectorAll(".test-card").forEach(syncCardUI);
+    }
+
+    function loadStateFromUI() {
+      state.meta = {
+        device: document.getElementById("meta-device").value,
+        date: document.getElementById("meta-date").value,
+        url: document.getElementById("meta-url").value,
+        account: document.getElementById("meta-account").value,
+      };
+      saveState();
+    }
+
+    function applyMetaToUI() {
+      const m = state.meta || {};
+      document.getElementById("meta-device").value = m.device || "";
+      document.getElementById("meta-date").value = m.date || new Date().toISOString().slice(0, 10);
+      document.getElementById("meta-url").value = m.url || window.location.origin;
+      document.getElementById("meta-account").value = m.account || "";
+    }
+
+    function statusLabel(s) {
+      if (s === "pass") return "Passou";
+      if (s === "fail") return "Falhou";
+      return "Pendente";
+    }
+
+    function updateCounters() {
+      const total = data.items.length;
+      let pass = 0, fail = 0;
+      data.items.forEach((it) => {
+        const s = state.results[it.id];
+        if (s === "pass") pass++;
+        else if (s === "fail") fail++;
+      });
+      const pending = total - pass - fail;
+      document.getElementById("cnt-total").textContent = total;
+      document.getElementById("cnt-pass").textContent = pass;
+      document.getElementById("cnt-fail").textContent = fail;
+      document.getElementById("cnt-pending").textContent = pending;
+      const pct = total ? Math.round((pass / total) * 100) : 0;
+      document.getElementById("progress-fill").style.width = pct + "%";
+      document.getElementById("progress-bar").setAttribute("aria-valuenow", String(pct));
+    }
+
+    function setResult(id, value) {
+      if (value == null) delete state.results[id];
+      else state.results[id] = value;
+      saveState();
+      applyFilters();
+    }
+
+    function syncCardUI(card) {
+      const id = card.dataset.id;
+      const s = state.results[id] || "";
+      card.dataset.status = s || "pending";
+      const badge = card.querySelector(".badge");
+      badge.className = "badge badge--" + (s || "pending");
+      badge.textContent = statusLabel(s);
+    }
+
+    function createCard(item) {
+      const st = state.results[item.id] || "";
+      const details = document.createElement("details");
+      details.className = "test-card";
+      details.dataset.id = item.id;
+      details.dataset.status = st || "pending";
+      details.dataset.roles = (item.roles || []).join(",");
+      if (matchesFilters(item) === false) details.classList.add("hidden");
+
+      const summary = document.createElement("summary");
+      summary.innerHTML =
+        '<span class="badge badge--' + (st || "pending") + '">' + statusLabel(st) + "</span>" +
+        '<span class="test-title">' + escapeHtml(item.title) + "</span>" +
+        (item.route ? '<span class="route-tag">' + escapeHtml(item.route) + "</span>" : "");
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+
+      const tabs = document.createElement("div");
+      tabs.className = "device-tabs";
+      tabs.setAttribute("role", "tablist");
+      ["mobile", "desktop", "tablet"].forEach((dev, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "device-tab";
+        btn.dataset.device = dev;
+        btn.setAttribute("role", "tab");
+        btn.setAttribute("aria-selected", i === 0 ? "true" : "false");
+        btn.textContent = dev === "mobile" ? "Celular" : dev === "desktop" ? "Computador" : "Tablet";
+        btn.addEventListener("click", () => {
+          tabs.querySelectorAll(".device-tab").forEach((t) => t.setAttribute("aria-selected", "false"));
+          btn.setAttribute("aria-selected", "true");
+          stepsPanel.innerHTML = renderSteps(item.steps[dev]);
+        });
+        tabs.appendChild(btn);
+      });
+
+      const stepsPanel = document.createElement("div");
+      stepsPanel.className = "steps-panel";
+      stepsPanel.setAttribute("role", "tabpanel");
+      stepsPanel.innerHTML = renderSteps(item.steps.mobile);
+
+      const expected = document.createElement("div");
+      expected.className = "expected";
+      expected.innerHTML = "<strong>Resultado esperado</strong>" + escapeHtml(item.expected);
+
+      body.appendChild(tabs);
+      body.appendChild(stepsPanel);
+      body.appendChild(expected);
+
+      if (item.warnings && item.warnings.length) {
+        const w = document.createElement("div");
+        w.className = "warnings";
+        w.innerHTML =
+          "<strong>Avisos / armadilhas</strong><ul>" +
+          item.warnings.map((x) => "<li>" + escapeHtml(x) + "</li>").join("") +
+          "</ul>";
+        body.appendChild(w);
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      [["pass", "Passou", "btn--pass"], ["fail", "Falhou", "btn--fail"], [null, "Resetar", "btn--reset"]].forEach(
+        ([val, label, cls]) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn " + cls;
+          b.textContent = label;
+          b.addEventListener("click", (e) => {
+            e.preventDefault();
+            setResult(item.id, val);
+          });
+          actions.appendChild(b);
+        }
+      );
+
+      body.appendChild(actions);
+      details.appendChild(summary);
+      details.appendChild(body);
+      return details;
+    }
+
+    function renderSteps(arr) {
+      if (!arr || !arr.length) return "<p>Sem passos definidos.</p>";
+      return "<ol>" + arr.map((s) => "<li>" + escapeHtml(s) + "</li>").join("") + "</ol>";
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    let filterPending = false;
+    let filterFail = false;
+    let filterRole = null;
+    let searchQuery = "";
+
+    function matchesFilters(item) {
+      const st = state.results[item.id];
+      if (filterPending && st) return false;
+      if (filterFail && st !== "fail") return false;
+      if (filterRole && !(item.roles || []).includes(filterRole)) return false;
+      if (searchQuery) {
+        const hay = (item.title + " " + (item.tags || []).join(" ") + " " + (item.route || "")).toLowerCase();
+        if (!hay.includes(searchQuery)) return false;
+      }
+      return true;
+    }
+
+    function applyFilters() {
+      document.querySelectorAll(".test-card").forEach((card) => {
+        const item = data.items.find((i) => i.id === card.dataset.id);
+        if (item) card.classList.toggle("hidden", !matchesFilters(item));
+      });
+      document.querySelectorAll(".section-block").forEach((sec) => {
+        const visible = sec.querySelectorAll(".test-card:not(.hidden)").length;
+        sec.classList.toggle("hidden", visible === 0);
+      });
+    }
+
+    function render() {
+      const sectionsEl = document.getElementById("sections");
+      const sidebar = document.getElementById("sidebar");
+      const jump = document.getElementById("section-jump");
+      sectionsEl.innerHTML = "";
+      sidebar.innerHTML = "<nav></nav>";
+      jump.innerHTML = '<option value="">Ir para seção…</option>';
+
+      const nav = sidebar.querySelector("nav");
+
+      data.sections.forEach((sec) => {
+        const secItems = data.items.filter((i) => i.sectionId === sec.id);
+        if (!secItems.length) return;
+
+        const anchor = "section-" + sec.id;
+        const opt = document.createElement("option");
+        opt.value = "#" + anchor;
+        opt.textContent = sec.title;
+        jump.appendChild(opt);
+
+        const a = document.createElement("a");
+        a.href = "#" + anchor;
+        a.textContent = sec.title;
+        nav.appendChild(a);
+
+        const block = document.createElement("section");
+        block.className = "section-block";
+        block.id = anchor;
+        block.innerHTML =
+          "<h3>" + escapeHtml(sec.title) + "</h3>" +
+          (sec.subtitle ? '<p class="sub">' + escapeHtml(sec.subtitle) + "</p>" : "");
+
+        secItems.forEach((item) => block.appendChild(createCard(item)));
+        sectionsEl.appendChild(block);
+      });
+
+      updateCounters();
+      applyFilters();
+    }
+
+    function buildExportText() {
+      const lines = [];
+      const m = state.meta || {};
+      lines.push("=== Guia de Bolso — Resultado QA ===");
+      lines.push("Data: " + (m.date || "—"));
+      lines.push("Dispositivo: " + (m.device || "—"));
+      lines.push("URL: " + (m.url || "—"));
+      lines.push("Conta: " + (m.account || "—"));
+      lines.push("");
+
+      let pass = 0, fail = 0;
+      data.items.forEach((it) => {
+        const s = state.results[it.id];
+        if (s === "pass") pass++;
+        else if (s === "fail") fail++;
+      });
+      lines.push("Resumo: " + pass + " passou, " + fail + " falhou, " + (data.items.length - pass - fail) + " pendente");
+      lines.push("");
+
+      const areaMap = {
+        A: "Preparação",
+        B: "Onboarding",
+        C: "Login/Cadastro",
+        D: "Home/Busca",
+        E: "Explorar",
+        F: "Categoria",
+        G: "Detalhe",
+        H: "Favoritos",
+        I: "Rotas/IA",
+        J: "Perfil",
+        K: "Extremos",
+        L: "Admin",
+        M: "Smoke",
+      };
+
+      lines.push("| Área | OK | Falhas |");
+      lines.push("|------|-----|--------|");
+      data.sections.forEach((sec) => {
+        const secItems = data.items.filter((i) => i.sectionId === sec.id);
+        let ok = 0, fl = 0;
+        secItems.forEach((it) => {
+          const s = state.results[it.id];
+          if (s === "pass") ok++;
+          else if (s === "fail") fl++;
+        });
+        const label = areaMap[sec.id] || sec.title;
+        lines.push("| " + label + " | " + ok + " | " + fl + " |");
+      });
+
+      lines.push("");
+      const failures = data.items.filter((it) => state.results[it.id] === "fail");
+      if (failures.length) {
+        lines.push("BLOQUEADORES / FALHAS:");
+        failures.forEach((it) => {
+          lines.push("- [" + it.sectionId + "] " + it.id + ": " + it.title);
+        });
+      } else {
+        lines.push("BLOQUEADORES: (nenhuma falha marcada)");
+      }
+
+      lines.push("");
+      lines.push("--- JSON ---");
+      lines.push(JSON.stringify({ meta: state.meta, results: state.results, exportedAt: new Date().toISOString() }, null, 2));
+
+      return lines.join("\n");
+    }
+
+    async function init() {
+      try {
+        const res = await fetch("./checklist-testes.data.json");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        data = await res.json();
+      } catch (e) {
+        document.getElementById("loading").classList.add("hidden");
+        const err = document.getElementById("load-error");
+        err.classList.remove("hidden");
+        err.textContent = "Erro ao carregar dados: " + e.message + ". Sirva via npm run dev ou Vercel.";
+        return;
+      }
+
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("app").classList.remove("hidden");
+      applyMetaToUI();
+
+      ["meta-device", "meta-date", "meta-url", "meta-account"].forEach((id) => {
+        document.getElementById(id).addEventListener("change", loadStateFromUI);
+        document.getElementById(id).addEventListener("input", loadStateFromUI);
+      });
+
+      render();
+
+      document.getElementById("search").addEventListener("input", (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        applyFilters();
+      });
+
+      document.querySelectorAll(".filter-chip[data-filter]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const f = btn.dataset.filter;
+          if (f === "pending") filterPending = !filterPending;
+          if (f === "fail") filterFail = !filterFail;
+          btn.setAttribute("aria-pressed", String(f === "pending" ? filterPending : filterFail));
+          applyFilters();
+        });
+      });
+
+      document.querySelectorAll(".filter-chip[data-filter-role]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const role = btn.dataset.filterRole;
+          if (filterRole === role) {
+            filterRole = null;
+            btn.setAttribute("aria-pressed", "false");
+          } else {
+            document.querySelectorAll(".filter-chip[data-filter-role]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+            filterRole = role;
+            btn.setAttribute("aria-pressed", "true");
+          }
+          applyFilters();
+        });
+      });
+
+      document.getElementById("section-jump").addEventListener("change", (e) => {
+        if (e.target.value) {
+          location.hash = e.target.value.slice(1);
+          e.target.value = "";
+        }
+      });
+
+      document.getElementById("btn-reset-all").addEventListener("click", () => {
+        if (confirm("Resetar todos os resultados e manter apenas os dados da sessão?")) {
+          state.results = {};
+          saveState();
+          render();
+        }
+      });
+
+      document.getElementById("btn-export").addEventListener("click", () => {
+        loadStateFromUI();
+        document.getElementById("export-text").value = buildExportText();
+        document.getElementById("export-modal").classList.add("open");
+      });
+
+      document.getElementById("export-close").addEventListener("click", () => {
+        document.getElementById("export-modal").classList.remove("open");
+      });
+
+      document.getElementById("export-copy").addEventListener("click", async () => {
+        const t = document.getElementById("export-text").value;
+        try {
+          await navigator.clipboard.writeText(t);
+          document.getElementById("export-copy").textContent = "Copiado!";
+          setTimeout(() => { document.getElementById("export-copy").textContent = "Copiar"; }, 2000);
+        } catch (_) {
+          document.getElementById("export-text").select();
+        }
+      });
+
+      document.getElementById("export-modal").addEventListener("click", (e) => {
+        if (e.target.id === "export-modal") document.getElementById("export-modal").classList.remove("open");
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

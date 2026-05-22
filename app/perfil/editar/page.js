@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import IconBack from "@/components/IconBack";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -206,10 +207,10 @@ export default function EditarPerfilPage() {
         <header className="mb-6 flex items-center gap-3">
           <Link
             href="/perfil"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl font-semibold text-[#1a4a3a] shadow-sm"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-sm"
             aria-label="Voltar"
           >
-            ←
+            <IconBack />
           </Link>
           <h1 className="text-2xl font-bold text-[#1a2e28]">Editar perfil</h1>
         </header>

@@ -1,0 +1,646 @@
+/**
+ * Generates public/checklist-testes.data.json
+ * Run: node scripts/build-checklist-data.mjs
+ */
+import { writeFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const OUT = join(__dirname, "../public/checklist-testes.data.json");
+
+const M = "Abra o app no celular (~390px).";
+const D = "No desktop, use janela ~390px ou DevTools iPhone.";
+const T = "No tablet (~768px) ou iPad; layout mobile centralizado.";
+
+function mk(id, sectionId, title, opts = {}) {
+  const mobile = opts.mobile || [M, title];
+  return {
+    id,
+    sectionId,
+    title,
+    route: opts.route ?? null,
+    roles: opts.roles ?? ["guest", "user", "premium", "admin"],
+    tags: opts.tags ?? [],
+    steps: {
+      mobile,
+      desktop: opts.desktop || [D, ...mobile.slice(1).map((s) => s.replace(/^Toque /, "Clique "))],
+      tablet: opts.tablet || [T, ...mobile.slice(1)],
+    },
+    expected: opts.expected || title,
+    warnings: opts.warnings || [],
+  };
+}
+
+const sections = [
+  { id: "A", title: "A. Preparação", subtitle: "Ambiente e dados de teste" },
+  { id: "B", title: "B. Onboarding e navegação", subtitle: "Primeira visita e bottom nav" },
+  { id: "C", title: "C. Login e cadastro", subtitle: "Google, SMS e perfil novo" },
+  { id: "D", title: "D. Home", subtitle: "Rota /" },
+  { id: "E", title: "E. Explorar", subtitle: "Rota /categorias" },
+  { id: "F", title: "F. Categoria", subtitle: "Rota /categoria/[slug]" },
+  { id: "G", title: "G. Detalhe do lugar", subtitle: "Rota /lugares/[id]" },
+  { id: "H", title: "H. Favoritos", subtitle: "Rota /favoritos" },
+  { id: "I", title: "I. Rotas", subtitle: "/rotas e /rotas/[id]" },
+  { id: "J", title: "J. Perfil", subtitle: "/perfil e /perfil/editar" },
+  { id: "K", title: "K. Casos extremos", subtitle: "Rede, limites e deep links" },
+  { id: "L", title: "L. Admin", subtitle: "Conta admin ou dev" },
+  { id: "M", title: "M. Regressão pós-release", subtitle: "Smoke de alto impacto" },
+];
+
+const items = [
+  mk("a-01", "A", "App abre em produção ou localhost na rede do celular", {
+    route: "/",
+    mobile: [M, "Acesse URL Vercel ou http://IP:3000 na mesma Wi‑Fi.", "Aguarde home sem erro fatal."],
+    expected: "Home abre mobile-first, sem tela branca permanente.",
+    warnings: ["Celular não alcança localhost do PC sem IP LAN."],
+    tags: ["setup"],
+  }),
+  mk("a-02", "A", "Limpar localStorage ou aba anônima para testar onboarding", {
+    mobile: [M, "Aba anônima ou apague onboarding_visto.", "Abra /."],
+    expected: "Onboarding 3 telas na primeira visita.",
+    warnings: ["Usuário logado pode alterar fluxo visual."],
+    tags: ["setup", "onboarding"],
+  }),
+  mk("a-03", "A", "Dados: sem foto, sem horário, parceiro ativo, praia com coords", {
+    mobile: [M, "Identifique/crie 4 lugares no admin.", "Anote IDs para testes G e D."],
+    expected: "Quatro perfis de lugar disponíveis para QA.",
+    warnings: ["Obrigatório para detalhe, parceiros, clima e chips."],
+    roles: ["admin"],
+    tags: ["setup"],
+  }),
+  mk("a-04", "A", "Conta admin com role = admin no Supabase", {
+    route: "/admin",
+    mobile: [M, "Login com perfis.role admin ou dev.", "Abra /admin."],
+    expected: "Painel admin acessível.",
+    warnings: ["Ajuste em Supabase → perfis se necessário."],
+    roles: ["admin"],
+    tags: ["setup", "admin"],
+  }),
+  mk("a-05", "A", "Migrations aplicadas (taxonomia, rotas, avaliações)", {
+    mobile: [M, "Siga docs/database.md e scripts em /supabase."],
+    expected: "Taxonomia, rotas e moderação sem erro 500.",
+    warnings: ["Inclui rotas_taxonomia.sql antes de aplica_em_rotas."],
+    roles: ["admin"],
+    tags: ["setup"],
+  }),
+
+  mk("b-01", "B", "Onboarding 3 telas → não reaparece ao recarregar", {
+    route: "/",
+    mobile: [M, "localStorage limpo → /.", "Conclua onboarding.", "Recarregue."],
+    expected: "Onboarding não reaparece; onboarding_visto salvo.",
+    tags: ["onboarding"],
+  }),
+  mk("b-02", "B", "Bottom nav: abas e estado ativo corretos", {
+    mobile: [M, "Toque Início, Explorar, Rotas, Favoritos, Perfil.", "Verifique aba ativa."],
+    expected: "Navegação OK; destaque na rota atual.",
+    tags: ["nav"],
+  }),
+  mk("b-03", "B", "URL inválida → 404 amigável", {
+    mobile: [M, "Acesse /rota-inexistente-xyz."],
+    expected: "Página not-found amigável.",
+    tags: ["nav"],
+  }),
+
+  mk("c-g-01", "C", "/login → Google → logado na home", {
+    route: "/login",
+    roles: ["guest"],
+    mobile: [M, "/login → Continuar com Google.", "Complete OAuth."],
+    expected: "Redireciona para / logado.",
+    warnings: ["Google OAuth no Supabase."],
+    tags: ["auth", "google"],
+  }),
+  mk("c-g-02", "C", "Avatar ou inicial no header da home", {
+    route: "/",
+    roles: ["user", "premium", "admin"],
+    mobile: [M, "Logado, abra /.", "Veja header."],
+    expected: "Avatar ou inicial visível.",
+    tags: ["auth"],
+  }),
+  mk("c-g-03", "C", "/login logado → redireciona para /", {
+    route: "/login",
+    roles: ["user", "premium", "admin"],
+    mobile: [M, "Sessão ativa → /login."],
+    expected: "Redirect automático para /.",
+    tags: ["auth"],
+  }),
+  mk("c-g-04", "C", "Erro OAuth → /login?error=auth", {
+    route: "/login",
+    roles: ["guest"],
+    mobile: [M, "Cancele OAuth ou simule erro."],
+    expected: "URL ?error=auth e mensagem de erro.",
+    warnings: ["Cancele popup Google para simular."],
+    tags: ["auth"],
+  }),
+  mk("c-s-01", "C", "Telefone inválido → mensagem de erro", {
+    route: "/login",
+    roles: ["guest"],
+    mobile: [M, "SMS com <11 dígitos."],
+    expected: "Erro de validação claro.",
+    tags: ["auth", "sms"],
+  }),
+  mk("c-s-02", "C", "OTP correto → home ~1,5s", {
+    route: "/login",
+    roles: ["guest"],
+    mobile: [M, "OTP válido 6 dígitos."],
+    expected: "Sucesso e redirect ~1,5s.",
+    warnings: ["Twilio número de teste."],
+    tags: ["auth", "sms"],
+  }),
+  mk("c-s-03", "C", "OTP errado → limpa e mensagem", {
+    route: "/login",
+    roles: ["guest"],
+    mobile: [M, "Código incorreto."],
+    expected: "Mensagem inválido; campos limpos.",
+    tags: ["auth", "sms"],
+  }),
+  mk("c-s-04", "C", "OTP expirado → mensagem adequada", {
+    route: "/login",
+    roles: ["guest"],
+    mobile: [M, "Use código após expirar."],
+    expected: "Mensagem de expiração.",
+    tags: ["auth", "sms"],
+  }),
+  mk("c-s-05", "C", "Reenviar OTP: cooldown 30s; bloqueio após 3", {
+    route: "/login",
+    roles: ["guest"],
+    mobile: [M, "Reenviar antes de 30s.", "Após 3 reenvios, 4º bloqueado."],
+    expected: "Cooldown e bloqueio corretos.",
+    tags: ["auth", "sms"],
+  }),
+  mk("c-c-01", "C", "Conta nova favorita após login", {
+    route: "/",
+    roles: ["user"],
+    mobile: [M, "Conta nova → coração em card."],
+    expected: "Favorito salvo; aparece em /favoritos.",
+    tags: ["favoritos"],
+  }),
+  mk("c-c-02", "C", "/perfil/editar: nome e foto persistem", {
+    route: "/perfil/editar",
+    roles: ["user", "premium", "admin"],
+    mobile: [M, "Altere nome e foto.", "Reload."],
+    expected: "Dados persistem no Storage imagens.",
+    warnings: ["RLS Storage."],
+    tags: ["perfil"],
+  }),
+  mk("c-c-03", "C", "Linha em perfis no Supabase", {
+    roles: ["admin"],
+    mobile: [M, "Supabase → perfis após login novo."],
+    expected: "Registro perfis para user id.",
+    tags: ["admin"],
+  }),
+
+  mk("d-01", "D", "Seções carregam sem travar página inteira", {
+    route: "/",
+    mobile: [M, "Scroll home completa."],
+    expected: "Seções independentes/skeletons; sem freeze total.",
+    tags: ["home"],
+  }),
+  mk("d-02", "D", "Falha Supabase: Conteúdo indisponível", {
+    route: "/",
+    mobile: [M, "Simule falha hero/em alta."],
+    expected: "Mensagem na seção; resto usável.",
+    warnings: ["Modo avião após primeiro load."],
+    tags: ["home"],
+  }),
+  mk("d-03", "D", "Frase contextual clima ou fallback", { route: "/", expected: "Frase no header coerente ou fallback horário.", tags: ["home"] }),
+  mk("d-04", "D", "Temperatura hero °C ou --°C", { route: "/", expected: "Temperatura ou placeholder sem quebrar layout.", tags: ["home"] }),
+  mk("d-05", "D", "Hero: métricas 2×2 e EXPLORAR → detalhe", {
+    route: "/",
+    mobile: [M, "Card O que fazer agora.", "Toque EXPLORAR."],
+    expected: "Abre /lugares/[id].",
+    tags: ["home"],
+  }),
+  mk("d-06", "D", "Favoritar hero: logado / guest modal", {
+    route: "/",
+    mobile: [M, "Teste coração logado e guest."],
+    expected: "Toggle favorito ou LoginModal.",
+    warnings: ["Duas sessões."],
+    tags: ["home"],
+  }),
+  mk("d-07", "D", "Carrossel parceiros com destaque vigente", {
+    route: "/",
+    expected: "Seção Parceiros com scroll horizontal.",
+    warnings: ["Prep parceiro ativo A-03."],
+    tags: ["home"],
+  }),
+  mk("d-08", "D", "Sem destaques: carrossel omitido", { route: "/", expected: "Sem seção ou vazia sem erro console.", tags: ["home"] }),
+  mk("d-09", "D", "Card parceiro → detalhe com badge", { route: "/", mobile: [M, "Toque card parceiro."], expected: "Detalhe com badge parceiro.", tags: ["home"] }),
+  mk("d-10", "D", "Em alta: scroll horizontal → detalhe", { route: "/", expected: "Cards abrem lugar.", tags: ["home"] }),
+  mk("d-11", "D", "Chip aberto/fechado só com horários", {
+    route: "/",
+    expected: "Chip só com mostrar_horarios + horários cadastrados.",
+    warnings: ["Lugar sem horário A-03."],
+    tags: ["home"],
+  }),
+  mk("d-12", "D", "Planos rápidos: busca ou login", {
+    route: "/",
+    expected: "Guest LoginModal; logado dispara busca.",
+    tags: ["home", "ia"],
+  }),
+  mk("d-13", "D", "Perto de você: loading depois cards", { route: "/", expected: "Loading local depois cards.", tags: ["home"] }),
+  mk("d-14", "D", "Com GPS: distância coerente", {
+    route: "/",
+    mobile: [M, "Permita localização."],
+    expected: "Km plausíveis nos cards.",
+    tags: ["home"],
+  }),
+  mk("d-15", "D", "Sem GPS: lista aparece", {
+    route: "/",
+    mobile: [M, "Negue localização."],
+    expected: "Lista Perto de você visível.",
+    tags: ["home"],
+  }),
+  mk("d-16", "D", "Guest buscar → LoginModal busca", {
+    route: "/",
+    roles: ["guest"],
+    mobile: [M, "Busca IA sem login."],
+    expected: "LoginModal motivo busca; sem API.",
+    tags: ["ia"],
+  }),
+  mk("d-17", "D", "Logado: browse ao focar busca vazia", {
+    route: "/",
+    roles: ["user", "premium"],
+    expected: "Recentes/populares no painel.",
+    tags: ["ia"],
+  }),
+  mk("d-18", "D", "Busca com resultado abre lugar", {
+    route: "/",
+    roles: ["user", "premium"],
+    mobile: [M, "Busque termo com match.", "Toque resultado."],
+    expected: "Lista e navegação ao detalhe.",
+    tags: ["ia"],
+  }),
+  mk("d-19", "D", "Busca sem resultado: mensagem clara", {
+    route: "/",
+    roles: ["user", "premium"],
+    expected: "Mensagem amigável; zero cards.",
+    tags: ["ia"],
+  }),
+  mk("d-20", "D", "Filtro Abertos / Fechados / Todos", {
+    route: "/",
+    roles: ["user", "premium"],
+    expected: "Filtros alteram resultados por horário.",
+    tags: ["ia"],
+  }),
+  mk("d-21", "D", "X/3 buscas; 4ª → paywall countdown", {
+    route: "/",
+    roles: ["user"],
+    expected: "Contador visível; 4ª abre PremiumPaywallSheet.",
+    warnings: ["Meia-noite America/Sao_Paulo renova."],
+    tags: ["ia", "premium"],
+  }),
+  mk("d-22", "D", "/?busca=1 abre busca pós-onboarding", {
+    route: "/?busca=1",
+    mobile: [M, "Limpe onboarding.", "Abra /?busca=1."],
+    expected: "Painel busca abre após onboarding.",
+    tags: ["ia"],
+  }),
+  mk("d-23", "D", "/?q=praia busca automática", {
+    route: "/?q=praia",
+    roles: ["user", "premium"],
+    expected: "Busca praia ao carregar.",
+    tags: ["ia"],
+  }),
+  mk("d-24", "D", "Parceiros priorizados nos resultados", {
+    route: "/",
+    roles: ["user", "premium"],
+    expected: "Badge ou ordem prioritária para parceiros.",
+    tags: ["ia"],
+  }),
+
+  mk("e-01", "E", "Contagem total e por categoria", { route: "/categorias", expected: "Números corretos no topo.", tags: ["explorar"] }),
+  mk("e-02", "E", "Carrossel Mais visitadas agora", { route: "/categorias", expected: "Carrossel se houver dados.", tags: ["explorar"] }),
+  mk("e-03", "E", "Atalhos humor → home busca", { route: "/categorias", expected: "Atalho leva à busca (login se guest).", tags: ["explorar"] }),
+  mk("e-04", "E", "Barra busca → /?busca=1", { route: "/categorias", mobile: [M, "Toque O que você procura."], expected: "Navega /?busca=1.", tags: ["explorar"] }),
+  mk("e-05", "E", "Grid categorias → /categoria/[slug]", { route: "/categorias", expected: "Cada card abre slug correto.", tags: ["explorar"] }),
+  mk("e-06", "E", "ExplorarSkeleton no loading", { route: "/categorias", expected: "Skeleton antes do conteúdo.", tags: ["explorar"] }),
+
+  mk("f-01", "F", "Lista lugares status ativo", { route: "/categoria/natureza", expected: "Só lugares ativos.", tags: ["categoria"] }),
+  mk("f-02", "F", "Chips subcategoria filtram", { route: "/categoria/gastronomia", expected: "Filtro por subcategoria.", tags: ["categoria"] }),
+  mk("f-03", "F", "Chip Todos restaura lista", { route: "/categoria/natureza", expected: "Todos mostra lista completa.", tags: ["categoria"] }),
+  mk("f-04", "F", "Erro Supabase → banner e voltar", {
+    route: "/categoria/natureza",
+    expected: "Banner vermelho; link /categorias.",
+    warnings: ["Simule rede/Supabase down."],
+    tags: ["categoria"],
+  }),
+  mk("f-05", "F", "Cards com distância (GPS)", {
+    route: "/categoria/natureza",
+    mobile: [M, "GPS ligado."],
+    expected: "Distância nos cards.",
+    tags: ["categoria"],
+  }),
+
+  mk("g-01", "G", "Lugar ativo abre completo", {
+    route: "/lugares/[id]",
+    mobile: [M, "Abra lugar ativo."],
+    expected: "Todas seções principais visíveis.",
+    tags: ["detalhe"],
+  }),
+  mk("g-02", "G", "ID inválido → Lugar não encontrado", {
+    route: "/lugares/invalid",
+    expected: "Mensagem Lugar não encontrado.",
+    tags: ["detalhe"],
+  }),
+  mk("g-03", "G", "Erro rede → ErrorBanner retry", {
+    route: "/lugares/[id]",
+    mobile: [M, "Modo avião no detalhe."],
+    expected: "ErrorBanner e Tentar novamente.",
+    tags: ["detalhe"],
+  }),
+  mk("g-04", "G", "Sem foto: placeholder aceitável", {
+    route: "/lugares/[id]",
+    expected: "Gradiente/placeholder sem broken image.",
+    warnings: ["Lugar sem foto A-03."],
+    tags: ["detalhe"],
+  }),
+  mk("g-05", "G", "Várias fotos: carrossel 1/N", { route: "/lugares/[id]", expected: "Carrossel com indicador.", tags: ["detalhe"] }),
+  mk("g-06", "G", "Parceiro: badge e conteúdo extra", { route: "/lugares/[id]", expected: "Badge parceiro; galeria/descrição.", tags: ["detalhe"] }),
+  mk("g-07", "G", "Compartilhar nativo ou Link copiado", { route: "/lugares/[id]", expected: "Share sheet ou toast.", tags: ["detalhe"] }),
+  mk("g-08", "G", "Restaurante: ações só com dados", { route: "/lugares/[id]", expected: "Ligar/IG/Cardápio/Site condicionais.", tags: ["detalhe"] }),
+  mk("g-09", "G", "Praia/trilha: sem menu fictício", { route: "/lugares/[id]", expected: "Sem cardápio em lugar público.", tags: ["detalhe"] }),
+  mk("g-10", "G", "Com horários: badge e sheet", { route: "/lugares/[id]", expected: "Badge e sheet horários.", tags: ["detalhe"] }),
+  mk("g-11", "G", "Sem horários: sem badge Abre enganoso", {
+    route: "/lugares/[id]",
+    expected: "Sem badge Abre incorreto.",
+    warnings: ["Lugar sem horário A-03."],
+    tags: ["detalhe"],
+  }),
+  mk("g-12", "G", "mostrar_endereco false: sem mapa", { route: "/lugares/[id]", expected: "Mapa estático oculto.", tags: ["detalhe"] }),
+  mk("g-13", "G", "Mapa estático ou link Maps", { route: "/lugares/[id]", expected: "Mapa ou link externo.", tags: ["detalhe"] }),
+  mk("g-14", "G", "Widget clima mini visível", {
+    route: "/lugares/[id]",
+    expected: "LugarClimaWidget em Natureza+coords.",
+    warnings: ["Praia com coords A-03."],
+    tags: ["detalhe", "clima"],
+  }),
+  mk("g-15", "G", "Guest Ver mais → LoginModal clima", {
+    route: "/lugares/[id]",
+    roles: ["guest"],
+    expected: "LoginModal motivo clima.",
+    tags: ["detalhe", "clima"],
+  }),
+  mk("g-16", "G", "Logado: ClimaSheet completo", {
+    route: "/lugares/[id]",
+    roles: ["user", "premium", "admin"],
+    expected: "Sheet previsão completa.",
+    tags: ["detalhe", "clima"],
+  }),
+  mk("g-17", "G", "API clima fora: página estável", {
+    route: "/lugares/[id]",
+    expected: "Widget some/erro local; página OK.",
+    tags: ["detalhe"],
+  }),
+  mk("g-18", "G", "Favoritar toggle ou modal guest", { route: "/lugares/[id]", expected: "Comportamento por sessão.", tags: ["detalhe"] }),
+  mk("g-19", "G", "Avaliar: nota aspectos comentário", {
+    route: "/lugares/[id]",
+    roles: ["user", "premium", "admin"],
+    expected: "Envio com toast sucesso.",
+    tags: ["detalhe"],
+  }),
+  mk("g-20", "G", "Avaliação oculta até aprovação admin", {
+    route: "/lugares/[id]",
+    roles: ["user"],
+    expected: "Não aparece na lista pública até aprovar.",
+    tags: ["detalhe"],
+  }),
+  mk("g-21", "G", "Segunda avaliação bloqueada", {
+    route: "/lugares/[id]",
+    roles: ["user"],
+    expected: "jaAvaliou impede novo envio.",
+    tags: ["detalhe"],
+  }),
+  mk("g-22", "G", "Admin: sugestão IA em avaliações", {
+    route: "/admin/avaliacoes",
+    roles: ["admin"],
+    expected: "Badge sugestão IA na fila.",
+    tags: ["admin"],
+  }),
+  mk("g-23", "G", "Ir agora: sheet apps sem preferência", {
+    route: "/lugares/[id]",
+    mobile: [M, "Limpe maps_preferido.", "Toque Ir agora."],
+    expected: "Sheet Google/Apple/Waze.",
+    tags: ["detalhe"],
+  }),
+  mk("g-24", "G", "Preferência Maps do perfil reutilizada", {
+    route: "/lugares/[id]",
+    mobile: [M, "Defina app em /perfil.", "Ir agora de novo."],
+    expected: "Abre app preferido direto.",
+    tags: ["detalhe"],
+  }),
+  mk("g-25", "G", "Log ir_agora em /admin/logs", {
+    route: "/lugares/[id]",
+    roles: ["admin"],
+    mobile: [M, "Ir agora.", "Confira /admin/logs."],
+    expected: "Evento ir_agora registrado.",
+    tags: ["admin"],
+  }),
+
+  mk("h-01", "H", "Guest: CTA e login", { route: "/favoritos", roles: ["guest"], expected: "CTA login; sem lista.", tags: ["favoritos"] }),
+  mk("h-02", "H", "Logado: lista e remover item", {
+    route: "/favoritos",
+    roles: ["user", "premium", "admin"],
+    mobile: [M, "Remova um favorito."],
+    expected: "Lista atualiza; rollback se falhar rede.",
+    tags: ["favoritos"],
+  }),
+  mk("h-03", "H", "Logado vazio: empty state", { route: "/favoritos", roles: ["user"], expected: "Estado vazio amigável.", tags: ["favoritos"] }),
+  mk("h-04", "H", "Erro fetch: banner retry", {
+    route: "/favoritos",
+    roles: ["user"],
+    expected: "Banner e retry.",
+    warnings: ["Simule offline."],
+    tags: ["favoritos"],
+  }),
+  mk("h-05", "H", "Lugar desativado some da lista", {
+    route: "/favoritos",
+    roles: ["admin", "user"],
+    expected: "Favorito de lugar inativo não listado.",
+    warnings: ["Desative lugar no admin."],
+    tags: ["favoritos"],
+  }),
+
+  mk("i-01", "I", "Guest vê rotas curadas", { route: "/rotas", roles: ["guest"], expected: "Lista rotas curadas visível.", tags: ["rotas"] }),
+  mk("i-02", "I", "Criar roteiro → login se guest", { route: "/rotas", roles: ["guest"], expected: "LoginModal ou redirect login.", tags: ["rotas", "ia"] }),
+  mk("i-03", "I", "Chips tipo filtram", { route: "/rotas", expected: "Filtro por tipo se >1.", tags: ["rotas"] }),
+  mk("i-04", "I", "Zero rotas: empty state", { route: "/rotas", expected: "Empty state sem crash.", warnings: ["Ambiente sem rotas cadastradas."], tags: ["rotas"] }),
+  mk("i-05", "I", "Formulário roteiro IA", {
+    route: "/rotas",
+    roles: ["user", "premium"],
+    mobile: [M, "Criar roteiro → preencha dias/perfil/interesses."],
+    expected: "Form válido aceita submit.",
+    tags: ["rotas", "ia"],
+  }),
+  mk("i-06", "I", "Geração → preview markdown", {
+    route: "/rotas",
+    roles: ["user", "premium"],
+    expected: "Preview markdown após gerar.",
+    tags: ["rotas", "ia"],
+  }),
+  mk("i-07", "I", "Salvar → Meus roteiros", {
+    route: "/rotas",
+    roles: ["user", "premium"],
+    expected: "Roteiro na lista Meus roteiros.",
+    tags: ["rotas", "ia"],
+  }),
+  mk("i-08", "I", "Free 2/dia; 3º paywall", {
+    route: "/rotas",
+    roles: ["user"],
+    expected: "Paywall na 3ª geração do dia.",
+    warnings: ["America/Sao_Paulo meia-noite."],
+    tags: ["rotas", "ia", "premium"],
+  }),
+  mk("i-09", "I", "Abrir roteiro salvo no modal", {
+    route: "/rotas",
+    roles: ["user", "premium"],
+    expected: "Modal com conteúdo salvo.",
+    tags: ["rotas"],
+  }),
+  mk("i-10", "I", "Detalhe: capa tags tipo dificuldade", { route: "/rotas/[id]", expected: "Metadados visíveis.", tags: ["rotas"] }),
+  mk("i-11", "I", "Etapas ordenadas com dicas", { route: "/rotas/[id]", expected: "Etapas em ordem com textos.", tags: ["rotas"] }),
+  mk("i-12", "I", "Ver no guia se lugar_id", { route: "/rotas/[id]", expected: "Link para lugar quando etapa tem lugar.", tags: ["rotas"] }),
+  mk("i-13", "I", "Abrir no Maps rotas_localizacoes", { route: "/rotas/[id]", expected: "Abre mapa externo com pontos.", tags: ["rotas"] }),
+
+  mk("j-01", "J", "Guest: benefícios e login", { route: "/perfil", roles: ["guest"], expected: "Benefícios + CTA login.", tags: ["perfil"] }),
+  mk("j-02", "J", "Logado: hero email membro desde", { route: "/perfil", roles: ["user", "premium", "admin"], expected: "Dados do usuário visíveis.", tags: ["perfil"] }),
+  mk("j-03", "J", "Stats favoritos avaliações roteiros", { route: "/perfil", roles: ["user", "premium"], expected: "Números coerentes com uso.", tags: ["perfil"] }),
+  mk("j-04", "J", "Card Premium / paywall", { route: "/perfil", roles: ["user"], expected: "CTA upgrade visível para free.", tags: ["perfil", "premium"] }),
+  mk("j-05", "J", "App navegação reflete no detalhe", {
+    route: "/perfil",
+    roles: ["user"],
+    mobile: [M, "Troque Maps preferido.", "Ir agora em lugar."],
+    expected: "Preferência aplicada no Ir agora.",
+    tags: ["perfil"],
+  }),
+  mk("j-06", "J", "Editar nome e avatar", { route: "/perfil/editar", roles: ["user"], expected: "Upload e nome salvos.", tags: ["perfil"] }),
+  mk("j-07", "J", "Logout com confirmação", { route: "/perfil", roles: ["user"], expected: "Confirma e desloga.", tags: ["perfil"] }),
+  mk("j-08", "J", "Excluir conta e log deletou_conta", {
+    route: "/perfil",
+    roles: ["user"],
+    expected: "Conta removida; log no admin.",
+    warnings: ["Use conta descartável.", "Irreversível."],
+    tags: ["perfil"],
+  }),
+
+  mk("k-01", "K", "GPS negado: home e detalhe usáveis", { route: "/", expected: "App funciona sem coords.", tags: ["edge"] }),
+  mk("k-02", "K", "Modo avião home: degradação", { route: "/", expected: "Mensagens por seção; não branco total.", tags: ["edge"] }),
+  mk("k-03", "K", "Modo avião busca IA: erro rede", { route: "/", roles: ["user"], expected: "Erro de rede claro na busca.", tags: ["edge", "ia"] }),
+  mk("k-04", "K", "Busca termo sem match", { route: "/", roles: ["user"], expected: "Zero resultados + mensagem.", tags: ["edge"] }),
+  mk("k-05", "K", "API Claude indisponível: erro busca/roteiro", {
+    route: "/",
+    roles: ["user"],
+    expected: "Mensagem erro; app estável.",
+    warnings: ["Simule 500 ou chave inválida em staging."],
+    tags: ["edge", "ia"],
+  }),
+  mk("k-06", "K", "Guest bloqueado: favoritos busca avaliar roteiro clima", {
+    roles: ["guest"],
+    expected: "LoginModal ou CTA em todas ações.",
+    tags: ["edge"],
+  }),
+  mk("k-07", "K", "Onboarding antes de ?busca=1 e ?q=", {
+    route: "/?busca=1",
+    expected: "Onboarding primeiro; depois deep link.",
+    tags: ["edge", "onboarding"],
+  }),
+  mk("k-08", "K", "Meia-noite SP: contador IA renova", {
+    route: "/",
+    roles: ["user"],
+    expected: "Após meia-noite SP, contador 0/3 e 0/2.",
+    warnings: ["Teste difícil em QA; validar RPC ou mudar data sistema."],
+    tags: ["edge", "ia"],
+  }),
+
+  mk("l-01", "L", "User comum /admin → redirect /", {
+    route: "/admin",
+    roles: ["user", "guest"],
+    expected: "Redirect para home.",
+    tags: ["admin"],
+  }),
+  mk("l-02", "L", "Shell: sidebar desktop drawer mobile", {
+    route: "/admin",
+    roles: ["admin"],
+    desktop: [D, "Largura >1024: sidebar fixa.", "Mobile: menu hamburger drawer."],
+    expected: "Layout responsivo admin.",
+    tags: ["admin"],
+  }),
+  mk("l-03", "L", "Sino alertas com links operacionais", { route: "/admin", roles: ["admin"], expected: "Links avaliações destaques logs.", tags: ["admin"] }),
+  mk("l-04", "L", "Dashboard KPIs semana/mês", { route: "/admin", roles: ["admin"], expected: "KPIs mudam ao alternar período.", tags: ["admin"] }),
+  mk("l-05", "L", "Aprovar/rejeitar fila inline", { route: "/admin", roles: ["admin"], expected: "Ações na fila funcionam.", tags: ["admin"] }),
+  mk("l-06", "L", "Timeline atividade", { route: "/admin", roles: ["admin"], expected: "Timeline com eventos recentes.", tags: ["admin"] }),
+  mk("l-07", "L", "Atalhos operacionais dashboard", { route: "/admin", roles: ["admin"], expected: "Links logs destaques expirando.", tags: ["admin"] }),
+  mk("l-08", "L", "Locais: listar criar editar", { route: "/admin/locais", roles: ["admin"], expected: "CRUD locais OK.", tags: ["admin"] }),
+  mk("l-09", "L", "EnderecoAutocomplete sem reabrir dropdown", {
+    route: "/admin/locais",
+    roles: ["admin"],
+    expected: "Seleção endereço estável.",
+    tags: ["admin"],
+  }),
+  mk("l-10", "L", "Fotos e toggles endereço/horários", { route: "/admin/locais", roles: ["admin"], expected: "Upload e toggles salvam.", tags: ["admin"] }),
+  mk("l-11", "L", "Tags máx 3 e subcategoria", { route: "/admin/locais", roles: ["admin"], expected: "Limite 3 tags; subcategoria OK.", tags: ["admin"] }),
+  mk("l-12", "L", "Rotas admin CRUD completo", { route: "/admin/rotas", roles: ["admin"], expected: "Tipo tags pontos mapa destaque.", tags: ["admin"] }),
+  mk("l-13", "L", "Avaliações pendentes e badge IA", { route: "/admin/avaliacoes", roles: ["admin"], expected: "Fila pendentes com sugestão IA.", tags: ["admin"] }),
+  mk("l-14", "L", "Aprovar público / rejeitar oculto", { route: "/admin/avaliacoes", roles: ["admin"], expected: "Aprovada no app; rejeitada oculta.", tags: ["admin"] }),
+  mk("l-15", "L", "Destaques plano Parceiro vigência", { route: "/admin/destaques", roles: ["admin"], expected: "CRUD vigência Parceiro.", tags: ["admin"] }),
+  mk("l-16", "L", "Novo destaque → home Parceiros", { route: "/admin/destaques", roles: ["admin"], expected: "Carrossel e badge após vigente.", tags: ["admin"] }),
+  mk("l-17", "L", "Destaques ?status=expirando expirado", { route: "/admin/destaques", roles: ["admin"], expected: "Filtros URL funcionam.", tags: ["admin"] }),
+  mk("l-18", "L", "Usuários role e premium IA", { route: "/admin/usuarios", roles: ["admin"], expected: "Edição role e flag premium.", tags: ["admin"] }),
+  mk("l-19", "L", "Link logs ?user_id=", { route: "/admin/usuarios", roles: ["admin"], expected: "Abre logs filtrados.", tags: ["admin"] }),
+  mk("l-20", "L", "Logs filtros ação período usuário", { route: "/admin/logs", roles: ["admin"], expected: "Filtros aplicam corretamente.", tags: ["admin"] }),
+  mk("l-21", "L", "Deep link lugar em ir_agora", { route: "/admin/logs", roles: ["admin"], expected: "Link para lugar no log.", tags: ["admin"] }),
+  mk("l-22", "L", "Taxonomia CRUD subcategorias tags", { route: "/admin/taxonomia", roles: ["admin"], expected: "CRUD sem erro.", tags: ["admin"] }),
+  mk("l-23", "L", "Renomear com migração lugares", { route: "/admin/taxonomia", roles: ["admin"], expected: "Lugares atualizados ao renomear.", tags: ["admin"] }),
+  mk("l-24", "L", "Excluir em uso bloqueado", { route: "/admin/taxonomia", roles: ["admin"], expected: "Exclusão impedida se em uso.", tags: ["admin"] }),
+  mk("l-25", "L", "aplica_em_rotas após migration", {
+    route: "/admin/taxonomia",
+    roles: ["admin"],
+    expected: "Campo aplica_em_rotas visível e funcional.",
+    warnings: ["Requer rotas_taxonomia.sql."],
+    tags: ["admin"],
+  }),
+
+  mk("m-01", "M", "Smoke: home hero → parceiros → em alta → planos → perto", {
+    route: "/",
+    expected: "Todas seções principais na ordem sem regressão.",
+    tags: ["smoke"],
+  }),
+  mk("m-02", "M", "Smoke: busca login limite parceiros ranking", {
+    route: "/",
+    roles: ["user"],
+    expected: "Fluxo busca completo OK.",
+    tags: ["smoke", "ia"],
+  }),
+  mk("m-03", "M", "Smoke: detalhe horários endereço clima", {
+    route: "/lugares/[id]",
+    expected: "Detalhe sem regressão nas 3 áreas.",
+    tags: ["smoke"],
+  }),
+  mk("m-04", "M", "Smoke: Explorar → /?busca=1", {
+    route: "/categorias",
+    expected: "Barra busca abre busca na home.",
+    tags: ["smoke"],
+  }),
+  mk("m-05", "M", "Smoke: perfil stats logout", { route: "/perfil", roles: ["user"], expected: "Stats e logout OK.", tags: ["smoke"] }),
+  mk("m-06", "M", "Smoke: aprovação dashboard = admin avaliações", {
+    route: "/admin",
+    roles: ["admin"],
+    expected: "Mesma avaliação aprovada inline aparece aprovada em /admin/avaliacoes.",
+    tags: ["smoke", "admin"],
+  }),
+];
+
+if (items.length < 100) {
+  console.error(`Too few items: ${items.length}`);
+  process.exit(1);
+}
+
+const payload = {
+  version: 1,
+  generatedAt: new Date().toISOString(),
+  sections,
+  items,
+};
+
+writeFileSync(OUT, JSON.stringify(payload, null, 2) + "\n");
+console.log(`Wrote ${items.length} items to ${OUT}`);

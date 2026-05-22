@@ -47,3 +47,20 @@ body {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Campos de busca usam sombra do container, sem contorno verde no texto */
+#smart-search-input,
+#smart-search-input:focus,
+#smart-search-input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+  border: none;
+}
+
+#smart-search-input::-webkit-search-decoration,
+#smart-search-input::-webkit-search-cancel-button,
+#smart-search-input::-webkit-search-results-button {
+  -webkit-appearance: none;
+  appearance: none;
+}

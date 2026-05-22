@@ -138,13 +138,12 @@ function SmartSearch({
     <section className="relative z-10 mb-4">
       <form ref={searchContainerRef} onSubmit={onSubmit}>
         <div
-          className={`rounded-[20px] p-px transition-all duration-300 ease-out ${
+          className={`overflow-hidden rounded-[20px] bg-white transition-shadow duration-300 ease-out ${
             active
-              ? "bg-gradient-to-r from-[#1a4a3a] via-[#2a6b55] to-[#3d8f72] shadow-[0_8px_28px_-6px_rgba(26,74,58,0.35)]"
-              : "bg-gradient-to-r from-[#c8ddd4] via-[#d4e8df] to-[#c8ddd4] shadow-[0_2px_12px_-4px_rgba(26,74,58,0.12)]"
+              ? "shadow-[0_8px_24px_-6px_rgba(26,46,40,0.14)]"
+              : "shadow-[0_2px_14px_-4px_rgba(26,46,40,0.08)]"
           }`}
         >
-          <div className="overflow-hidden rounded-[19px] bg-gradient-to-b from-white to-[#f8fcfa]">
             <div className="flex items-center gap-2.5 px-3 py-2.5">
               <div
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors duration-300 ${
@@ -181,7 +180,7 @@ function SmartSearch({
                   onBlur={handleBlur}
                   onChange={(e) => onChange(e.target.value)}
                   placeholder="O que fazer agora?"
-                  className={`w-full bg-transparent text-[15px] leading-snug text-[#1a2e28] placeholder:text-[#9aa8a3]/90 focus:outline-none ${
+                  className={`w-full appearance-none border-0 bg-transparent text-[15px] leading-snug text-[#1a2e28] shadow-none ring-0 placeholder:text-[#9aa8a3]/90 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 ${
                     searchMode ? "pr-8" : ""
                   }`}
                 />
@@ -209,7 +208,6 @@ function SmartSearch({
                 <IconSend className="h-[17px] w-[17px] -rotate-45" />
               </button>
             </div>
-          </div>
         </div>
       </form>
 
