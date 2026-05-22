@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import AppDeveloperCredit from "@/components/AppDeveloperCredit";
 import AuthFlow from "@/components/AuthFlow";
+import Logo from "@/components/Logo";
 import LegalConsentLine from "@/components/legal/LegalConsentLine";
 import { LOGIN_HERO_IMAGE, LOGIN_VALUE_PILLS } from "@/lib/authImagery";
 import { createClient } from "@/lib/supabase/client";
@@ -130,8 +131,9 @@ function LoginPageContent() {
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[430px] flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]">
         {/* Hero de valor */}
         <div className="flex flex-1 flex-col justify-end pb-6 pt-8">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8e6d4]">
-            Guia de Bolso · Imbituba
+          <Logo size="lg" variant="light" priority className="drop-shadow-sm" />
+          <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8e6d4]">
+            Imbituba, Santa Catarina
           </p>
           <h1 className="mt-3 font-display text-[2.15rem] font-extrabold leading-[1.05] tracking-tight">
             Sua próxima

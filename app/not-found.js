@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import Logo from "@/components/Logo";
 
 /**
  * Página 404 — rota não encontrada, visual alinhado ao Guia de Bolso.
@@ -9,9 +10,12 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto flex min-h-screen max-w-md flex-col px-5 pb-10 pt-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a4a3a]/70">
-          Guia de bolso
-        </p>
+        <div className="flex items-center gap-2">
+          <Logo size="sm" variant="default" />
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a4a3a]/70">
+            Guia de bolso
+          </p>
+        </div>
 
         <div className="relative mt-6 overflow-hidden rounded-[28px] shadow-lg ring-1 ring-black/5">
           <div className="relative h-52 w-full">
@@ -25,12 +29,9 @@ export default function NotFound() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0b1f1a]/90 via-[#0b1f1a]/40 to-[#0b1f1a]/20" />
             <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-              <span
-                className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-3xl backdrop-blur-md"
-                aria-hidden
-              >
-                🧭
-              </span>
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 p-2 backdrop-blur-md">
+                <Logo size="md" variant="light" />
+              </div>
               <p className="mt-4 text-6xl font-extrabold tracking-tight text-white">404</p>
             </div>
           </div>

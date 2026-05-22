@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 /**
  * HomeContextHeader - Home page title, location, contextual phrase, and profile link.
@@ -29,9 +30,12 @@ export default function HomeContextHeader({
     <header className="mb-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a4a3a]/70">
-            Guia de bolso
-          </p>
+          <div className="flex items-center gap-2">
+            <Logo size="sm" variant="default" />
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a4a3a]/70">
+              Guia de bolso
+            </p>
+          </div>
           <h1 className="mt-1 font-display text-[1.65rem] font-bold leading-tight tracking-tight text-[#1a2e28]">
             O que fazer <span className="text-[#1a4a3a]">agora</span>
           </h1>

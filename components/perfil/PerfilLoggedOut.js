@@ -3,20 +3,10 @@
 import Link from "next/link";
 import AppDeveloperCredit from "@/components/AppDeveloperCredit";
 import AuthFlow from "@/components/AuthFlow";
+import Logo from "@/components/Logo";
 import PerfilSettingsGroup from "@/components/perfil/PerfilSettingsGroup";
 import { useFeedback } from "@/components/FeedbackProvider";
 import { PERFIL_BENEFICIOS } from "@/lib/perfil";
-
-/**
- * @returns {import("react").JSX.Element}
- */
-function IconPersonLarge() {
-  return (
-    <svg className="h-14 w-14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-    </svg>
-  );
-}
 
 /**
  * Estado deslogado da aba Perfil.
@@ -36,8 +26,8 @@ export default function PerfilLoggedOut() {
           className="pointer-events-none absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-white/5"
           aria-hidden
         />
-        <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/15 ring-4 ring-white/20">
-          <IconPersonLarge />
+        <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/15 p-3 ring-4 ring-white/20">
+          <Logo size="md" variant="light" />
         </div>
         <h2 className="relative mt-5 text-xl font-bold leading-tight">
           Entre e personalize sua viagem

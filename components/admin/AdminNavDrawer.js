@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import AdminNavLinkItem from "@/components/admin/AdminNavLinkItem";
+import Logo from "@/components/Logo";
 import {
   ADMIN_NAV_LINKS,
   AdminNavIcon,
@@ -52,10 +53,16 @@ export default function AdminNavDrawer({ open, onClose, pathname, perfil }) {
         aria-label="Menu do painel admin"
       >
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
-          <Link href="/admin" onClick={onClose} className="min-w-0">
-            <span className="block text-lg font-bold tracking-tight">Guia de bolso.</span>
-            <span className="block text-[11px] font-medium uppercase tracking-wider text-white/55">
-              Painel admin
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className="flex min-w-0 items-center gap-2.5"
+          >
+            <Logo size="sm" variant="light" />
+            <span className="min-w-0">
+              <span className="block text-[11px] font-medium uppercase tracking-wider text-white/55">
+                Painel admin
+              </span>
             </span>
           </Link>
           <button

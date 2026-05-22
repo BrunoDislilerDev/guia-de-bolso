@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AdminNavLinkItem from "@/components/admin/AdminNavLinkItem";
+import Logo from "@/components/Logo";
 import {
   ADMIN_NAV_LINKS,
   AdminNavIcon,
@@ -33,19 +34,24 @@ export default function AdminSidebar({ pathname, collapsed, onToggleCollapse, pe
         }`}
       >
         {!collapsed ? (
-          <Link href="/admin" className="min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4ede8]/50 rounded-lg">
-            <span className="block truncate text-lg font-bold tracking-tight">Guia de bolso.</span>
-            <span className="block text-[11px] font-medium uppercase tracking-wider text-white/55">
-              Painel admin
+          <Link
+            href="/admin"
+            className="flex min-w-0 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4ede8]/50 rounded-lg"
+          >
+            <Logo size="sm" variant="light" />
+            <span className="min-w-0">
+              <span className="block truncate text-[11px] font-medium uppercase tracking-wider text-white/55">
+                Painel admin
+              </span>
             </span>
           </Link>
         ) : (
           <Link
             href="/admin"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4ede8]/50"
-            title="Guia de bolso — Admin"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4ede8]/50"
+            title="Guia de Bolso — Admin"
           >
-            GB
+            <Logo size="xs" variant="light" />
           </Link>
         )}
         {!collapsed && (

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Logo from "@/components/Logo";
 import { ONBOARDING_SLIDES } from "@/lib/authImagery";
 
 const SWIPE_THRESHOLD_PX = 52;
@@ -125,8 +126,8 @@ export default function Onboarding({ onComplete }) {
       {/* Barra de progresso superior */}
       <header className="absolute inset-x-0 top-0 z-20 px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between gap-3">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md">
-            Guia de Bolso
+          <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 backdrop-blur-md">
+            <Logo size="sm" variant="light" />
           </span>
           <button
             type="button"
