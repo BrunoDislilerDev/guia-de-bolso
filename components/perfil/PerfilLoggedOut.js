@@ -80,6 +80,16 @@ export default function PerfilLoggedOut() {
       >
         Continuar sem login
       </Link>
+
+      <p className="text-center text-[11px] leading-relaxed text-[#9aa8a3]">
+        <Link href="/termos" className="font-semibold text-[#1a4a3a] underline">
+          Termos
+        </Link>
+        {" · "}
+        <Link href="/privacidade" className="font-semibold text-[#1a4a3a] underline">
+          Privacidade
+        </Link>
+      </p>
     </div>
   );
 }

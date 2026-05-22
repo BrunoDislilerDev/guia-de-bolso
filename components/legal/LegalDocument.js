@@ -1,0 +1,101 @@
+import Link from "next/link";
+import { LEGAL_LAST_UPDATED, LEGAL_RESPONSAVEL } from "@/lib/legalContent";
+
+/**
+ * Página legal estática (privacidade ou termos).
+ * @param {object} props
+ * @param {"privacidade" | "termos"} props.kind
+ * @param {string} props.title
+ * @param {import("@/lib/legalContent").LegalSection[]} props.sections
+ * @returns {import("react").ReactElement}
+ */
+export default function LegalDocument({ kind, title, sections }) {
+  return (
+    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
+      <div className="mx-auto max-w-md px-4 pb-12 pt-[max(1rem,env(safe-area-inset-top))]">
+        <Link
+          href="/"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#1a4a3a] transition active:opacity-70"
+        >
+          ← Voltar ao app
+        </Link>
+
+        <header className="mt-4">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#1a4a3a]">
+            {LEGAL_RESPONSAVEL.produto}
+          </p>
+          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-[#1a2e28]">
+            {title}
+          </h1>
+          <p className="mt-2 text-xs text-[#5a6b66]">
+            Atualizado em {LEGAL_LAST_UPDATED} · {LEGAL_RESPONSAVEL.nome}
+          </p>
+        </header>
+
+        <nav
+          className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e8eeee]"
+          aria-label="Índice"
+        >
+          <p className="text-xs font-bold uppercase tracking-wide text-[#5a6b66]">
+            Índice
+          </p>
+          <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm">
+            {sections.map((section) => (
+              <li key={section.id}>
+                <a
+                  href={`#${section.id}`}
+                  className="font-medium text-[#1a4a3a] underline-offset-2 hover:underline"
+                >
+                  {section.title.replace(/^\d+\.\s*/, "")}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+
+        <article className="mt-8 space-y-8">
+          {sections.map((section) => (
+            <section key={section.id} id={section.id} className="scroll-mt-6">
+              <h2 className="text-base font-bold text-[#1a4a3a]">{section.title}</h2>
+              <div className="mt-3 space-y-3">
+                {section.paragraphs.map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className="text-sm leading-relaxed text-[#5a6b66]"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          ))}
+        </article>
+
+        <footer className="mt-10 rounded-2xl bg-white p-4 text-center text-xs text-[#5a6b66] shadow-sm ring-1 ring-[#e8eeee]">
+          <p>
+            Contato:{" "}
+            <a
+              href={`mailto:${LEGAL_RESPONSAVEL.email}`}
+              className="font-semibold text-[#1a4a3a] underline"
+            >
+              {LEGAL_RESPONSAVEL.email}
+            </a>
+          </p>
+          {kind === "privacidade" ? (
+            <p className="mt-2">
+              <Link href="/termos" className="font-semibold text-[#1a4a3a] underline">
+                Termos de Uso
+              </Link>
+            </p>
+          ) : (
+            <p className="mt-2">
+              <Link href="/privacidade" className="font-semibold text-[#1a4a3a] underline">
+                Política de Privacidade
+              </Link>
+            </p>
+          )}
+        </footer>
+      </div>
+    </div>
+  );
+}

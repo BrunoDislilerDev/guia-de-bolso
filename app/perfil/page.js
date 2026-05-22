@@ -260,6 +260,24 @@ export default function PerfilPage() {
             />
 
             <PerfilSettingsGroup
+              title="Legal"
+              items={[
+                {
+                  key: "termos",
+                  icon: "📄",
+                  label: "Termos de Uso",
+                  href: "/termos",
+                },
+                {
+                  key: "privacidade",
+                  icon: "🔒",
+                  label: "Política de Privacidade",
+                  href: "/privacidade",
+                },
+              ]}
+            />
+
+            <PerfilSettingsGroup
               title="Sessão"
               items={[
                 {

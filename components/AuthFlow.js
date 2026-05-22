@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import IconApple from "@/components/IconApple";
 import IconBack from "@/components/IconBack";
+import LegalConsentLine from "@/components/legal/LegalConsentLine";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -37,9 +39,42 @@ function IconMessage({ className = "h-5 w-5" }) {
 }
 
 /**
- * Formats a Brazilian phone number as the user types.
- * @param {string} value - Raw input value.
- * @returns {string} Formatted phone string.
+ * Botão Apple desativado (OAuth pendente Apple Developer Program).
+ * @param {object} props
+ * @param {boolean} props.compact
+ * @returns {import("react").ReactElement}
+ */
+function AppleSignInButtonDisabled({ compact }) {
+  const hintId = useId();
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {/* TODO: habilitar quando Apple Developer Program estiver ativo */}
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        aria-label="Entrar com Apple — indisponível no momento"
+        aria-describedby={hintId}
+        className={`flex min-h-[52px] w-full cursor-not-allowed items-center justify-center gap-3 rounded-2xl py-3.5 text-sm font-semibold opacity-50 ${
+          compact
+            ? "border border-[#1a2e28]/10 bg-[#1a2e28] text-white"
+            : "bg-[#1a2e28] text-white"
+        }`}
+      >
+        <IconApple dark />
+        Continuar com Apple
+      </button>
+      <p id={hintId} className="text-center text-[10px] leading-snug text-[#9aa8a3]">
+        Em breve — Apple Developer Program
+      </p>
+    </div>
+  );
+}
+
+/**
+ * @param {string} value
+ * @returns {string}
  */
 function formatPhone(value) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -52,21 +87,22 @@ function formatPhone(value) {
 }
 
 /**
- * Strips non-digits from a phone string and limits to 11 digits.
- * @param {string} value - Raw input value.
- * @returns {string} Digits-only phone string.
+ * @param {string} value
+ * @returns {string}
  */
 function cleanPhone(value) {
   return value.replace(/\D/g, "").slice(0, 11);
 }
 
 /**
- * AuthFlow - Multi-step login with Google OAuth and SMS OTP verification.
+ * AuthFlow — Google, Apple (UI off) e SMS OTP.
  * @param {object} props
- * @param {boolean} [props.compact] - Compact styling for use inside modals.
+ * @param {boolean} [props.compact] - Modal LoginModal.
+ * @param {"default" | "immersive"} [props.variant] - Visual da página /login.
  * @returns {import('react').ReactElement}
  */
-export default function AuthFlow({ compact = false }) {
+export default function AuthFlow({ compact = false, variant = "default" }) {
+  const immersive = variant === "immersive" && !compact;
   const router = useRouter();
   const [screen, setScreen] = useState("main");
   const [oauthLoading, setOauthLoading] = useState(false);
@@ -84,16 +120,30 @@ export default function AuthFlow({ compact = false }) {
   const phoneE164 = `+55${digits}`;
   const codeValue = code.join("");
 
+  const titleClass = compact
+    ? "text-xl font-bold text-[#1a2e28]"
+    : immersive
+      ? "text-xl font-bold tracking-tight text-[#1a2e28]"
+      : "text-2xl font-bold tracking-tight text-[#1a2e28]";
+  const subtitleClass = compact
+    ? "mt-1.5 text-sm leading-relaxed text-[#5a6b66]"
+    : "mt-2 text-sm leading-relaxed text-[#5a6b66]";
+  const backLinkClass =
+    "mb-5 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#1a4a3a]";
+  const primaryBtn =
+    "flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl py-3.5 text-sm font-semibold transition active:scale-[0.99] disabled:opacity-60";
+  const googleBtn = `${primaryBtn} border border-[#e3ebe7] bg-white text-[#1a2e28] shadow-sm`;
+  const smsBtn = `${primaryBtn} border-2 border-[#1a4a3a]/15 bg-[#f0f4f3] text-[#1a4a3a]`;
+  const ctaBtn = `${primaryBtn} bg-[#1a4a3a] text-white shadow-md shadow-[#1a4a3a]/25`;
+  const inputClass =
+    "mt-6 w-full min-h-[52px] rounded-2xl border border-[#e3ebe7] bg-white px-4 py-3 text-base text-[#1a2e28] outline-none focus-visible:ring-2 focus-visible:ring-[#1a4a3a]/25";
+
   useEffect(() => {
     if (screen !== "code" || resendSeconds <= 0) return undefined;
     const timer = setTimeout(() => setResendSeconds((current) => current - 1), 1000);
     return () => clearTimeout(timer);
   }, [screen, resendSeconds]);
 
-  /**
-   * Starts Google OAuth sign-in via Supabase.
-   * @returns {Promise<void>}
-   */
   async function handleGoogle() {
     setOauthLoading(true);
     const supabase = createClient();
@@ -104,11 +154,6 @@ export default function AuthFlow({ compact = false }) {
     if (error) setOauthLoading(false);
   }
 
-  /**
-   * Sends or resends an SMS OTP to the entered phone number.
-   * @param {boolean} [isResend] - Whether this is a resend attempt.
-   * @returns {Promise<void>}
-   */
   async function sendCode(isResend = false) {
     setPhoneError("");
     setCodeError("");
@@ -140,10 +185,6 @@ export default function AuthFlow({ compact = false }) {
     setTimeout(() => inputsRef.current[0]?.focus(), 50);
   }
 
-  /**
-   * Verifies the 6-digit SMS code and redirects on success.
-   * @returns {Promise<void>}
-   */
   async function verifyCode() {
     setCodeError("");
     setVerifying(true);
@@ -170,12 +211,6 @@ export default function AuthFlow({ compact = false }) {
     setTimeout(() => router.push("/"), 1500);
   }
 
-  /**
-   * Updates a single OTP digit and focuses the next input.
-   * @param {number} index - Digit index (0–5).
-   * @param {string} value - Input value for that cell.
-   * @returns {void}
-   */
   function updateCode(index, value) {
     const digit = value.replace(/\D/g, "").slice(-1);
     const next = [...code];
@@ -185,23 +220,12 @@ export default function AuthFlow({ compact = false }) {
     if (digit && index < 5) inputsRef.current[index + 1]?.focus();
   }
 
-  /**
-   * Moves focus to the previous OTP input on backspace when current cell is empty.
-   * @param {number} index - Digit index (0–5).
-   * @param {import('react').KeyboardEvent} event - Keyboard event.
-   * @returns {void}
-   */
   function handleCodeKeyDown(index, event) {
     if (event.key === "Backspace" && !code[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
     }
   }
 
-  /**
-   * Fills all OTP inputs when a 6-digit code is pasted.
-   * @param {import('react').ClipboardEvent} event - Paste event.
-   * @returns {void}
-   */
   function handlePaste(event) {
     const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length !== 6) return;
@@ -210,10 +234,6 @@ export default function AuthFlow({ compact = false }) {
     inputsRef.current[5]?.focus();
   }
 
-  /**
-   * Returns to the phone entry screen and clears OTP state.
-   * @returns {void}
-   */
   function resetPhone() {
     setScreen("phone");
     setCode(["", "", "", "", "", ""]);
@@ -222,63 +242,53 @@ export default function AuthFlow({ compact = false }) {
     setResendCount(0);
   }
 
-  const titleClass = compact
-    ? "text-2xl font-bold text-[#1a4a3a]"
-    : "text-2xl font-bold text-white";
-  const subtitleClass = compact
-    ? "mt-2 text-sm text-[#5a6b66]"
-    : "mt-2 text-sm text-white/70";
-
   if (screen === "success") {
     return (
-      <div className="py-8 text-center">
-        <div className="mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-[#b8e6d4] text-4xl text-[#1a4a3a]">
+      <div className="py-10 text-center">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#d4ede8] text-3xl font-bold text-[#1a4a3a]">
           ✓
         </div>
-        <h2 className={compact ? "mt-5 text-xl font-bold text-[#1a4a3a]" : "mt-5 text-xl font-bold text-white"}>
-          Login realizado com sucesso!
-        </h2>
+        <h2 className="mt-5 text-xl font-bold text-[#1a2e28]">Pronto para explorar!</h2>
+        <p className="mt-2 text-sm text-[#5a6b66]">Abrindo o guia…</p>
       </div>
     );
   }
 
   if (screen === "phone") {
     return (
-      <div>
-        <button
-          type="button"
-          onClick={() => setScreen("main")}
-          className={`mb-5 inline-flex items-center gap-1.5 text-sm font-semibold ${
-            compact ? "text-[#1a4a3a]" : "text-white/80"
-          }`}
-        >
+      <div className="pb-2">
+        <button type="button" onClick={() => setScreen("main")} className={backLinkClass}>
           <IconBack className="h-4 w-4" />
           Voltar
         </button>
-        <h2 className={titleClass}>Entrar com SMS</h2>
-        <p className={subtitleClass}>Digite seu telefone para receber um código de acesso</p>
+        <h2 className={titleClass}>Seu celular</h2>
+        <p className={subtitleClass}>Enviaremos um código de 6 dígitos por SMS.</p>
+        <label htmlFor="auth-phone" className="sr-only">
+          Telefone com DDD
+        </label>
         <input
+          id="auth-phone"
           type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           value={phone}
           onChange={(event) => {
             setPhone(formatPhone(event.target.value));
             setPhoneError("");
           }}
           placeholder="(48) 9 9608-7543"
-          className={`mt-6 w-full rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ${
-            compact
-              ? "bg-[#f0f4f3] text-[#1a2e28] focus:ring-[#1a4a3a]/30"
-              : "bg-white text-[#1a2e28] focus:ring-white/40"
-          }`}
+          className={inputClass}
         />
-        {phoneError && <p className="mt-2 text-sm text-red-400">{phoneError}</p>}
+        {phoneError && (
+          <p className="mt-2 text-sm text-red-600" role="alert">
+            {phoneError}
+          </p>
+        )}
         <button
           type="button"
           disabled={digits.length !== 11 || sendingCode}
           onClick={() => sendCode(false)}
-          className={`mt-5 w-full rounded-xl py-3.5 text-sm font-semibold disabled:opacity-50 ${
-            compact ? "bg-[#1a4a3a] text-white" : "bg-white text-[#1a4a3a]"
-          }`}
+          className={`${ctaBtn} mt-5`}
         >
           {sendingCode ? "Enviando..." : "Enviar código"}
         </button>
@@ -289,22 +299,22 @@ export default function AuthFlow({ compact = false }) {
   if (screen === "code") {
     const complete = code.every(Boolean);
     const maxResends = resendCount >= 3;
+
     return (
-      <div>
-        <button
-          type="button"
-          onClick={resetPhone}
-          className={`mb-5 inline-flex items-center gap-1.5 text-sm font-semibold ${
-            compact ? "text-[#1a4a3a]" : "text-white/80"
-          }`}
-        >
+      <div className="pb-2">
+        <button type="button" onClick={resetPhone} className={backLinkClass}>
           <IconBack className="h-4 w-4" />
           Usar outro número
         </button>
-        <h2 className={titleClass}>Código enviado!</h2>
-        <p className={subtitleClass}>Digite o código de 6 dígitos enviado para {phone}</p>
+        <h2 className={titleClass}>Código SMS</h2>
+        <p className={subtitleClass}>Enviamos para {phone}</p>
 
-        <div className="mt-6 flex justify-between gap-2" onPaste={handlePaste}>
+        <div
+          className="mt-6 flex justify-between gap-1.5"
+          onPaste={handlePaste}
+          role="group"
+          aria-label="Código de 6 dígitos"
+        >
           {code.map((digit, index) => (
             <input
               key={index}
@@ -313,32 +323,36 @@ export default function AuthFlow({ compact = false }) {
               }}
               value={digit}
               inputMode="numeric"
+              autoComplete={index === 0 ? "one-time-code" : "off"}
+              aria-label={`Dígito ${index + 1}`}
               maxLength={1}
               onChange={(event) => updateCode(index, event.target.value)}
               onKeyDown={(event) => handleCodeKeyDown(index, event)}
-              className={`h-12 w-11 rounded-xl border bg-white text-center text-lg font-bold text-[#1a2e28] outline-none ${
+              className={`h-12 w-11 min-w-0 flex-1 rounded-xl border bg-white text-center text-lg font-bold text-[#1a2e28] outline-none focus-visible:ring-2 focus-visible:ring-[#1a4a3a]/30 ${
                 codeError
                   ? "border-red-400"
                   : digit
                     ? "border-[#1a4a3a]"
-                    : "border-white/40"
+                    : "border-[#e3ebe7]"
               }`}
             />
           ))}
         </div>
 
-        {codeError && <p className="mt-3 text-sm text-red-400">{codeError}</p>}
+        {codeError && (
+          <p className="mt-3 text-sm text-red-600" role="alert">
+            {codeError}
+          </p>
+        )}
 
         {complete && (
           <button
             type="button"
             disabled={verifying}
             onClick={verifyCode}
-            className={`mt-5 w-full rounded-xl py-3.5 text-sm font-semibold disabled:opacity-60 ${
-              compact ? "bg-[#1a4a3a] text-white" : "bg-white text-[#1a4a3a]"
-            }`}
+            className={`${ctaBtn} mt-5`}
           >
-            {verifying ? "Verificando..." : "Verificar código"}
+            {verifying ? "Verificando..." : "Confirmar e entrar"}
           </button>
         )}
 
@@ -346,14 +360,12 @@ export default function AuthFlow({ compact = false }) {
           type="button"
           disabled={resendSeconds > 0 || maxResends || sendingCode}
           onClick={() => sendCode(true)}
-          className={`mt-5 w-full text-sm font-semibold disabled:opacity-50 ${
-            compact ? "text-[#1a4a3a]" : "text-[#b8e6d4]"
-          }`}
+          className="mt-5 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-[#1a4a3a] disabled:opacity-50"
         >
           {maxResends
             ? "Muitas tentativas. Aguarde alguns minutos."
             : resendSeconds > 0
-              ? `Reenviar código em ${resendSeconds}s`
+              ? `Reenviar em ${resendSeconds}s`
               : "Reenviar código"}
         </button>
       </div>
@@ -362,45 +374,73 @@ export default function AuthFlow({ compact = false }) {
 
   return (
     <div>
-      <h2 className={titleClass}>{compact ? "Faça login para continuar" : "Acesse sua conta"}</h2>
-      <p className={subtitleClass}>
-        {compact ? "Escolha uma forma de entrada para continuar" : "Escolha como deseja continuar"}
-      </p>
+      {immersive ? (
+        <>
+          <h2 className={titleClass}>Entre e desbloqueie tudo</h2>
+          <p className={subtitleClass}>
+            Favoritos, busca com IA, avaliações e clima nas praias — em uma conta gratuita.
+          </p>
+          <ul className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[#1a4a3a]">
+            <li className="rounded-full bg-[#d4ede8] px-3 py-1">Grátis para viajantes</li>
+            <li className="rounded-full bg-[#f0f4f3] px-3 py-1 ring-1 ring-[#e3ebe7]">
+              Sem cartão
+            </li>
+          </ul>
+        </>
+      ) : (
+        <>
+          {!compact && (
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#1a4a3a]">
+              Imbituba, SC
+            </p>
+          )}
+          <h2 className={compact ? titleClass : `${titleClass} ${!compact ? "mt-1" : ""}`}>
+            {compact ? "Entre para continuar" : "Sua conta no guia"}
+          </h2>
+          <p className={subtitleClass}>
+            {compact
+              ? "Salve favoritos, avalie lugares e use a busca com IA."
+              : "Google, SMS e em breve Apple."}
+          </p>
+        </>
+      )}
 
-      <div className="mt-7 flex flex-col gap-3">
+      <div className={`flex flex-col gap-3 ${immersive ? "mt-5" : "mt-6"}`}>
         <button
           type="button"
           disabled={oauthLoading}
           onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white py-3.5 text-sm font-semibold text-[#1a2e28] disabled:opacity-70"
+          className={googleBtn}
+          aria-label="Entrar com Google"
         >
           <IconGoogle />
-          {oauthLoading ? "Redirecionando..." : "Entrar com Google"}
+          {oauthLoading ? "Redirecionando..." : "Continuar com Google"}
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className={compact ? "h-px flex-1 bg-zinc-200" : "h-px flex-1 bg-white/30"} />
-          <span className={compact ? "text-xs text-[#9aa8a3]" : "text-xs text-white/60"}>ou</span>
-          <div className={compact ? "h-px flex-1 bg-zinc-200" : "h-px flex-1 bg-white/30"} />
+        <AppleSignInButtonDisabled compact={compact || immersive} />
+
+        <div className="flex items-center gap-3 py-0.5">
+          <div className="h-px flex-1 bg-[#e3ebe7]" />
+          <span className="text-xs font-medium text-[#9aa8a3]">ou</span>
+          <div className="h-px flex-1 bg-[#e3ebe7]" />
         </div>
 
         <button
           type="button"
           onClick={() => setScreen("phone")}
-          className={`flex w-full items-center justify-center gap-3 rounded-xl border py-3.5 text-sm font-semibold ${
-            compact
-              ? "border-[#d8dfdc] bg-[#f0f4f3] text-[#1a4a3a]"
-              : "border-white/30 bg-white/10 text-white"
-          }`}
+          className={smsBtn}
+          aria-label="Entrar com SMS"
         >
           <IconMessage />
-          Entrar com SMS
+          Continuar com SMS
         </button>
       </div>
 
-      <p className={compact ? "mt-6 text-center text-xs text-[#9aa8a3]" : "mt-7 text-center text-xs text-white/50"}>
-        🔒 Sua privacidade é nossa prioridade
-      </p>
+      {compact && (
+        <div className="mt-5">
+          <LegalConsentLine />
+        </div>
+      )}
     </div>
   );
 }

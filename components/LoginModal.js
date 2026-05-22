@@ -103,7 +103,7 @@ export default function LoginModal({ isOpen, onClose, motivo = "favoritar" }) {
           </p>
         </div>
 
-        <div id="login-modal-title" className="mt-5">
+        <div id="login-modal-title" className="mt-5 max-h-[min(70vh,520px)] overflow-y-auto overscroll-contain">
           <AuthFlow compact />
         </div>
 

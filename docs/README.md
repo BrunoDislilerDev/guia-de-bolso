@@ -20,6 +20,7 @@ New to the project? Start with the [root README](../README.md), then follow the 
 | [**Testing checklist**](./TESTING-CHECKLIST.md) | Manual QA — interactive checklist at [`/checklist-testes.html`](../public/checklist-testes.html) (145 cases, mobile/tablet/desktop) |
 | [**Costs & revenue**](./CUSTOS.md) | Monthly costs (R$), AI usage, B2B/B2C projections — edit with [`custos-planilha.csv`](./custos-planilha.csv) |
 | [**Place taxonomy**](./taxonomia-lugares.md) | Subcategorias vs tags; admin `/admin/taxonomia` |
+| [**Legal (draft)**](./legal/) | Privacy policy & terms — source in `lib/legalContent.js`; review with counsel before formal release |
 
 ---
 

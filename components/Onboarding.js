@@ -1,286 +1,212 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ONBOARDING_SLIDES } from "@/lib/authImagery";
+
+const SWIPE_THRESHOLD_PX = 52;
+const SLIDE_COUNT = ONBOARDING_SLIDES.length;
 
 /**
- * IconPin - Map pin icon for onboarding slide.
+ * Onboarding imersivo em tela cheia — fotos, valor e gestos de swipe.
  * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconPin({ className = "h-7 w-7" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-    </svg>
-  );
-}
-
-/**
- * IconTimer - Timer icon for onboarding slide.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconTimer({ className = "h-7 w-7" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm1-10C7.03 4 3 8.03 3 13s4.02 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16a7 7 0 110-14 7 7 0 010 14z" />
-    </svg>
-  );
-}
-
-/**
- * IconHeart - Heart icon for onboarding slide.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconHeart({ className = "h-7 w-7" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-    </svg>
-  );
-}
-
-/**
- * IconWaves - Waves icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconWaves({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M2 16c2 0 2.75-1.2 4.5-1.2S9 16 11 16s2.75-1.2 4.5-1.2S18 16 20 16h2v2h-2c-2 0-2.75-1.2-4.5-1.2S13 18 11 18s-2.75-1.2-4.5-1.2S4 18 2 18v-2zm0-5c2 0 2.75-1.2 4.5-1.2S9 11 11 11s2.75-1.2 4.5-1.2S18 11 20 11h2v2h-2c-2 0-2.75-1.2-4.5-1.2S13 13 11 13s-2.75-1.2-4.5-1.2S4 13 2 13v-2z" />
-    </svg>
-  );
-}
-
-/**
- * IconMountain - Mountain icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconMountain({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M14 6l-3.75 5 2.85 3.8L11.5 16.1 7 10l-6 8h22L14 6z" />
-    </svg>
-  );
-}
-
-/**
- * IconUtensils - Utensils icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconUtensils({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M8.1 13.34l2.83-2.83L3.91 3.5a4.008 4.008 0 000 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z" />
-    </svg>
-  );
-}
-
-/**
- * IconStar - Star icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconStar({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" />
-    </svg>
-  );
-}
-
-/**
- * IconMap - Map icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconMap({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9A.5.5 0 003 5.38V21l6-2.1 6 2.1 5.64-1.9a.5.5 0 00.36-.48V3.5a.5.5 0 00-.5-.5zM10 5.47l4 1.4v11.66l-4-1.4V5.47zm-5 1.1l3-1.01v11.58l-3 1.05V6.57zm14 10.86l-3 1.01V6.86l3-1.16v11.73z" />
-    </svg>
-  );
-}
-
-/**
- * IconCamera - Camera icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconCamera({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M20 5h-3.17l-1.84-2H9.01L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13a5 5 0 110-10 5 5 0 010 10zm0-1.8a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z" />
-    </svg>
-  );
-}
-
-/**
- * IconSunset - Sunset icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconSunset({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M3 19h18v2H3v-2zm16-4h3v2h-3v-2zM2 15h3v2H2v-2zm3.64-7.78l1.41-1.41 2.12 2.12-1.41 1.41-2.12-2.12zM11 3h2v4h-2V3zm5.83 4.93l2.12-2.12 1.41 1.41-2.12 2.12-1.41-1.41zM7 15a5 5 0 1110 0h-2a3 3 0 00-6 0H7z" />
-    </svg>
-  );
-}
-
-/**
- * IconCup - Cup icon for feature chip.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
-function IconCup({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M2 19h18v2H2v-2zM18 8h1a3 3 0 010 6h-1.18A6.99 6.99 0 015 10V5h13v3zm0 2v2h1a1 1 0 000-2h-1zM7 7v3a5 5 0 0010 0V7H7z" />
-    </svg>
-  );
-}
-
-const slides = [
-  {
-    Icon: IconPin,
-    title: "Descubra lugares incríveis",
-    subtitle: "Guia locais, praias, cafés e experiências em um só lugar.",
-    features: [
-      { Icon: IconWaves, label: "Praias" },
-      { Icon: IconMountain, label: "Trilhas" },
-      { Icon: IconUtensils, label: "Gastronomia" },
-    ],
-  },
-  {
-    Icon: IconTimer,
-    title: "Tudo organizado para você",
-    subtitle: "Encontre rapidamente o que fazer sem perder tempo procurando.",
-    features: [
-      { Icon: IconStar, label: "Lugares recomendados" },
-      { Icon: IconMap, label: "Rotas simples" },
-      { Icon: IconCamera, label: "Dicas locais" },
-    ],
-  },
-  {
-    Icon: IconHeart,
-    title: "Explore como um local",
-    subtitle: "Descubra cantinhos escondidos e experiências autênticas.",
-    features: [
-      { Icon: IconSunset, label: "Pôr do sol" },
-      { Icon: IconWaves, label: "Surfe" },
-      { Icon: IconCup, label: "Cafés" },
-    ],
-  },
-];
-
-/**
- * Onboarding - Multi-slide first-run introduction with skip and completion.
- * @param {object} props
- * @param {() => void} [props.onComplete] - Called after the user finishes or skips onboarding.
- * @returns {import('react').ReactElement}
+ * @param {() => void} [props.onComplete]
+ * @returns {import("react").ReactElement}
  */
 export default function Onboarding({ onComplete }) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const slide = slides[currentSlide];
-  const isLastSlide = currentSlide === slides.length - 1;
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isLastSlide = currentSlide === SLIDE_COUNT - 1;
+  const slide = ONBOARDING_SLIDES[currentSlide];
+  const progressPct = ((currentSlide + 1) / SLIDE_COUNT) * 100;
 
-  /**
-   * Persists onboarding completion in localStorage and invokes the parent callback.
-   * @returns {void}
-   */
-  function completeOnboarding() {
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const completeOnboarding = useCallback(() => {
     localStorage.setItem("onboarding_visto", "true");
     onComplete?.();
+  }, [onComplete]);
+
+  function goToSlide(index) {
+    setCurrentSlide(Math.max(0, Math.min(index, SLIDE_COUNT - 1)));
   }
 
-  /**
-   * Advances to the next slide or completes onboarding on the last slide.
-   * @returns {void}
-   */
   function handlePrimaryAction() {
     if (isLastSlide) {
       completeOnboarding();
       return;
     }
-
-    setCurrentSlide((current) => current + 1);
+    goToSlide(currentSlide + 1);
   }
 
+  function handleTouchStart(event) {
+    touchStartX.current = event.touches[0].clientX;
+    touchStartY.current = event.touches[0].clientY;
+  }
+
+  function handleTouchEnd(event) {
+    const deltaX = event.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = event.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX || Math.abs(deltaY) > Math.abs(deltaX)) return;
+
+    if (deltaX < 0 && !isLastSlide) goToSlide(currentSlide + 1);
+    else if (deltaX > 0 && currentSlide > 0) goToSlide(currentSlide - 1);
+  }
+
+  const motionSafe = reducedMotion ? "" : "transition-all duration-700 ease-out";
+
   return (
-    <section className="fixed inset-0 z-50 overflow-hidden bg-[#f0f4f3] text-[#1a2e28]">
+    <section
+      className="fixed inset-0 z-50 overflow-hidden bg-[#071612] text-white"
+      aria-label="Introdução ao Guia de Bolso"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <style>{`
-        @keyframes onboardingSlide {
-          from {
-            opacity: 0;
-            transform: translateX(16px);
+        @media (prefers-reduced-motion: no-preference) {
+          @keyframes onboardingKenBurns {
+            from { transform: scale(1.05); }
+            to { transform: scale(1.12); }
           }
-          to {
-            opacity: 1;
-            transform: translateX(0);
+          @keyframes onboardingFloatIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes onboardingPulseCta {
+            0%, 100% { box-shadow: 0 8px 28px rgba(184, 230, 212, 0.35); }
+            50% { box-shadow: 0 12px 36px rgba(184, 230, 212, 0.55); }
+          }
+          .onboarding-ken-burns {
+            animation: onboardingKenBurns 14s ease-in-out infinite alternate;
+          }
+          .onboarding-content-enter {
+            animation: onboardingFloatIn 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          }
+          .onboarding-cta-glow {
+            animation: onboardingPulseCta 2.5s ease-in-out infinite;
           }
         }
       `}</style>
-      <div className="relative mx-auto min-h-screen max-w-md bg-[#f0f4f3]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://picsum.photos/seed/praia/400/600"
-          alt="Praia em Imbituba"
-          className="h-[60vh] w-full object-cover"
-        />
 
-        <div className="absolute inset-x-0 bottom-0 min-h-[48vh] rounded-t-[2rem] bg-white px-6 pb-8 pt-16 shadow-[0_-12px_35px_rgba(26,74,58,0.12)]">
-          <div className="absolute left-1/2 top-0 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#d4ede8] text-[#1a4a3a] shadow-lg ring-8 ring-white">
-            <slide.Icon />
-          </div>
-
+      {/* Slides de fundo */}
+      <div className="absolute inset-0">
+        {ONBOARDING_SLIDES.map((item, index) => (
           <div
-            key={currentSlide}
-            className="transition-all duration-300 ease-out"
-            style={{ animation: "onboardingSlide 300ms ease-out" }}
+            key={item.title}
+            className={`absolute inset-0 ${motionSafe} ${
+              index === currentSlide ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+            aria-hidden={index !== currentSlide}
           >
-            <h1 className="text-center text-2xl font-bold leading-tight text-[#1a4a3a]">
-              {slide.title}
-            </h1>
-            <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-relaxed text-[#5a6b66]">
-              {slide.subtitle}
-            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.image.src}
+              alt={index === currentSlide ? item.image.alt : ""}
+              className={`h-full w-full object-cover ${
+                index === currentSlide && !reducedMotion ? "onboarding-ken-burns" : ""
+              }`}
+            />
+            <div
+              className="absolute inset-0 bg-gradient-to-b from-[#071612]/75 via-[#071612]/35 to-[#071612]/95"
+              aria-hidden
+            />
+          </div>
+        ))}
+      </div>
 
-            <div className="mt-7 grid grid-cols-3 gap-3">
-              {slide.features.map(({ Icon, label }) => (
-                <div key={label} className="flex flex-col items-center gap-2 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f4f3] text-[#1a4a3a]">
-                    <Icon />
-                  </div>
-                  <span className="text-xs font-medium leading-tight text-[#5a6b66]">
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
+      {/* Barra de progresso superior */}
+      <header className="absolute inset-x-0 top-0 z-20 px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="flex items-center justify-between gap-3">
+          <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md">
+            Guia de Bolso
+          </span>
+          <button
+            type="button"
+            onClick={completeOnboarding}
+            className="min-h-10 rounded-full px-3 py-1.5 text-sm font-semibold text-white/90 backdrop-blur-md ring-1 ring-white/20 transition active:bg-white/15"
+            aria-label="Pular introdução"
+          >
+            Pular
+          </button>
+        </div>
+        <div
+          className="mt-3 h-1 overflow-hidden rounded-full bg-white/15"
+          role="progressbar"
+          aria-valuenow={currentSlide + 1}
+          aria-valuemin={1}
+          aria-valuemax={SLIDE_COUNT}
+          aria-label={`Passo ${currentSlide + 1} de ${SLIDE_COUNT}`}
+        >
+          <div
+            className={`h-full rounded-full bg-[#b8e6d4] ${reducedMotion ? "" : "transition-all duration-500 ease-out"}`}
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      </header>
+
+      {/* Conteúdo principal */}
+      <div className="relative z-10 flex min-h-full flex-col justify-end px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-24">
+        <div key={currentSlide} className="onboarding-content-enter max-w-md">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#b8e6d4]">
+            {slide.kicker}
+          </p>
+          <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-[1.08] tracking-tight text-white">
+            {slide.title}
+          </h1>
+          <p className="mt-3 max-w-[20rem] text-[15px] leading-relaxed text-white/85">
+            {slide.subtitle}
+          </p>
+
+          <div className="mt-6 inline-flex items-end gap-2 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-md ring-1 ring-white/15">
+            <span className="font-display text-3xl font-extrabold leading-none text-[#b8e6d4]">
+              {slide.stat.value}
+            </span>
+            <span className="pb-0.5 text-xs font-semibold uppercase tracking-wide text-white/75">
+              {slide.stat.label}
+            </span>
           </div>
 
-          <div className="mt-8 flex justify-center gap-2">
-            {slides.map((_, index) => (
-              <span
+          <ul className="mt-5 flex flex-col gap-2.5" aria-label="Destaques">
+            {slide.highlights.map((item, index) => (
+              <li
+                key={item.text}
+                className="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-md ring-1 ring-white/10"
+                style={
+                  reducedMotion
+                    ? undefined
+                    : { animationDelay: `${80 + index * 70}ms` }
+                }
+              >
+                <span className="text-xl" aria-hidden>
+                  {item.emoji}
+                </span>
+                <span className="text-sm font-semibold text-white/95">{item.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Controles inferiores */}
+        <div className="mt-8 max-w-md">
+          <div className="flex justify-center gap-2" role="tablist" aria-label="Slides">
+            {ONBOARDING_SLIDES.map((_, index) => (
+              <button
                 key={index}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "w-7 bg-[#1a4a3a]" : "w-2 bg-[#d4ede8]"
+                type="button"
+                role="tab"
+                aria-selected={index === currentSlide}
+                aria-label={`Ir para slide ${index + 1}`}
+                onClick={() => goToSlide(index)}
+                className={`h-2 rounded-full transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b8e6d4] ${
+                  index === currentSlide ? "w-9 bg-[#b8e6d4]" : "w-2 bg-white/35"
                 }`}
               />
             ))}
@@ -289,19 +215,25 @@ export default function Onboarding({ onComplete }) {
           <button
             type="button"
             onClick={handlePrimaryAction}
-            className="mt-7 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
+            className={`mt-5 flex min-h-[54px] w-full items-center justify-center rounded-2xl bg-[#b8e6d4] text-base font-bold text-[#053d24] ${
+              !reducedMotion && isLastSlide ? "onboarding-cta-glow" : ""
+            } transition active:scale-[0.98] active:bg-[#a3dcc8]`}
           >
-            {isLastSlide ? "Começar" : "Continuar"}
+            {isLastSlide ? "Entrar no guia" : "Próximo"}
           </button>
 
-          {currentSlide > 0 && (
-            <button
-              type="button"
+          {isLastSlide ? (
+            <Link
+              href="/"
               onClick={completeOnboarding}
-              className="mt-4 w-full text-center text-sm font-medium text-[#5a6b66] transition-colors hover:text-[#1a4a3a]"
+              className="mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold text-white/90 ring-1 ring-white/25 transition active:bg-white/10"
             >
-              Pular introdução
-            </button>
+              Explorar sem criar conta
+            </Link>
+          ) : (
+            <p className="mt-3 text-center text-xs text-white/50">
+              Deslize ↔ ou toque em Próximo
+            </p>
           )}
         </div>
       </div>
