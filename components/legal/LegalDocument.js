@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AppDeveloperCredit from "@/components/AppDeveloperCredit";
 import { LEGAL_LAST_UPDATED, LEGAL_RESPONSAVEL } from "@/lib/legalContent";
 
 /**
@@ -94,6 +95,9 @@ export default function LegalDocument({ kind, title, sections }) {
               </Link>
             </p>
           )}
+          <div className="mt-4 border-t border-[#e8eeee] pt-4">
+            <AppDeveloperCredit />
+          </div>
         </footer>
       </div>
     </div>

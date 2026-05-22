@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import RoteiroContent from "@/components/rotas/RoteiroContent";
 
-const DIAS_OPCOES = ["1 dia", "2 dias", "3 dias", "4+ dias"];
+import { ROTEIRO_DIAS_OPCOES, formatDiasViagem } from "@/lib/roteiroDias";
+
+const DIAS_OPCOES = ROTEIRO_DIAS_OPCOES;
 
 const PERFIS = [
   { id: "familia", label: "Família com crianças", emoji: "👨‍👩‍👧" },
@@ -218,13 +220,18 @@ export default function RoteiroBottomSheet({
 
       setToast("Roteiro salvo!");
       setTimeout(() => setToast(""), 3000);
-      onRoteiroSalvo?.(data.roteiro ?? {
+      const salvo = data.roteiro ?? {
         titulo,
         dias,
         perfil,
         interesses,
         conteudo,
         created_at: new Date().toISOString(),
+      };
+
+      onRoteiroSalvo?.({
+        ...salvo,
+        diasLabel: formatDiasViagem(salvo.dias ?? dias),
       });
     } catch (error) {
       setErro(error.message || "Não foi possível salvar o roteiro.");

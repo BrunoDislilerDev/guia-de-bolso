@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AppDeveloperCredit from "@/components/AppDeveloperCredit";
 import AuthFlow from "@/components/AuthFlow";
 import { PERFIL_BENEFICIOS } from "@/lib/perfil";
 
@@ -90,6 +91,8 @@ export default function PerfilLoggedOut() {
           Privacidade
         </Link>
       </p>
+
+      <AppDeveloperCredit showProductLine className="mt-4" />
     </div>
   );
 }

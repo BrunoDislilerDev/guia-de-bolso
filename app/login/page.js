@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import AppDeveloperCredit from "@/components/AppDeveloperCredit";
 import AuthFlow from "@/components/AuthFlow";
 import LegalConsentLine from "@/components/legal/LegalConsentLine";
 import { LOGIN_HERO_IMAGE, LOGIN_VALUE_PILLS } from "@/lib/authImagery";
@@ -170,6 +171,8 @@ function LoginPageContent() {
           <div className="mt-4">
             <LegalConsentLine />
           </div>
+
+          <AppDeveloperCredit className="mt-5" />
         </section>
       </div>
     </div>

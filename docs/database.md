@@ -348,7 +348,7 @@ User-saved **AI-generated** trip plans (not admin `rotas`).
 | `id` | `uuid` | PK |
 | `user_id` | `uuid` FK | Owner |
 | `titulo` | `text` | |
-| `dias` | `text` | Trip length label |
+| `dias` | `integer` | Trip length in days (1–3; 4 = “4+ dias” in UI); UI labels parsed via `parseDiasViagem()` |
 | `perfil` | `text` | Traveler profile |
 | `interesses` | `jsonb` / array | Interest tags |
 | `conteudo` | `text` | Markdown/body from Claude |

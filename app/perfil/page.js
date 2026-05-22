@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import AppDeveloperCredit from "@/components/AppDeveloperCredit";
 import BottomNav from "@/components/BottomNav";
 import PremiumPaywallSheet from "@/components/PremiumPaywallSheet";
 import PerfilHero from "@/components/perfil/PerfilHero";
@@ -306,9 +307,7 @@ export default function PerfilPage() {
               </p>
             )}
 
-            <p className="pb-2 text-center text-[10px] text-[#9aa8a3]">
-              Guia de Bolso · Imbituba
-            </p>
+            <AppDeveloperCredit showProductLine className="pb-2" />
           </div>
         )}
       </main>

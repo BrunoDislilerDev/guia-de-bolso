@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parseDiasViagem } from "@/lib/roteiroDias";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -19,7 +20,9 @@ export async function POST(request) {
 
     const { titulo, dias, perfil, interesses, conteudo } = await request.json();
 
-    if (!titulo?.trim() || !dias?.trim() || !perfil?.trim() || !conteudo?.trim()) {
+    const diasNumero = parseDiasViagem(dias);
+
+    if (!titulo?.trim() || diasNumero === null || !perfil?.trim() || !conteudo?.trim()) {
       return NextResponse.json(
         { error: "Dados incompletos para salvar o roteiro." },
         { status: 400 }
@@ -31,7 +34,7 @@ export async function POST(request) {
       .insert({
         user_id: user.id,
         titulo: titulo.trim(),
-        dias: dias.trim(),
+        dias: diasNumero,
         perfil: perfil.trim(),
         interesses: Array.isArray(interesses) ? interesses : [],
         conteudo: conteudo.trim(),
