@@ -2,6 +2,7 @@
 
 import PlaceCard from "@/components/PlaceCard";
 import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
+import UserErrorAlert from "@/components/UserErrorAlert";
 
 /**
  * IconSearchLarge - Large search icon for empty results state.
@@ -25,7 +26,9 @@ const SUGESTOES = ["Praias", "Restaurantes", "Trilhas"];
  * @param {string} props.termo - Search query displayed in the header.
  * @param {boolean} props.loading - Whether results are loading.
  * @param {object[]} [props.resultados] - Matching place records.
- * @param {string} [props.erro] - Optional error message to display.
+ * @param {string} [props.erro] - Optional message (error or info).
+ * @param {boolean} [props.erroReportavel] - Use UserErrorAlert with report hint.
+ * @param {object} [props.erroReportContext] - Context for feedback sheet.
  * @param {(sugestao: string) => void} props.onSugestaoClick - Called when an empty-state suggestion is tapped.
  * @param {(lugar: object) => boolean} props.isFavorito - Returns whether a place is favorited.
  * @param {(lugar: object) => void} props.onFavoritar - Favorite toggle handler.
@@ -36,17 +39,26 @@ export default function SearchResultsPanel({
   loading,
   resultados = [],
   erro = "",
+  erroReportavel = false,
+  erroReportContext = null,
   onSugestaoClick,
   isFavorito,
   onFavoritar,
 }) {
   return (
     <div className="pb-6">
-      {erro && (
+      {erro && erroReportavel ? (
+        <UserErrorAlert
+          className="mb-4"
+          message={erro}
+          reportContext={erroReportContext}
+        />
+      ) : null}
+      {erro && !erroReportavel ? (
         <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {erro}
         </p>
-      )}
+      ) : null}
       <div className="mb-5 flex items-start justify-between gap-3">
         <h2 className="text-lg font-bold text-[#1a2e28]">
           Resultados para &ldquo;{termo}&rdquo;

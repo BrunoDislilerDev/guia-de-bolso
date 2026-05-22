@@ -45,6 +45,7 @@ const sections = [
   { id: "J", title: "J. Perfil", subtitle: "/perfil e /perfil/editar" },
   { id: "K", title: "K. Casos extremos", subtitle: "Rede, limites e deep links" },
   { id: "L", title: "L. Admin", subtitle: "Conta admin ou dev" },
+  { id: "N", title: "N. Feedback e erros PT", subtitle: "Ajuda, reporte e admin feedback" },
   { id: "M", title: "M. Regressão pós-release", subtitle: "Smoke de alto impacto" },
 ];
 
@@ -522,6 +523,12 @@ const items = [
     warnings: ["Use conta descartável.", "Irreversível."],
     tags: ["perfil"],
   }),
+  mk("j-09", "J", "Ajuda e feedback: enviar sugestão", {
+    route: "/perfil",
+    roles: ["guest", "user"],
+    expected: "Sheet abre; envio com sucesso (Obrigado).",
+    tags: ["perfil", "feedback"],
+  }),
 
   mk("k-01", "K", "GPS negado: home e detalhe usáveis", { route: "/", expected: "App funciona sem coords.", tags: ["edge"] }),
   mk("k-02", "K", "Modo avião home: degradação", { route: "/", expected: "Mensagens por seção; não branco total.", tags: ["edge"] }),
@@ -592,6 +599,45 @@ const items = [
   mk("l-22", "L", "Taxonomia CRUD subcategorias tags", { route: "/admin/taxonomia", roles: ["admin"], expected: "CRUD sem erro.", tags: ["admin"] }),
   mk("l-23", "L", "Renomear com migração lugares", { route: "/admin/taxonomia", roles: ["admin"], expected: "Lugares atualizados ao renomear.", tags: ["admin"] }),
   mk("l-24", "L", "Excluir em uso bloqueado", { route: "/admin/taxonomia", roles: ["admin"], expected: "Exclusão impedida se em uso.", tags: ["admin"] }),
+  mk("l-26", "L", "Feedback: filtrar status e notas", {
+    route: "/admin/feedback",
+    roles: ["admin"],
+    expected: "Lista, altera status e salva admin_notas.",
+    tags: ["admin", "feedback"],
+  }),
+
+  mk("n-01", "N", "Feedback logado com perfil pré-preenchido", {
+    route: "/perfil",
+    roles: ["user"],
+    expected: "Nome/e-mail editáveis; POST 201.",
+    tags: ["feedback"],
+  }),
+  mk("n-02", "N", "Feedback visitante sem login", {
+    route: "/perfil",
+    roles: ["guest"],
+    expected: "Envio OK com service role no servidor.",
+    warnings: ["Requer SUPABASE_SERVICE_ROLE_KEY em .env.local."],
+    tags: ["feedback"],
+  }),
+  mk("n-03", "N", "Erro busca IA: mensagem PT + reportar", {
+    route: "/",
+    roles: ["user"],
+    expected: "UserErrorAlert em PT; link abre sheet tipo erro.",
+    warnings: ["Simule falha Claude/API em staging."],
+    tags: ["feedback", "ia"],
+  }),
+  mk("n-04", "N", "Admin dashboard: contador feedback novos", {
+    route: "/admin",
+    roles: ["admin"],
+    expected: "Resumo operacional mostra Feedback novos com link.",
+    tags: ["admin", "feedback"],
+  }),
+  mk("n-05", "N", "RLS: user não lê feedback alheio", {
+    roles: ["user"],
+    expected: "Select em feedback falha para user comum.",
+    tags: ["feedback", "edge"],
+  }),
+
   mk("l-25", "L", "aplica_em_rotas após migration", {
     route: "/admin/taxonomia",
     roles: ["admin"],

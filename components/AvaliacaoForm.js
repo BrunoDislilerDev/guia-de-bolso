@@ -5,6 +5,8 @@ import {
   MAX_COMENTARIO_AVALIACAO,
   getAspectosParaLugar,
 } from "@/lib/avaliacaoAspectos";
+import UserErrorAlert from "@/components/UserErrorAlert";
+import { buildReportContext } from "@/lib/reportContext";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -217,9 +219,14 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
         </div>
 
         {erro && (
-          <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-            {erro}
-          </p>
+          <UserErrorAlert
+            className="mt-4"
+            message={erro}
+            reportContext={buildReportContext({
+              code: "SERVER",
+              route: lugar?.id ? `/lugares/${lugar.id}` : null,
+            })}
+          />
         )}
 
         <button

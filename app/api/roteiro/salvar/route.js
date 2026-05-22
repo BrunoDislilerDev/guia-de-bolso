@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { parseDiasViagem } from "@/lib/roteiroDias";
 import { createClient } from "@/lib/supabase/server";
+import { buildApiErrorBody } from "@/lib/userMessages";
 
 /**
  * Persists a generated itinerary for the authenticated user.
@@ -15,7 +16,10 @@ export async function POST(request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Faça login para salvar o roteiro." }, { status: 401 });
+      return NextResponse.json(
+        { ...buildApiErrorBody("LOGIN_REQUIRED"), error: "Faça login para salvar o roteiro." },
+        { status: 401 }
+      );
     }
 
     const { titulo, dias, perfil, interesses, conteudo } = await request.json();
@@ -24,7 +28,10 @@ export async function POST(request) {
 
     if (!titulo?.trim() || diasNumero === null || !perfil?.trim() || !conteudo?.trim()) {
       return NextResponse.json(
-        { error: "Dados incompletos para salvar o roteiro." },
+        {
+          ...buildApiErrorBody("VALIDATION"),
+          error: "Dados incompletos para salvar o roteiro.",
+        },
         { status: 400 }
       );
     }
@@ -44,15 +51,12 @@ export async function POST(request) {
 
     if (error) {
       console.error("Erro ao salvar roteiro:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     return NextResponse.json({ success: true, roteiro });
   } catch (err) {
     console.error("Salvar roteiro error:", err);
-    return NextResponse.json(
-      { error: "Erro interno ao salvar roteiro" },
-      { status: 500 }
-    );
+    return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 }

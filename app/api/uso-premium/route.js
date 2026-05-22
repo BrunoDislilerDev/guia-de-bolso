@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUser, getPerfilUsage } from "@/lib/premiumServer";
+import { buildApiErrorBody } from "@/lib/userMessages";
 
 /**
  * Returns premium feature usage counters for the current session user.
@@ -22,9 +23,10 @@ export async function GET() {
       loggedIn: true,
       usage,
     });
-  } catch {
+  } catch (err) {
+    console.error("GET /api/uso-premium:", err);
     return NextResponse.json(
-      { loggedIn: false, usage: null, error: "Erro ao carregar uso do plano." },
+      { loggedIn: false, usage: null, ...buildApiErrorBody("SERVER") },
       { status: 500 }
     );
   }

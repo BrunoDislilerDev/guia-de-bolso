@@ -8,6 +8,7 @@ import {
 import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
 import { checkBuscaAccess, getAuthUser } from "@/lib/premiumServer";
 import { supabase } from "@/lib/supabase";
+import { buildApiErrorBody } from "@/lib/userMessages";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
@@ -80,10 +81,7 @@ export async function POST(request) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "ANTHROPIC_API_KEY não configurada" },
-        { status: 500 }
-      );
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const [{ data: lugares, error }, destaquesVigentes] = await Promise.all([
@@ -95,7 +93,8 @@ export async function POST(request) {
     ]);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Busca — erro Supabase:", error);
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const parceiroIds = buildParceiroIdSet(destaquesVigentes);
@@ -165,10 +164,8 @@ Busca do usuário: ${queryUsuario}`,
     const claudeRaw = await claudeResponse.text();
 
     if (!claudeResponse.ok) {
-      return NextResponse.json(
-        { error: "Erro ao consultar a Claude API" },
-        { status: 500 }
-      );
+      console.error("Busca — Claude HTTP:", claudeResponse.status, claudeRaw);
+      return NextResponse.json(buildApiErrorBody("CLAUDE_ERROR"), { status: 500 });
     }
 
     const claudeData = JSON.parse(claudeRaw);
@@ -188,10 +185,8 @@ Busca do usuário: ${queryUsuario}`,
       usage: access.usage ?? null,
       filtroStatus,
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Erro interno ao processar a busca" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("POST /api/buscar:", err);
+    return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 }

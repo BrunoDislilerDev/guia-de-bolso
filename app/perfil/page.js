@@ -24,6 +24,7 @@ import {
 import { isPremiumActive } from "@/lib/premium";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { createClient } from "@/lib/supabase";
+import { useFeedback } from "@/components/FeedbackProvider";
 import { registrarLog } from "@/lib/logs";
 
 /**
@@ -32,6 +33,7 @@ import { registrarLog } from "@/lib/logs";
  */
 export default function PerfilPage() {
   const router = useRouter();
+  const feedback = useFeedback();
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -256,6 +258,21 @@ export default function PerfilPage() {
                   icon: "📱",
                   label: "Conta vinculada",
                   detail: providerName(user),
+                },
+              ]}
+            />
+
+            <PerfilSettingsGroup
+              title="Ajuda e feedback"
+              items={[
+                {
+                  key: "feedback",
+                  icon: "💬",
+                  label: "Enviar sugestão ou reportar problema",
+                  onClick: () =>
+                    feedback?.openFeedback({
+                      pagina_origem: "/perfil",
+                    }),
                 },
               ]}
             />

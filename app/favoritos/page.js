@@ -7,41 +7,10 @@ import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import PlaceCard from "@/components/PlaceCard";
 import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
+import UserErrorAlert from "@/components/UserErrorAlert";
+import { buildReportContext } from "@/lib/reportContext";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
-
-/**
- * Error banner with alert icon for failed data loads.
- * @param {object} props
- * @param {string} props.message - User-facing error text.
- * @param {import("react").ReactNode} [props.action] - Optional retry control.
- * @returns {import("react").ReactElement}
- */
-function ErrorBanner({ message, action }) {
-  return (
-    <div
-      className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-      role="alert"
-    >
-      <svg
-        className="h-5 w-5 shrink-0"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-      <div className="min-w-0 flex-1">
-        <p>{message}</p>
-        {action ? <div className="mt-2">{action}</div> : null}
-      </div>
-    </div>
-  );
-}
 
 /**
  * Empty-state heart illustration for the favorites page.
@@ -217,8 +186,9 @@ export default function FavoritosPage() {
         </header>
 
         {fetchError && user && !loadingFavoritos && (
-          <ErrorBanner
+          <UserErrorAlert
             message="Não foi possível carregar seus favoritos. Tente novamente."
+            reportContext={buildReportContext({ code: "SERVER", route: "/favoritos" })}
             action={
               <button
                 type="button"

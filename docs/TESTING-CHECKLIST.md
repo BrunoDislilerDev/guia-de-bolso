@@ -47,10 +47,25 @@ Use a ferramenta com **145 casos de teste**, passo a passo por dispositivo, resu
 | G | Detalhe do lugar | 25 |
 | H | Favoritos | 5 |
 | I | Rotas e roteiro IA | 13 |
-| J | Perfil | 8 |
+| J | Perfil | 9 |
 | K | Casos extremos | 8 |
-| L | Admin | 25 |
+| L | Admin | 26 |
+| N | Feedback e erros PT | 5 |
 | M | Smoke pós-release | 6 |
+
+---
+
+## N — Feedback e erros (manual)
+
+| ID | Caso | Passos | Esperado |
+|----|------|--------|----------|
+| N-01 | Feedback logado | Perfil → Enviar sugestão → preencher e enviar | 201, mensagem de obrigado, item em admin |
+| N-02 | Feedback visitante | Perfil sem login → mesmo fluxo com nome/e-mail opcionais | Envio OK se `SUPABASE_SERVICE_ROLE_KEY` configurada |
+| N-03 | Erro busca + reportar | Forçar erro na busca IA (ex. desligar API key em dev) | Mensagem 100% PT + link reportar abre sheet com tipo `erro` |
+| N-04 | Admin feedback | `/admin/feedback` → filtrar, alterar status, salvar notas | Persiste no Supabase |
+| N-05 | RLS feedback | Usuário comum tenta `select` em `feedback` no client | Negado; admin vê todos |
+
+Regenerar checklist HTML: `node scripts/build-checklist-data.mjs` (após incluir casos N no script, se desejado).
 
 ---
 
@@ -65,6 +80,7 @@ Use a ferramenta com **145 casos de teste**, passo a passo por dispositivo, resu
 | Favoritos | | |
 | Rotas/IA | | |
 | Perfil | | |
+| Feedback/erros | | |
 | Admin | | |
 | Extremos | | |
 

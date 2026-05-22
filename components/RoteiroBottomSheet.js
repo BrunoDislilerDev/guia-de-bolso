@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import RoteiroContent from "@/components/rotas/RoteiroContent";
 
+import UserErrorAlert from "@/components/UserErrorAlert";
 import { ROTEIRO_DIAS_OPCOES, formatDiasViagem } from "@/lib/roteiroDias";
+import { buildReportContext } from "@/lib/reportContext";
+import {
+  getNetworkErrorMessage,
+  getUserMessage,
+  mapApiErrorResponse,
+} from "@/lib/userMessages";
 
 const DIAS_OPCOES = ROTEIRO_DIAS_OPCOES;
 
@@ -76,6 +83,7 @@ export default function RoteiroBottomSheet({
   const [salvando, setSalvando] = useState(false);
   const [toast, setToast] = useState("");
   const [erro, setErro] = useState("");
+  const [erroContext, setErroContext] = useState(null);
 
   const formularioCompleto = Boolean(dias && perfil && interesses.length > 0);
 
@@ -151,6 +159,7 @@ export default function RoteiroBottomSheet({
     }
 
     setErro("");
+    setErroContext(null);
     setView("loading");
     setLoading(true);
     setLoadingMessageIndex(0);
@@ -177,15 +186,26 @@ export default function RoteiroBottomSheet({
           setView("form");
           return;
         }
-        throw new Error(data.error ?? "Erro ao gerar roteiro");
+        const mapped = mapApiErrorResponse(data, response.status);
+        setErro(mapped.message);
+        setErroContext(
+          buildReportContext({
+            code: mapped.code ?? data.code,
+            route: "/rotas",
+            message: mapped.message,
+          })
+        );
+        setView("form");
+        return;
       }
 
       setTitulo(data.titulo ?? `Roteiro ${dias} - ${perfil}`);
       setConteudo(data.conteudo ?? "");
       setView("result");
       onUsageRefresh?.(data.usage ?? null);
-    } catch (error) {
-      setErro(error.message || "Não foi possível gerar o roteiro. Tente novamente.");
+    } catch {
+      setErro(getNetworkErrorMessage());
+      setErroContext(buildReportContext({ code: "NETWORK", route: "/rotas" }));
       setView("form");
     } finally {
       setLoading(false);
@@ -204,6 +224,7 @@ export default function RoteiroBottomSheet({
 
     setSalvando(true);
     setErro("");
+    setErroContext(null);
 
     try {
       const response = await fetch("/api/roteiro/salvar", {
@@ -215,7 +236,16 @@ export default function RoteiroBottomSheet({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Erro ao salvar roteiro");
+        const mapped = mapApiErrorResponse(data, response.status);
+        setErro(mapped.message);
+        setErroContext(
+          buildReportContext({
+            code: mapped.code ?? data.code,
+            route: "/rotas",
+            message: mapped.message,
+          })
+        );
+        return;
       }
 
       setToast("Roteiro salvo!");
@@ -233,8 +263,9 @@ export default function RoteiroBottomSheet({
         ...salvo,
         diasLabel: formatDiasViagem(salvo.dias ?? dias),
       });
-    } catch (error) {
-      setErro(error.message || "Não foi possível salvar o roteiro.");
+    } catch {
+      setErro(getUserMessage("SERVER"));
+      setErroContext(buildReportContext({ code: "NETWORK", route: "/rotas" }));
     } finally {
       setSalvando(false);
     }
@@ -360,7 +391,11 @@ export default function RoteiroBottomSheet({
                 </section>
 
                 {erro && (
-                  <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>
+                  <UserErrorAlert
+                    className="mt-4"
+                    message={erro}
+                    reportContext={erroContext}
+                  />
                 )}
 
                 <button
@@ -403,7 +438,11 @@ export default function RoteiroBottomSheet({
                 </div>
 
                 {erro && (
-                  <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>
+                  <UserErrorAlert
+                    className="mt-4"
+                    message={erro}
+                    reportContext={erroContext}
+                  />
                 )}
 
                 <div className="mt-6 space-y-2">

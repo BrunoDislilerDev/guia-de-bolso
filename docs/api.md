@@ -128,6 +128,43 @@ Required: `titulo`, `dias`, `perfil`, `conteudo` (trimmed strings). `interesses`
 
 ---
 
+### `POST /api/feedback`
+
+Receives user feedback (logged in or guest). Guest inserts use `SUPABASE_SERVICE_ROLE_KEY` server-side.
+
+**Auth:** Optional (if session, `user_id` is set)
+
+**Request body:**
+
+```json
+{
+  "tipo": "erro",
+  "assunto": "Busca IA",
+  "mensagem": "Descreva com pelo menos 10 caracteres...",
+  "nome_contato": "Nome",
+  "email_contato": "email@exemplo.com",
+  "pagina_origem": "/",
+  "contexto_tecnico": { "code": "CLAUDE_ERROR", "route": "/", "timestamp": "..." }
+}
+```
+
+**Success (201):** `{ "success": true, "message": "Recebemos seu feedback. Obrigado!", "id": "uuid" }`
+
+**Errors (Portuguese `error` + `code`):**
+
+| HTTP | `code` | Meaning |
+|------|--------|---------|
+| 400 | `VALIDATION` | Invalid tipo, short message, or invalid email |
+| 429 | `RATE_LIMIT` | Max 5 submissions per hour per IP/user |
+| 503 | `SERVER` | Guest insert without service role configured |
+| 500 | `SERVER` | Insert failure |
+
+**Rate limit:** in-memory per process (`lib/feedbackRateLimit.js`); comment in code notes production should use Redis/KV if scaled.
+
+**Admin reads:** browser Supabase client on `/admin/feedback` (RLS admin).
+
+---
+
 ### `POST /api/avaliacoes/analisar`
 
 Claude pre-moderation for a newly submitted review. Called from the client after `avaliacoes` insert; result is stored on `sugestao_ia` for the admin queue.
@@ -229,6 +266,7 @@ Not all data goes through `/api`. The browser Supabase client reads public data 
 | Variable | Required by |
 |----------|-------------|
 | `ANTHROPIC_API_KEY` | `/api/buscar`, `/api/roteiro`, `/api/avaliacoes/analisar` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `/api/feedback` (guest insert only; server-side) |
 | `ANTHROPIC_MODEL` | Model id (default `claude-sonnet-4-5`) |
 | `NEXT_PUBLIC_SUPABASE_URL` | Auth session |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth session |

@@ -5,7 +5,7 @@ import Link from "next/link";
 /**
  * Resumo operacional (atalhos clicáveis) — sem duplicar timeline de logs.
  * @param {object} props
- * @param {{ emAnalise: number, destaquesExpirando: number, premiumAtivos: number }} props.counts
+ * @param {{ emAnalise: number, destaquesExpirando: number, premiumAtivos: number, feedbackNovos?: number }} props.counts
  * @returns {import("react").JSX.Element}
  */
 export default function DashboardOperacionalSidebar({ counts }) {
@@ -31,6 +31,13 @@ export default function DashboardOperacionalSidebar({ counts }) {
       hint: "Usuários com assinatura ativa",
       accent: "text-[#7a6520]",
       bg: "bg-[#f5e6b8]/50",
+    },
+    {
+      label: "Feedback novos",
+      value: counts.feedbackNovos ?? 0,
+      href: "/admin/feedback",
+      accent: "text-[#1a4a3a]",
+      bg: "bg-[#eef8f4]",
     },
   ];
 

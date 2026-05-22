@@ -3,6 +3,8 @@
 import Link from "next/link";
 import AppDeveloperCredit from "@/components/AppDeveloperCredit";
 import AuthFlow from "@/components/AuthFlow";
+import PerfilSettingsGroup from "@/components/perfil/PerfilSettingsGroup";
+import { useFeedback } from "@/components/FeedbackProvider";
 import { PERFIL_BENEFICIOS } from "@/lib/perfil";
 
 /**
@@ -21,6 +23,8 @@ function IconPersonLarge() {
  * @returns {import("react").JSX.Element}
  */
 export default function PerfilLoggedOut() {
+  const feedback = useFeedback();
+
   return (
     <div className="space-y-6">
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a4a3a] via-[#1a4a3a] to-[#0f3028] px-6 py-8 text-center text-white shadow-md">
@@ -74,6 +78,19 @@ export default function PerfilLoggedOut() {
         </p>
         <AuthFlow compact />
       </div>
+
+      <PerfilSettingsGroup
+        title="Ajuda e feedback"
+        items={[
+          {
+            key: "feedback",
+            icon: "💬",
+            label: "Enviar sugestão ou reportar problema",
+            onClick: () =>
+              feedback?.openFeedback({ pagina_origem: "/perfil" }),
+          },
+        ]}
+      />
 
       <Link
         href="/"

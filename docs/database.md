@@ -238,6 +238,34 @@ Some selects join `profiles:user_id(...)` (Supabase view); fallback select uses 
 
 ---
 
+### `feedback`
+
+User suggestions, questions, and problem reports (voluntary).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `uuid` | PK |
+| `user_id` | `uuid` FK → `auth.users` | Nullable (guest via API) |
+| `tipo` | `text` | `sugestao`, `duvida`, `critica`, `elogio`, `erro`, `outro` |
+| `status` | `text` | `novo`, `em_analise`, `respondido`, `arquivado` (default `novo`) |
+| `assunto` | `text` | Optional (~120 chars) |
+| `mensagem` | `text` | Required (min 10 chars in API) |
+| `email_contato` | `text` | Optional |
+| `nome_contato` | `text` | Optional |
+| `pagina_origem` | `text` | e.g. `/`, `/perfil`, `/lugares/uuid` |
+| `contexto_tecnico` | `jsonb` | Optional (route, code, userAgent, timestamp) |
+| `admin_notas` | `text` | Internal admin notes |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+**Indexes:** `status`, `tipo`, `created_at DESC`, `user_id`.
+
+**RLS** (migration `supabase/feedback.sql`):
+
+- **INSERT:** authenticated users with `user_id = auth.uid()`; guests insert only via `POST /api/feedback` (service role).
+- **SELECT / UPDATE:** `perfis.role` in `admin`, `dev` (same pattern as `avaliacoes` / `logs`).
+
+---
+
 ### `rotas`
 
 Admin-managed curated routes (trails, city walks). **Distinct from** AI `roteiros`.

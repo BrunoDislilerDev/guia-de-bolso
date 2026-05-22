@@ -257,7 +257,7 @@ Browse by type (Nature, Food, Night, etc.) when not using AI search.
 
 **Edge cases**
 - Invalid/empty slug → empty list after load.
-- Supabase error on category grid → red `ErrorBanner` (“Não foi possível carregar os lugares”) with link back to `/categorias`.
+- Supabase error on category grid → `UserErrorAlert` (“Não foi possível carregar os lugares”) with report hint and link back to `/categorias`.
 - Subcategory chips only if rows exist in `subcategorias` for that category name.
 - No login required for browsing.
 
@@ -282,7 +282,7 @@ Decide to go now, contact the business, or navigate.
 
 **Edge cases**
 - Inactive or missing id → “Lugar não encontrado”.
-- Supabase error loading place → full-page red `ErrorBanner` with “Tentar novamente” (`router.refresh()`).
+- Supabase error loading place → full-page `UserErrorAlert` with “Tentar novamente” (`router.refresh()`) and report hint.
 - No photos → placeholder/gradient from `getCapaFromLugar`; hero uses `next/image` with descriptive `alt` (place name).
 - No hours configured or `mostrar_horarios=false` → no compact hours row.
 - No address or `mostrar_endereco=false` → no location card.
@@ -312,7 +312,7 @@ Build a personal shortlist for the trip.
 
 **Edge cases**
 - Guest on `/favoritos` → CTA + `LoginModal`.
-- Fetch failure → red `ErrorBanner` with “Tentar novamente” (`router.refresh()`).
+- Fetch failure → `UserErrorAlert` with “Tentar novamente” (`router.refresh()`) and report hint.
 - Deactivated place drops from list (`lugares!inner` + `status=ativo`).
 - Optimistic UI rollback if RLS/network fails.
 - Favorite state on home resets when session ends.
@@ -560,7 +560,9 @@ Understand when content failed vs. is empty; navigate with keyboard/screen reade
 | Pattern | Where | Behavior |
 |---------|--------|----------|
 | **SectionUnavailable** | Home (`app/page.js`) | Gray, non-alarming copy per failed section (“Conteúdo indisponível no momento”) |
-| **ErrorBanner** | Place detail, category grid, favorites | Red `role="alert"` banner; optional retry or back link |
+| **UserErrorAlert** | Home search, place detail, category grid, favorites, roteiro sheet, avaliação | Red `role="alert"`; optional retry; report hint opens `FeedbackSheet` |
+| **FeedbackSheet** | Global (`FeedbackProvider`) | Perfil → Ajuda e feedback; pré-preenche em reportes de erro |
+| **Admin feedback** | `/admin/feedback` | Filter by status/tipo; update status and `admin_notas` |
 | **PlaceCardSkeleton** | Favorites, category list, search results | Pulse placeholders matching card height |
 | **`next/image`** | `PlaceCard`, `EmAltaCard`, search rows, lugar hero, route covers | Remote hosts allowed in `next.config.mjs` (Supabase Storage, picsum) |
 | **Design tokens** | `app/globals.css` | `--color-primary`, `--color-background`, etc.; system dark mode media query **disabled** until full theme ships |

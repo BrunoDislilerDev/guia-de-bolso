@@ -85,6 +85,7 @@ export default function AdminDashboard() {
     emAnalise: 0,
     destaquesExpirando: 0,
     premiumAtivos: 0,
+    feedbackNovos: 0,
   });
 
   const [pendentes, setPendentes] = useState([]);
@@ -110,6 +111,7 @@ export default function AdminDashboard() {
       avaliacoes,
       logsRes,
       perfisRes,
+      feedbackNovosRes,
     ] = await Promise.all([
       fetchCount(supabase, "lugares", {
         eq: { field: "status", value: "ativo" },
@@ -141,6 +143,10 @@ export default function AdminDashboard() {
         .order("created_at", { ascending: false })
         .limit(3),
       supabase.from("perfis").select("id, nome"),
+      supabase
+        .from("feedback")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "novo"),
     ]);
 
     setMetrics({
@@ -190,6 +196,7 @@ export default function AdminDashboard() {
       emAnalise: emAnaliseCounts.total,
       destaquesExpirando,
       premiumAtivos,
+      feedbackNovos: feedbackNovosRes.count ?? 0,
     });
 
     setPendentes(avaliacoes.data ?? []);

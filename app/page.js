@@ -18,6 +18,8 @@ import SearchResultsPanel from "@/components/home/SearchResultsPanel";
 import SearchStatusFilter from "@/components/home/SearchStatusFilter";
 import SmartSearch from "@/components/home/SmartSearch";
 import { FILTRO_STATUS_BUSCA } from "@/lib/busca";
+import { buildReportContext } from "@/lib/reportContext";
+import { getNetworkErrorMessage, mapApiErrorResponse } from "@/lib/userMessages";
 import { fetchClimaApis } from "@/lib/clima";
 import {
   IMBITUBA_COORDS,
@@ -166,6 +168,8 @@ function Home() {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState("geral");
   const [erroBusca, setErroBusca] = useState("");
+  const [erroBuscaReportavel, setErroBuscaReportavel] = useState(false);
+  const [erroBuscaContext, setErroBuscaContext] = useState(null);
   const [filtroBuscaStatus, setFiltroBuscaStatus] = useState(FILTRO_STATUS_BUSCA.TODOS);
 
   const {
@@ -528,6 +532,8 @@ function Home() {
     setLoadingBusca(true);
     setResultadosBusca([]);
     setErroBusca("");
+    setErroBuscaReportavel(false);
+    setErroBuscaContext(null);
 
     try {
       const response = await fetch("/api/buscar", {
@@ -553,7 +559,17 @@ function Home() {
           setSearchMode("browse");
           return;
         }
-        setErroBusca(data.error ?? "Erro na busca");
+        const mapped = mapApiErrorResponse(data, response.status);
+        setErroBusca(mapped.message);
+        setErroBuscaReportavel(true);
+        setErroBuscaContext(
+          buildReportContext({
+            code: mapped.code ?? data.code,
+            route: "/",
+            message: mapped.message,
+            extra: { query: termo },
+          })
+        );
         setResultadosBusca([]);
         return;
       }
@@ -561,11 +577,16 @@ function Home() {
       setResultadosBusca(data.lugares ?? []);
       if (data.message && !(data.lugares ?? []).length) {
         setErroBusca(data.message);
+        setErroBuscaReportavel(false);
       }
       if (data.usage) setPremiumUsage(data.usage);
       else await refreshPremiumUsage();
     } catch {
-      setErroBusca("Não foi possível concluir a busca. Tente novamente.");
+      setErroBusca(getNetworkErrorMessage());
+      setErroBuscaReportavel(true);
+      setErroBuscaContext(
+        buildReportContext({ code: "NETWORK", route: "/", extra: { query: termo } })
+      );
       setResultadosBusca([]);
     } finally {
       setLoadingBusca(false);
@@ -705,6 +726,8 @@ function Home() {
                 withDistanciaDinamica(l, userPosition)
               )}
               erro={erroBusca}
+              erroReportavel={erroBuscaReportavel}
+              erroReportContext={erroBuscaContext}
               onSugestaoClick={executarBusca}
               isFavorito={isFavorito}
               onFavoritar={handleFavoritar}

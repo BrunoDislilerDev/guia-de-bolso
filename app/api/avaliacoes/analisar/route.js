@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/premiumServer";
+import { buildApiErrorBody } from "@/lib/userMessages";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
@@ -51,12 +52,15 @@ export async function POST(request) {
     const { avaliacao_id } = await request.json();
 
     if (!avaliacao_id) {
-      return NextResponse.json({ error: "avaliacao_id obrigatório" }, { status: 400 });
+      return NextResponse.json(
+        { ...buildApiErrorBody("VALIDATION"), error: "Identificador da avaliação é obrigatório." },
+        { status: 400 }
+      );
     }
 
     const { user, supabase } = await getAuthUser();
     if (!user) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+      return NextResponse.json(buildApiErrorBody("UNAUTHORIZED"), { status: 401 });
     }
 
     const { data: avaliacao, error: fetchError } = await supabase
@@ -66,19 +70,16 @@ export async function POST(request) {
       .single();
 
     if (fetchError || !avaliacao) {
-      return NextResponse.json({ error: "Avaliação não encontrada" }, { status: 404 });
+      return NextResponse.json(buildApiErrorBody("NOT_FOUND"), { status: 404 });
     }
 
     if (avaliacao.user_id !== user.id) {
-      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+      return NextResponse.json(buildApiErrorBody("FORBIDDEN"), { status: 403 });
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "ANTHROPIC_API_KEY não configurada" },
-        { status: 500 }
-      );
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const lugar = avaliacao.lugares || {};
@@ -114,10 +115,8 @@ Comentário: "${avaliacao.comentario || "sem comentário"}"`,
     const claudeRaw = await claudeResponse.text();
 
     if (!claudeResponse.ok) {
-      return NextResponse.json(
-        { error: "Erro ao consultar a Claude API" },
-        { status: 500 }
-      );
+      console.error("Analisar avaliação — Claude HTTP:", claudeResponse.status);
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const claudeData = JSON.parse(claudeRaw);
@@ -125,10 +124,7 @@ Comentário: "${avaliacao.comentario || "sem comentário"}"`,
     const resultado = parseModeracaoJson(text);
 
     if (!resultado) {
-      return NextResponse.json(
-        { error: "Resposta da IA inválida" },
-        { status: 500 }
-      );
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const sentimento = String(resultado.sentimento || "neutro").toLowerCase();
@@ -152,14 +148,13 @@ Comentário: "${avaliacao.comentario || "sem comentário"}"`,
       .eq("id", avaliacao_id);
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+      console.error("Analisar avaliação — update:", updateError);
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json(
-      { error: "Erro interno ao analisar avaliação" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("POST /api/avaliacoes/analisar:", err);
+    return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 }

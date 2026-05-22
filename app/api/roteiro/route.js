@@ -3,6 +3,7 @@ import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
 import { checkRoteiroAccess, getAuthUser } from "@/lib/premiumServer";
 import { selecionarLugaresParaRoteiro } from "@/lib/roteiroLugares";
 import { supabase } from "@/lib/supabase";
+import { buildApiErrorBody } from "@/lib/userMessages";
 
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
@@ -42,10 +43,7 @@ export async function POST(request) {
     const { dias, perfil, interesses } = await request.json();
 
     if (!dias?.trim() || !perfil?.trim() || !interesses?.length) {
-      return NextResponse.json(
-        { error: "Informe dias, perfil e interesses." },
-        { status: 400 }
-      );
+      return NextResponse.json(buildApiErrorBody("VALIDATION"), { status: 400 });
     }
 
     const { user } = await getAuthUser();
@@ -64,10 +62,7 @@ export async function POST(request) {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "ANTHROPIC_API_KEY não configurada" },
-        { status: 500 }
-      );
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const [{ data: lugaresRaw, error }, destaquesVigentes] = await Promise.all([
@@ -79,7 +74,8 @@ export async function POST(request) {
     ]);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Roteiro — erro Supabase:", error);
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const parceiroIds = buildParceiroIdSet(destaquesVigentes);
@@ -118,10 +114,8 @@ Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
     const claudeRaw = await claudeResponse.text();
 
     if (!claudeResponse.ok) {
-      return NextResponse.json(
-        { error: "Erro ao consultar a Claude API" },
-        { status: 500 }
-      );
+      console.error("Roteiro — Claude HTTP:", claudeResponse.status);
+      return NextResponse.json(buildApiErrorBody("ROTEIRO_ERROR"), { status: 500 });
     }
 
     const claudeData = JSON.parse(claudeRaw);
@@ -132,10 +126,8 @@ Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
       titulo: `Roteiro ${dias} - ${perfil}`,
       usage: access.usage ?? null,
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Erro interno ao gerar roteiro" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("POST /api/roteiro:", err);
+    return NextResponse.json(buildApiErrorBody("ROTEIRO_ERROR"), { status: 500 });
   }
 }

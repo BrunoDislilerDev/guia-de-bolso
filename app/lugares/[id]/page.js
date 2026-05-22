@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import AvaliacaoForm from "@/components/AvaliacaoForm";
 import IconBack from "@/components/IconBack";
+import UserErrorAlert from "@/components/UserErrorAlert";
 import LoginModal from "@/components/LoginModal";
 import LugarAvaliacoesSection from "@/components/lugar/LugarAvaliacoesSection";
 import { AVALIACAO_STATUS_APROVADOS } from "@/lib/avaliacoes";
@@ -17,6 +18,7 @@ import LugarQuickActions from "@/components/lugar/LugarQuickActions";
 import LugarTags from "@/components/lugar/LugarTags";
 import { getCapaFromLugar, getFotosFromLugar } from "@/lib/fotos";
 import { saveLugarVisitado } from "@/lib/lugaresVisitados";
+import { buildReportContext } from "@/lib/reportContext";
 import { fetchLugarEhParceiroVigente, getBadgeParceiroLabel } from "@/lib/destaques";
 import {
   getFotosParaExibicao,
@@ -153,39 +155,6 @@ function BottomSheet({ isOpen, onClose, title, children }) {
           {title}
         </h2>
         {children}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Error banner with alert icon for failed data loads.
- * @param {object} props
- * @param {string} props.message - User-facing error text.
- * @param {import("react").ReactNode} [props.action] - Optional retry or navigation control.
- * @returns {import("react").ReactElement}
- */
-function ErrorBanner({ message, action }) {
-  return (
-    <div
-      className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-      role="alert"
-    >
-      <svg
-        className="h-5 w-5 shrink-0"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-      <div className="min-w-0 flex-1">
-        <p>{message}</p>
-        {action ? <div className="mt-2">{action}</div> : null}
       </div>
     </div>
   );
@@ -492,8 +461,12 @@ export default function LugarPage() {
     return (
       <div className="min-h-screen bg-[#f0f4f3] px-4 py-6 text-[#1a2e28]">
         <div className="mx-auto max-w-md">
-          <ErrorBanner
+          <UserErrorAlert
             message="Erro ao carregar o lugar. Tente novamente."
+            reportContext={buildReportContext({
+              code: "NOT_FOUND",
+              route: `/lugares/${id}`,
+            })}
             action={
               <button
                 type="button"
