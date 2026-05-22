@@ -259,10 +259,14 @@ export default function RoteiroBottomSheet({
         created_at: new Date().toISOString(),
       };
 
-      onRoteiroSalvo?.({
+      const payload = {
         ...salvo,
         diasLabel: formatDiasViagem(salvo.dias ?? dias),
-      });
+      };
+
+      onRoteiroSalvo?.(payload);
+      resetFormulario();
+      onClose();
     } catch {
       setErro(getUserMessage("SERVER"));
       setErroContext(buildReportContext({ code: "NETWORK", route: "/rotas" }));

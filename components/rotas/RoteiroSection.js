@@ -30,10 +30,32 @@ function formatData(iso) {
  * @param {object} props
  * @param {{ id?: string, titulo: string, created_at?: string, conteudo?: string }|null} props.roteiro - Roteiro a exibir; null fecha o modal.
  * @param {() => void} props.onClose - Fecha o modal.
+ * @param {(id: string) => Promise<boolean>} [props.onExcluir] - Remove roteiro no servidor e na lista.
  * @returns {import("react").JSX.Element|null}
  */
-function RoteiroViewModal({ roteiro, onClose }) {
+function RoteiroViewModal({ roteiro, onClose, onExcluir }) {
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExclusao, setErroExclusao] = useState("");
+
   if (!roteiro) return null;
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async function handleConfirmarExclusao() {
+    if (!roteiro.id || !onExcluir) return;
+    setExcluindo(true);
+    setErroExclusao("");
+    const ok = await onExcluir(roteiro.id);
+    setExcluindo(false);
+    if (!ok) {
+      setErroExclusao("Não foi possível excluir o roteiro. Tente novamente.");
+      return;
+    }
+    setConfirmandoExclusao(false);
+    onClose();
+  }
 
   return (
     <div
@@ -53,14 +75,57 @@ function RoteiroViewModal({ roteiro, onClose }) {
         <div className="flex-1 overflow-y-auto bg-[#f0f4f3] px-5 py-4">
           <RoteiroContent conteudo={roteiro.conteudo} />
         </div>
-        <div className="border-t border-gray-100 px-5 py-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full rounded-xl bg-[#1a4a3a] py-3 text-sm font-semibold text-white"
-          >
-            Fechar
-          </button>
+        <div className="border-t border-gray-100 px-5 py-4 space-y-2">
+          {erroExclusao ? (
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+              {erroExclusao}
+            </p>
+          ) : null}
+          {confirmandoExclusao ? (
+            <>
+              <p className="text-center text-sm text-[#5a6b66]">
+                Excluir &ldquo;{roteiro.titulo}&rdquo;? Esta ação não pode ser desfeita.
+              </p>
+              <button
+                type="button"
+                onClick={handleConfirmarExclusao}
+                disabled={excluindo}
+                className="w-full rounded-xl bg-[#d9534f] py-3 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {excluindo ? "Excluindo..." : "Sim, excluir"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmandoExclusao(false)}
+                disabled={excluindo}
+                className="w-full rounded-xl bg-[#f0f4f3] py-3 text-sm font-semibold text-[#5a6b66]"
+              >
+                Cancelar
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-xl bg-[#1a4a3a] py-3 text-sm font-semibold text-white"
+              >
+                Fechar
+              </button>
+              {roteiro.id && onExcluir ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErroExclusao("");
+                    setConfirmandoExclusao(true);
+                  }}
+                  className="w-full rounded-xl border border-red-200 bg-white py-3 text-sm font-semibold text-[#d9534f]"
+                >
+                  Excluir roteiro
+                </button>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -116,6 +181,32 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
       novoRoteiro,
       ...atual.filter((item) => item.id !== novoRoteiro.id),
     ]);
+    setSheetOpen(false);
+    setRoteiroVisualizando(novoRoteiro);
+  }
+
+  /**
+   * Remove roteiro salvo do Supabase e da lista local.
+   * @param {string} roteiroId
+   * @returns {Promise<boolean>}
+   */
+  async function handleExcluirRoteiro(roteiroId) {
+    if (!user?.id) return false;
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("roteiros")
+      .delete()
+      .eq("id", roteiroId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Erro ao excluir roteiro:", error);
+      return false;
+    }
+
+    setRoteiros((atual) => atual.filter((item) => item.id !== roteiroId));
+    return true;
   }
 
   /**
@@ -251,6 +342,7 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
         isLoggedIn={loggedIn}
         onLoginRequired={() => setLoginOpen(true)}
         onLimitReached={() => setPaywallOpen(true)}
+        onRoteiroSalvo={handleRoteiroSalvo}
         onUsageRefresh={(nextUsage) => {
           if (nextUsage) setPremiumUsage(nextUsage);
           else refreshUsage();
@@ -276,6 +368,7 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
       <RoteiroViewModal
         roteiro={roteiroVisualizando}
         onClose={() => setRoteiroVisualizando(null)}
+        onExcluir={loggedIn ? handleExcluirRoteiro : undefined}
       />
     </>
   );
