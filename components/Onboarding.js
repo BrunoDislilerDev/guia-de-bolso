@@ -1,28 +1,93 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
 import { ONBOARDING_SLIDES } from "@/lib/authImagery";
+import { createClient } from "@/lib/supabase/client";
 
 const SWIPE_THRESHOLD_PX = 52;
 const SLIDE_COUNT = ONBOARDING_SLIDES.length;
 
+/** @typedef {'login' | 'home'} OnboardingDestination */
+
+/**
+ * Slide de fundo com fallback se a imagem falhar ao carregar.
+ * @param {object} props
+ * @param {object} props.image
+ * @param {boolean} props.active
+ * @param {boolean} props.reducedMotion
+ * @param {string} props.motionSafe
+ * @returns {import("react").ReactElement}
+ */
+function OnboardingBackgroundSlide({ image, active, reducedMotion, motionSafe }) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [image.src]);
+
+  return (
+    <div
+      className={`absolute inset-0 ${motionSafe} ${
+        active ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
+      aria-hidden={!active}
+    >
+      {!failed ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={image.src}
+          alt={active ? image.alt : ""}
+          loading={active ? "eager" : "lazy"}
+          fetchPriority={active ? "high" : "auto"}
+          decoding="async"
+          onError={() => setFailed(true)}
+          className={`h-full w-full object-cover opacity-90 ${
+            active && !reducedMotion ? "onboarding-ken-burns" : ""
+          }`}
+        />
+      ) : (
+        <div
+          className="h-full w-full bg-gradient-to-br from-[#1a4a3a] via-[#0d2820] to-[#071612]"
+          aria-hidden
+        />
+      )}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-[#071612]/45 via-[#1a4a3a]/35 to-[#071612]/80"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
 /**
  * Onboarding imersivo em tela cheia — fotos, valor e gestos de swipe.
  * @param {object} props
- * @param {() => void} [props.onComplete]
+ * @param {boolean} [props.isLoggedIn=false] - Sessão ativa (evita loop login→home).
+ * @param {(dest: OnboardingDestination) => void} [props.onComplete]
  * @returns {import("react").ReactElement}
  */
-export default function Onboarding({ onComplete }) {
-  const router = useRouter();
+export default function Onboarding({ isLoggedIn = false, onComplete }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [sessionLoggedIn, setSessionLoggedIn] = useState(isLoggedIn);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const isLastSlide = currentSlide === SLIDE_COUNT - 1;
   const slide = ONBOARDING_SLIDES[currentSlide];
   const progressPct = ((currentSlide + 1) / SLIDE_COUNT) * 100;
+  const loggedIn = isLoggedIn || sessionLoggedIn;
+
+  useEffect(() => {
+    setSessionLoggedIn(isLoggedIn);
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setSessionLoggedIn(true);
+    });
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -32,22 +97,22 @@ export default function Onboarding({ onComplete }) {
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  const markOnboardingSeen = useCallback(() => {
-    localStorage.setItem("onboarding_visto", "true");
-  }, []);
+  /** @param {OnboardingDestination} dest */
+  const finish = useCallback(
+    (dest) => {
+      onComplete?.(dest);
+    },
+    [onComplete]
+  );
 
-  /** Fecha o onboarding e permanece na home (explorar como visitante). */
-  const completeAndExplore = useCallback(() => {
-    markOnboardingSeen();
-    onComplete?.();
-  }, [markOnboardingSeen, onComplete]);
+  /** Visitante → login; já logado → home (evita redirect imediato em /login). */
+  const finishEnter = useCallback(() => {
+    finish(loggedIn ? "home" : "login");
+  }, [finish, loggedIn]);
 
-  /** Fecha o onboarding e abre a tela de login. */
-  const completeAndLogin = useCallback(() => {
-    markOnboardingSeen();
-    onComplete?.();
-    router.push("/login");
-  }, [markOnboardingSeen, onComplete, router]);
+  const finishExplore = useCallback(() => {
+    finish("home");
+  }, [finish]);
 
   function goToSlide(index) {
     setCurrentSlide(Math.max(0, Math.min(index, SLIDE_COUNT - 1)));
@@ -55,7 +120,7 @@ export default function Onboarding({ onComplete }) {
 
   function handlePrimaryAction() {
     if (isLastSlide) {
-      completeAndLogin();
+      finishEnter();
       return;
     }
     goToSlide(currentSlide + 1);
@@ -76,6 +141,11 @@ export default function Onboarding({ onComplete }) {
   }
 
   const motionSafe = reducedMotion ? "" : "transition-all duration-700 ease-out";
+  const primaryCtaLabel = isLastSlide
+    ? loggedIn
+      ? "Continuar no guia"
+      : "Entrar no guia"
+    : "Próximo";
 
   return (
     <section
@@ -110,33 +180,18 @@ export default function Onboarding({ onComplete }) {
         }
       `}</style>
 
-      {/* Slides de fundo */}
       <div className="absolute inset-0">
         {ONBOARDING_SLIDES.map((item, index) => (
-          <div
-            key={item.title}
-            className={`absolute inset-0 ${motionSafe} ${
-              index === currentSlide ? "opacity-100" : "pointer-events-none opacity-0"
-            }`}
-            aria-hidden={index !== currentSlide}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={item.image.src}
-              alt={index === currentSlide ? item.image.alt : ""}
-              className={`h-full w-full object-cover ${
-                index === currentSlide && !reducedMotion ? "onboarding-ken-burns" : ""
-              }`}
-            />
-            <div
-              className="absolute inset-0 bg-gradient-to-b from-[#071612]/75 via-[#071612]/35 to-[#071612]/95"
-              aria-hidden
-            />
-          </div>
+          <OnboardingBackgroundSlide
+            key={item.image.src}
+            image={item.image}
+            active={index === currentSlide}
+            reducedMotion={reducedMotion}
+            motionSafe={motionSafe}
+          />
         ))}
       </div>
 
-      {/* Barra de progresso superior */}
       <header className="absolute inset-x-0 top-0 z-20 px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 backdrop-blur-md">
@@ -144,9 +199,11 @@ export default function Onboarding({ onComplete }) {
           </span>
           <button
             type="button"
-            onClick={completeAndLogin}
+            onClick={finishEnter}
             className="min-h-10 rounded-full px-3 py-1.5 text-sm font-semibold text-white/90 backdrop-blur-md ring-1 ring-white/20 transition active:bg-white/15"
-            aria-label="Pular introdução e ir para login"
+            aria-label={
+              loggedIn ? "Pular introdução e ir para o guia" : "Pular introdução e ir para login"
+            }
           >
             Pular
           </button>
@@ -166,7 +223,6 @@ export default function Onboarding({ onComplete }) {
         </div>
       </header>
 
-      {/* Conteúdo principal */}
       <div className="relative z-10 flex min-h-full flex-col justify-end px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-24">
         <div key={currentSlide} className="onboarding-content-enter max-w-md">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#b8e6d4]">
@@ -208,7 +264,6 @@ export default function Onboarding({ onComplete }) {
           </ul>
         </div>
 
-        {/* Controles inferiores */}
         <div className="mt-8 max-w-md">
           <div className="flex justify-center gap-2" role="tablist" aria-label="Slides">
             {ONBOARDING_SLIDES.map((_, index) => (
@@ -233,20 +288,22 @@ export default function Onboarding({ onComplete }) {
               !reducedMotion && isLastSlide ? "onboarding-cta-glow" : ""
             } transition active:scale-[0.98] active:bg-[#a3dcc8]`}
           >
-            {isLastSlide ? "Entrar no guia" : "Próximo"}
+            {primaryCtaLabel}
           </button>
 
           {isLastSlide ? (
             <>
               <button
                 type="button"
-                onClick={completeAndExplore}
+                onClick={finishExplore}
                 className="mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold text-white/90 ring-1 ring-white/25 transition active:bg-white/10"
               >
                 Explorar sem criar conta
               </button>
               <p className="mt-3 text-center text-xs text-white/50">
-                Entrar no guia abre login com Google ou SMS
+                {loggedIn
+                  ? "Você já está conectado — continue explorando"
+                  : "Entrar no guia abre login com Google ou SMS"}
               </p>
             </>
           ) : (

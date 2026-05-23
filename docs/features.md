@@ -26,10 +26,11 @@ Full-screen intro on first visit: **4 slides** with nature backgrounds (beach, l
 Understand the product before exploring; choose login or guest browse.
 
 **Main flows**
-1. User opens `/` for the first time → `Onboarding` overlay if `onboarding_visto` is unset.
-2. User swipes through 4 slides → **Entrar no guia** or **Pular** → `/login`.
-3. **Explorar sem criar conta** (last slide only) → home as guest.
-4. Returning visits skip onboarding.
+1. User opens `/` for the first time → `Onboarding` overlay if `onboarding_visto` is unset (4 slides).
+2. **Pular** or **Entrar no guia** (guest) → `onComplete('login')` → parent `router.replace('/login?from=onboarding')`.
+3. **Entrar no guia** / **Pular** when already logged in → `onComplete('home')` (avoids `/login` redirect loop).
+4. **Explorar sem criar conta** → `onComplete('home')` only.
+5. Background images served from `/public/onboarding/*.jpg` (local assets).
 
 **Edge cases**
 - Clearing `localStorage` shows onboarding again.

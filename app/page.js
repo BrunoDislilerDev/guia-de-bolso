@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
 import Onboarding from "@/components/Onboarding";
@@ -103,6 +103,7 @@ function SectionUnavailable({ title }) {
  * @returns {import("react").ReactElement}
  */
 function Home() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -661,6 +662,18 @@ function Home() {
   const buscaLimiteDiarioAtingido =
     Boolean(user) && isDailyBuscaLimitReached(premiumUsage);
 
+  /** @param {'login' | 'home'} dest */
+  const handleOnboardingComplete = useCallback(
+    (dest) => {
+      localStorage.setItem("onboarding_visto", "true");
+      setShowOnboarding(false);
+      if (dest === "login") {
+        router.replace("/login?from=onboarding");
+      }
+    },
+    [router]
+  );
+
   if (!onboardingChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
@@ -670,7 +683,9 @@ function Home() {
   }
 
   if (showOnboarding) {
-    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
+    return (
+      <Onboarding isLoggedIn={Boolean(user)} onComplete={handleOnboardingComplete} />
+    );
   }
 
   return (
