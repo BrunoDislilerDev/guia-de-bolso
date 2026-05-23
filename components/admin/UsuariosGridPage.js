@@ -12,7 +12,7 @@ import {
   isAdminTeamRole,
   normalizeRole,
 } from "@/lib/adminRoles";
-import { getLogAcaoBadgeAdmin } from "@/lib/adminLogs";
+import { formatLogDateTime, getLogAcaoBadgeAdmin } from "@/lib/adminLogs";
 import { formatarAcaoLog } from "@/lib/logs";
 import { NAV_APPS } from "@/lib/perfil";
 import {
@@ -642,7 +642,7 @@ export default function UsuariosGridPage() {
                           </span>
                           <p className="mt-1 text-[#1a2e28]">{formatarAcaoLog(log)}</p>
                           <p className="text-[#9aa8a3]">
-                            {formatCadastro(log.created_at)}
+                            {formatLogDateTime(log.created_at).absoluto}
                           </p>
                         </li>
                       );

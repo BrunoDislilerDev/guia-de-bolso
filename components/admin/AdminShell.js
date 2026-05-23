@@ -24,6 +24,12 @@ export function useAdminAuth() {
 
     /** Carrega usuário e perfil; redireciona se não autenticado ou sem permissão admin. */
     async function checkAdmin() {
+      if (!supabase) {
+        console.error("[admin] Supabase não configurado no cliente.");
+        router.replace("/");
+        return;
+      }
+
       const {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
@@ -31,7 +37,7 @@ export function useAdminAuth() {
       if (cancelled) return;
 
       if (!currentUser) {
-        router.replace("/");
+        router.replace("/login?next=/admin");
         return;
       }
 
@@ -43,8 +49,18 @@ export function useAdminAuth() {
 
       if (cancelled) return;
 
+      if (perfilError) {
+        console.error("[admin] Erro ao ler perfil (RLS?):", perfilError.message);
+        router.replace("/?admin=rls");
+        return;
+      }
+
       if (!canAccessAdmin(perfilData?.role)) {
-        router.replace("/");
+        console.warn(
+          "[admin] Sem permissão. role=",
+          perfilData?.role ?? "(perfil ausente)"
+        );
+        router.replace("/?admin=denied");
         return;
       }
 
