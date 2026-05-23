@@ -4,27 +4,17 @@ import Link from "next/link";
 import { getCategoriaHref } from "@/lib/categorias";
 
 /**
- * Card compacto de categoria (grid 2 colunas).
+ * Conteúdo visual compartilhado do card de categoria.
  * @param {object} props
  * @param {import("@/lib/categorias").CategoriaExplore} props.categoria
  * @param {number} props.count
  * @param {string} [props.imagemUrl]
+ * @param {boolean} props.vazio
  * @returns {import("react").JSX.Element}
  */
-export default function ExplorarCategoriaCard({ categoria, count, imagemUrl }) {
-  const href = getCategoriaHref(categoria.nome);
-  const vazio = count === 0;
-
+function CategoriaCardContent({ categoria, count, imagemUrl, vazio }) {
   return (
-    <Link
-      href={href}
-      className={`relative flex min-h-[148px] flex-col overflow-hidden rounded-2xl shadow-sm ring-1 transition active:scale-[0.98] ${
-        vazio
-          ? "bg-gray-50 ring-gray-200/80 opacity-75"
-          : "bg-white ring-[#e8eeee] hover:ring-[#1a4a3a]/25"
-      }`}
-      aria-label={`${categoria.nome}, ${count} lugares`}
-    >
+    <>
       <div className="relative h-[88px] w-full overflow-hidden">
         {imagemUrl && !vazio ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -61,6 +51,55 @@ export default function ExplorarCategoriaCard({ categoria, count, imagemUrl }) {
           {vazio ? "Em breve" : `${count} ${count === 1 ? "lugar" : "lugares"}`}
         </p>
       </div>
+    </>
+  );
+}
+
+/**
+ * Card compacto de categoria (grid 2 colunas).
+ * @param {object} props
+ * @param {import("@/lib/categorias").CategoriaExplore} props.categoria
+ * @param {number} props.count
+ * @param {string} [props.imagemUrl]
+ * @returns {import("react").JSX.Element}
+ */
+export default function ExplorarCategoriaCard({ categoria, count, imagemUrl }) {
+  const vazio = count === 0;
+  const baseClass = `relative flex min-h-[148px] flex-col overflow-hidden rounded-2xl shadow-sm ring-1 ${
+    vazio
+      ? "cursor-not-allowed bg-gray-50 ring-gray-200/80 opacity-75"
+      : "bg-white ring-[#e8eeee] transition active:scale-[0.98] hover:ring-[#1a4a3a]/25"
+  }`;
+
+  if (vazio) {
+    return (
+      <div
+        className={baseClass}
+        aria-disabled="true"
+        title={`${categoria.nome} — em breve, sem lugares cadastrados`}
+      >
+        <CategoriaCardContent
+          categoria={categoria}
+          count={count}
+          imagemUrl={imagemUrl}
+          vazio={vazio}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={getCategoriaHref(categoria.nome)}
+      className={baseClass}
+      aria-label={`${categoria.nome}, ${count} lugares`}
+    >
+      <CategoriaCardContent
+        categoria={categoria}
+        count={count}
+        imagemUrl={imagemUrl}
+        vazio={vazio}
+      />
     </Link>
   );
 }

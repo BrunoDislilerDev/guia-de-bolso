@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import AppDeveloperCredit from "@/components/AppDeveloperCredit";
+import IconBack from "@/components/IconBack";
 import { LEGAL_LAST_UPDATED, LEGAL_RESPONSAVEL } from "@/lib/legalContent";
 
 /**
@@ -11,27 +15,38 @@ import { LEGAL_LAST_UPDATED, LEGAL_RESPONSAVEL } from "@/lib/legalContent";
  * @returns {import("react").ReactElement}
  */
 export default function LegalDocument({ kind, title, sections }) {
+  const searchParams = useSearchParams();
+  const fromPerfil = searchParams.get("from") === "perfil";
+  const backHref = fromPerfil ? "/perfil" : "/";
+  const backLabel = fromPerfil ? "Voltar ao perfil" : "Voltar ao app";
+
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <div className="mx-auto max-w-md px-4 pb-12 pt-[max(1rem,env(safe-area-inset-top))]">
-        <Link
-          href="/"
-          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#1a4a3a] transition active:opacity-70"
-        >
-          ← Voltar ao app
-        </Link>
+        <header className="mb-4 flex items-center gap-3">
+          <Link
+            href={backHref}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-sm ring-1 ring-[#e8eeee] transition active:scale-[0.97]"
+            aria-label={backLabel}
+          >
+            <IconBack />
+          </Link>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#1a4a3a]">
+              {LEGAL_RESPONSAVEL.produto}
+            </p>
+            <p className="truncate text-sm font-semibold text-[#5a6b66]">{backLabel}</p>
+          </div>
+        </header>
 
-        <header className="mt-4">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#1a4a3a]">
-            {LEGAL_RESPONSAVEL.produto}
-          </p>
-          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-[#1a2e28]">
+        <div className="mt-2">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-[#1a2e28]">
             {title}
           </h1>
           <p className="mt-2 text-xs text-[#5a6b66]">
             Atualizado em {LEGAL_LAST_UPDATED} · {LEGAL_RESPONSAVEL.nome}
           </p>
-        </header>
+        </div>
 
         <nav
           className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e8eeee]"
@@ -84,13 +99,19 @@ export default function LegalDocument({ kind, title, sections }) {
           </p>
           {kind === "privacidade" ? (
             <p className="mt-2">
-              <Link href="/termos" className="font-semibold text-[#1a4a3a] underline">
+              <Link
+                href={fromPerfil ? "/termos?from=perfil" : "/termos"}
+                className="font-semibold text-[#1a4a3a] underline"
+              >
                 Termos de Uso
               </Link>
             </p>
           ) : (
             <p className="mt-2">
-              <Link href="/privacidade" className="font-semibold text-[#1a4a3a] underline">
+              <Link
+                href={fromPerfil ? "/privacidade?from=perfil" : "/privacidade"}
+                className="font-semibold text-[#1a4a3a] underline"
+              >
                 Política de Privacidade
               </Link>
             </p>

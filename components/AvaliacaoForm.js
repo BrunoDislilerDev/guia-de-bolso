@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  MAX_ASPECTOS_SELECIONADOS,
   MAX_COMENTARIO_AVALIACAO,
   getAspectosParaLugar,
 } from "@/lib/avaliacaoAspectos";
@@ -66,11 +67,13 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
    * @param {string} aspecto
    */
   function toggleAspecto(aspecto) {
-    setAspectos((current) =>
-      current.includes(aspecto)
-        ? current.filter((item) => item !== aspecto)
-        : [...current, aspecto]
-    );
+    setAspectos((current) => {
+      if (current.includes(aspecto)) {
+        return current.filter((item) => item !== aspecto);
+      }
+      if (current.length >= MAX_ASPECTOS_SELECIONADOS) return current;
+      return [...current, aspecto];
+    });
   }
 
   /**
@@ -178,7 +181,10 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
 
         <div className="mt-6">
           <p className="text-sm font-semibold text-[#1a2e28]">O que mais marcou?</p>
-          <p className="mt-0.5 text-xs text-[#9aa8a3]">Selecione quantos quiser</p>
+          <p className="mt-0.5 text-xs text-[#9aa8a3]">
+            Escolha até {MAX_ASPECTOS_SELECIONADOS}
+            {aspectos.length > 0 ? ` · ${aspectos.length} selecionado${aspectos.length > 1 ? "s" : ""}` : ""}
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {opcoesAspectos.map((aspecto) => {
               const selected = aspectos.includes(aspecto);

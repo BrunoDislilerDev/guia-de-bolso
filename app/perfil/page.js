@@ -284,13 +284,13 @@ export default function PerfilPage() {
                   key: "termos",
                   icon: "📄",
                   label: "Termos de Uso",
-                  href: "/termos",
+                  href: "/termos?from=perfil",
                 },
                 {
                   key: "privacidade",
                   icon: "🔒",
                   label: "Política de Privacidade",
-                  href: "/privacidade",
+                  href: "/privacidade?from=perfil",
                 },
               ]}
             />

@@ -176,7 +176,9 @@ export default function LugarAvaliacoesSection({
 
       {total === 0 ? (
         <p className="mt-4 text-sm text-[#9aa8a3]">
-          Seja o primeiro a avaliar este lugar
+          {jaAvaliou
+            ? "Sua avaliação foi enviada e aparecerá aqui após aprovação da equipe."
+            : "Seja o primeiro a avaliar este lugar"}
         </p>
       ) : (
         <>
