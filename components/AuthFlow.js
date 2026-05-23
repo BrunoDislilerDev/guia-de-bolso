@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import IconApple from "@/components/IconApple";
 import IconBack from "@/components/IconBack";
 import LegalConsentLine from "@/components/legal/LegalConsentLine";
+import { ensurePerfil } from "@/lib/ensurePerfil";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -205,6 +206,13 @@ export default function AuthFlow({ compact = false, variant = "default" }) {
       );
       setTimeout(() => inputsRef.current[0]?.focus(), 50);
       return;
+    }
+
+    const {
+      data: { user: verifiedUser },
+    } = await supabase.auth.getUser();
+    if (verifiedUser) {
+      await ensurePerfil(supabase, verifiedUser);
     }
 
     setScreen("success");

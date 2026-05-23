@@ -13,7 +13,7 @@ DECLARE
   v_perfil perfis%ROWTYPE;
   v_used int;
   v_roteiros int;
-  v_limit int := 3;
+  v_limit int := 5;
   v_resets_at timestamptz;
 BEGIN
   IF auth.uid() IS NULL OR auth.uid() IS DISTINCT FROM p_user_id THEN
@@ -86,7 +86,7 @@ BEGIN
     RETURN jsonb_build_object(
       'allowed', false,
       'code', 'LIMIT_REACHED',
-      'message', 'Você usou suas 3 buscas com IA de hoje. O limite reinicia à meia-noite. Assine o Premium por R$9,90/mês para uso ilimitado.',
+      'message', 'Você usou suas 5 buscas com IA de hoje. O limite reinicia à meia-noite. Assine o Premium por R$9,90/mês para uso ilimitado.',
       'usage', jsonb_build_object(
         'premium', false,
         'day', v_day,
@@ -166,7 +166,7 @@ BEGIN
         'day', v_day,
         'month', v_day,
         'resets_at', v_resets_at,
-        'buscas', jsonb_build_object('used', 0, 'limit', 3, 'remaining', 3),
+        'buscas', jsonb_build_object('used', 0, 'limit', 5, 'remaining', 5),
         'roteiros', jsonb_build_object('used', 1, 'limit', v_limit, 'remaining', v_limit - 1)
       )
     );
@@ -179,7 +179,7 @@ BEGIN
       'day', v_day,
       'month', v_day,
       'resets_at', v_resets_at,
-      'buscas', jsonb_build_object('used', COALESCE(v_perfil.buscas_ia, 0), 'limit', 3, 'remaining', null),
+      'buscas', jsonb_build_object('used', COALESCE(v_perfil.buscas_ia, 0), 'limit', 5, 'remaining', null),
       'roteiros', jsonb_build_object('used', COALESCE(v_perfil.roteiros_ia, 0), 'limit', v_limit, 'remaining', null)
     ));
   END IF;
@@ -204,7 +204,7 @@ BEGIN
         'day', v_day,
         'month', v_day,
         'resets_at', v_resets_at,
-        'buscas', jsonb_build_object('used', v_buscas, 'limit', 3, 'remaining', greatest(0, 3 - v_buscas)),
+        'buscas', jsonb_build_object('used', v_buscas, 'limit', 5, 'remaining', greatest(0, 5 - v_buscas)),
         'roteiros', jsonb_build_object('used', v_used, 'limit', v_limit, 'remaining', 0)
       )
     );
@@ -224,7 +224,7 @@ BEGIN
       'day', v_day,
       'month', v_day,
       'resets_at', v_resets_at,
-      'buscas', jsonb_build_object('used', v_buscas, 'limit', 3, 'remaining', greatest(0, 3 - v_buscas)),
+      'buscas', jsonb_build_object('used', v_buscas, 'limit', 5, 'remaining', greatest(0, 5 - v_buscas)),
       'roteiros', jsonb_build_object('used', v_used + 1, 'limit', v_limit, 'remaining', greatest(0, v_limit - v_used - 1))
     )
   );

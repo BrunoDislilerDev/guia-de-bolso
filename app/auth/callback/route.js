@@ -1,3 +1,4 @@
+import { ensurePerfil } from "@/lib/ensurePerfil";
 import { createClient } from "@/lib/supabase/server";
 import { registrarLog } from "@/lib/logs";
 import { NextResponse } from "next/server";
@@ -20,6 +21,9 @@ export async function GET(request) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      if (user) {
+        await ensurePerfil(supabase, user);
+      }
       await registrarLog(supabase, user, "login", {
         provider: user?.app_metadata?.provider,
       });

@@ -40,6 +40,34 @@ function addDaysISO(iso, dias) {
 }
 
 /**
+ * Detecta preset 30/60/90 quando início é hoje e fim bate o intervalo.
+ * @param {string} dataInicio
+ * @param {string} dataFim
+ * @param {string} hojeRef
+ * @returns {30|60|90|null}
+ */
+function getDuracaoPresetAtivo(dataInicio, dataFim, hojeRef) {
+  if (dataInicio !== hojeRef) return null;
+  const start = new Date(`${hojeRef}T12:00:00`);
+  const end = new Date(`${dataFim}T12:00:00`);
+  const diffDays = Math.round((end - start) / (24 * 60 * 60 * 1000));
+  if (diffDays === 30) return 30;
+  if (diffDays === 60) return 60;
+  if (diffDays === 90) return 90;
+  return null;
+}
+
+/**
+ * @param {boolean} active
+ * @returns {string}
+ */
+function duracaoChipClass(active) {
+  return active
+    ? "rounded-lg bg-[#1a4a3a] px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-[#1a4a3a]/20"
+    : "rounded-lg bg-[#f0f4f3] px-3 py-1.5 text-xs font-semibold text-[#1a4a3a] ring-1 ring-[#e3e9e6] transition hover:bg-[#e8eeee]";
+}
+
+/**
  * Admin de destaques comerciais (plano único Parceiro · R$ 199/mês).
  * @returns {import("react").ReactElement}
  */
@@ -59,6 +87,11 @@ function AdminDestaquesPage() {
     data_fim: addDaysISO(hoje, 30),
     ativo: true,
   });
+
+  const duracaoPresetAtivo = useMemo(
+    () => getDuracaoPresetAtivo(form.data_inicio, form.data_fim, hoje),
+    [form.data_inicio, form.data_fim, hoje]
+  );
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
@@ -280,7 +313,7 @@ function AdminDestaquesPage() {
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-lg bg-[#f0f4f3] px-3 py-1.5 text-xs font-semibold text-[#1a4a3a]"
+            className={duracaoChipClass(duracaoPresetAtivo === 30)}
             onClick={() =>
               setForm((f) => ({
                 ...f,
@@ -293,7 +326,7 @@ function AdminDestaquesPage() {
           </button>
           <button
             type="button"
-            className="rounded-lg bg-[#f0f4f3] px-3 py-1.5 text-xs font-semibold text-[#1a4a3a]"
+            className={duracaoChipClass(duracaoPresetAtivo === 60)}
             onClick={() =>
               setForm((f) => ({
                 ...f,
@@ -306,7 +339,7 @@ function AdminDestaquesPage() {
           </button>
           <button
             type="button"
-            className="rounded-lg bg-[#f0f4f3] px-3 py-1.5 text-xs font-semibold text-[#1a4a3a]"
+            className={duracaoChipClass(duracaoPresetAtivo === 90)}
             onClick={() =>
               setForm((f) => ({
                 ...f,

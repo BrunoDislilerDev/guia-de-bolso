@@ -23,7 +23,7 @@ Unauthenticated requests to AI routes return `401` with `{ code: "LOGIN_REQUIRED
 Natural-language place search powered by Claude.
 
 **Auth:** Required  
-**Premium:** Free tier — **3 searches/day** (resets at midnight, America/Sao_Paulo); Premium — unlimited
+**Premium:** Free tier — **5 searches/day** (resets at midnight, America/Sao_Paulo); Premium — unlimited
 
 **Request body:**
 
@@ -273,7 +273,7 @@ Not all data goes through `/api`. The browser Supabase client reads public data 
 
 ## Rate limits and cost control
 
-- Free-tier limits are **per calendar day** (America/Sao_Paulo): 3 buscas, 2 roteiros; enforced in `lib/premiumServer.js` and RPC `increment_*_ia` before AI calls.
+- Free-tier limits are **per calendar day** (America/Sao_Paulo): 5 buscas, 2 roteiros; enforced in `lib/premiumServer.js` and RPC `increment_*_ia` before AI calls.
 - Read path realigns stale or legacy `YYYY-MM` keys before normalize; RPC `increment_*_ia` matches exact `YYYY-MM-DD` only. Client must not trust `localStorage` over server when counts diverge.
 - `LIMIT_REACHED` responses include `usage`; RPC JSON uses `resets_at`, client-normalized `usage` uses camelCase `resetsAt` / `msUntilReset`.
 - Roteiro generation uses a filtered place list (`lib/roteiroLugares.js`) to reduce tokens.

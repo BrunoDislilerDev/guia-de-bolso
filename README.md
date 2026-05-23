@@ -81,7 +81,7 @@ The product combines a curated place catalog, live context (opening hours, geolo
 
 | Capability | Free (signed in) | Premium |
 |------------|------------------|---------|
-| AI place search | 3 / day (resets at midnight, Brasília) | Unlimited |
+| AI place search | 5 / day (resets at midnight, Brasília) | Unlimited |
 | AI trip itinerary | 2 / day (resets at midnight, Brasília) | Unlimited |
 | `ClimaCard` beach weather UI | Not on home (header uses Open-Meteo phrase only) | Full sheet when component is mounted |
 

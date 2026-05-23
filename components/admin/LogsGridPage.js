@@ -257,7 +257,7 @@ export default function LogsGridPage() {
   return (
     <AdminShell
       title="Logs"
-      subtitle="Atividade e eventos do app"
+      subtitle="Atividade e eventos do app · horários em Brasília"
       contentClassName="bg-[#f0f4f3]"
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

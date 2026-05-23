@@ -81,7 +81,7 @@ One row per registered user. Extends auth with app profile, admin role, and AI/p
 | `buscas_ia` | `integer` | AI searches used **today** *(migration)* |
 | `roteiros_ia` | `integer` | AI itineraries used **today** *(migration)* |
 
-**Free tier limits** (enforced in app + RPC): **3 searches/day**, **2 roteiros/day**; counters reset at **midnight** (SP). Premium: unlimited (`lib/premium.js`). See `supabase/premium_uso_diario.sql` (column comment).
+**Free tier limits** (enforced in app + RPC): **5 searches/day**, **2 roteiros/day**; counters reset at **midnight** (SP). Premium: unlimited (`lib/premium.js`). See `supabase/premium_uso_diario.sql` (column comment).
 
 ---
 

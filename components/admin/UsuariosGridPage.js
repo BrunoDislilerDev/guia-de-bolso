@@ -393,6 +393,12 @@ export default function UsuariosGridPage() {
       title="Usuários"
       subtitle="Perfis, papéis, Premium IA e engajamento no app"
     >
+      <p className="mb-5 rounded-2xl bg-[#f7faf9] px-4 py-3 text-sm leading-relaxed text-[#5a6b66] ring-1 ring-[#e8eeee]">
+        Lista baseada em contas com perfil no app. Novos logins (Google ou SMS) criam ou
+        atualizam o perfil automaticamente. Se faltar alguém, peça para abrir o app uma vez
+        após o login.
+      </p>
+
       {message && (
         <div
           className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-[#d4ede8] bg-[#eef8f4] px-4 py-3 text-sm font-semibold text-[#1a4a3a]"

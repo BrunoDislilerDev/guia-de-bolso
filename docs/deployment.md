@@ -271,7 +271,8 @@ Minimum for a legacy DB that already has base schema:
 | 1 | Base schema (tables created in dashboard / legacy scripts) |
 | 2 | `premium_usuario.sql` |
 | 3 | `increment_uso_ia.sql` |
-| 3b | `premium_uso_diario.sql` *(optional)* — `COMMENT ON COLUMN` only |
+| 3b | `perfis_email_admin.sql` | `email` on `perfis` + admin SELECT policy |
+| 3c | `premium_uso_diario.sql` *(optional)* — `COMMENT ON COLUMN` only |
 | 4 | `perfis_premium_policies.sql` |
 | 5 | `perfis_role_check.sql` |
 | 6 | `tags_categorias.sql` |

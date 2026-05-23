@@ -490,7 +490,7 @@ Get a custom day-by-day plan for the region.
 ## 23. Guia Premium (paywall)
 
 **Description**  
-Subscription at **R$ 9,90/mo** for **unlimited** AI search and roteiros (no daily cap). Free tier: **3 buscas + 2 roteiros per day**, resetting at **midnight** (`America/Sao_Paulo`). `PremiumPaywallSheet` explains the daily limit; `DailyLimitCountdown` shows time until reset (`HH:MM:SS`, updates every second).
+Subscription at **R$ 9,90/mo** for **unlimited** AI search and roteiros (no daily cap). Free tier: **5 buscas + 2 roteiros per day**, resetting at **midnight** (`America/Sao_Paulo`). `PremiumPaywallSheet` explains the daily limit; `DailyLimitCountdown` shows time until reset (`HH:MM:SS`, updates every second).
 
 **User goal**  
 Understand the daily free quota, when it renews, or upgrade for unlimited use.

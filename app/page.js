@@ -36,10 +36,14 @@ import {
 import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
 import { getLugaresVisitados } from "@/lib/lugaresVisitados";
 import { withDistanciaDinamica } from "@/lib/localizacao";
+import { ensurePerfil } from "@/lib/ensurePerfil";
 import { canUseBusca, isDailyBuscaLimitReached } from "@/lib/premium";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
+
+/** Timeout de segurança se `getSession`/`getUser` não responder (ex.: OAuth no tablet). */
+const AUTH_RESOLVE_TIMEOUT_MS = 8000;
 
 const LUGAR_SELECT = "*, localizacoes(*), lugares_tags(tags(*))";
 
@@ -230,22 +234,48 @@ function Home() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
-      setUser(currentUser);
-      if (!currentUser) setFavoritos([]);
+    let accessLogged = false;
+
+    function applySession(sessionUser) {
+      setUser(sessionUser);
+      if (!sessionUser) setFavoritos([]);
       setAuthLoading(false);
-      registrarLog(supabase, currentUser, "acessou_app");
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const currentUser = session?.user ?? null;
+      applySession(currentUser);
+      if (currentUser && !accessLogged) {
+        accessLogged = true;
+        registrarLog(supabase, currentUser, "acessou_app");
+        ensurePerfil(supabase, currentUser);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) setFavoritos([]);
-      setAuthLoading(false);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const currentUser = session?.user ?? null;
+      applySession(currentUser);
+      if (currentUser && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        ensurePerfil(supabase, currentUser);
+      }
+      if (currentUser && !accessLogged) {
+        accessLogged = true;
+        registrarLog(supabase, currentUser, "acessou_app");
+      }
     });
 
-    return () => subscription.unsubscribe();
+    const safetyTimer = window.setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        applySession(session?.user ?? null);
+      });
+    }, AUTH_RESOLVE_TIMEOUT_MS);
+
+    return () => {
+      window.clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -632,7 +662,7 @@ function Home() {
   const buscaLimiteDiarioAtingido =
     Boolean(user) && isDailyBuscaLimitReached(premiumUsage);
 
-  if (!onboardingChecked || authLoading) {
+  if (!onboardingChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f0f4f3] text-[#5a6b66]">
         Carregando...
