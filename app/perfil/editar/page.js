@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import IconBack from "@/components/IconBack";
+import {
+  AVATAR_COMPRESS_OPTIONS,
+  compressImageFile,
+} from "@/lib/imageCompress";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -30,6 +34,14 @@ function getInitial(user) {
 }
 
 /**
+ * @param {string} message
+ * @returns {boolean}
+ */
+function isSuccessMessage(message) {
+  return /atualizad/i.test(message);
+}
+
+/**
  * Edit profile page: name and avatar upload to Supabase Storage.
  * @returns {import("react").ReactElement}
  */
@@ -44,6 +56,15 @@ export default function EditarPerfilPage() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [message, setMessage] = useState("");
   const fileInputRef = useRef(null);
+  const previewObjectUrlRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -92,26 +113,46 @@ export default function EditarPerfilPage() {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+
     const objectUrl = URL.createObjectURL(file);
+    previewObjectUrlRef.current = objectUrl;
     setPreviewUrl(objectUrl);
     setUploading(true);
     setMessage("");
+
+    let uploadFile = file;
+
+    try {
+      uploadFile = await compressImageFile(file, AVATAR_COMPRESS_OPTIONS);
+    } catch (error) {
+      setMessage(
+        error?.message || "Não foi possível preparar a foto. Tente outro arquivo."
+      );
+      setUploading(false);
+      event.target.value = "";
+      return;
+    }
 
     const supabase = createClient();
     const bucketName = "Guia de Bolso - Imagens";
     const filePath = `avatars/${user.id}/avatar.jpg`;
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(bucketName)
-      .upload(filePath, file, {
+      .upload(filePath, uploadFile, {
         cacheControl: "3600",
         upsert: true,
-        contentType: file.type || "image/jpeg",
+        contentType: uploadFile.type || "image/jpeg",
       });
 
     if (uploadError) {
       setMessage("Não foi possível enviar a foto. Tente novamente.");
       setUploading(false);
+      event.target.value = "";
       return;
     }
 
@@ -131,6 +172,7 @@ export default function EditarPerfilPage() {
     if (perfilError) {
       setMessage("Foto enviada, mas não foi possível salvar no perfil.");
       setUploading(false);
+      event.target.value = "";
       return;
     }
 
@@ -141,10 +183,16 @@ export default function EditarPerfilPage() {
       },
     });
 
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+
     setFotoUrl(publicUrl);
     setPreviewUrl(previewPublicUrl);
     setMessage("Foto atualizada!");
     setUploading(false);
+    event.target.value = "";
   }
 
   /**
@@ -200,96 +248,126 @@ export default function EditarPerfilPage() {
   }
 
   const avatarUrl = previewUrl || fotoUrl;
+  const messageIsSuccess = message && isSuccessMessage(message);
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
-      <div className="mx-auto max-w-md px-4 pb-10 pt-6">
+      <div className="mx-auto max-w-md px-4 pb-36 pt-[max(1.25rem,env(safe-area-inset-top))]">
         <header className="mb-6 flex items-center gap-3">
           <Link
             href="/perfil"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-sm"
-            aria-label="Voltar"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-sm transition active:scale-[0.98]"
+            aria-label="Voltar ao perfil"
           >
             <IconBack />
           </Link>
-          <h1 className="text-2xl font-bold text-[#1a2e28]">Editar perfil</h1>
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-extrabold tracking-tight text-[#1a2e28]">
+              Editar perfil
+            </h1>
+            <p className="mt-0.5 text-sm text-[#5a6b66]">Nome e foto de perfil</p>
+          </div>
         </header>
 
-        <form onSubmit={handleSave} className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="flex flex-col items-center">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="group relative h-28 w-28 overflow-hidden rounded-full ring-4 ring-[#d4ede8]"
-              aria-label="Alterar foto"
-            >
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={avatarUrl}
-                  alt="Foto de perfil atual"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-[#1a4a3a] text-3xl font-bold text-white">
-                  {getInitial(user)}
-                </div>
-              )}
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 text-xs font-semibold text-white transition-colors group-hover:bg-black/55">
-                {uploading ? (
-                  <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+        <form id="editar-perfil-form" onSubmit={handleSave}>
+          <div className="rounded-3xl bg-white p-5 shadow-[0_2px_14px_-4px_rgba(26,46,40,0.08)]">
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="group relative h-32 w-32 overflow-hidden rounded-full ring-4 ring-[#d4ede8] disabled:opacity-80"
+                aria-label="Alterar foto de perfil"
+              >
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt="Foto de perfil atual"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <>
-                    <svg className="mb-1 h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                      <path d="M20 5h-3.17l-1.84-2H9.01L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13a5 5 0 110-10 5 5 0 010 10z" />
-                    </svg>
-                    Alterar
-                  </>
+                  <div className="flex h-full w-full items-center justify-center bg-[#1a4a3a] text-3xl font-bold text-white">
+                    {getInitial(user)}
+                  </div>
                 )}
-              </div>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="user"
-              hidden
-              onChange={handlePhotoChange}
-            />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 text-xs font-semibold text-white transition-colors group-hover:bg-black/55">
+                  {uploading ? (
+                    <span
+                      className="h-7 w-7 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                      aria-hidden
+                    />
+                  ) : (
+                    <>
+                      <svg className="mb-1 h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                        <path d="M20 5h-3.17l-1.84-2H9.01L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13a5 5 0 110-10 5 5 0 010 10z" />
+                      </svg>
+                      Alterar foto
+                    </>
+                  )}
+                </div>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="user"
+                hidden
+                onChange={handlePhotoChange}
+              />
+              <p className="mt-3 text-center text-xs text-[#9aa8a3]">
+                JPEG, PNG ou WebP · redimensionamos antes do envio
+              </p>
+            </div>
+
+            <label className="mt-6 block text-sm font-semibold text-[#1a2e28]">
+              Nome completo
+              <input
+                type="text"
+                value={nome}
+                onChange={(event) => setNome(event.target.value)}
+                autoComplete="name"
+                className="mt-2 w-full rounded-xl bg-[#f0f4f3] px-4 py-3 text-sm font-normal text-[#1a2e28] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30"
+              />
+            </label>
+
+            <label className="mt-4 block text-sm font-semibold text-[#1a2e28]">
+              Email
+              <input
+                type="email"
+                value={user.email ?? ""}
+                readOnly
+                className="mt-2 w-full cursor-not-allowed rounded-xl bg-zinc-100 px-4 py-3 text-sm font-normal text-zinc-500"
+              />
+            </label>
+
+            {message && (
+              <p
+                role="status"
+                className={`mt-4 rounded-xl px-3 py-2.5 text-center text-sm font-medium ${
+                  messageIsSuccess
+                    ? "bg-[#d4ede8] text-[#1a4a3a]"
+                    : "bg-red-50 text-red-800"
+                }`}
+              >
+                {message}
+              </p>
+            )}
           </div>
+        </form>
+      </div>
 
-          <label className="mt-6 block text-sm font-semibold text-[#1a2e28]">
-            Nome completo
-            <input
-              type="text"
-              value={nome}
-              onChange={(event) => setNome(event.target.value)}
-              className="mt-2 w-full rounded-xl bg-[#f0f4f3] px-4 py-3 text-sm font-normal text-[#1a2e28] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]/30"
-            />
-          </label>
-
-          <label className="mt-4 block text-sm font-semibold text-[#1a2e28]">
-            Email
-            <input
-              type="email"
-              value={user.email ?? ""}
-              readOnly
-              className="mt-2 w-full rounded-xl bg-zinc-100 px-4 py-3 text-sm font-normal text-zinc-500"
-            />
-          </label>
-
-          {message && (
-            <p className="mt-4 text-center text-sm text-[#5a6b66]">{message}</p>
-          )}
-
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#e8eeee]/90 bg-[#f0f4f3]/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md">
+        <div className="mx-auto max-w-md">
           <button
             type="submit"
+            form="editar-perfil-form"
             disabled={saving || uploading}
-            className="mt-6 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528] disabled:opacity-70"
+            className="w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#153d30] active:bg-[#123528] disabled:opacity-70"
           >
-            {saving ? "Salvando..." : "Salvar alterações"}
+            {saving ? "Salvando…" : "Salvar alterações"}
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );

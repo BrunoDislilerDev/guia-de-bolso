@@ -431,7 +431,11 @@ Personalize account appearance.
 
 **Main flows**
 1. Load `perfis` nome/foto → edit → save upsert.
-2. Photo upload → Storage → public URL → `perfis.foto_url` + `auth.updateUser` metadata.
+2. Photo upload → client compression (`lib/imageCompress.js`, avatar max 512px) → Storage → public URL → `perfis.foto_url` + `auth.updateUser` metadata.
+3. Entry point: hero **Editar perfil** on `/perfil` (not duplicated under Conta settings).
+
+**Image compression (client)**  
+`compressImageFile` in `lib/imageCompress.js` skips files under 200KB; otherwise resizes via canvas (JPEG ~0.82). Used for avatars (`/perfil/editar`) and admin entity photos via `lib/storageUpload.js` (`uploadEntityPhoto` / `uploadEntityPhotos`).
 
 **Edge cases**
 - Requires session; unauthenticated users not routed here from profile edit link.

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import LoginModal from "@/components/LoginModal";
+import Logo from "@/components/Logo";
 import PlaceCard from "@/components/PlaceCard";
 import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
 import UserErrorAlert from "@/components/UserErrorAlert";
@@ -13,15 +14,18 @@ import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
 
 /**
- * Empty-state heart illustration for the favorites page.
+ * Empty-state illustration for the favorites page.
  * @returns {import("react").ReactElement}
  */
 function EmptyIllustration() {
   return (
-    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#d4ede8] text-[#1a4a3a]">
-      <svg className="h-11 w-11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-      </svg>
+    <div className="mx-auto flex flex-col items-center gap-4">
+      <Logo size="lg" showWordmark />
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#d4ede8] text-[#1a4a3a]">
+        <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+        </svg>
+      </div>
     </div>
   );
 }
@@ -173,16 +177,30 @@ export default function FavoritosPage() {
     }
   }
 
+  const showCount =
+    user && !authLoading && !loadingFavoritos && !fetchError && lugares.length > 0;
+
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
-      <div className="mx-auto max-w-md px-4 pb-28 pt-6">
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-[#1a2e28]">
-            Favoritos
-          </h1>
-          <p className="mt-1 text-sm text-[#5a6b66]">
-            Seus lugares salvos para visitar quando quiser.
-          </p>
+      <div className="mx-auto max-w-md px-4 pb-28 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <header className="mb-6 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <Logo size="sm" className="mb-3" />
+            <h1 className="font-display text-2xl font-extrabold tracking-tight text-[#1a2e28]">
+              Favoritos
+            </h1>
+            <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
+              Seus lugares salvos para visitar quando quiser.
+            </p>
+          </div>
+          {showCount && (
+            <span
+              className="shrink-0 rounded-full bg-[#d4ede8] px-3 py-1.5 text-sm font-bold tabular-nums text-[#1a4a3a]"
+              aria-label={`${lugares.length} favoritos`}
+            >
+              {lugares.length}
+            </span>
+          )}
         </header>
 
         {fetchError && user && !loadingFavoritos && (
@@ -208,9 +226,9 @@ export default function FavoritosPage() {
             ))}
           </div>
         ) : !user ? (
-          <section className="rounded-2xl bg-white p-6 text-center shadow-sm">
+          <section className="rounded-3xl bg-white p-6 text-center shadow-[0_2px_14px_-4px_rgba(26,46,40,0.08)]">
             <EmptyIllustration />
-            <h2 className="mt-5 text-xl font-bold text-[#1a4a3a]">
+            <h2 className="mt-5 font-display text-xl font-extrabold text-[#1a4a3a]">
               Faça login para ver seus favoritos
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-[#5a6b66]">
@@ -231,19 +249,19 @@ export default function FavoritosPage() {
             ))}
           </div>
         ) : lugares.length === 0 ? (
-          <section className="rounded-2xl bg-white p-6 text-center shadow-sm">
+          <section className="rounded-3xl bg-white p-6 text-center shadow-[0_2px_14px_-4px_rgba(26,46,40,0.08)]">
             <EmptyIllustration />
-            <h2 className="mt-5 text-xl font-bold text-[#1a4a3a]">
+            <h2 className="mt-5 font-display text-xl font-extrabold text-[#1a4a3a]">
               Nenhum favorito ainda
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-[#5a6b66]">
               Explore o guia e toque no coração para salvar seus lugares.
             </p>
             <Link
-              href="/"
+              href="/categorias"
               className="mt-6 block w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] active:bg-[#123528]"
             >
-              Explorar lugares
+              Explorar categorias
             </Link>
           </section>
         ) : (

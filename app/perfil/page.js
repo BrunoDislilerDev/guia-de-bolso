@@ -248,13 +248,6 @@ export default function PerfilPage() {
               title="Conta"
               items={[
                 {
-                  key: "editar",
-                  icon: "✏️",
-                  label: "Editar perfil",
-                  detail: "Nome e foto",
-                  href: "/perfil/editar",
-                },
-                {
                   key: "provider",
                   icon: "📱",
                   label: "Conta vinculada",

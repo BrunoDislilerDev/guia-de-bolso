@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
+import Logo from "@/components/Logo";
 import ExplorarAtalhos from "@/components/explorar/ExplorarAtalhos";
 import ExplorarBuscaBar from "@/components/explorar/ExplorarBuscaBar";
 import ExplorarCategoriaCard from "@/components/explorar/ExplorarCategoriaCard";
@@ -86,10 +87,13 @@ export default function CategoriasPage() {
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
       <header className="sticky top-0 z-30 border-b border-[#e8eeee]/80 bg-[#f0f4f3]/90 px-4 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur-md">
         <div className="mx-auto max-w-md">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#1a4a3a]">
-            Imbituba, SC
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1a2e28]">
+          <div className="mb-3 flex items-center gap-3">
+            <Logo size="sm" />
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#1a4a3a]">
+              Imbituba, SC
+            </p>
+          </div>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-[#1a2e28]">
             Explorar
           </h1>
           <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
@@ -117,7 +121,7 @@ export default function CategoriasPage() {
                     </p>
                     <h2
                       id="explorar-destaques-title"
-                      className="text-lg font-bold text-[#1a2e28]"
+                      className="font-display text-lg font-extrabold text-[#1a2e28]"
                     >
                       Mais visitadas agora
                     </h2>
@@ -143,7 +147,7 @@ export default function CategoriasPage() {
               <div className="mb-3">
                 <h2
                   id="explorar-grid-title"
-                  className="text-lg font-bold text-[#1a2e28]"
+                  className="font-display text-lg font-extrabold text-[#1a2e28]"
                 >
                   Todas as categorias
                 </h2>
