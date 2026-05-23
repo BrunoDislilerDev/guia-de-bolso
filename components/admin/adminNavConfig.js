@@ -11,6 +11,7 @@ export const ADMIN_NAV_LINKS = [
   { href: "/admin/avaliacoes", label: "Avaliações", icon: "avaliacoes" },
   { href: "/admin/feedback", label: "Feedback", icon: "feedback" },
   { href: "/admin/destaques", label: "Destaques", icon: "destaques" },
+  { href: "/admin/relatorios", label: "Relatórios", icon: "relatorios" },
   { href: "/admin/usuarios", label: "Usuários", icon: "usuarios" },
   { href: "/admin/logs", label: "Logs", icon: "logs" },
   { href: "/admin/taxonomia", label: "Taxonomia", icon: "taxonomia" },
@@ -111,6 +112,16 @@ export function AdminNavIcon({ name, className = "h-5 w-5" }) {
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M16 19v-1a4 4 0 00-4-4H8a4 4 0 00-4 4v1M12 11a3 3 0 100-6 3 3 0 000 6zm8 8v-1a3 3 0 00-2-2.83M16 4.17a3 3 0 010 5.66"
+          />
+        </svg>
+      );
+    case "relatorios":
+      return (
+        <svg {...shared}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 17v-6m3 6V7m3 10v-4M4 5h16v14H4V5z"
           />
         </svg>
       );

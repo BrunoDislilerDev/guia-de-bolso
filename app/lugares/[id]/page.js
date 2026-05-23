@@ -173,6 +173,7 @@ export default function LugarPage() {
   const [fotos, setFotos] = useState([]);
   const [fotoAtual, setFotoAtual] = useState(0);
   const carouselRef = useRef(null);
+  const viewLoggedRef = useRef(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
@@ -292,6 +293,25 @@ export default function LugarPage() {
 
     fetchLugarEhParceiroVigente(supabase, id).then(setEhParceiro);
   }, [id]);
+
+  useEffect(() => {
+    viewLoggedRef.current = false;
+  }, [id]);
+
+  useEffect(() => {
+    if (!lugar?.id || viewLoggedRef.current) return;
+
+    viewLoggedRef.current = true;
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
+      registrarLog(supabase, currentUser, "visualizou_lugar", {
+        lugar_id: lugar.id,
+        lugar_nome: lugar.nome,
+        pagina: `/lugares/${lugar.id}`,
+      });
+    });
+  }, [lugar]);
 
   useEffect(() => {
     if (!lugar?.categoria || !lugar?.subcategoria) {
