@@ -12,7 +12,6 @@ import HomeContextHeader from "@/components/home/HomeContextHeader";
 import OQueFazerAgora from "@/components/home/OQueFazerAgora";
 import ParceirosCarrossel from "@/components/home/ParceirosCarrossel";
 import PertoDeVoce from "@/components/home/PertoDeVoce";
-import HomeCategoriasSection from "@/components/home/HomeCategoriasSection";
 import PlanosRapidos from "@/components/home/PlanosRapidos";
 import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
 import SearchBrowsePanel from "@/components/home/SearchBrowsePanel";
@@ -792,10 +791,6 @@ function Home() {
               ) : (
                 <EmAltaHoje lugares={emAltaExibidos} />
               )}
-              <HomeCategoriasSection
-                lugaresAtivos={lugaresAtivos}
-                userPosition={userPosition}
-              />
               <PlanosRapidos onPlanoClick={handlePlanoClick} />
               {sectionErrors.perto ? (
                 <SectionUnavailable title="Perto de você" />
