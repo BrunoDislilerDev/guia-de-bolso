@@ -310,7 +310,7 @@ guia-de-bolso/
 - [x] Excluir conta com confirmação estilo Apple/Google
 - [x] Preferência de app de navegação salva no localStorage
 - [x] Bottom sheet de login para conteúdo restrito
-- [x] Onboarding com 3 telas
+- [x] Onboarding com 4 telas (praia, lagoa, montanha, cachoeira + IA/limites Premium)
 - [x] Painel admin completo (`/admin`)
 - [x] Dashboard com analytics e logs em tempo real
 - [x] Gestão de locais com status (ativo, desativado, em_analise)

@@ -20,20 +20,21 @@ User-facing product reference for **Guia de Bolso** (Imbituba, SC). Behavior is 
 ## 1. First-run onboarding
 
 **Description**  
-A short multi-slide intro shown on the first visit, explaining discovery, favorites, and local context. Dismissal is remembered in the browser.
+Full-screen intro on first visit: **4 slides** with nature backgrounds (beach, lagoon, mountain, waterfall). Last slide explains **AI search & roteiros**, daily free limits, and Premium. Dismissal is stored in `localStorage.onboarding_visto`.
 
 **User goal**  
-Understand what the app does before exploring, without creating an account.
+Understand the product before exploring; choose login or guest browse.
 
 **Main flows**
-1. User opens `/` for the first time → `Onboarding` overlay appears if `localStorage.onboarding_visto` is unset.
-2. User swipes through slides → taps finish → key is set → home loads normally.
-3. Returning visits skip onboarding.
+1. User opens `/` for the first time → `Onboarding` overlay if `onboarding_visto` is unset.
+2. User swipes through 4 slides → **Entrar no guia** or **Pular** → `/login`.
+3. **Explorar sem criar conta** (last slide only) → home as guest.
+4. Returning visits skip onboarding.
 
 **Edge cases**
 - Clearing `localStorage` shows onboarding again.
 - Onboarding waits until auth check finishes (`onboardingChecked`) to avoid flashing home then overlay.
-- Works for guests and logged-in users alike.
+- Works for guests and logged-in users alike (CTAs still route to login on finish/skip).
 
 ---
 

@@ -96,6 +96,19 @@ Implementation: `app/api/roteiro/route.js` (strict markdown system prompt, `max_
 
 ---
 
+### `DELETE /api/roteiro/[id]`
+
+Deletes a saved itinerary owned by the authenticated user.
+
+**Auth:** Required
+
+**Success:** `{ "success": true }`  
+**Errors:** `401` (not logged in), `404` (not found or RLS blocked — run `supabase/roteiros_policies.sql`), `500`
+
+Implementation: `app/api/roteiro/[id]/route.js` (verifies deleted row via `.select("id").maybeSingle()`).
+
+---
+
 ### `POST /api/roteiro/salvar`
 
 Persists a generated itinerary to `roteiros` for the logged-in user.

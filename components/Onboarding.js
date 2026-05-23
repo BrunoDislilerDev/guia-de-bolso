@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
 import { ONBOARDING_SLIDES } from "@/lib/authImagery";
@@ -15,6 +15,7 @@ const SLIDE_COUNT = ONBOARDING_SLIDES.length;
  * @returns {import("react").ReactElement}
  */
 export default function Onboarding({ onComplete }) {
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const touchStartX = useRef(0);
@@ -31,10 +32,22 @@ export default function Onboarding({ onComplete }) {
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  const completeOnboarding = useCallback(() => {
+  const markOnboardingSeen = useCallback(() => {
     localStorage.setItem("onboarding_visto", "true");
+  }, []);
+
+  /** Fecha o onboarding e permanece na home (explorar como visitante). */
+  const completeAndExplore = useCallback(() => {
+    markOnboardingSeen();
     onComplete?.();
-  }, [onComplete]);
+  }, [markOnboardingSeen, onComplete]);
+
+  /** Fecha o onboarding e abre a tela de login. */
+  const completeAndLogin = useCallback(() => {
+    markOnboardingSeen();
+    onComplete?.();
+    router.push("/login");
+  }, [markOnboardingSeen, onComplete, router]);
 
   function goToSlide(index) {
     setCurrentSlide(Math.max(0, Math.min(index, SLIDE_COUNT - 1)));
@@ -42,7 +55,7 @@ export default function Onboarding({ onComplete }) {
 
   function handlePrimaryAction() {
     if (isLastSlide) {
-      completeOnboarding();
+      completeAndLogin();
       return;
     }
     goToSlide(currentSlide + 1);
@@ -131,9 +144,9 @@ export default function Onboarding({ onComplete }) {
           </span>
           <button
             type="button"
-            onClick={completeOnboarding}
+            onClick={completeAndLogin}
             className="min-h-10 rounded-full px-3 py-1.5 text-sm font-semibold text-white/90 backdrop-blur-md ring-1 ring-white/20 transition active:bg-white/15"
-            aria-label="Pular introdução"
+            aria-label="Pular introdução e ir para login"
           >
             Pular
           </button>
@@ -224,13 +237,18 @@ export default function Onboarding({ onComplete }) {
           </button>
 
           {isLastSlide ? (
-            <Link
-              href="/"
-              onClick={completeOnboarding}
-              className="mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold text-white/90 ring-1 ring-white/25 transition active:bg-white/10"
-            >
-              Explorar sem criar conta
-            </Link>
+            <>
+              <button
+                type="button"
+                onClick={completeAndExplore}
+                className="mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold text-white/90 ring-1 ring-white/25 transition active:bg-white/10"
+              >
+                Explorar sem criar conta
+              </button>
+              <p className="mt-3 text-center text-xs text-white/50">
+                Entrar no guia abre login com Google ou SMS
+              </p>
+            </>
           ) : (
             <p className="mt-3 text-center text-xs text-white/50">
               Deslize ↔ ou toque em Próximo

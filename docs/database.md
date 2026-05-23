@@ -475,6 +475,7 @@ RLS policies for **`rotas`** and related tables are in [`rotas_policies.sql`](..
 | `perfis` | `perfis_insert_own` | same | `INSERT` own row |
 | `perfis` | `perfis_update_own` | same | `UPDATE` own row |
 | `logs` | `Admin lê logs` | `logs_policies.sql` | `SELECT` with `USING (true)` — **very permissive**; rely on admin UI gate |
+| `roteiros` | Users CRUD own rows | `roteiros_policies.sql` | `SELECT`/`INSERT`/`UPDATE`/`DELETE` where `auth.uid() = user_id` |
 | `storage.objects` | lugares-fotos / rotas-fotos | `fotos_migration.sql` | Authenticated upload/update; public read |
 | `storage.objects` | `imagens` avatars | `storage-policies.sql` | Insert/update only under `avatars/{user_id}/` |
 
@@ -571,6 +572,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | 17 | `avaliacoes_moderacao.sql` | `aspectos`, `sugestao_ia` on `avaliacoes` |
 | 18 | `plano_comercial_unico.sql` | Normalize single **Parceiro** commercial plan |
 | 19 | `premium_uso_dia_fix.sql` | Optional: documents/fixes daily `uso_ia_mes` semantics |
+| 20 | `roteiros_policies.sql` | RLS on `roteiros` (required for delete to persist) |
 
 ---
 
@@ -627,6 +629,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Saved AI trips | `roteiros` `.select("id, titulo, dias, ...")` `.eq("user_id")` |
 | Generate itinerary | `POST /api/roteiro` — server reads `lugares` catalog |
 | Save itinerary | `POST /api/roteiro/salvar` → `roteiros.insert` |
+| Delete saved itinerary | `DELETE /api/roteiro/[id]` → `roteiros.delete` (owner only) |
 
 ### API — AI search (`app/api/buscar/route.js`)
 

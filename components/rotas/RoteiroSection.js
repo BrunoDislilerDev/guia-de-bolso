@@ -235,22 +235,32 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
    * @returns {Promise<boolean>}
    */
   async function handleExcluirRoteiro(roteiroId) {
-    if (!user?.id) return false;
+    if (!isLoggedIn || !roteiroId) return false;
 
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("roteiros")
-      .delete()
-      .eq("id", roteiroId)
-      .eq("user_id", user.id);
+    try {
+      const res = await fetch(`/api/roteiro/${encodeURIComponent(String(roteiroId))}`, {
+        method: "DELETE",
+      });
 
-    if (error) {
-      console.error("Erro ao excluir roteiro:", error);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error("Erro ao excluir roteiro:", body?.error || res.status);
+        return false;
+      }
+
+      const body = await res.json().catch(() => ({}));
+      if (!body?.success) return false;
+
+      const idStr = String(roteiroId);
+      setRoteiros((atual) => atual.filter((item) => String(item.id) !== idStr));
+      if (roteiroVisualizando && String(roteiroVisualizando.id) === idStr) {
+        setRoteiroVisualizando(null);
+      }
+      return true;
+    } catch (err) {
+      console.error("Erro ao excluir roteiro:", err);
       return false;
     }
-
-    setRoteiros((atual) => atual.filter((item) => item.id !== roteiroId));
-    return true;
   }
 
   /**
