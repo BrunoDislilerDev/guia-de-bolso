@@ -8,30 +8,34 @@ import { buildApiErrorBody } from "@/lib/userMessages";
 const CLAUDE_MODEL = "claude-sonnet-4-5";
 
 const SYSTEM_PROMPT = `Você é um especialista local em Imbituba, Santa Catarina.
-Monte um roteiro personalizado usando APENAS os lugares da lista (nome exato).
-Use EXATAMENTE este formato markdown:
+Monte um roteiro personalizado usando APENAS lugares da lista fornecida (use o nome EXATO de cada lugar).
+Siga RIGOROSAMENTE este formato markdown — cada parada precisa das 4 linhas após o nome:
 
-# Dia 1 — Título curto do dia
+# Dia 1 — Título curto e inspirador do dia
 
 ## 🌅 Manhã
-**Nome do Lugar**
-→ O que fazer lá (1-2 frases)
-💡 Dica local curta
+**Nome Exato do Lugar**
+→ O que fazer lá (1-2 frases objetivas)
+💡 Dica local curta e útil
 ⏱️ ~2h
 
 ## ☀️ Tarde
-**Outro Lugar**
-→ Atividade
-💡 Dica
+**Outro Lugar da Lista**
+→ Atividade clara
+💡 Dica prática
 ⏱️ ~3h
 
 ## 🌙 Noite
-**Lugar**
+**Lugar da Lista**
 → Atividade
 💡 Dica
 ⏱️ ~2h
 
-Repita para cada dia. Tom amigável, emojis, português do Brasil. Não invente lugares.`;
+Regras obrigatórias:
+- Repita o bloco completo (## período + parada com **nome**, →, 💡, ⏱️) para cada dia solicitado.
+- Não deixe períodos vazios: se não houver lugar à noite, use outro período ou omita o bloco ## daquele período.
+- Não invente lugares. Não use parágrafos soltos fora do formato.
+- Tom amigável, português do Brasil, emojis apenas nos títulos ## de período.`;
 
 /**
  * Generates a personalized multi-day itinerary via Claude from active places.
@@ -99,7 +103,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL ?? CLAUDE_MODEL,
-        max_tokens: 1400,
+        max_tokens: 2400,
         system: SYSTEM_PROMPT,
         messages: [
           {
@@ -119,11 +123,17 @@ Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
     }
 
     const claudeData = JSON.parse(claudeRaw);
-    const conteudo = claudeData.content?.[0]?.text ?? "";
+    const conteudo = claudeData.content?.[0]?.text?.trim() ?? "";
+
+    const lugaresCatalog = lugares.map((lugar) => ({
+      id: String(lugar.id),
+      nome: lugar.nome,
+    }));
 
     return NextResponse.json({
       conteudo,
       titulo: `Roteiro ${dias} - ${perfil}`,
+      lugaresCatalog,
       usage: access.usage ?? null,
     });
   } catch (err) {

@@ -1,21 +1,42 @@
 "use client";
 
-import { formatRoteiroConteudo } from "@/lib/roteiroMarkdown";
+import RoteiroItineraryView from "@/components/rotas/RoteiroItineraryView";
 
 /**
- * Renderiza o HTML formatado de um roteiro gerado por IA (markdown convertido).
+ * Renderiza roteiro em timeline estruturada (substitui HTML markdown legado).
  * @param {object} props
  * @param {string} props.conteudo - Texto markdown do roteiro.
- * @param {string} [props.className] - Classes adicionais no container.
+ * @param {string} [props.className]
+ * @param {string} [props.titulo]
+ * @param {string} [props.diasLabel]
+ * @param {string} [props.perfil]
+ * @param {string[]} [props.interesses]
+ * @param {Array<{ id: string, nome: string }>} [props.lugaresCatalog]
+ * @param {boolean} [props.compactHeader]
  * @returns {import("react").JSX.Element|null}
  */
-export default function RoteiroContent({ conteudo, className = "" }) {
+export default function RoteiroContent({
+  conteudo,
+  className = "",
+  titulo,
+  diasLabel,
+  perfil,
+  interesses,
+  lugaresCatalog,
+  compactHeader,
+}) {
   if (!conteudo) return null;
 
   return (
-    <article
-      className={`roteiro-content space-y-1 ${className}`}
-      dangerouslySetInnerHTML={{ __html: formatRoteiroConteudo(conteudo) }}
+    <RoteiroItineraryView
+      conteudo={conteudo}
+      titulo={titulo}
+      diasLabel={diasLabel}
+      perfil={perfil}
+      interesses={interesses}
+      lugaresCatalog={lugaresCatalog}
+      compactHeader={compactHeader}
+      className={className}
     />
   );
 }

@@ -6,7 +6,9 @@ import DailyLimitCountdown from "@/components/DailyLimitCountdown";
 import PremiumPaywallSheet from "@/components/PremiumPaywallSheet";
 import RoteiroBottomSheet from "@/components/RoteiroBottomSheet";
 import { canUseRoteiro, isDailyRoteiroLimitReached } from "@/lib/premium";
-import RoteiroContent from "@/components/rotas/RoteiroContent";
+import RoteiroItineraryView from "@/components/rotas/RoteiroItineraryView";
+import { fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
+import { formatDiasViagem } from "@/lib/roteiroDias";
 import { createClient } from "@/lib/supabase";
 import { LIMITS } from "@/lib/premium";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
@@ -34,12 +36,15 @@ function formatData(iso) {
  * @param {(id: string) => Promise<boolean>} [props.onExcluir] - Remove roteiro no servidor e na lista.
  * @returns {import("react").JSX.Element|null}
  */
-function RoteiroViewModal({ roteiro, onClose, onExcluir }) {
+function RoteiroViewModal({ roteiro, onClose, onExcluir, lugaresCatalog = [] }) {
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [erroExclusao, setErroExclusao] = useState("");
 
   if (!roteiro) return null;
+
+  const diasLabel = roteiro.diasLabel || formatDiasViagem(roteiro.dias);
+  const interesses = Array.isArray(roteiro.interesses) ? roteiro.interesses : [];
 
   /**
    * @returns {Promise<void>}
@@ -60,23 +65,38 @@ function RoteiroViewModal({ roteiro, onClose, onExcluir }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl sm:max-w-lg sm:rounded-3xl"
+        className="flex max-h-[92vh] w-full max-w-md flex-col rounded-t-[24px] bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="roteiro-view-title"
       >
-        <div className="border-b border-gray-100 px-5 py-4">
-          <h2 className="text-lg font-bold text-gray-950">{roteiro.titulo}</h2>
-          <p className="mt-1 text-xs text-gray-500">{formatData(roteiro.created_at)}</p>
+        <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200" />
+        <div className="shrink-0 border-b border-[#e8eeee] px-5 py-3">
+          <h2 id="roteiro-view-title" className="font-display text-lg font-extrabold text-[#1a2e28]">
+            {roteiro.titulo}
+          </h2>
+          <p className="mt-1 text-xs text-[#5a6b66]">
+            {formatData(roteiro.created_at)}
+            {diasLabel ? ` · ${diasLabel}` : ""}
+            {roteiro.perfil ? ` · ${roteiro.perfil}` : ""}
+          </p>
         </div>
-        <div className="flex-1 overflow-y-auto bg-[#f0f4f3] px-5 py-4">
-          <RoteiroContent conteudo={roteiro.conteudo} />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+          <RoteiroItineraryView
+            conteudo={roteiro.conteudo}
+            diasLabel={diasLabel}
+            perfil={roteiro.perfil}
+            interesses={interesses}
+            lugaresCatalog={lugaresCatalog}
+            compactHeader
+          />
         </div>
-        <div className="border-t border-gray-100 px-5 py-4 space-y-2">
+        <div className="shrink-0 border-t border-[#e8eeee] px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2">
           {erroExclusao ? (
             <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
               {erroExclusao}
@@ -147,6 +167,7 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [roteiros, setRoteiros] = useState(roteirosIniciais);
   const [roteiroVisualizando, setRoteiroVisualizando] = useState(null);
+  const [lugaresCatalog, setLugaresCatalog] = useState([]);
 
   const {
     usage,
@@ -170,6 +191,28 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchLugaresFromApi({ limit: 120 })
+      .then((data) => {
+        if (cancelled) return;
+        setLugaresCatalog(
+          (data ?? []).map((lugar) => ({
+            id: String(lugar.id),
+            nome: lugar.nome,
+          }))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setLugaresCatalog([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /**
@@ -366,6 +409,7 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
         roteiro={roteiroVisualizando}
         onClose={() => setRoteiroVisualizando(null)}
         onExcluir={loggedIn ? handleExcluirRoteiro : undefined}
+        lugaresCatalog={lugaresCatalog}
       />
     </>
   );

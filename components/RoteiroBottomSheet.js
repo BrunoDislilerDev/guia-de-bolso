@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Logo from "@/components/Logo";
-import RoteiroContent from "@/components/rotas/RoteiroContent";
+import RoteiroItineraryView from "@/components/rotas/RoteiroItineraryView";
 
 import UserErrorAlert from "@/components/UserErrorAlert";
 import { ROTEIRO_DIAS_OPCOES, formatDiasViagem } from "@/lib/roteiroDias";
@@ -123,6 +123,7 @@ export default function RoteiroBottomSheet({
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
+  const [lugaresCatalog, setLugaresCatalog] = useState([]);
   const [salvando, setSalvando] = useState(false);
   const [toast, setToast] = useState("");
   const [erro, setErro] = useState("");
@@ -163,6 +164,7 @@ export default function RoteiroBottomSheet({
     setInteresses([]);
     setTitulo("");
     setConteudo("");
+    setLugaresCatalog([]);
     setErro("");
     setLoadingMessageIndex(0);
     setView("form");
@@ -244,6 +246,7 @@ export default function RoteiroBottomSheet({
 
       setTitulo(data.titulo ?? `Roteiro ${dias} - ${perfil}`);
       setConteudo(data.conteudo ?? "");
+      setLugaresCatalog(Array.isArray(data.lugaresCatalog) ? data.lugaresCatalog : []);
       setView("result");
       onUsageRefresh?.(data.usage ?? null);
     } catch {
@@ -354,7 +357,18 @@ export default function RoteiroBottomSheet({
         >
           <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200" />
 
-          <div className="flex-1 overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+          <div
+            className={`flex min-h-0 flex-1 flex-col ${
+              view === "result" ? "overflow-hidden" : ""
+            }`}
+          >
+          <div
+            className={`flex-1 px-5 pt-4 ${
+              view === "result"
+                ? "min-h-0 overflow-y-auto overscroll-contain pb-4"
+                : "overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+            }`}
+          >
             {view === "form" && (
               <>
                 <h2 id="roteiro-sheet-title" className="text-xl font-bold text-gray-950">
@@ -376,7 +390,7 @@ export default function RoteiroBottomSheet({
                           onClick={() => setDias(opcao)}
                           className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                             selected
-                              ? "bg-emerald-700 text-white"
+                              ? "bg-[#1a4a3a] text-white"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
@@ -399,7 +413,7 @@ export default function RoteiroBottomSheet({
                           onClick={() => setPerfil(item.label)}
                           className={`flex flex-col items-center justify-center gap-1 rounded-2xl border-2 px-3 py-4 text-center text-sm font-semibold transition-colors ${
                             selected
-                              ? "border-emerald-700 bg-emerald-50 text-emerald-900"
+                              ? "border-[#1a4a3a] bg-[#d4ede8] text-[#1a4a3a]"
                               : "border-gray-100 bg-gray-50 text-gray-700 hover:border-gray-200"
                           }`}
                         >
@@ -426,7 +440,7 @@ export default function RoteiroBottomSheet({
                           onClick={() => toggleInteresse(item)}
                           className={`rounded-full px-3 py-2 text-sm font-medium transition-colors ${
                             selected
-                              ? "bg-emerald-700 text-white"
+                              ? "bg-[#1a4a3a] text-white"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
@@ -449,7 +463,7 @@ export default function RoteiroBottomSheet({
                   type="button"
                   onClick={handleGerar}
                   disabled={!formularioCompleto}
-                  className="mt-6 w-full rounded-xl bg-emerald-700 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                  className="mt-6 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
                   Gerar meu roteiro
                 </button>
@@ -462,19 +476,17 @@ export default function RoteiroBottomSheet({
 
             {view === "result" && (
               <>
-                <div className="rounded-2xl bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54] p-4 text-white shadow-md">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100/90">
-                    Seu roteiro
-                  </p>
-                  <h2 className="mt-1 text-xl font-bold leading-tight">{titulo}</h2>
-                  <p className="mt-2 text-sm text-emerald-50/90">
-                    {dias} · {perfil}
-                  </p>
-                </div>
-
-                <div className="mt-4 rounded-2xl bg-[#f0f4f3] p-3">
-                  <RoteiroContent conteudo={conteudo} />
-                </div>
+                <h2 id="roteiro-sheet-title" className="sr-only">
+                  {titulo}
+                </h2>
+                <RoteiroItineraryView
+                  conteudo={conteudo}
+                  titulo={titulo}
+                  diasLabel={dias}
+                  perfil={perfil}
+                  interesses={interesses}
+                  lugaresCatalog={lugaresCatalog}
+                />
 
                 {erro && (
                   <UserErrorAlert
@@ -483,33 +495,38 @@ export default function RoteiroBottomSheet({
                     reportContext={erroContext}
                   />
                 )}
-
-                <div className="mt-6 space-y-2">
-                  <button
-                    type="button"
-                    onClick={handleSalvar}
-                    disabled={salvando}
-                    className="w-full rounded-xl bg-emerald-700 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
-                  >
-                    {salvando ? "Salvando..." : "Salvar roteiro"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetFormulario}
-                    className="w-full rounded-xl border border-gray-200 bg-white py-3.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50"
-                  >
-                    Novo roteiro
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="w-full py-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
-                  >
-                    Fechar
-                  </button>
-                </div>
               </>
             )}
+          </div>
+
+          {view === "result" && (
+            <div className="shrink-0 border-t border-[#e8eeee] bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+              <button
+                type="button"
+                onClick={handleSalvar}
+                disabled={salvando || !conteudo.trim()}
+                className="w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] disabled:opacity-60"
+              >
+                {salvando ? "Salvando…" : "Salvar roteiro"}
+              </button>
+              <div className="mt-2 flex gap-4">
+                <button
+                  type="button"
+                  onClick={resetFormulario}
+                  className="flex-1 py-2 text-sm font-semibold text-[#1a4a3a] transition-colors hover:text-[#153d30]"
+                >
+                  Novo roteiro
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="flex-1 py-2 text-sm font-medium text-[#5a6b66] transition-colors hover:text-[#1a2e28]"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          )}
           </div>
         </div>
       </div>
