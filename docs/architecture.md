@@ -129,7 +129,7 @@ components/
 └── …                      # Other root-level UI (maps, autocomplete, etc.)
 ```
 
-**Home** logic is driven by `lib/homeContext.js` (contextual phrases, quick-search chips, hero selection, preset plans). **Place detail** uses `lib/lugarDetalhe.js` to distinguish public venues (beaches, trails) from establishments (restaurants, services) and to shape quick actions.
+**Home** logic is driven by `lib/homeContext.js` (quick-search chips, `pickHeroLugar` scoring, preset plans; `getFraseContextual` for chips, not the header). Header weather is inline in `HomeContextHeader`. **Place detail** uses `lib/lugarDetalhe.js` to distinguish public venues (beaches, trails) from establishments (restaurants, services) and to shape quick actions.
 
 ### Client-side state patterns
 
@@ -212,7 +212,7 @@ Shell props: `title`, `subtitle`, `headerAction`, `contentClassName`, `children`
 
 **Dashboard-only components** (`app/admin/page.js`): `DashboardHero`, `DashboardMetricCard`, `DashboardPendentesSection`, `DashboardOperacionalSidebar`, `DashboardAtividadeSection`, `DashboardSkeleton`; metrics helpers in `lib/adminDashboard.js`.
 
-**Other admin libs:** `lib/adminLogs.js` (log listing/filters), `lib/adminTaxonomia.js` (subcategoria/tag CRUD), `lib/adminAlertas.js` + `AdminAlertsBell.js` (operational alerts, `localStorage` read state).
+**Other admin libs:** `lib/adminLogs.js` (log listing/filters), `lib/adminRelatorios.js` + `lib/relatorioPdf.js` (establishment metrics, WhatsApp copy, PDF), `lib/adminTaxonomia.js` (subcategoria/tag CRUD), `lib/adminAlertas.js` + `AdminAlertsBell.js` (operational alerts, `localStorage` read state).
 
 ---
 
@@ -259,12 +259,13 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `horarios.js` | Shared | Brazil timezone hours, `getStatusFuncionamento` (optional `mostrar_horarios` for badge UI), `horariosTemCadastro` |
 | `localizacao.js` | Shared | Haversine distance, `withDistanciaDinamica` |
 | `logs.js` | Shared | Insert into `logs` for analytics |
-| `storageUpload.js` | Client | Admin photo upload to Storage |
-| `homeContext.js` | Shared | Home phrases, hero pick, quick-search chips, preset plans, `getMelhorHorario` (null without hours) |
+| `storageUpload.js` | Client | Admin photo upload to Storage (uses `imageCompress.js` when over 200KB) |
+| `imageCompress.js` | Client | Canvas resize/JPEG for avatars and entity photos |
+| `homeContext.js` | Shared | Hero scoring (`pickHeroLugar`), quick-search chips, preset plans, `getMelhorHorario` (null without hours) |
 | `lugarDetalhe.js` | Shared | Establishment vs public place, quick actions, persuasion copy, `getStaticMapUrl` (Google Static Maps) |
 | `lugaresPopulares.js` | Shared | Trending places by favorite count |
 | `lugaresVisitados.js` | Client | Recent places in `localStorage` for search browse |
-| `clima.js` | Shared | Open-Meteo weather/marine; `fetchClimaApisCached`, `lugarExibeClima`; home phrase + hero temp + `LugarClimaWidget` |
+| `clima.js` | Shared | Open-Meteo weather/marine; `fetchClimaApisCached`, `lugarExibeClima`; home header + hero temp + `LugarClimaWidget` |
 | `fotos.js` / `photoItems.js` | Shared | Cover URL helpers for places and routes |
 | `tags.js` | Shared | Tag chips from `lugares_tags` / `rotas_tags` joins |
 | `rotas.js` | Shared | Fixed route type catalog (`CATEGORIAS_ROTA`) |
@@ -278,7 +279,8 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `categorias.js` | Shared | Explorar category catalog, sort, featured picks |
 | `perfil.js` | Shared | Profile quick-link definitions |
 | `avaliacaoAspectos.js` | Shared | Aspect chip options per place category |
-| `roteiroMarkdown.js` / `roteiroLugares.js` | Server/shared | Itinerary formatting and catalog filtering for AI |
+| `roteiroParse.js` | Shared | Markdown → days/periods/stops for timeline UI |
+| `roteiroMarkdown.js` / `roteiroLugares.js` | Server/shared | Legacy markdown helpers and catalog filtering for AI |
 | `usePremiumUsage.js` | Client | Premium quota hook + `localStorage` cache |
 | `googleMaps.js` | Client | Admin map picker helpers |
 
@@ -404,9 +406,10 @@ flowchart LR
 ### 6. Roteiro (itinerary) path
 
 1. User completes form on `/rotas` (logged in).  
-2. `POST /api/roteiro` — premium check, filtered place list, Claude generates markdown/structured content.  
-3. Optional `POST /api/roteiro/salvar` — persists to `roteiros` table.  
-4. UI renders via `RoteiroContent` + `lib/roteiroMarkdown.js`.
+2. `POST /api/roteiro` — premium check, filtered place list (`lib/roteiroLugares.js`), Claude returns strict markdown + `lugaresCatalog`.  
+3. `lib/roteiroParse.js` → `RoteiroItineraryView` in `RoteiroBottomSheet` / `RoteiroViewModal`.  
+4. Optional `POST /api/roteiro/salvar` — persists to `roteiros` table.  
+5. Saved trips reopen in the same timeline UI (`RoteiroSection`).
 
 ---
 

@@ -22,7 +22,8 @@ Use a ferramenta com **145 casos de teste**, passo a passo por dispositivo, resu
 |-------|-------------------|-----------------|
 | Login | `/login`, `LoginModal`, Perfil | — |
 | Cadastro | Primeiro login (Google/SMS) + `/perfil/editar` | — |
-| Busca IA | Home `SmartSearch`, `/?busca=1`, `/?q=` | Login + limite 3/dia (free) |
+| Busca IA | Home `SmartSearch`, `/?busca=1`, `/?q=` | Login + limite 5/dia (free) |
+| Relatórios admin | `/admin/relatorios` | Admin/dev; lugar ativo + período |
 | Ver lugar | Cards → `/lugares/[id]` | Nenhuma |
 | Favoritar | Coração home/detalhe, `/favoritos` | Login |
 | Avaliar | Detalhe → `AvaliacaoForm` | Login; moderação admin |

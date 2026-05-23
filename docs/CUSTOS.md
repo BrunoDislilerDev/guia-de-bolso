@@ -14,7 +14,7 @@ Documento financeiro para planejamento de lançamento. **Não substitui contabil
 |-------|-----------|---------------------------|------------|
 | **B2B Parceiro (principal)** | Estabelecimento | **R$ 199/mês** — `lib/planoComercial.js`, `plano_comercial_unico.sql` | Carrossel Parceiros, prioridade na busca IA, badges |
 | **B2C Guia Premium (secundário)** | Usuário final | **R$ 9,90/mês** — IA ilimitada (`lib/premium.js`) | Não paga o negócio sozinho; cobre heavy users parcialmente |
-| **Free tier IA** | — | 3 buscas/dia + 2 roteiros/dia (America/Sao_Paulo) | Teto teórico de custo variável |
+| **Free tier IA** | — | 5 buscas/dia + 2 roteiros/dia (America/Sao_Paulo) | Teto teórico de custo variável |
 
 **Roadmap V2 (só cenário na planilha, não no código):** Gratuito R$ 0 · Estabelecido R$ 99 · Destaque R$ 149 · Parceiro R$ 229 (`CLAUDE.md`).
 

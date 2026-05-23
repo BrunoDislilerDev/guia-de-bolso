@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Admin establishment reports** (`/admin/relatorios`) — filter by active place and period; KPI cards (views, IR AGORA, favorites, approved reviews) with % vs previous period; review list; copy WhatsApp summary; PDF export (`lib/adminRelatorios.js`, `lib/relatorioPdf.js`, `components/admin/RelatoriosEstabelecimentoPage.js`).
+- **Place view logging** — `visualizou_lugar` on place detail for logged-in users (`app/lugares/[id]/page.js`, `lib/logs.js`); counted in establishment reports alongside legacy `acesso_app` with `detalhes.lugar_id`.
+- **AI roteiro timeline UI** — `lib/roteiroParse.js` parses strict markdown into days/periods/stops; `RoteiroItineraryView` accordion timeline in `RoteiroBottomSheet` and `RoteiroViewModal` (`components/rotas/RoteiroSection.js`).
+- **Client image compression** — `lib/imageCompress.js` for avatars and admin uploads via `lib/storageUpload.js`.
+
+### Changed
+
+- **Home header** — `HomeContextHeader` shows brand + location with inline Open-Meteo temperature/emoji; contextual phrase card removed.
+- **Hero selection** — `pickHeroLugar` (`lib/homeContext.js`) scores open status, vigent partner, trending IDs, time-of-day category, and distance; documented in `docs/features.md`.
+- **AI roteiro API** — stricter markdown prompt, `max_tokens` 2400, response includes `lugaresCatalog` for UI linking (`app/api/roteiro/route.js`).
+- **Favoritos / Explorar / Perfil** — UX polish (count badge, empty states, profile edit footer, duplicate “Editar perfil” removed from settings list).
+
+### Documentation
+
+- Synced `/docs` with post-0.5.0 code: home ranking criteria, admin reports, roteiro parser, `visualizou_lugar`, free-tier search limit (5/day).
+
 ## [0.5.0] - 2026-05-21
 
 ### Added

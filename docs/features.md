@@ -11,7 +11,7 @@ User-facing product reference for **Guia de Bolso** (Imbituba, SC). Behavior is 
 | Role | Typical access |
 |------|----------------|
 | **Guest** | Browse places, categories, curated routes, place details; mini weather on outdoor detail; **no** AI search/roteiros; full `ClimaSheet` requires login |
-| **Logged-in user** | Favorites, reviews, AI search (3/day), AI roteiros (2/day), saved roteiros, full outdoor weather sheet on place detail |
+| **Logged-in user** | Favorites, reviews, AI search (5/day), AI roteiros (2/day), saved roteiros, full outdoor weather sheet on place detail |
 | **Premium** | Unlimited AI search & roteiros (weather on detail is login-gated, not premium-gated today) |
 | **Admin / Dev** | CMS at `/admin` (`canAccessAdmin`: roles `admin`, `dev` only) |
 
@@ -40,19 +40,19 @@ Understand what the app does before exploring, without creating an account.
 ## 2. Home — contextual header
 
 **Description**  
-Top bar with region label (Imbituba), a **time- and weather-aware phrase**, and avatar (login link or user photo).
+Top bar with **Guia de Bolso** branding (`Logo`), region label (“Imbituba, SC”), **inline weather** (temperature + emoji from Open-Meteo), and avatar (login link or user photo).
 
 **User goal**  
-Feel the app is aware of “right now” (morning/afternoon/night, weather hints).
+See where the guide applies and current regional weather at a glance.
 
 **Main flows**
-1. Home loads → `fetchClimaApis` for Imbituba coordinates → `getFraseContextual(clima)` sets phrase.
+1. Home secondary load → `fetchClimaApis(IMBITUBA_COORDS)` → `temperaturaClima` / `climaEmoji` passed to `HomeContextHeader`.
 2. Guest taps avatar area → `/login` or profile when logged in.
 
 **Edge cases**
-- Weather API failure → phrase falls back to time-of-day copy only; home may show a discreet gray line (“Conteúdo indisponível no momento”) when the climate request fails in the secondary load phase.
+- Weather API failure → header shows `--°` or omits emoji; hero may still show `--°C` in the metrics grid.
 - Geolocation is **not** required for the header (fixed regional coords for climate).
-- Phrase uses `America/Sao_Paulo` logic (aligned with opening hours).
+- `getFraseContextual()` remains in `lib/homeContext.js` for chips/presets but is **not** shown in the header card.
 
 ---
 
@@ -73,19 +73,19 @@ Find places matching intent (“romantic dinner”, “open now”, “sunset sp
 
 **Edge cases**
 - **Guest** → `LoginModal` with motivo `busca`.
-- **Daily limit reached** (3/day) → `PremiumPaywallSheet` (`busca`) with countdown; search panel may close. Inline `DailyLimitCountdown` while search is open.
+- **Daily limit reached** (5/day) → `PremiumPaywallSheet` (`busca`) with countdown; search panel may close. Inline `DailyLimitCountdown` while search is open.
 - Empty catalog after status filter → API message, zero results.
 - Network/API error → inline error string; optimistic UI not applied to results.
 - Server returns `LOGIN_REQUIRED` / `LIMIT_REACHED` even if client pre-check passed (session/expiry race).
 - Usage counter: hydrates from `localStorage` on same calendar day, then syncs via `GET /api/uso-premium` (server is source of truth). Shows “Carregando uso de IA…” until cache or API is ready — never a false `0/3` flash.
-- When daily limit reached with search open: inline `DailyLimitCountdown` + paywall; label shows `X/3 hoje`.
+- When daily limit reached with search open: inline `DailyLimitCountdown` + paywall; label shows `X/5 hoje`.
 
 ---
 
 ## 4. Search — browse mode (no query yet)
 
 **Description**  
-Overlay when the search field is focused: **recently viewed** places (device) and **popular** places (favorites aggregate in DB).
+Overlay when the search field is focused: **recently viewed** places (device) and **popular** places (same `fetchLugaresPopulares` ranking as §8, limit **5** in browse).
 
 **User goal**  
 Resume exploration or pick a trending place without typing.
@@ -130,25 +130,39 @@ Large hero card with one **contextual place**: photo, badges (e.g. trending), a 
 Get a single strong recommendation without searching.
 
 **Main flows**
-1. Active places loaded → sorted by distance if GPS available → `pickHeroLugar` chooses one.
+1. Phase 1 loads active places + trending IDs + vigent `destaques` → `pickHeroLugar(lugaresAtivos, userPosition, popularIds, parceiroIds)` picks one place.
 2. Secondary home load fetches Open-Meteo for Imbituba → `temperaturaClima` passed into the hero (shown as e.g. `23°C`, or `--°C` if unavailable).
 3. **De carro** estimates minutes from parsed `distancia_calculada` at 30 km/h, rounded to the nearest 5 (`~5 min`, `~10 min`, …).
 4. User taps card or CTA → `/lugares/[id]`.
 5. User toggles favorite on hero (login required).
 
+**Selection criteria (`pickHeroLugar` / `scoreLugar` in `lib/homeContext.js`)**  
+Pool = places **open now** (`getStatusFuncionamento`); if none open, all active places. Highest score wins:
+
+| Signal | Weight |
+|--------|--------|
+| Open now | +40 |
+| Vigent commercial partner (`parceiroIds` / `ehParceiro`) | +50 |
+| In trending set (`popularIds` from `fetchLugaresPopulares`) | +25 |
+| Category matches time of day (SP): morning → Natureza/Gastronomia; afternoon → +Natureza/Gastronomia/Aventura; night → Noite/Gastronomia | +12–18 |
+| Distance &lt; 5 km / &lt; 15 km (when GPS available) | +20 / +10 |
+
+Badge **“Em alta hoje 🔥”** on the hero when the place is trending and not a partner.
+
 **Edge cases**
 - No places / still loading → placeholder “Carregando sugestão…”.
 - Supabase failure for active places → hero section replaced by gray `SectionUnavailable` (“Conteúdo indisponível no momento”), not a silent empty hero.
-- Hero preference uses popularity set + proximity heuristics (`lib/homeContext.js`).
 - Without GPS, distance may show static/legacy `distancia` text; drive-time block shows `—` when distance cannot be parsed to km.
 - Hero does **not** show open/closed or “best time” chips (those appear on list cards only when hours are configured).
 
 ---
 
-## 7. Home — Parceiros comerciais
+## 7. Home — Parceiros comerciais (“Destaques da semana”)
 
 **Description**  
-Horizontal carousel of places with an **active commercial highlight** (`destaques` + plano Parceiro). Shown between the hero and “Em alta hoje”.
+Horizontal carousel of places with an **active commercial highlight** in table `destaques` (single Parceiro plan). Shown between the hero and “Em alta hoje”. **Not** driven by `lugares.destaque` (legacy boolean) or favorite count.
+
+**Criteria (`lib/destaques.js`)** — row included when: `ativo`, `data_inicio ≤ hoje ≤ data_fim`, joined `lugares.status = ativo`. Order follows `fetchDestaquesVigentes` query (`data_inicio` desc).
 
 **User goal**  
 Discover official partner businesses promoted in the guide.
@@ -166,17 +180,18 @@ Discover official partner businesses promoted in the guide.
 ## 8. Home — “Em alta hoje”
 
 **Description**  
-Horizontal list of popular places (by favorite count), with distance when GPS is available.
+Horizontal list of **trending** places — same ranking as **Populares agora** (see §4), capped at **8** cards on the home feed.
 
 **User goal**  
 See what others save most often.
 
 **Main flows**
-1. `fetchLugaresPopulares` → up to 8 cards → `EmAltaCard` with `next/image` (first card may use `priority` preload).
+1. `fetchLugaresPopulares` (`lib/lugaresPopulares.js` → API `mode=populares`) counts rows in `favoritos` per `lugar_id`, orders by count, loads place rows — up to **8** → `EmAltaCard` with `next/image` (first card may use `priority` preload).
 2. Star rating renders only when the place row includes `rating_medio` or `media_avaliacoes` (no per-card Supabase query).
 
 **Edge cases**
-- Ties / few favorites → fallback to recent active places.
+- No favorites in DB → fallback to newest **active** places (`queryLugaresAtivos`).
+- Ties broken by favorite count order returned from aggregation.
 - Popular fetch failure → `SectionUnavailable` for the section title “🔥 Em alta hoje”.
 - Open/closed chip renders only when `mostrar_horarios` is true and `horarios` is non-empty (same rule as `PlaceCard`).
 - Cards link to place detail; not the same algorithm as hero pick.
@@ -476,10 +491,12 @@ Get a custom day-by-day plan for the region.
 
 **Main flows**
 1. `/rotas` → “Roteiro personalizado com IA” → login check → quota check → `RoteiroBottomSheet`.
-2. Submit → `POST /api/roteiro` → display result → “Salvar” → `POST /api/roteiro/salvar`.
-3. Saved list on `/rotas` → tap → read-only modal with `RoteiroContent`.
+2. Submit → `POST /api/roteiro` → `lib/roteiroParse.js` builds day/period/stop timeline → `RoteiroItineraryView` (accordion); footer **Salvar** fixed on scroll.
+3. “Salvar” → `POST /api/roteiro/salvar` → list on `/rotas`.
+4. Saved list → tap → `RoteiroViewModal` with the same timeline UI (`components/rotas/RoteiroSection.js`).
 
 **Edge cases**
+- Parser drops empty period blocks; stops link to catalog names when `lugaresCatalog` from API matches.
 - Guest → login modal.
 - No saved roteiros yet → empty state in `RoteiroSection` (“Nenhum roteiro salvo ainda”).
 - Daily limit 2/day → paywall (`roteiro`) with countdown; compact `DailyLimitCountdown` on `/rotas` card when blocked (`Novos roteiros em HH:MM:SS`, light text on dark gradient).
@@ -587,7 +604,7 @@ Understand when content failed vs. is empty; navigate with keyboard/screen reade
 
 | Surface | What users see |
 |---------|----------------|
-| **Home header** | Time/weather-aware phrase (`getFraseContextual`) |
+| **Home header** | Inline regional temperature + weather emoji (`HomeContextHeader`) |
 | **Hero card** | Regional temperature in the 2×2 metrics grid (`temperaturaClima` from the same fetch) |
 | **Place detail** | `LugarClimaWidget` for **Natureza** / **Aventura** with coordinates — mini summary for everyone; **`ClimaSheet`** (UV, waves chart, sea temp, moon) for **logged-in** users |
 | **Not mounted** | `ClimaCard` beach picker on home (component exists; use detail widget instead) |
@@ -596,12 +613,12 @@ Understand when content failed vs. is empty; navigate with keyboard/screen reade
 Plan beach/outdoor time with local weather awareness at decision time (especially on place pages).
 
 **Main flows**
-1. Home secondary load → `fetchClimaApis(IMBITUBA_COORDS)` → phrase + hero temperature.
+1. Home secondary load → `fetchClimaApis(IMBITUBA_COORDS)` → header inline weather + hero temperature.
 2. Outdoor place detail → `fetchClimaApisCached(lat, lng)` → widget; logged-in tap opens `ClimaSheet`.
 3. Guest tap on widget → `LoginModal` with motivo `clima`.
 
 **Edge cases**
-- Climate fetch failure on home → neutral time-based phrases; hero shows `--°C`.
+- Climate fetch failure on home → header/hero show `--°` / `--°C`.
 - Widget omitted on detail if marine/weather API fails (silent).
 - `PremiumPaywallSheet` copy for `clima` exists but detail sheet is **login-gated**, not premium-gated in the current build.
 
@@ -627,7 +644,7 @@ Sign in from a focused screen (bookmark, redirect, marketing link).
 ## 29. Activity logging (user-visible impact: minimal)
 
 **Description**  
-Server/client inserts into `logs` for login, logout, favorites, `ir_agora`, app open, account deletion request (`deletou_conta`). Drives **`/admin`** summary and **`/admin/logs`**, not end-user UI.
+Server/client inserts into `logs` for login, logout, favorites, `ir_agora`, **`visualizou_lugar`** (place detail, logged-in), app open (`acessou_app` / `acesso_app`), account deletion request (`deletou_conta`). Drives **`/admin`** summary, **`/admin/logs`**, and **`/admin/relatorios`** view metrics, not end-user UI.
 
 **User goal**  
 (N/A — operational/analytics.)
@@ -653,6 +670,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Destaques | Single commercial plan (Parceiro); vigência dates; `?status=expirando` \| `expirado` | Run paid highlights |
 | Usuários | Roles, Premium IA status, engagement sheet; link to user logs | Access control |
 | Logs (`/admin/logs`) | Filter by action, period, user (`?user_id=`); deep links to place edit | Investigate behavior |
+| Relatórios (`/admin/relatorios`) | Per-establishment report: period presets (30d, this month, previous month, 3 months); KPIs with % vs previous period (views = `visualizou_lugar` + `acesso_app` with `lugar_id`, `ir_agora`, favorite logs, approved reviews); review list; copy WhatsApp; PDF (`jspdf`) | Share performance with partners |
 | Taxonomia (`/admin/taxonomia`) | CRUD `subcategorias` (per fixed category) and `tags` (`categorias` jsonb, `aplica_em_rotas`); block delete when in use; migrate places on rename | Maintain catalog vocabulary without SQL |
 
 **Edge cases**
@@ -693,7 +711,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | AI roteiro | `/rotas` (sheet) |
 | Profile | `/perfil`, `/perfil/editar` |
 | Login | `/login`, modal, `/auth/callback` |
-| Admin | `/admin`, `/admin/logs`, `/admin/taxonomia`, … |
+| Admin | `/admin`, `/admin/logs`, `/admin/relatorios`, `/admin/taxonomia`, … |
 
 ---
 

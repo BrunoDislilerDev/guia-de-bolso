@@ -43,7 +43,7 @@ Natural-language place search powered by Claude.
   "lugares": [/* full place objects with relations */],
   "usage": {
     "premium": false,
-    "buscas": { "used": 1, "limit": 3 }
+    "buscas": { "used": 1, "limit": 5 }
   }
 }
 ```
@@ -89,10 +89,10 @@ Generates a multi-day AI itinerary (markdown).
 
 All three fields are required. `dias` and `perfil` must be non-empty **strings** (the route uses `.trim()`). `interesses` must be a non-empty array.
 
-**Success:** `{ "conteudo": "...", "titulo": "Roteiro 3 - casal", "usage": { ... } }`  
+**Success:** `{ "conteudo": "<markdown>", "titulo": "Roteiro 3 - casal", "lugaresCatalog": [{ "id", "nome" }, ...], "usage": { ... } }`  
 **Errors:** Same pattern as `/api/buscar` (`LOGIN_REQUIRED`, `LIMIT_REACHED`)
 
-Implementation: `app/api/roteiro/route.js`, formatting in `lib/roteiroMarkdown.js`.
+Implementation: `app/api/roteiro/route.js` (strict markdown system prompt, `max_tokens: 2400`, default model `claude-sonnet-4-5` or `ANTHROPIC_MODEL`). Client parses markdown via `lib/roteiroParse.js` → `RoteiroItineraryView`.
 
 ---
 
@@ -232,7 +232,7 @@ Returns current user's premium status and **daily** AI usage (with optional `res
   "usage": {
     "premium": false,
     "day": "2026-05-19",
-    "buscas": { "used": 2, "limit": 3, "remaining": 1 },
+    "buscas": { "used": 2, "limit": 5, "remaining": 3 },
     "roteiros": { "used": 0, "limit": 2, "remaining": 2 },
     "resetsAt": "2026-05-20T03:00:00.000Z",
     "msUntilReset": 19800000

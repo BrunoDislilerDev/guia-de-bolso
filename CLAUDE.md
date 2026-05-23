@@ -82,7 +82,7 @@ guia-de-bolso/
 ├── components/
 │   ├── Onboarding.js            # Telas de onboarding (3-4 slides)
 │   ├── LoginModal.js            # Bottom sheet de login para conteúdo restrito
-│   ├── DestaqueCarrossel.js     # Carrossel de destaques da semana
+│   ├── home/ParceirosCarrossel.js  # Carrossel de parceiros (destaques vigentes)
 │   ├── BotaoIrAgora.js          # Botão que abre Maps preferido
 │   └── AvaliacaoCard.js         # Card de avaliação de um lugar
 ├── public/
@@ -281,7 +281,7 @@ guia-de-bolso/
 - [x] Fluxo de verificação com contador de reenvio e tratamento de erros
 - [x] Carrossel de destaques na home com auto-scroll e dots
 - [x] Sistema de planos (Básico, Padrão, Premium) com badges visuais
-- [x] Temperatura real via OpenWeatherMap API
+- [x] Clima regional via Open-Meteo (home header + hero + detalhe Natureza/Aventura)
 - [x] Geolocalização dinâmica com distância real calculada
 - [x] Endereço estruturado com Google Places Autocomplete no admin
 - [x] Tabela localizacoes separada com lat/lng
@@ -319,7 +319,10 @@ guia-de-bolso/
 - [x] Gestão de destaques e planos
 - [x] Gestão de destaques no painel admin
 - [x] Gestão de usuários
-- [x] Sistema de logs (login, logout, favoritos, IR AGORA, acesso ao app)
+- [x] Sistema de logs (login, logout, favoritos, IR AGORA, visualizou_lugar, acesso ao app)
+- [x] Relatórios por estabelecimento no admin (`/admin/relatorios`) com PDF e WhatsApp
+- [x] Roteiro IA com timeline (`lib/roteiroParse.js`, `RoteiroItineraryView`)
+- [x] Compressão de imagem no cliente (`lib/imageCompress.js`) para avatar e fotos admin
 - [x] Sistema de avaliações com moderação
 - [x] Editor de horários com time picker (toggles Fechado/24h)
 - [x] Página de categorias (`/categorias`)

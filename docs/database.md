@@ -423,7 +423,7 @@ Product analytics and audit trail.
 | `user_id` | `uuid` FK | → `perfis.id` ON DELETE SET NULL *(migration: `logs_policies.sql`)* |
 | `user_email` | `text` | Denormalized |
 | `user_nome` | `text` | Denormalized |
-| `acao` | `text` | e.g. `login`, `favoritou`, `ir_agora`, `acessou_app` |
+| `acao` | `text` | e.g. `login`, `favoritou`, `ir_agora`, `visualizou_lugar`, `acessou_app` |
 | `detalhes` | `jsonb` | Context (place name, maps app, page, etc.) |
 | `created_at` | `timestamptz` | |
 
@@ -505,7 +505,7 @@ Defined in [`supabase/increment_uso_ia.sql`](../supabase/increment_uso_ia.sql).
 
 | Function | Parameter | Returns | Purpose |
 |----------|-----------|---------|---------|
-| `increment_busca_ia` | `p_user_id uuid` | `jsonb` | Auth check, **daily** reset (`YYYY-MM-DD`), increment search count (limit 3/day), premium bypass |
+| `increment_busca_ia` | `p_user_id uuid` | `jsonb` | Auth check, **daily** reset (`YYYY-MM-DD`), increment search count (limit **5**/day), premium bypass |
 | `increment_roteiro_ia` | `p_user_id uuid` | `jsonb` | Same for roteiros (limit 2/day); returns `resets_at` (next midnight SP) in `usage` |
 
 **Return payload (conceptual):**
@@ -520,7 +520,7 @@ Defined in [`supabase/increment_uso_ia.sql`](../supabase/increment_uso_ia.sql).
     "day": "2026-05-19",
     "month": "2026-05-19",
     "resets_at": "2026-05-20T03:00:00.000Z",
-    "buscas": { "used": 1, "limit": 3, "remaining": 2 },
+    "buscas": { "used": 1, "limit": 5, "remaining": 4 },
     "roteiros": { "used": 0, "limit": 2, "remaining": 2 }
   }
 }
@@ -581,8 +581,9 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Use case | Query |
 |----------|--------|
 | Active places (hero) | `lugares` `.select("*, localizacoes(*), lugares_tags(tags(*))")` `.eq("status","ativo")` `.limit(50)` — phase 1 |
-| Trending (“Em alta”) | `fetchLugaresPopulares` (`lib/lugaresPopulares.js`): reads `favoritos`, then active `lugares` by top IDs — phase 1 |
-| “Perto de você” | Active `lugares` `.limit(20)`, exclude hero/trending IDs client-side, `.slice(0, 6)`, sort by GPS |
+| Trending (“Em alta”) / browse “Populares” | `fetchLugaresPopulares` (`lib/lugaresPopulares.js`): aggregate `favoritos` by `lugar_id`, fallback newest active — phase 1 (home: 8, browse: 5) |
+| Hero (“Sugestão do momento”) | All active places in phase 1 → `pickHeroLugar` (`lib/homeContext.js`) scores open + partner + trending + time-of-day category + distance |
+| “Perto de você” | Active `lugares` via API `.limit(20)`, exclude hero + **all** `parceiroIds` client-side, `.slice(0, 6)`, sort by GPS — phase 2 |
 | Parceiros carousel | `destaques` vigentes + active `lugares`; `buildParceiroIdSet` / `enrichLugaresComParceiro` (`lib/destaques.js`) |
 | Favorites on home | `favoritos` `.select("lugar_id")` `.eq("user_id", user.id)` |
 | AI search | **Not SQL** — `POST /api/buscar` loads catalog server-side |
@@ -592,6 +593,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Use case | Query |
 |----------|--------|
 | Place | `lugares` `.select("*")` `.eq("id")` `.eq("status","ativo")` |
+| View log (logged-in) | `registrarLog(..., "visualizou_lugar", { lugar_id, lugar_nome })` on mount |
 | Photos | `fotos_lugar` by `lugar_id`; fallback `lugares.fotos` jsonb |
 | Location | `localizacoes` `.maybeSingle()` |
 | Tags | `lugares_tags` `.select("tags(*)")` |
@@ -649,6 +651,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Dashboard (`/admin`) | `fetchCount` / `fetchCountInPeriod` (`lib/adminDashboard.js`): active `lugares`, pending `avaliacoes`, `perfis` created in period, `logs` with `acao = ir_agora` in period, `em_analise` count; `fetchDestaquesVigentes` + expiring-within-7d; `countPremiumAtivos`; recent `logs` (3 rows); pending review list (5 rows) |
 | Logs admin (`/admin/logs`) | `logs` paginated/filtered via `lib/adminLogs.js` (`acao`, date range, `user_id`, text search on `user_nome` / `user_email` / `detalhes.lugar_nome`) |
 | Taxonomia admin | `subcategorias` insert/update/delete (usage count on `lugares.categoria` + `lugares.subcategoria`); `tags` CRUD + `lugares_tags` / `rotas_tags` usage checks |
+| Relatórios (`/admin/relatorios`) | `buildRelatorioEstabelecimento` (`lib/adminRelatorios.js`): `logs` counts for `visualizou_lugar` + `acesso_app` (with `detalhes.lugar_id`), `ir_agora`, `favoritou`; active `favoritos` count; `avaliacoes` approved in period; compares to previous period via `getReportPeriodRanges` |
 
 ### Premium usage
 
@@ -666,7 +669,8 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | OAuth callback | `login` | `{ provider }` |
 | Favorite toggle | `favoritou` / `desfavoritou` | `{ lugar_id, lugar_nome }` |
 | Navigation CTA | `ir_agora` | `{ lugar_id, lugar_nome, app: google\|apple\|waze }` |
-| App open | `acessou_app` | `{ pagina }` |
+| Place detail view | `visualizou_lugar` | `{ lugar_id, lugar_nome }` |
+| App open | `acessou_app` / `acesso_app` | `{ pagina }` (legacy rows may include `lugar_id` for reports) |
 | Account deletion | `deletou_conta` | (profile request; surfaced in admin alerts → `/admin/logs?acao=deletou_conta`) |
 
 ---
