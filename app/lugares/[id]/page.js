@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import AvaliacaoForm from "@/components/AvaliacaoForm";
+import NavigationAppSheet from "@/components/NavigationAppSheet";
 import IconBack from "@/components/IconBack";
 import UserErrorAlert from "@/components/UserErrorAlert";
 import LoginModal from "@/components/LoginModal";
@@ -18,6 +19,7 @@ import LugarQuickActions from "@/components/lugar/LugarQuickActions";
 import LugarTags from "@/components/lugar/LugarTags";
 import { getCapaFromLugar, getFotosFromLugar } from "@/lib/fotos";
 import { saveLugarVisitado } from "@/lib/lugaresVisitados";
+import { MAP_PREFERENCE_STORAGE_KEY } from "@/lib/perfil";
 import { buildReportContext } from "@/lib/reportContext";
 import { fetchLugarEhParceiroVigente, getBadgeParceiroLabel } from "@/lib/destaques";
 import {
@@ -178,6 +180,7 @@ export default function LugarPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showHorarios, setShowHorarios] = useState(false);
   const [showRotas, setShowRotas] = useState(false);
+  const [mapPreference, setMapPreference] = useState("google");
   const [sobreExpandido, setSobreExpandido] = useState(false);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [jaAvaliou, setJaAvaliou] = useState(false);
@@ -334,6 +337,11 @@ export default function LugarPage() {
         setJaAvaliou(Boolean(data));
       });
   }, [user, lugar]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(MAP_PREFERENCE_STORAGE_KEY);
+    if (stored) setMapPreference(stored);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -564,23 +572,21 @@ export default function LugarPage() {
   }
 
   /**
-   * Opens the user's preferred maps app and logs the IR AGORA action.
-   * @param {string} [preference] - Override: `google`, `apple`, or `waze`.
+   * Abre o app de mapas escolhido e registra o log IR AGORA.
+   * @param {string} appKey - `google`, `apple` ou `waze`.
+   * @param {boolean} [remember=true] - Salva preferência no dispositivo.
    */
-  function openRoute(preference) {
-    const selected = preference || localStorage.getItem("map_app_preferido");
-
-    if (!selected) {
-      setShowRotas(true);
-      return;
+  function launchNavigationApp(appKey, remember = true) {
+    if (remember) {
+      localStorage.setItem(MAP_PREFERENCE_STORAGE_KEY, appKey);
+      setMapPreference(appKey);
     }
 
-    localStorage.setItem("map_app_preferido", selected);
     setShowRotas(false);
     registrarLog(createClient(), user, "ir_agora", {
       lugar_id: lugar.id,
       lugar_nome: lugar.nome,
-      app: selected,
+      app: appKey,
     });
 
     const urls = {
@@ -589,7 +595,23 @@ export default function LugarPage() {
       waze: wazeUrl(lugar, localizacao),
     };
 
-    window.open(urls[selected], "_blank", "noopener,noreferrer");
+    window.open(urls[appKey], "_blank", "noopener,noreferrer");
+  }
+
+  /**
+   * IR AGORA: usa preferência salva ou abre sheet de escolha.
+   * @param {string} [preference] - Força um app sem abrir o sheet.
+   */
+  function openRoute(preference) {
+    const selected =
+      preference || localStorage.getItem(MAP_PREFERENCE_STORAGE_KEY);
+
+    if (!selected) {
+      setShowRotas(true);
+      return;
+    }
+
+    launchNavigationApp(selected, true);
   }
 
   /**
@@ -759,28 +781,12 @@ export default function LugarPage() {
         </div>
       </BottomSheet>
 
-      <BottomSheet
+      <NavigationAppSheet
         isOpen={showRotas}
         onClose={() => setShowRotas(false)}
-        title="Abrir rota com"
-      >
-        <div className="grid gap-3">
-          {[
-            ["google", "Google Maps"],
-            ["apple", "Apple Maps"],
-            ["waze", "Waze"],
-          ].map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => openRoute(key)}
-              className="rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </BottomSheet>
+        preferredKey={mapPreference}
+        onSelect={(appKey, remember) => launchNavigationApp(appKey, remember)}
+      />
 
       <AvaliacaoForm
         isOpen={showAvaliacaoForm}

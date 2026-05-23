@@ -14,6 +14,7 @@ import PerfilSettingsGroup from "@/components/perfil/PerfilSettingsGroup";
 import PerfilSkeleton from "@/components/perfil/PerfilSkeleton";
 import PerfilStats from "@/components/perfil/PerfilStats";
 import PerfilBottomSheet from "@/components/perfil/PerfilBottomSheet";
+import PerfilLogoutSheet from "@/components/perfil/PerfilLogoutSheet";
 import {
   MAP_PREFERENCE_STORAGE_KEY,
   getNavAppLabel,
@@ -363,29 +364,11 @@ export default function PerfilPage() {
         </button>
       </PerfilBottomSheet>
 
-      <PerfilBottomSheet
+      <PerfilLogoutSheet
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
-        title="Sair da conta"
-      >
-        <p className="text-sm leading-relaxed text-[#5a6b66]">
-          Tem certeza que deseja sair?
-        </p>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="mt-5 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white"
-        >
-          Sair
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowLogoutConfirm(false)}
-          className="mt-3 w-full rounded-xl bg-[#f0f4f3] py-3.5 text-sm font-semibold text-[#5a6b66]"
-        >
-          Cancelar
-        </button>
-      </PerfilBottomSheet>
+        onConfirm={handleLogout}
+      />
 
       <PremiumPaywallSheet
         isOpen={paywallOpen}

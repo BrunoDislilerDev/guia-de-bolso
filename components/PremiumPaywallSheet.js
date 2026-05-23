@@ -1,6 +1,7 @@
 "use client";
 
 import DailyLimitCountdown from "@/components/DailyLimitCountdown";
+import { PREMIUM_BENEFITS } from "@/lib/premiumBenefits";
 import { LIMITS, PREMIUM_PRICE_LABEL } from "@/lib/premium";
 
 const COPY = {
@@ -23,12 +24,6 @@ const COPY = {
       "No plano gratuito, buscas e roteiros com IA têm limite diário que reinicia todo dia. O Premium remove completamente esse limite.",
   },
 };
-
-const BENEFITS = [
-  "Busca com IA ilimitada (sem limite diário)",
-  "Roteiros personalizados ilimitados",
-  "Detalhes completos do clima e do mar",
-];
 
 /**
  * PremiumPaywallSheet - Bottom sheet promoting Guia Premium when a daily limit is reached.
@@ -90,13 +85,16 @@ export default function PremiumPaywallSheet({
           </div>
         )}
 
-        <ul className="mt-5 space-y-2 rounded-2xl bg-[#f0f4f3] p-4 text-sm text-[#1a4a3a]">
-          {BENEFITS.map((item) => (
-            <li key={item} className="flex items-center gap-2">
-              <span className="text-emerald-600" aria-hidden>
+        <ul className="mt-5 space-y-2.5 rounded-2xl bg-[#f0f4f3] p-4 text-sm text-[#1a4a3a]">
+          {PREMIUM_BENEFITS.map((item) => (
+            <li key={item} className="flex items-start gap-2.5">
+              <span
+                className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600/15 text-xs font-bold text-emerald-700"
+                aria-hidden
+              >
                 ✓
               </span>
-              {item}
+              <span className="leading-snug">{item}</span>
             </li>
           ))}
         </ul>

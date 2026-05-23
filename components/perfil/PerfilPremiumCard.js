@@ -1,6 +1,7 @@
 "use client";
 
 import { LIMITS, PREMIUM_PRICE_LABEL } from "@/lib/premium";
+import { PREMIUM_ACTIVE_SUMMARY, PREMIUM_BENEFITS } from "@/lib/premiumBenefits";
 
 /**
  * @param {object} props
@@ -52,7 +53,7 @@ export default function PerfilPremiumCard({ isPremium, usage, onUpgrade }) {
           <div>
             <p className="text-sm font-bold text-[#7a6520]">Guia Premium ativo</p>
             <p className="mt-1 text-xs leading-relaxed text-[#6b5344]">
-              Buscas e roteiros com IA ilimitados. Aproveite sem limites diários.
+              {PREMIUM_ACTIVE_SUMMARY}
             </p>
           </div>
         </div>
@@ -92,6 +93,17 @@ export default function PerfilPremiumCard({ isPremium, usage, onUpgrade }) {
           label="Roteiros com IA"
         />
       </div>
+
+      <ul className="mt-4 space-y-1.5 border-t border-[#eef3f1] pt-4 text-xs text-[#5a6b66]">
+        {PREMIUM_BENEFITS.slice(0, 4).map((item) => (
+          <li key={item} className="flex items-start gap-2">
+            <span className="text-emerald-600" aria-hidden>
+              ✓
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
 
       {onUpgrade && (
         <button

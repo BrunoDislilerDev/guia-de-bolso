@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Logo from "@/components/Logo";
 import RoteiroContent from "@/components/rotas/RoteiroContent";
 
 import UserErrorAlert from "@/components/UserErrorAlert";
@@ -34,20 +35,62 @@ const INTERESSES_OPCOES = [
 
 const LOADING_MESSAGES = [
   "Consultando os melhores lugares...",
-  "Montando seu roteiro...",
+  "Montando seu roteiro personalizado...",
+  "Organizando paradas e horários...",
   "Quase pronto...",
 ];
 
 /**
- * Spinner - Loading indicator for AI itinerary generation.
- * @returns {import('react').ReactElement}
+ * Estado de carregamento da geração de roteiro com IA.
+ * @param {object} props
+ * @param {string} props.message
+ * @returns {import("react").JSX.Element}
  */
-function Spinner() {
+function RoteiroLoadingView({ message }) {
   return (
-    <div
-      className="h-10 w-10 animate-spin rounded-full border-[3px] border-emerald-200 border-t-emerald-600"
-      aria-hidden
-    />
+    <div className="flex min-h-[340px] flex-col items-center justify-center px-4 py-10 text-center">
+      <Logo size="sm" className="mx-auto opacity-90" />
+      <div className="roteiro-progress-track mt-8 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-[#e8eeee]">
+        <div className="roteiro-progress-bar h-full w-1/3 rounded-full bg-[#1a4a3a]" />
+      </div>
+      <p
+        key={message}
+        className="roteiro-loading-message mt-6 text-base font-semibold text-[#1a2e28]"
+      >
+        {message}
+      </p>
+      <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-[#5a6b66]">
+        A IA está montando o melhor roteiro para você. Isso leva cerca de 15–30
+        segundos.
+      </p>
+      <style>{`
+        @keyframes roteiroProgress {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(350%); }
+        }
+        @keyframes roteiroMessageIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .roteiro-progress-bar {
+          animation: roteiroProgress 1.4s ease-in-out infinite;
+        }
+        .roteiro-loading-message {
+          animation: roteiroMessageIn 0.35s ease-out;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .roteiro-progress-bar {
+            animation: none;
+            width: 66%;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          .roteiro-loading-message {
+            animation: none;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
 
@@ -414,15 +457,7 @@ export default function RoteiroBottomSheet({
             )}
 
             {view === "loading" && (
-              <div className="flex min-h-[320px] flex-col items-center justify-center py-10 text-center">
-                <Spinner />
-                <p className="mt-5 text-base font-semibold text-gray-800">
-                  {LOADING_MESSAGES[loadingMessageIndex]}
-                </p>
-                <p className="mt-2 text-sm text-gray-500">
-                  A IA está montando o melhor roteiro para você
-                </p>
-              </div>
+              <RoteiroLoadingView message={LOADING_MESSAGES[loadingMessageIndex]} />
             )}
 
             {view === "result" && (

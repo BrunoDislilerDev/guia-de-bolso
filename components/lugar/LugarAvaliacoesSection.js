@@ -175,11 +175,22 @@ export default function LugarAvaliacoesSection({
       )}
 
       {total === 0 ? (
-        <p className="mt-4 text-sm text-[#9aa8a3]">
-          {jaAvaliou
-            ? "Sua avaliação foi enviada e aparecerá aqui após aprovação da equipe."
-            : "Seja o primeiro a avaliar este lugar"}
-        </p>
+        jaAvaliou ? (
+          <div
+            className="mt-4 rounded-2xl border border-[#b8e6d8] bg-[#e8f5f0] px-4 py-3.5 text-sm leading-relaxed text-[#1a4a3a]"
+            role="status"
+          >
+            <p className="font-semibold">Obrigado pela sua avaliação!</p>
+            <p className="mt-1 text-[#2d5c4a]">
+              Sua avaliação foi recebida e será analisada pela nossa equipe antes
+              de aparecer aqui.
+            </p>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-[#9aa8a3]">
+            Seja o primeiro a avaliar este lugar
+          </p>
+        )
       ) : (
         <>
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e8eeee]">

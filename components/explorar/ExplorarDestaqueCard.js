@@ -62,7 +62,9 @@ export default function ExplorarDestaqueCard({ categoria, count, imagemUrl }) {
   );
 
   const shellClass = `relative flex h-[168px] w-[260px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 ${
-    vazio ? "cursor-not-allowed opacity-70" : "group transition active:scale-[0.98]"
+    vazio
+      ? "pointer-events-none cursor-not-allowed opacity-70"
+      : "group transition active:scale-[0.98]"
   }`;
 
   if (vazio) {
@@ -70,7 +72,8 @@ export default function ExplorarDestaqueCard({ categoria, count, imagemUrl }) {
       <div
         className={shellClass}
         aria-disabled="true"
-        title={`${categoria.nome} — em breve`}
+        tabIndex={-1}
+        title={`${categoria.nome} — em breve, sem lugares cadastrados`}
       >
         {inner}
       </div>

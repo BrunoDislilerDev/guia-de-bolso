@@ -38,6 +38,7 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
   const [comentario, setComentario] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
+  const [limiteAspectosAviso, setLimiteAspectosAviso] = useState(false);
 
   const opcoesAspectos = getAspectosParaLugar(lugar);
   const restantes = MAX_COMENTARIO_AVALIACAO - comentario.length;
@@ -59,6 +60,7 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
       setAspectos([]);
       setComentario("");
       setErro("");
+      setLimiteAspectosAviso(false);
       setEnviando(false);
     }
   }, [isOpen]);
@@ -67,13 +69,17 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
    * @param {string} aspecto
    */
   function toggleAspecto(aspecto) {
-    setAspectos((current) => {
-      if (current.includes(aspecto)) {
-        return current.filter((item) => item !== aspecto);
-      }
-      if (current.length >= MAX_ASPECTOS_SELECIONADOS) return current;
-      return [...current, aspecto];
-    });
+    if (aspectos.includes(aspecto)) {
+      setLimiteAspectosAviso(false);
+      setAspectos(aspectos.filter((item) => item !== aspecto));
+      return;
+    }
+    if (aspectos.length >= MAX_ASPECTOS_SELECIONADOS) {
+      setLimiteAspectosAviso(true);
+      return;
+    }
+    setLimiteAspectosAviso(false);
+    setAspectos([...aspectos, aspecto]);
   }
 
   /**
@@ -185,6 +191,11 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
             Escolha até {MAX_ASPECTOS_SELECIONADOS}
             {aspectos.length > 0 ? ` · ${aspectos.length} selecionado${aspectos.length > 1 ? "s" : ""}` : ""}
           </p>
+          {limiteAspectosAviso && (
+            <p className="mt-2 text-xs font-medium text-amber-800" role="status">
+              Você pode selecionar no máximo {MAX_ASPECTOS_SELECIONADOS} aspectos.
+            </p>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             {opcoesAspectos.map((aspecto) => {
               const selected = aspectos.includes(aspecto);
