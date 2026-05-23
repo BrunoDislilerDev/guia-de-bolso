@@ -37,7 +37,7 @@ import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
 import { getLugaresVisitados } from "@/lib/lugaresVisitados";
 import { withDistanciaDinamica } from "@/lib/localizacao";
 import { ensurePerfil } from "@/lib/ensurePerfil";
-import { canUseBusca, isDailyBuscaLimitReached } from "@/lib/premium";
+import { LIMITS, canUseBusca, isDailyBuscaLimitReached } from "@/lib/premium";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { createClient } from "@/lib/supabase";
 import { registrarLog } from "@/lib/logs";
@@ -96,17 +96,6 @@ async function fetchLugaresProximos(excludeIds = []) {
   return (data ?? []).filter((l) => !exclude.has(String(l.id))).slice(0, 6);
 }
 
-/**
- * Loads trending places for home; throws if the favorites query fails.
- * @param {import("@supabase/supabase-js").SupabaseClient} supabase
- * @param {number} limit
- * @returns {Promise<object[]>}
- */
-async function fetchLugaresPopularesHome(supabase, limit) {
-  const { error } = await supabase.from("favoritos").select("lugar_id");
-  if (error) throw error;
-  return fetchLugaresPopulares(supabase, limit);
-}
 
 /**
  * Discreet placeholder when a home section fails to load.
@@ -242,15 +231,21 @@ function Home() {
       setAuthLoading(false);
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      applySession(currentUser);
-      if (currentUser && !accessLogged) {
-        accessLogged = true;
-        registrarLog(supabase, currentUser, "acessou_app");
-        ensurePerfil(supabase, currentUser);
-      }
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        const currentUser = session?.user ?? null;
+        applySession(currentUser);
+        if (currentUser && !accessLogged) {
+          accessLogged = true;
+          registrarLog(supabase, currentUser, "acessou_app");
+          ensurePerfil(supabase, currentUser);
+        }
+      })
+      .catch((err) => {
+        console.error("[home] getSession:", err);
+        applySession(null);
+      });
 
     const {
       data: { subscription },
@@ -279,8 +274,6 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    if (authLoading) return undefined;
-
     let cancelled = false;
     setHomeLoading(true);
     const supabase = createClient();
@@ -289,7 +282,7 @@ function Home() {
       try {
         const [ativosResult, popularesResult, destaquesResult] = await Promise.allSettled([
           fetchLugaresAtivos(),
-          fetchLugaresPopularesHome(supabase, 8),
+          fetchLugaresPopulares(supabase, 8),
           fetchDestaquesVigentes(supabase),
         ]);
 
@@ -307,6 +300,7 @@ function Home() {
           setLugaresAtivos(enriched);
           setLugaresParceiros(lugaresFromDestaquesVigentes(destaquesVigentes, enriched));
         } else {
+          console.error("[home] lugares ativos:", ativosResult.reason);
           errors.hero = true;
           setLugaresParceiros(lugaresFromDestaquesVigentes(destaquesVigentes));
         }
@@ -316,6 +310,7 @@ function Home() {
             enrichLugaresComParceiro(popularesResult.value, idsParceiros)
           );
         } else {
+          console.error("[home] lugares populares:", popularesResult.reason);
           errors.emAlta = true;
         }
 
@@ -324,7 +319,8 @@ function Home() {
           hero: errors.hero,
           emAlta: errors.emAlta,
         }));
-      } catch {
+      } catch (err) {
+        console.error("[home] loadPrimary:", err);
         if (!cancelled) {
           setSectionErrors((prev) => ({ ...prev, hero: true, emAlta: true }));
         }
@@ -338,10 +334,10 @@ function Home() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading]);
+  }, []);
 
   useEffect(() => {
-    if (authLoading) return undefined;
+    if (homeLoading) return undefined;
 
     let cancelled = false;
     setPertoLoading(true);
@@ -385,7 +381,7 @@ function Home() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, parceiroIdsKey, parceiroIds, heroLugar?.id]);
+  }, [homeLoading, parceiroIdsKey, parceiroIds, heroLugar?.id]);
 
   useEffect(() => {
     if (searchMode !== "browse") return undefined;
@@ -727,13 +723,9 @@ function Home() {
             <p className="mb-2 text-center text-[10px] text-[#8a9a95]">
               {premiumUsageLoading && !premiumUsage
                 ? "Carregando uso de IA…"
-                : premiumUsage
-                  ? premiumUsage.premium
-                    ? "Premium · buscas ilimitadas"
-                    : `IA ${premiumUsage.buscas.used}/${premiumUsage.buscas.limit} hoje · renova à meia-noite`
-                  : premiumUsageSynced
-                    ? null
-                    : "Carregando uso de IA…"}
+                : premiumUsage?.premium
+                  ? "Premium · buscas ilimitadas"
+                  : `IA ${premiumUsage?.buscas?.used ?? 0}/${premiumUsage?.buscas?.limit ?? LIMITS.busca} hoje · renova à meia-noite`}
             </p>
           )}
           {buscaLimiteDiarioAtingido && searchMode && (

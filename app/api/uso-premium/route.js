@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createDefaultUsage } from "@/lib/premium";
 import { getAuthUser, getPerfilUsage } from "@/lib/premiumServer";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
@@ -17,7 +18,13 @@ export async function GET() {
       });
     }
 
-    const usage = await getPerfilUsage(user.id);
+    let usage;
+    try {
+      usage = await getPerfilUsage(user.id);
+    } catch (perfilErr) {
+      console.error("GET /api/uso-premium perfil:", perfilErr);
+      usage = createDefaultUsage();
+    }
 
     return NextResponse.json({
       loggedIn: true,
@@ -25,6 +32,14 @@ export async function GET() {
     });
   } catch (err) {
     console.error("GET /api/uso-premium:", err);
+    const { user } = await getAuthUser().catch(() => ({ user: null }));
+    if (user?.id) {
+      return NextResponse.json({
+        loggedIn: true,
+        usage: createDefaultUsage(),
+        ...buildApiErrorBody("SERVER"),
+      });
+    }
     return NextResponse.json(
       { loggedIn: false, usage: null, ...buildApiErrorBody("SERVER") },
       { status: 500 }

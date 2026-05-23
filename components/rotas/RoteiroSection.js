@@ -8,6 +8,7 @@ import RoteiroBottomSheet from "@/components/RoteiroBottomSheet";
 import { canUseRoteiro, isDailyRoteiroLimitReached } from "@/lib/premium";
 import RoteiroContent from "@/components/rotas/RoteiroContent";
 import { createClient } from "@/lib/supabase";
+import { LIMITS } from "@/lib/premium";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 
 /**
@@ -259,13 +260,9 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
           <p className="mt-2 text-xs text-emerald-100/80">
             {usageLoading && !usage
               ? "Carregando uso de IA…"
-              : usage
-                ? usage.premium
-                  ? "✨ Premium — roteiros com IA ilimitados"
-                  : `${usage.roteiros.used}/${usage.roteiros.limit} roteiros gratuitos hoje`
-                : usageSynced
-                  ? null
-                  : "Carregando uso de IA…"}
+              : usage?.premium
+                ? "✨ Premium — roteiros com IA ilimitados"
+                : `${usage?.roteiros?.used ?? 0}/${usage?.roteiros?.limit ?? LIMITS.roteiro} roteiros gratuitos hoje`}
           </p>
         )}
         {roteiroLimiteDiarioAtingido && (

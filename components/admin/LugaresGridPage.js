@@ -272,6 +272,10 @@ export default function LugaresGridPage() {
       fetchDestaquesVigentes(supabase),
     ]);
 
+    if (lugaresRes.error) {
+      console.error("[admin lugares]", lugaresRes.error.message);
+    }
+
     const ids = buildParceiroIdSet(destaquesVigentes);
     setParceiroIds(ids);
     setLugares(lugaresRes.data ?? []);
