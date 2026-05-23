@@ -6,7 +6,10 @@ import { useEffect, useMemo, useState } from "react";
 import IconBack from "@/components/IconBack";
 import PlaceCard from "@/components/PlaceCard";
 import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
+import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
 import UserErrorAlert from "@/components/UserErrorAlert";
+import { fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
+import { isSupabasePublicConfigured } from "@/lib/supabase/publicEnv";
 import { buildReportContext } from "@/lib/reportContext";
 import { createClient } from "@/lib/supabase";
 import { withDistanciaDinamica } from "@/lib/localizacao";
@@ -43,23 +46,30 @@ export default function CategoriaPage() {
   useEffect(() => {
     if (!categoria) return;
 
+    if (!isSupabasePublicConfigured()) {
+      setFetchError(true);
+      setLoading(false);
+      return undefined;
+    }
+
     const supabase = createClient();
 
-    supabase
-      .from("lugares")
-      .select("*, localizacoes(*), lugares_tags(tags(*))")
-      .eq("categoria", categoria)
-      .eq("status", "ativo")
-      .then(({ data, error }) => {
-        if (error) {
-          setFetchError(true);
-          setLugares([]);
-        } else {
-          setFetchError(false);
-          setLugares(data ?? []);
-        }
+    fetchLugaresFromApi({ categoria, limit: 100 })
+      .then((data) => {
+        setFetchError(false);
+        setLugares(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("[categoria] lugares:", err);
+        setFetchError(true);
+        setLugares([]);
         setLoading(false);
       });
+
+    if (!supabase) {
+      return undefined;
+    }
 
     supabase
       .from("subcategorias")
@@ -122,6 +132,8 @@ export default function CategoriaPage() {
             </p>
           </div>
         </header>
+
+        <SupabaseConfigAlert />
 
         {fetchError && (
           <UserErrorAlert

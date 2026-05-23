@@ -100,7 +100,20 @@ ANTHROPIC_MODEL=claude-sonnet-4-5
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIza...
 ```
 
-After changing env vars in Vercel, **redeploy** (or trigger a new deployment) so serverless functions pick up new values.
+After changing env vars in Vercel, **redeploy** (or trigger a new deployment) so serverless functions and the client bundle pick up new values.
+
+**Symptom:** home / Explorar show no places, empty sections, or an amber “Supabase não configurado no deploy” banner.
+
+**Cause:** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` were missing at **build time** (the production JS bundle will not contain your project URL).
+
+**Fix:**
+
+1. Vercel → Project → **Settings** → **Environment Variables**
+2. Add both variables for **Production** and **Preview** (values from Supabase → Settings → API Keys; use **anon** / **publishable**, not `service_role`)
+3. **Deployments** → Redeploy latest (or push a new commit)
+4. Optional: run `supabase/lugares_public_read.sql` in the SQL Editor if anon reads return permission errors
+
+The production build fails on Vercel if these variables are absent (`next.config.mjs` guard).
 
 ---
 

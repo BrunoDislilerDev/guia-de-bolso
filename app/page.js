@@ -12,7 +12,9 @@ import HomeContextHeader from "@/components/home/HomeContextHeader";
 import OQueFazerAgora from "@/components/home/OQueFazerAgora";
 import ParceirosCarrossel from "@/components/home/ParceirosCarrossel";
 import PertoDeVoce from "@/components/home/PertoDeVoce";
+import HomeCategoriasSection from "@/components/home/HomeCategoriasSection";
 import PlanosRapidos from "@/components/home/PlanosRapidos";
+import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
 import SearchBrowsePanel from "@/components/home/SearchBrowsePanel";
 import SearchResultsPanel from "@/components/home/SearchResultsPanel";
 import SearchStatusFilter from "@/components/home/SearchStatusFilter";
@@ -30,10 +32,11 @@ import {
 import {
   buildParceiroIdSet,
   enrichLugaresComParceiro,
-  fetchDestaquesVigentes,
   lugaresFromDestaquesVigentes,
 } from "@/lib/destaques";
+import { fetchDestaquesFromApi, fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
 import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
+import { isSupabasePublicConfigured } from "@/lib/supabase/publicEnv";
 import { getLugaresVisitados } from "@/lib/lugaresVisitados";
 import { withDistanciaDinamica } from "@/lib/localizacao";
 import { ensurePerfil } from "@/lib/ensurePerfil";
@@ -44,8 +47,6 @@ import { registrarLog } from "@/lib/logs";
 
 /** Timeout de segurança se `getSession`/`getUser` não responder (ex.: OAuth no tablet). */
 const AUTH_RESOLVE_TIMEOUT_MS = 8000;
-
-const LUGAR_SELECT = "*, localizacoes(*), lugares_tags(tags(*))";
 
 /**
  * First letter of the user's display name for the avatar fallback.
@@ -67,15 +68,7 @@ function getUserInitial(user) {
  * @returns {Promise<object[]>} Active places.
  */
 async function fetchLugaresAtivos(limit = 50) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("lugares")
-    .select(LUGAR_SELECT)
-    .eq("status", "ativo")
-    .limit(limit);
-
-  if (error) throw error;
-  return data ?? [];
+  return fetchLugaresFromApi({ limit });
 }
 
 /**
@@ -84,16 +77,9 @@ async function fetchLugaresAtivos(limit = 50) {
  * @returns {Promise<object[]>}
  */
 async function fetchLugaresProximos(excludeIds = []) {
-  const supabase = createClient();
   const exclude = new Set(excludeIds.map(String));
-  const { data, error } = await supabase
-    .from("lugares")
-    .select(LUGAR_SELECT)
-    .eq("status", "ativo")
-    .limit(20);
-
-  if (error) throw error;
-  return (data ?? []).filter((l) => !exclude.has(String(l.id))).slice(0, 6);
+  const data = await fetchLugaresFromApi({ limit: 20 });
+  return data.filter((l) => !exclude.has(String(l.id))).slice(0, 6);
 }
 
 
@@ -222,7 +208,17 @@ function Home() {
   }, []);
 
   useEffect(() => {
+    if (!isSupabasePublicConfigured()) {
+      setAuthLoading(false);
+      return undefined;
+    }
+
     const supabase = createClient();
+    if (!supabase) {
+      setAuthLoading(false);
+      return undefined;
+    }
+
     let accessLogged = false;
 
     function applySession(sessionUser) {
@@ -276,14 +272,19 @@ function Home() {
   useEffect(() => {
     let cancelled = false;
     setHomeLoading(true);
-    const supabase = createClient();
+
+    if (!isSupabasePublicConfigured()) {
+      setSectionErrors((prev) => ({ ...prev, hero: true, emAlta: true, perto: true }));
+      setHomeLoading(false);
+      return undefined;
+    }
 
     async function loadPrimary() {
       try {
         const [ativosResult, popularesResult, destaquesResult] = await Promise.allSettled([
           fetchLugaresAtivos(),
-          fetchLugaresPopulares(supabase, 8),
-          fetchDestaquesVigentes(supabase),
+          fetchLugaresPopulares(null, 8),
+          fetchDestaquesFromApi(),
         ]);
 
         if (cancelled) return;
@@ -325,7 +326,7 @@ function Home() {
           setSectionErrors((prev) => ({ ...prev, hero: true, emAlta: true }));
         }
       } finally {
-        if (!cancelled) setHomeLoading(false);
+        setHomeLoading(false);
       }
     }
 
@@ -417,8 +418,9 @@ function Home() {
   }, [searchMode]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isSupabasePublicConfigured()) return;
     const supabase = createClient();
+    if (!supabase) return;
     supabase
       .from("favoritos")
       .select("lugar_id")
@@ -441,6 +443,7 @@ function Home() {
     }
 
     const supabase = createClient();
+    if (!supabase) return;
     const lugarId = String(lugar.id);
     const jaFavorito = favoritos.includes(lugarId);
 
@@ -680,6 +683,8 @@ function Home() {
           getUserInitial={getUserInitial}
         />
 
+        <SupabaseConfigAlert />
+
         {!homeLoading && sectionErrors.clima && (
           <p className="mb-4 text-center text-sm text-[#5a6b66]">
             Conteúdo indisponível no momento
@@ -787,6 +792,10 @@ function Home() {
               ) : (
                 <EmAltaHoje lugares={emAltaExibidos} />
               )}
+              <HomeCategoriasSection
+                lugaresAtivos={lugaresAtivos}
+                userPosition={userPosition}
+              />
               <PlanosRapidos onPlanoClick={handlePlanoClick} />
               {sectionErrors.perto ? (
                 <SectionUnavailable title="Perto de você" />

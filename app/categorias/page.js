@@ -7,13 +7,15 @@ import ExplorarBuscaBar from "@/components/explorar/ExplorarBuscaBar";
 import ExplorarCategoriaCard from "@/components/explorar/ExplorarCategoriaCard";
 import ExplorarDestaqueCard from "@/components/explorar/ExplorarDestaqueCard";
 import ExplorarSkeleton from "@/components/explorar/ExplorarSkeleton";
+import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
+import { isSupabasePublicConfigured } from "@/lib/supabase/publicEnv";
 import {
   CATEGORIAS_EXPLORE,
   getCategoriasEmDestaque,
   sortCategoriasPorContagem,
 } from "@/lib/categorias";
 import { getCapaFromLugar } from "@/lib/fotos";
-import { createClient } from "@/lib/supabase";
+import { fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
 
 /**
  * Tela Explorar — descoberta por categorias, intenções e busca IA.
@@ -25,13 +27,13 @@ export default function CategoriasPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
+    if (!isSupabasePublicConfigured()) {
+      setLoading(false);
+      return undefined;
+    }
 
-    supabase
-      .from("lugares")
-      .select("categoria, imagem_url, fotos")
-      .eq("status", "ativo")
-      .then(({ data }) => {
+    fetchLugaresFromApi({ limit: 100 })
+      .then((data) => {
         const totals = {};
         const imagens = {};
 
@@ -49,7 +51,15 @@ export default function CategoriasPage() {
         setCounts(totals);
         setCapas(imagens);
         setLoading(false);
+      })
+      .catch((err) => {
+        console.error("[Explorar] lugares:", err);
+        setCounts({});
+        setCapas({});
+        setLoading(false);
       });
+
+    return undefined;
   }, []);
 
   const totalLugares = useMemo(
@@ -91,6 +101,7 @@ export default function CategoriasPage() {
       </header>
 
       <main className="mx-auto max-w-md px-4 pb-32 pt-5">
+        <SupabaseConfigAlert />
         {loading ? (
           <ExplorarSkeleton />
         ) : (
