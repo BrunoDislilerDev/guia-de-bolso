@@ -24,7 +24,6 @@ import { getNetworkErrorMessage, mapApiErrorResponse } from "@/lib/userMessages"
 import { fetchClimaApis } from "@/lib/clima";
 import {
   IMBITUBA_COORDS,
-  getFraseContextual,
   pickHeroLugar,
   sortLugaresPorDistancia,
 } from "@/lib/homeContext";
@@ -115,10 +114,9 @@ function Home() {
   const [lugaresProximos, setLugaresProximos] = useState([]);
   const [parceiroIds, setParceiroIds] = useState(() => new Set());
   const [lugaresParceiros, setLugaresParceiros] = useState([]);
-  const [contextualPhrase, setContextualPhrase] = useState(
-    "Descubra o melhor da região agora"
-  );
   const [temperaturaClima, setTemperaturaClima] = useState(null);
+  const [climaEmoji, setClimaEmoji] = useState(null);
+  const [climaCondition, setClimaCondition] = useState(null);
   const [homeLoading, setHomeLoading] = useState(true);
   const [pertoLoading, setPertoLoading] = useState(true);
   const [sectionErrors, setSectionErrors] = useState({
@@ -363,12 +361,15 @@ function Home() {
         }
 
         if (climaResult.status === "fulfilled") {
-          setContextualPhrase(getFraseContextual(climaResult.value));
           const temp = Number(climaResult.value?.temperature);
           setTemperaturaClima(Number.isFinite(temp) ? temp : null);
+          setClimaEmoji(climaResult.value?.weatherEmoji ?? null);
+          setClimaCondition(climaResult.value?.condition ?? null);
           setSectionErrors((prev) => ({ ...prev, clima: false }));
         } else {
           setTemperaturaClima(null);
+          setClimaEmoji(null);
+          setClimaCondition(null);
           setSectionErrors((prev) => ({ ...prev, clima: true }));
         }
       } finally {
@@ -678,17 +679,15 @@ function Home() {
         <HomeContextHeader
           user={user}
           avatarUrl={avatarUrl}
-          contextualPhrase={contextualPhrase}
+          temperatura={temperaturaClima}
+          weatherEmoji={climaEmoji}
+          weatherCondition={climaCondition}
+          climaLoading={!homeLoading && pertoLoading}
+          climaErro={!homeLoading && sectionErrors.clima}
           getUserInitial={getUserInitial}
         />
 
         <SupabaseConfigAlert />
-
-        {!homeLoading && sectionErrors.clima && (
-          <p className="mb-4 text-center text-sm text-[#5a6b66]">
-            Conteúdo indisponível no momento
-          </p>
-        )}
 
         <SmartSearch
           searchContainerRef={searchContainerRef}
