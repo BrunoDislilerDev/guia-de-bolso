@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import EnderecoAutocomplete from "@/components/EnderecoAutocomplete";
 import HorarioEditor from "@/components/admin/HorarioEditor";
+import LugarQrSection from "@/components/admin/LugarQrSection";
 import PhotoUploader from "@/components/admin/PhotoUploader";
 import { getInitialPhotoItems } from "@/lib/fotos";
 import {
@@ -24,6 +25,14 @@ import {
   filterTagsByCategoria,
   getTagIds,
 } from "@/lib/tags";
+import { isLugarElegivelQr } from "@/lib/lugarQr";
+import {
+  fetchTakenSlugs,
+  isMissingSlugColumnError,
+  isSlugAutoFromNome,
+  resolveLugarSlug,
+  slugifyNome,
+} from "@/lib/slug";
 
 const emptyHorario = {
   dom: "fechado",
@@ -125,6 +134,7 @@ export default function LocalForm({
   const [tagLimitMessage, setTagLimitMessage] = useState("");
   const [photoItems, setPhotoItems] = useState(() => getInitialPhotoItems(initialData));
   const [photoError, setPhotoError] = useState("");
+  const [slugColumnReady, setSlugColumnReady] = useState(true);
   const { destaque: _destaqueLegado, ...initialSemDestaque } = initialData ?? {};
 
   const [form, setForm] = useState({
@@ -134,6 +144,8 @@ export default function LocalForm({
     telefone: formatTelefone(initialData?.telefone),
     mostrar_endereco: initialData?.mostrar_endereco ?? true,
     mostrar_horarios: initialData?.mostrar_horarios ?? true,
+    slug: initialData?.slug || "",
+    slug_auto: isSlugAutoFromNome(initialData?.slug, initialData?.nome),
   });
 
   useEffect(() => {
@@ -144,7 +156,9 @@ export default function LocalForm({
       .select("*")
       .order("nome")
       .then(({ data }) => setTags(data ?? []));
-  }, []);
+
+    fetchTakenSlugs(supabase, editingId).then(({ ready }) => setSlugColumnReady(ready));
+  }, [editingId]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -236,10 +250,32 @@ export default function LocalForm({
       fotos: _fotos,
       endereco: _endereco,
       destaque: _destaqueCampo,
+      slug: _slugField,
+      slug_auto: _slugAuto,
       ...formFields
     } = form;
+
+    const { taken: takenSlugs, ready: slugReady } = await fetchTakenSlugs(
+      supabase,
+      editingId
+    );
+    setSlugColumnReady(slugReady);
+
+    const slugValue =
+      slugReady && isLugarElegivelQr(form)
+        ? resolveLugarSlug({
+            nome: form.nome,
+            slugManual: form.slug,
+            slugAuto: form.slug_auto,
+            lugarId: editingId,
+            takenSlugs,
+            currentSlug: initialData?.slug || null,
+          })
+        : null;
+
     const payload = {
       ...formFields,
+      ...(slugReady ? { slug: slugValue } : {}),
       mostrar_endereco: Boolean(form.mostrar_endereco),
       mostrar_horarios: Boolean(form.mostrar_horarios),
       horarios: form.horarios,
@@ -264,9 +300,14 @@ export default function LocalForm({
       if (!lugarId) throw new Error("Não foi possível salvar o local.");
     } catch (error) {
       console.error(error);
+      const message = error?.message || "";
       setPhotoError(
-        error?.message ||
-          "Não foi possível salvar o local. Se o erro citar colunas mostrar_endereco ou mostrar_horarios, rode supabase/lugares_visibilidade.sql no SQL Editor."
+        isMissingSlugColumnError(error)
+          ? "Coluna slug ainda não existe no banco. Rode supabase/lugares_qr_slug.sql no SQL Editor do Supabase e tente de novo."
+          : message.includes("lugares_slug_unique_idx") || message.includes("duplicate key")
+            ? "Este slug já está em uso. Escolha outro slug ou altere o nome."
+            : message ||
+                "Não foi possível salvar o local. Se o erro citar colunas mostrar_endereco, mostrar_horarios ou slug, rode as migrations em supabase/."
       );
       setSaving(false);
       return;
@@ -349,14 +390,35 @@ export default function LocalForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-5 shadow-sm">
+    <>
+      <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-5 shadow-sm">
       <div className="grid gap-4 md:grid-cols-2">
-        <Input label="Nome" value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
+        <Input label="Nome" value={form.nome || ""} onChange={(e) => {
+          const nome = e.target.value;
+          setForm((current) => {
+            const next = { ...current, nome };
+            if (current.slug_auto && isLugarElegivelQr(next)) {
+              next.slug = slugifyNome(nome);
+            }
+            return next;
+          });
+        }} required />
         <label className="block text-sm font-semibold text-[#1a2e28]">
           Categoria
           <select
             value={form.categoria}
-            onChange={(e) => setForm({ ...form, categoria: e.target.value, subcategoria: "" })}
+            onChange={(e) => {
+              const categoria = e.target.value;
+              setForm((current) => ({
+                ...current,
+                categoria,
+                subcategoria: "",
+                slug: isLugarElegivelQr({ categoria })
+                  ? slugifyNome(current.nome)
+                  : "",
+                slug_auto: true,
+              }));
+            }}
             className="mt-1 w-full rounded-xl bg-[#f0f4f3] px-3 py-2 text-sm font-normal outline-none"
           >
             {categorias.map((cat) => <option key={cat}>{cat}</option>)}
@@ -398,6 +460,38 @@ export default function LocalForm({
         <Input label="Cardápio URL" value={form.cardapio_url || ""} onChange={(e) => setForm({ ...form, cardapio_url: e.target.value })} />
         <Input label="Site URL" value={form.site_url || ""} onChange={(e) => setForm({ ...form, site_url: e.target.value })} />
       </div>
+
+      {!slugColumnReady && isLugarElegivelQr(form) && (
+        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          QR Code e slug ainda não estão ativos neste banco. Rode o arquivo{" "}
+          <code className="rounded bg-white px-1 py-0.5 text-xs">supabase/lugares_qr_slug.sql</code>{" "}
+          no SQL Editor do Supabase. Você pode salvar o local normalmente até lá.
+        </p>
+      )}
+
+      {slugColumnReady && isLugarElegivelQr(form) && (
+        <div className="mt-4">
+          <label className="block text-sm font-semibold text-[#1a2e28]">
+            Slug (URL curta)
+            <input
+              value={form.slug || ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  slug: e.target.value,
+                  slug_auto: false,
+                })
+              }
+              placeholder={slugifyNome(form.nome) || "bar-do-ze"}
+              className="mt-1 w-full rounded-xl bg-[#f0f4f3] px-3 py-2 font-mono text-sm font-normal outline-none ring-[#1a4a3a]/20 focus:ring-2"
+            />
+          </label>
+          <p className="mt-1 text-xs text-[#5a6b66]">
+            Link público: /q/{form.slug || slugifyNome(form.nome) || "…"}
+            {form.slug_auto ? " · gerado automaticamente do nome" : " · editado manualmente"}
+          </p>
+        </div>
+      )}
 
       <p className="mt-4 rounded-xl bg-[#eef8f4] px-3 py-2 text-xs text-[#5a6b66]">
         Destaque comercial (carrossel e perfil completo no app) é gerenciado em{" "}
@@ -514,5 +608,19 @@ export default function LocalForm({
         {saving ? "Salvando..." : "Salvar local"}
       </button>
     </form>
+
+    {editingId && isLugarElegivelQr(form) && (
+      <LugarQrSection
+        slugColumnReady={slugColumnReady}
+        lugar={{
+          id: editingId,
+          nome: form.nome,
+          categoria: form.categoria,
+          slug: form.slug || initialData?.slug,
+          status: form.status,
+        }}
+      />
+    )}
+    </>
   );
 }

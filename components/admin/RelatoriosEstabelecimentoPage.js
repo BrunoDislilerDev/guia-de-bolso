@@ -7,6 +7,7 @@ import {
   IconEye,
   IconHeart,
   IconNavigation,
+  IconQr,
   IconStar,
 } from "@/components/admin/dashboardIcons";
 import {
@@ -226,6 +227,14 @@ export default function RelatoriosEstabelecimentoPage() {
               icon={IconEye}
               iconWrap="bg-sky-50"
               iconColor="text-sky-700"
+            />
+            <DashboardMetricCard
+              label="Escaneamentos QR"
+              value={relatorio.qrScans.value}
+              variation={relatorio.qrScans.variation}
+              icon={IconQr}
+              iconWrap="bg-teal-50"
+              iconColor="text-teal-800"
             />
             <DashboardMetricCard
               label="IR AGORA"

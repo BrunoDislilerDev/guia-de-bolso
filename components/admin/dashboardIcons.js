@@ -67,6 +67,14 @@ export function IconEye({ className = "h-6 w-6" }) {
   );
 }
 
+export function IconQr({ className = "h-6 w-6" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h2v2h-2v-2zm-4 0h2v2h-2v-2zm4 4h2v2h-2v-2zm-4 0h2v2h-2v-2zm4 4h2v2h-2v-2zm-4 0h2v2h-2v-2zM13 13h2v2h-2v-2zm2 4h2v2h-2v-2zm2-2h2v2h-2v-2zm2 2h2v6h-2v-6zm-4 4h2v2h-2v-2z" />
+    </svg>
+  );
+}
+
 export function IconHeart({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
