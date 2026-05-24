@@ -324,7 +324,12 @@ guia-de-bolso/
 - [x] Roteiro IA com timeline (`lib/roteiroParse.js`, `RoteiroItineraryView`)
 - [x] Compressão de imagem no cliente (`lib/imageCompress.js`) para avatar e fotos admin
 - [x] Sistema de avaliações com moderação
-- [x] Editor de horários com time picker (toggles Fechado/24h)
+- [x] Editor de horários com time picker (Fechado/24h, **dois turnos por dia**, fechamento após meia-noite, copiar entre dias — `HorarioEditor`, `lib/horarios.js`)
+- [x] Testes unitários de horários (`lib/horarios.test.js`) e premium (`lib/premium.test.js`)
+- [x] Carrossel de fotos menos sensível a swipes acidentais (`lib/horizontalCarousel.js`, `LugarHero`, `RotaGaleria`)
+- [x] Exclusão persistente de roteiros salvos (`DELETE /api/roteiro/[id]`, `supabase/roteiros_policies.sql`)
+- [x] Tags admin: até **5** por local e rota (antes 3)
+- [x] Onboarding com imagens locais (`/public/onboarding/`) e fluxo guest → login
 - [x] Página de categorias (`/categorias`)
 - [x] Novas categorias: Cultura, Aventura, Bem-estar, Compras
 - [x] Tabela perfis com roles (user/admin)

@@ -114,6 +114,8 @@ Core content: beaches, restaurants, trails, services, etc.
 | `media_avaliacoes` | `numeric` | *(optional alias)* — same client read path as `rating_medio` |
 | `created_at` | `timestamptz` | |
 
+**`horarios` runtime:** parsed in `lib/horarios.js` (`parseHorarioDia`, `getStatusFuncionamento`, overnight carry-over, `America/Sao_Paulo`). Tests: `node lib/horarios.test.js`.
+
 Until an aggregate column or view exists, cards omit the rating chip; detail page still loads approved `avaliacoes` for the full list.
 
 ---

@@ -301,6 +301,7 @@ Decide to go now, contact the business, or navigate.
 - Inactive or missing id → “Lugar não encontrado”.
 - Supabase error loading place → full-page `UserErrorAlert` with “Tentar novamente” (`router.refresh()`) and report hint.
 - No photos → placeholder/gradient from `getCapaFromLugar`; hero uses `next/image` with descriptive `alt` (place name).
+- Photo carousel uses `lib/horizontalCarousel.js` (`snap-proximity`) to reduce accidental swipes between photos.
 - No hours configured or `mostrar_horarios=false` → no compact hours row.
 - No address or `mostrar_endereco=false` → no location card.
 - Climate widget hidden if API fails (no error banner; section omitted).
@@ -496,6 +497,7 @@ Get a custom day-by-day plan for the region.
 2. Submit → `POST /api/roteiro` → `lib/roteiroParse.js` builds day/period/stop timeline → `RoteiroItineraryView` (accordion); footer **Salvar** fixed on scroll.
 3. “Salvar” → `POST /api/roteiro/salvar` → list on `/rotas`.
 4. Saved list → tap → `RoteiroViewModal` with the same timeline UI (`components/rotas/RoteiroSection.js`).
+5. Delete saved item → `DELETE /api/roteiro/[id]` (server verifies row removed; requires `supabase/roteiros_policies.sql` on Supabase).
 
 **Edge cases**
 - Parser drops empty period blocks; stops link to catalog names when `lugaresCatalog` from API matches.
@@ -554,18 +556,27 @@ Understand how far places are from current position.
 ## 25. Opening hours & open/now status
 
 **Description**  
-Weekly `horarios` json on each place; real-time open/closed for establishments and AI filters.
+Weekly `horarios` json on each place; real-time open/closed for establishments and AI filters. Supports **multiple shifts per day** (comma-separated) and **overnight closing** (e.g. `18:30-00:00`, `18:00-04:00` when close time ≤ open time = next calendar day).
 
 **User goal**  
-Know if a business is open before going.
+Know if a business is open before going — including lunch/dinner splits and bars open past midnight.
 
 **Main flows**
-1. Detail shows badge + compact summary → tap → full week sheet.
-2. AI search and filters use same parser (`America/Sao_Paulo`).
+1. Detail shows badge + compact summary (`getHorarioResumo` / `status.resumo`) → tap → full week sheet (`formatHorario` shows multi-shift and “dia seguinte” labels).
+2. AI search and filters use same parser (`America/Sao_Paulo`, `lib/busca.js` → `abertoAgora`).
+3. Admin `HorarioEditor`: per-day **Fechado** / **24h** / one or **two shifts**; copy Monday → Tue–Fri or custom day checkboxes; draft state while fixing validation errors.
+
+**Status messages (examples)**
+- Open in shift: “Aberto · fecha às 15:00” or “Fecha à meia-noite”.
+- Pause between shifts: “Abre mais tarde às 18:00”.
+- Overnight carry-over (e.g. `22:00-04:00`): open until 04:00 next morning; “Fecha às 04:00”.
+- After last shift: “Fechado hoje”.
 
 **Edge cases**
 - Public nature spots may hide hours UI entirely (`isLugarEstabelecimento`).
-- `fechado`, `24h`, and split ranges supported; malformed json → safe “closed”/unknown.
+- Values: `fechado`, `24h`, single interval, comma-separated intervals, overnight interval; malformed json → safe “closed”/unknown.
+- At most **one overnight shift per day**; cannot combine overnight with a second diurnal shift that overlaps (admin shows inline error).
+- `00:00` close = end at midnight (no carry-over into early morning); `04:00` close = carry-over until 04:00.
 - Establishment CTA copy changes when closed (“Como chegar” vs “Ir agora”).
 
 ---
@@ -666,8 +677,8 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Area | Description | User goal (operator) |
 |------|-------------|----------------------|
 | Dashboard (`/admin`) | Hero greeting + operational summary; KPI cards (pending reviews, active places, live partners, new users, IR AGORA in period, places in review); work queue with approve/reject; operational shortcuts; activity timeline; week/month period toggle | Monitor health and clear the moderation queue |
-| Locais (`/admin/locais`) | CRUD, photos, hours, tags, address autocomplete, `mostrar_endereco` / `mostrar_horarios` toggles | Keep catalog accurate |
-| Rotas | CRUD, steps, featured flag | Publish trails |
+| Locais (`/admin/locais`) | CRUD, photos, hours (`HorarioEditor`: 2 shifts/day, overnight, copy between days), tags (max **5**), address autocomplete, `mostrar_endereco` / `mostrar_horarios` toggles | Keep catalog accurate |
+| Rotas | CRUD, steps, featured flag; tags max **5** per route | Publish trails |
 | Avaliações | Approve/reject pending; deep links from alerts (`?tab=`) | Moderate UGC |
 | Destaques | Single commercial plan (Parceiro); vigência dates; `?status=expirando` \| `expirado` | Run paid highlights |
 | Usuários | Roles, Premium IA status, engagement sheet; link to user logs | Access control |

@@ -586,6 +586,12 @@ const items = [
   }),
   mk("l-10", "L", "Fotos e toggles endereço/horários", { route: "/admin/locais", roles: ["admin"], expected: "Upload e toggles salvam.", tags: ["admin"] }),
   mk("l-11", "L", "Tags máx 5 e subcategoria", { route: "/admin/locais", roles: ["admin"], expected: "Limite 5 tags; subcategoria OK.", tags: ["admin"] }),
+  mk("l-12", "L", "Horários dois turnos e noturno", {
+    route: "/admin/locais",
+    roles: ["admin"],
+    expected: "11-15 + 18-04 salva; status aberto/fechado correto no detalhe e busca abertos.",
+    tags: ["admin", "horarios"],
+  }),
   mk("l-12", "L", "Rotas admin CRUD completo", { route: "/admin/rotas", roles: ["admin"], expected: "Tipo tags pontos mapa destaque.", tags: ["admin"] }),
   mk("l-13", "L", "Avaliações pendentes e badge IA", { route: "/admin/avaliacoes", roles: ["admin"], expected: "Fila pendentes com sugestão IA.", tags: ["admin"] }),
   mk("l-14", "L", "Aprovar público / rejeitar oculto", { route: "/admin/avaliacoes", roles: ["admin"], expected: "Aprovada no app; rejeitada oculta.", tags: ["admin"] }),

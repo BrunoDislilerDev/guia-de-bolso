@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-24T01:14:15.794Z",
+  "generatedAt": "2026-05-24T01:52:52.079Z",
   "sections": [
     {
       "id": "A",
@@ -3936,6 +3936,35 @@
         ]
       },
       "expected": "Limite 5 tags; subcategoria OK.",
+      "warnings": []
+    },
+    {
+      "id": "l-12",
+      "sectionId": "L",
+      "title": "Horários dois turnos e noturno",
+      "route": "/admin/locais",
+      "roles": [
+        "admin"
+      ],
+      "tags": [
+        "admin",
+        "horarios"
+      ],
+      "steps": {
+        "mobile": [
+          "Abra o app no celular (~390px).",
+          "Horários dois turnos e noturno"
+        ],
+        "desktop": [
+          "No desktop, use janela ~390px ou DevTools iPhone.",
+          "Horários dois turnos e noturno"
+        ],
+        "tablet": [
+          "No tablet (~768px) ou iPad; layout mobile centralizado.",
+          "Horários dois turnos e noturno"
+        ]
+      },
+      "expected": "11-15 + 18-04 salva; status aberto/fechado correto no detalhe e busca abertos.",
       "warnings": []
     },
     {

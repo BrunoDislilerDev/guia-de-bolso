@@ -4,7 +4,7 @@ Checklist para QA manual (celular ~390px, tablet e desktop). Complementa [Featur
 
 ## Checklist interativo (recomendado)
 
-Use a ferramenta com **145 casos de teste**, passo a passo por dispositivo, resultado esperado, avisos e botões **Passou / Falhou / Resetar**:
+Use a ferramenta com **153 casos de teste**, passo a passo por dispositivo, resultado esperado, avisos e botões **Passou / Falhou / Resetar**:
 
 **[Abrir checklist interativo](/checklist-testes.html)**  
 (produção: `https://guia-de-bolso-puce.vercel.app/checklist-testes.html` · local: `http://localhost:3000/checklist-testes.html`)
@@ -27,7 +27,7 @@ Use a ferramenta com **145 casos de teste**, passo a passo por dispositivo, resu
 | Ver lugar | Cards → `/lugares/[id]` | Nenhuma |
 | Favoritar | Coração home/detalhe, `/favoritos` | Login |
 | Avaliar | Detalhe → `AvaliacaoForm` | Login; moderação admin |
-| Roteiro IA | `/rotas` → Criar roteiro | Login + limite 2/dia (free) |
+| Roteiro IA | `/rotas` → Criar roteiro | Login + limite 2/dia (free); excluir salvo via `DELETE /api/roteiro/[id]` |
 | Rotas curadas | `/rotas`, `/rotas/[id]` | Nenhuma (só listagem) |
 | Clima | Hero home; `LugarClimaWidget` no detalhe | Sheet completo = login |
 | Perfil | `/perfil`, `/perfil/editar` | Stats só logado |
@@ -50,7 +50,7 @@ Use a ferramenta com **145 casos de teste**, passo a passo por dispositivo, resu
 | I | Rotas e roteiro IA | 13 |
 | J | Perfil | 9 |
 | K | Casos extremos | 8 |
-| L | Admin | 26 |
+| L | Admin | 27 |
 | N | Feedback e erros PT | 5 |
 | M | Smoke pós-release | 6 |
 

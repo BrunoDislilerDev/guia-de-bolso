@@ -256,7 +256,8 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `premium.js` | Shared | Daily limits, `getUsageDayKey()`, `isSameUsageDay()`, `normalizeUsageFromPerfil`, `isDailyBuscaLimitReached` |
 | `premiumServer.js` | Server | `getAuthUser`, `checkBuscaAccess`, RPC increment wrappers |
 | `busca.js` | Shared | Open/closed filter, compact summaries for Claude |
-| `horarios.js` | Shared | Brazil timezone hours, `getStatusFuncionamento` (optional `mostrar_horarios` for badge UI), `horariosTemCadastro` |
+| `horarios.js` | Shared | Brazil timezone hours: `parseHorarioDia`, `validarIntervalos`, `getStatusFuncionamento` (multi-shift + overnight carry-over, optional `mostrar_horarios` for badges, optional `referencia` for tests), `horariosTemCadastro`; tests in `lib/horarios.test.js` |
+| `horizontalCarousel.js` | Client | Shared horizontal snap helpers for place/route photo carousels (`LugarHero`, `RotaGaleria`) |
 | `localizacao.js` | Shared | Haversine distance, `withDistanciaDinamica` |
 | `logs.js` | Shared | Insert into `logs` for analytics |
 | `storageUpload.js` | Client | Admin photo upload to Storage (uses `imageCompress.js` when over 200KB) |
@@ -268,7 +269,7 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `clima.js` | Shared | Open-Meteo weather/marine; `fetchClimaApisCached`, `lugarExibeClima`; home header + hero temp + `LugarClimaWidget` |
 | `fotos.js` / `photoItems.js` | Shared | Cover URL helpers for places and routes |
 | `tags.js` | Shared | Tag chips from `lugares_tags` / `rotas_tags` joins |
-| `rotas.js` | Shared | Fixed route type catalog (`CATEGORIAS_ROTA`) |
+| `rotas.js` | Shared | Fixed route type catalog (`CATEGORIAS_ROTA`); `MAX_TAGS_ROTA` = 5 |
 | `adminRoles.js` | Shared | `canAccessAdmin`, role chips, `user` → `usuario` normalization |
 | `adminDashboard.js` | Client | Dashboard KPI counts, period variation, hero summary (`buildResumoOperacional`) |
 | `adminLogs.js` | Client | Admin log filters, pagination, badges (`getLogAcaoBadgeAdmin`) |

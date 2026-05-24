@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Multi-shift & overnight opening hours** — `lugares.horarios` supports comma-separated daily intervals (`11:00-15:00,18:00-23:00`) and overnight closes (`18:30-00:00`, `22:00-04:00` when `fim <= inicio`); `lib/horarios.js` (`parseHorarioDia`, `getStatusFuncionamento`, carry-over across midnight); admin `HorarioEditor` (two shifts per day, copy between weekdays); unit tests `lib/horarios.test.js`.
 - **Admin establishment reports** (`/admin/relatorios`) — filter by active place and period; KPI cards (views, IR AGORA, favorites, approved reviews) with % vs previous period; review list; copy WhatsApp summary; PDF export (`lib/adminRelatorios.js`, `lib/relatorioPdf.js`, `components/admin/RelatoriosEstabelecimentoPage.js`).
 - **Place view logging** — `visualizou_lugar` on place detail for logged-in users (`app/lugares/[id]/page.js`, `lib/logs.js`); counted in establishment reports alongside legacy `acesso_app` with `detalhes.lugar_id`.
 - **AI roteiro timeline UI** — `lib/roteiroParse.js` parses strict markdown into days/periods/stops; `RoteiroItineraryView` accordion timeline in `RoteiroBottomSheet` and `RoteiroViewModal` (`components/rotas/RoteiroSection.js`).
@@ -15,14 +16,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **Admin tag limit** — places and curated routes allow **5 tags** (was 3) in `LocalForm` / `RotaForm` (`MAX_TAGS`, `MAX_TAGS_ROTA` in `lib/rotas.js`).
+- **Onboarding assets** — backgrounds from `/public/onboarding/*.jpg` (compressed local JPGs); guest finish/skip routes to `/login?from=onboarding`, logged-in users to home (`components/Onboarding.js`, `app/page.js`, `lib/authImagery.js`).
+- **Place & route photo carousels** — less accidental horizontal swipes via `lib/horizontalCarousel.js` (`snap-proximity`, index on `scrollend`); used in `LugarHero`, `RotaGaleria`.
+- **Opening-hours UX** — status copy includes pause between shifts and overnight close (`status.resumo`); compact row on detail; optional `title`/subtitle on cards (`PlaceCard`, `EmAltaCard`, `LugarHero`, `getHorarioResumo` in `lib/lugarDetalhe.js`).
 - **Home header** — `HomeContextHeader` shows brand + location with inline Open-Meteo temperature/emoji; contextual phrase card removed.
 - **Hero selection** — `pickHeroLugar` (`lib/homeContext.js`) scores open status, vigent partner, trending IDs, time-of-day category, and distance; documented in `docs/features.md`.
 - **AI roteiro API** — stricter markdown prompt, `max_tokens` 2400, response includes `lugaresCatalog` for UI linking (`app/api/roteiro/route.js`).
 - **Favoritos / Explorar / Perfil** — UX polish (count badge, empty states, profile edit footer, duplicate “Editar perfil” removed from settings list).
 
+### Fixed
+
+- **Saved roteiro delete** — `DELETE /api/roteiro/[id]` server route verifies row removal; client uses API instead of direct Supabase delete; RLS policies in `supabase/roteiros_policies.sql` (`components/rotas/RoteiroSection.js`).
+- **Admin hours editor** — turn 2 inputs editable while validating (local draft state); overnight second shift allowed with daytime first shift (`components/admin/HorarioEditor.js`, `validarIntervalos` in `lib/horarios.js`).
+
 ### Documentation
 
 - Synced `/docs` with post-0.5.0 code: home ranking criteria, admin reports, roteiro parser, `visualizou_lugar`, free-tier search limit (5/day).
+- Updated hours model, tag limit (5), onboarding navigation, carousel behavior, and `[Unreleased]` changelog entries.
 
 ## [0.5.0] - 2026-05-21
 

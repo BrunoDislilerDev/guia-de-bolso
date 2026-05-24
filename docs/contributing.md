@@ -139,6 +139,16 @@ npm run lint    # ESLint
 | Geolocation | Features degrade gracefully without GPS permission |
 | Admin | Confirm `role` is `admin` or `dev`; test `/admin`, `/admin/logs`, `/admin/taxonomia` after taxonomy SQL |
 | Reviews IA | `POST /api/avaliacoes/analisar` needs `ANTHROPIC_API_KEY`; run `avaliacoes_moderacao.sql` for `aspectos` / `sugestao_ia` |
+| Opening hours | Multi-shift / overnight strings — run `node lib/horarios.test.js` after changes to `lib/horarios.js` |
+
+---
+
+## Unit tests (optional, no CI yet)
+
+```bash
+node lib/horarios.test.js
+node lib/premium.test.js
+```
 
 ---
 
