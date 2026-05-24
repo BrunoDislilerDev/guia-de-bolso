@@ -171,8 +171,6 @@ export default function LugarPage() {
   const router = useRouter();
   const [lugar, setLugar] = useState(null);
   const [fotos, setFotos] = useState([]);
-  const [fotoAtual, setFotoAtual] = useState(0);
-  const carouselRef = useRef(null);
   const viewLoggedRef = useRef(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -582,15 +580,6 @@ export default function LugarPage() {
     : acoesRapidasBase;
   const modoAcoes = ehEstabelecimento ? "estabelecimento" : "publico";
 
-  /** Updates the photo carousel index from horizontal scroll position. */
-  function handleCarouselScroll() {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const nextIndex = Math.round(carousel.scrollLeft / carousel.clientWidth);
-    setFotoAtual(nextIndex);
-  }
-
   /**
    * Abre o app de mapas escolhido e registra o log IR AGORA.
    * @param {string} appKey - `google`, `apple` ou `waze`.
@@ -670,9 +659,6 @@ export default function LugarPage() {
         <LugarHero
           nome={lugar.nome}
           imagens={imagens}
-          fotoAtual={fotoAtual}
-          carouselRef={carouselRef}
-          onCarouselScroll={handleCarouselScroll}
           categoria={lugar.categoria}
           categoriaStyle={badgeStyle}
           subcategoria={lugar.subcategoria}

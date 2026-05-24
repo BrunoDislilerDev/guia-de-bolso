@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRef } from "react";
 import IconBack from "@/components/IconBack";
+import {
+  CAROUSEL_SLIDE_CLASS,
+  CAROUSEL_TRACK_CLASS,
+  useCarouselScrollIndex,
+} from "@/lib/horizontalCarousel";
 
 /**
  * Ícone de coração para favoritar ou indicar favorito ativo.
@@ -56,9 +62,6 @@ function ShareIcon({ className = "w-5 h-5" }) {
  * @param {object} props
  * @param {string} props.nome - Nome do lugar (alt das imagens e título).
  * @param {string[]} props.imagens - URLs das fotos do carrossel.
- * @param {number} props.fotoAtual - Índice da foto visível (0-based).
- * @param {import("react").RefObject<HTMLDivElement>} props.carouselRef - Ref do container com scroll horizontal.
- * @param {import("react").UIEventHandler<HTMLDivElement>} props.onCarouselScroll - Handler de scroll do carrossel.
  * @param {string} props.categoria - Nome da categoria exibida no chip.
  * @param {string} props.categoriaStyle - Classes Tailwind do chip de categoria.
  * @param {string} [props.subcategoria] - Nome da subcategoria (chip opcional).
@@ -76,9 +79,6 @@ function ShareIcon({ className = "w-5 h-5" }) {
 export default function LugarHero({
   nome,
   imagens,
-  fotoAtual,
-  carouselRef,
-  onCarouselScroll,
   categoria,
   categoriaStyle,
   subcategoria,
@@ -92,19 +92,20 @@ export default function LugarHero({
   onFavoritar,
   onShare,
 }) {
+  const carouselRef = useRef(null);
+  const fotoAtual = useCarouselScrollIndex(carouselRef, imagens.length);
   const temNota = totalAvaliacoes > 0 && mediaAvaliacoes > 0;
 
   return (
     <div className="relative h-[min(52vh,380px)] min-h-[300px] overflow-hidden bg-[#0b1f1a]">
       <div
         ref={carouselRef}
-        onScroll={onCarouselScroll}
-        className="flex h-full snap-x snap-mandatory overflow-x-auto scroll-smooth scrollbar-hide [-webkit-overflow-scrolling:touch]"
+        className={CAROUSEL_TRACK_CLASS}
       >
         {imagens.map((foto, index) => (
           <div
             key={`${foto}-${index}`}
-            className="relative h-full w-full shrink-0 snap-center"
+            className={CAROUSEL_SLIDE_CLASS}
           >
             <Image
               src={foto}

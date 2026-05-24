@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import IconBack from "@/components/IconBack";
 import LoginModal from "@/components/LoginModal";
+import {
+  CAROUSEL_SLIDE_CLASS,
+  CAROUSEL_TRACK_CLASS,
+  useCarouselScrollIndex,
+} from "@/lib/horizontalCarousel";
 import { registrarLog } from "@/lib/logs";
 import { createClient } from "@/lib/supabase";
 
@@ -72,13 +77,13 @@ export default function RotaGaleria({
   descricao = "",
   backHref = "/rotas",
 }) {
-  const [fotoAtual, setFotoAtual] = useState(0);
   const [user, setUser] = useState(null);
   const [isFavorito, setIsFavorito] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState("");
   const carouselRef = useRef(null);
   const fotos = imagens?.length ? imagens : [];
+  const fotoAtual = useCarouselScrollIndex(carouselRef, fotos.length);
 
   useEffect(() => {
     const supabase = createClient();
@@ -114,16 +119,6 @@ export default function RotaGaleria({
         setIsFavorito(Boolean(data));
       });
   }, [user, rotaId]);
-
-  /**
-   * Atualiza o índice do carrossel conforme o scroll horizontal.
-   * @returns {void}
-   */
-  function handleCarouselScroll() {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-    setFotoAtual(Math.round(carousel.scrollLeft / carousel.clientWidth));
-  }
 
   /**
    * Alterna favorito da rota com UI otimista e persistência no Supabase.
@@ -207,16 +202,9 @@ export default function RotaGaleria({
       {fotos.length === 0 ? (
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
       ) : (
-        <div
-          ref={carouselRef}
-          onScroll={handleCarouselScroll}
-          className="flex h-full snap-x snap-mandatory overflow-x-auto scroll-smooth scrollbar-hide [-webkit-overflow-scrolling:touch]"
-        >
+        <div ref={carouselRef} className={CAROUSEL_TRACK_CLASS}>
           {fotos.map((foto, index) => (
-            <div
-              key={`${foto}-${index}`}
-              className="relative h-full w-full shrink-0 snap-center"
-            >
+            <div key={`${foto}-${index}`} className={CAROUSEL_SLIDE_CLASS}>
               <Image
                 src={foto}
                 alt={nome}
