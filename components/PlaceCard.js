@@ -72,7 +72,7 @@ export default function PlaceCard({
 }) {
   const status = getStatusFuncionamento(lugar.horarios, lugar.mostrar_horarios);
   const distancia = lugar.distancia_calculada || lugar.distancia;
-  const tags = lugar.ehParceiro ? getTagsFromLugar(lugar).slice(0, 2) : [];
+  const tags = getTagsFromLugar(lugar).slice(0, 2);
   const rating = getRatingMedio(lugar);
   const imagemUrl = getCapaFromLugar(lugar);
 
