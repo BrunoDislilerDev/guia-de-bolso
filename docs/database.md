@@ -113,6 +113,7 @@ Core content: beaches, restaurants, trails, services, etc.
 | `rating_medio` | `numeric` | *(optional, not in repo migrations)* — if present, `PlaceCard` / `EmAltaCard` show stars without extra queries |
 | `media_avaliacoes` | `numeric` | *(optional alias)* — same client read path as `rating_medio` |
 | `created_at` | `timestamptz` | |
+| `slug` | `text` | Unique short URL segment for `/q/{slug}` (eligible establishments only; null for Natureza/Aventura) *(migration: `lugares_qr_slug.sql`)* |
 
 **`horarios` runtime:** parsed in `lib/horarios.js` (`parseHorarioDia`, `getStatusFuncionamento`, overnight carry-over, `America/Sao_Paulo`). Tests: `node lib/horarios.test.js`.
 
@@ -425,7 +426,7 @@ Product analytics and audit trail.
 | `user_id` | `uuid` FK | → `perfis.id` ON DELETE SET NULL *(migration: `logs_policies.sql`)* |
 | `user_email` | `text` | Denormalized |
 | `user_nome` | `text` | Denormalized |
-| `acao` | `text` | e.g. `login`, `favoritou`, `ir_agora`, `visualizou_lugar`, `acessou_app` |
+| `acao` | `text` | e.g. `login`, `favoritou`, `ir_agora`, `visualizou_lugar`, `escaneou_qr`, `acessou_app` |
 | `detalhes` | `jsonb` | Context (place name, maps app, page, etc.) |
 | `created_at` | `timestamptz` | |
 
@@ -575,6 +576,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | 18 | `plano_comercial_unico.sql` | Normalize single **Parceiro** commercial plan |
 | 19 | `premium_uso_dia_fix.sql` | Optional: documents/fixes daily `uso_ia_mes` semantics |
 | 20 | `roteiros_policies.sql` | RLS on `roteiros` (required for delete to persist) |
+| 21 | `lugares_qr_slug.sql` | `lugares.slug` unique + backfill for eligible categories |
 
 ---
 
@@ -656,7 +658,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Dashboard (`/admin`) | `fetchCount` / `fetchCountInPeriod` (`lib/adminDashboard.js`): active `lugares`, pending `avaliacoes`, `perfis` created in period, `logs` with `acao = ir_agora` in period, `em_analise` count; `fetchDestaquesVigentes` + expiring-within-7d; `countPremiumAtivos`; recent `logs` (3 rows); pending review list (5 rows) |
 | Logs admin (`/admin/logs`) | `logs` paginated/filtered via `lib/adminLogs.js` (`acao`, date range, `user_id`, text search on `user_nome` / `user_email` / `detalhes.lugar_nome`) |
 | Taxonomia admin | `subcategorias` insert/update/delete (usage count on `lugares.categoria` + `lugares.subcategoria`); `tags` CRUD + `lugares_tags` / `rotas_tags` usage checks |
-| Relatórios (`/admin/relatorios`) | `buildRelatorioEstabelecimento` (`lib/adminRelatorios.js`): `logs` counts for `visualizou_lugar` + `acesso_app` (with `detalhes.lugar_id`), `ir_agora`, `favoritou`; active `favoritos` count; `avaliacoes` approved in period; compares to previous period via `getReportPeriodRanges` |
+| Relatórios (`/admin/relatorios`) | `buildRelatorioEstabelecimento` (`lib/adminRelatorios.js`): `logs` counts for `visualizou_lugar` + `acesso_app` (with `detalhes.lugar_id`), `escaneou_qr`, `ir_agora`, `favoritou`; active `favoritos` count; `avaliacoes` approved in period; compares to previous period via `getReportPeriodRanges` |
 
 ### Premium usage
 
@@ -675,6 +677,7 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 | Favorite toggle | `favoritou` / `desfavoritou` | `{ lugar_id, lugar_nome }` |
 | Navigation CTA | `ir_agora` | `{ lugar_id, lugar_nome, app: google\|apple\|waze }` |
 | Place detail view | `visualizou_lugar` | `{ lugar_id, lugar_nome }` |
+| QR scan redirect | `escaneou_qr` | `{ lugar_id, lugar_nome, slug, pagina }` — server-side via service role on `GET /q/[slug]` |
 | App open | `acessou_app` / `acesso_app` | `{ pagina }` (legacy rows may include `lugar_id` for reports) |
 | Account deletion | `deletou_conta` | (profile request; surfaced in admin alerts → `/admin/logs?acao=deletou_conta`) |
 

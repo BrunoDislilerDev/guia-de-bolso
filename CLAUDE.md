@@ -321,6 +321,7 @@ guia-de-bolso/
 - [x] Gestão de usuários
 - [x] Sistema de logs (login, logout, favoritos, IR AGORA, visualizou_lugar, acesso ao app)
 - [x] Relatórios por estabelecimento no admin (`/admin/relatorios`) com PDF e WhatsApp
+- [x] QR Code por estabelecimento — URL curta `/q/{slug}`, PDF no admin, contagem de scans nos relatórios
 - [x] Roteiro IA com timeline (`lib/roteiroParse.js`, `RoteiroItineraryView`)
 - [x] Compressão de imagem no cliente (`lib/imageCompress.js`) para avatar e fotos admin
 - [x] Sistema de avaliações com moderação

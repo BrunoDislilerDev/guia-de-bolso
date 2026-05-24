@@ -171,7 +171,7 @@ Discover official partner businesses promoted in the guide.
 
 **Main flows**
 1. Home loads active places and vigent `destaques` → `ParceirosCarrossel` lists partner places with distance when GPS is available.
-2. Partner cards show badge/tags via `ehParceiro`; tap → place detail.
+2. Partner cards show badge; **tags on cards** for all places with tags; tap → place detail.
 
 **Edge cases**
 - No active highlights → carousel omitted (not an error state).
@@ -290,7 +290,8 @@ Decide to go now, contact the business, or navigate.
 
 **Main flows**
 1. Open `/lugares/[id]` → parallel load place, photos (`fotos` jsonb + `fotos_lugar`), location, tags, reviews, favorite/review state.
-2. **Establishment** (restaurant, salon, etc.): open/closed badge on hero when hours apply; compact hours row + sheet when `mostrar_horarios`; Call / Instagram / Menu / Site only for fields with URLs.
+2. **Layout:** default in development is **Airbnb-style** (`LugarDetalheAirbnb`); set `NEXT_PUBLIC_LUGAR_DETALHE_V2=false` for legacy hero overlay. Production uses legacy until flag is `true`.
+2. **Establishment** (restaurant, salon, etc.): full gallery, tags, quick actions (Call / Instagram / Menu / Site when URLs exist), long about text — **all active places**, not only Parceiro; open/closed badge on hero when hours apply.
 3. **Public** (beach, trail, etc.): info chips via quick actions — no call/menu row.
 4. **Outdoor** (`Natureza`, `Aventura` with lat/lng): `LugarClimaWidget` shows live summary; tap **Ver mais** → `ClimaSheet` if logged in, else `LoginModal` (`clima`).
 5. **Address block** when `mostrar_endereco` and `localizacoes.endereco_completo` — static map (Google Maps Static API) or fallback link to Google Maps.
@@ -310,6 +311,7 @@ Decide to go now, contact the business, or navigate.
 - One review per user per place (second attempt blocked).
 - `profiles` join failure → fallback query without author names.
 - Share: `navigator.share` or clipboard copy; user canceling share is silent.
+- **Place profile visibility** — gallery, tags, establishment quick actions, and long description are shown for **all** active places; only the Parceiro badge remains paywalled (`lib/lugarVisibilidade.js`).
 - Maps: first visit may open app picker sheet; preference stored in `localStorage`.
 - Visit recorded to recent list on successful load.
 
@@ -657,7 +659,7 @@ Sign in from a focused screen (bookmark, redirect, marketing link).
 ## 29. Activity logging (user-visible impact: minimal)
 
 **Description**  
-Server/client inserts into `logs` for login, logout, favorites, `ir_agora`, **`visualizou_lugar`** (place detail, logged-in), app open (`acessou_app` / `acesso_app`), account deletion request (`deletou_conta`). Drives **`/admin`** summary, **`/admin/logs`**, and **`/admin/relatorios`** view metrics, not end-user UI.
+Server/client inserts into `logs` for login, logout, favorites, `ir_agora`, **`visualizou_lugar`** (place detail), **`escaneou_qr`** (QR redirect `/q/[slug]`, server-side), app open (`acessou_app` / `acesso_app`), account deletion request (`deletou_conta`). Drives **`/admin`** summary, **`/admin/logs`**, and **`/admin/relatorios`** view/QR metrics, not end-user UI.
 
 **User goal**  
 (N/A — operational/analytics.)
@@ -683,7 +685,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Destaques | Single commercial plan (Parceiro); vigência dates; `?status=expirando` \| `expirado` | Run paid highlights |
 | Usuários | Roles, Premium IA status, engagement sheet; link to user logs | Access control |
 | Logs (`/admin/logs`) | Filter by action, period, user (`?user_id=`); deep links to place edit | Investigate behavior |
-| Relatórios (`/admin/relatorios`) | Per-establishment report: period presets (30d, this month, previous month, 3 months); KPIs with % vs previous period (views = `visualizou_lugar` + `acesso_app` with `lugar_id`, `ir_agora`, favorite logs, approved reviews); review list; copy WhatsApp; PDF (`jspdf`) | Share performance with partners |
+| Relatórios (`/admin/relatorios`) | Per-establishment report: period presets (30d, this month, previous month, 3 months); KPIs with % vs previous period (views = `visualizou_lugar` + `acesso_app` with `lugar_id`, **QR scans = `escaneou_qr`**, `ir_agora`, favorite logs, approved reviews); review list; copy WhatsApp; PDF (`jspdf`) | Share performance with partners |
 | Taxonomia (`/admin/taxonomia`) | CRUD `subcategorias` (per fixed category) and `tags` (`categorias` jsonb, `aplica_em_rotas`); block delete when in use; migrate places on rename | Maintain catalog vocabulary without SQL |
 
 **Edge cases**
@@ -695,6 +697,29 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 - Address is stored in `localizacoes` only; run `lugares_visibilidade.sql` if visibility toggles fail to save.
 - `EnderecoAutocomplete` locks the search field after selection so the dropdown does not reopen on the same text.
 - Destaques form casts ids with `Number()` — must match DB id types (uuid vs serial).
+
+---
+
+## 30. Establishment QR codes
+
+**Description**  
+Short URL and printable QR for commercial places (all categories except Natureza and Aventura). Scan opens place detail; scans are logged separately from page views.
+
+**User goal**  
+Establishment displays QR at counter/table; tourist scans and lands on the official place profile.
+
+**Main flows**
+1. Admin edits place → **QR Code do estabelecimento** section → copy `/q/{slug}` or **Baixar PDF** (A6 table tent).
+2. Tourist scans QR → `GET /q/{slug}` → log `escaneou_qr` → redirect `/lugares/{id}?ref=qr`.
+3. Detail shows one-time session banner: “Você abriu o guia pelo QR de {nome}”.
+4. Operator checks **Escaneamentos QR** in `/admin/relatorios` (period + % vs previous).
+
+**Edge cases**
+- Natureza/Aventura: no QR section in admin; slug cleared on save.
+- Inactive place: `/q/{slug}` returns 404.
+- Duplicate names: slug suffix `-2`, `-3`, …
+- Guest scans work without login; service role required for log insert in production.
+- Slug editable manually in admin (disables auto-sync from name).
 
 ---
 
@@ -719,6 +744,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Smart search | `/` (overlay) |
 | Categories | `/categorias`, `/categoria/[slug]` |
 | Place detail | `/lugares/[id]` |
+| QR short link | `/q/[slug]` → `/lugares/[id]?ref=qr` |
 | Favorites | `/favoritos` |
 | Curated routes | `/rotas`, `/rotas/[id]` |
 | AI roteiro | `/rotas` (sheet) |

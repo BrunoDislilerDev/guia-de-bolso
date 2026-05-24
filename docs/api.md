@@ -178,6 +178,31 @@ Receives user feedback (logged in or guest). Guest inserts use `SUPABASE_SERVICE
 
 ---
 
+### `GET /q/[slug]`
+
+Public short link for establishment QR codes. Not under `/api`; implemented as App Router route handler.
+
+**Auth:** None
+
+**Behavior:**
+
+1. Lookup `lugares` by `slug` where `status = 'ativo'` and category is QR-eligible (not Natureza/Aventura).
+2. Insert `logs` row with `acao = 'escaneou_qr'` via **service role** (`createServiceClient`) — works for anonymous scans.
+3. **302 redirect** to `/lugares/{id}?ref=qr`.
+
+**Responses:**
+
+| HTTP | Meaning |
+|------|---------|
+| 302 | Active eligible place found — redirect to detail |
+| 404 | Unknown slug, inactive place, or ineligible category |
+
+**Printed URL:** `{SITE}/q/{slug}` where `SITE` is `NEXT_PUBLIC_SITE_URL`, request origin, or `VERCEL_URL`.
+
+**Admin:** slug generated on save in `LocalForm`; PDF download in `LugarQrSection` (`lib/qrPdf.js`).
+
+---
+
 ### `POST /api/avaliacoes/analisar`
 
 Claude pre-moderation for a newly submitted review. Called from the client after `avaliacoes` insert; result is stored on `sugestao_ia` for the admin queue.

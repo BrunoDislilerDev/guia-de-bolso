@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  INFO_CHIP_PUBLIC_CLASS,
+} from "@/components/lugar/airbnb/lugarAirbnbTokens";
+
 /**
  * Ícone de telefone para ação "Ligar".
  * @param {object} props
@@ -71,19 +75,29 @@ const ICONS_ESTABELECIMENTO = {
  * @param {import("react").ComponentType<{ className?: string }>} props.Icon - Componente de ícone.
  * @returns {import("react").JSX.Element}
  */
-function BotaoEstabelecimento({ label, href, Icon }) {
+function BotaoEstabelecimento({ label, href, Icon, variant = "default" }) {
+  const isAirbnb = variant === "airbnb";
+
   const content = (
     <>
-      <Icon />
-      <span className="text-xs font-medium">{label}</span>
+      <Icon className={isAirbnb ? "h-4 w-4" : "h-5 w-5"} />
+      <span className={isAirbnb ? "text-[10px] font-semibold leading-tight" : "text-xs font-medium"}>
+        {label}
+      </span>
     </>
   );
 
-  const className = `flex w-[4.5rem] flex-col items-center gap-2 rounded-2xl px-2 py-3 text-[#1a4a3a] ${
-    href
-      ? "bg-white shadow-sm ring-1 ring-[#e3ebe7] transition-transform active:scale-95"
-      : "bg-white/60 opacity-40 ring-1 ring-[#e3ebe7]/60"
-  }`;
+  const className = isAirbnb
+    ? `flex w-[3.75rem] shrink-0 flex-col items-center gap-1 rounded-lg border px-1.5 py-2 text-[#1a4a3a] ${
+        href
+          ? "border-[#b8d4cc] bg-[#f0f4f3] transition-transform active:scale-95"
+          : "border-[#d0ddd8] bg-[#f0f4f3]/50 opacity-40"
+      }`
+    : `flex w-[4.5rem] flex-col items-center gap-2 rounded-2xl px-2 py-3 text-[#1a4a3a] ${
+        href
+          ? "bg-white shadow-sm ring-1 ring-[#e3ebe7] transition-transform active:scale-95"
+          : "bg-white/60 opacity-40 ring-1 ring-[#e3ebe7]/60"
+      }`;
 
   if (!href) {
     return (
@@ -106,7 +120,22 @@ function BotaoEstabelecimento({ label, href, Icon }) {
  * @param {{ id: string, label: string, emoji: string }} props.acao - Dados da ação informativa.
  * @returns {import("react").JSX.Element}
  */
-function ChipPublico({ acao }) {
+function ChipPublico({ acao, variant = "default" }) {
+  const isAirbnb = variant === "airbnb";
+
+  if (isAirbnb) {
+    return (
+      <div className={INFO_CHIP_PUBLIC_CLASS} role="listitem" aria-label={acao.label}>
+        <span className="text-base leading-none" aria-hidden>
+          {acao.emoji}
+        </span>
+        <span className="line-clamp-2 text-center text-[10px] font-semibold leading-snug">
+          {acao.label}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex min-w-[5.5rem] max-w-[9.5rem] shrink-0 snap-start flex-col items-center gap-1.5 rounded-2xl bg-white px-3 py-3 text-[#1a4a3a] shadow-sm ring-1 ring-[#e3ebe7]"
@@ -127,21 +156,29 @@ function ChipPublico({ acao }) {
  * Seção de ações rápidas na página do lugar (links externos ou chips informativos).
  * @param {object} props
  * @param {"estabelecimento"|"publico"} [props.modo="estabelecimento"] - Layout e tipo de ação.
+ * @param {"default"|"airbnb"} [props.variant="default"] - Estilo visual dos chips.
  * @param {Array<{ id: string, label: string, href?: string, emoji?: string }>} [props.acoes=[]] - Lista de ações; vazio oculta a seção.
  * @returns {import("react").JSX.Element|null}
  */
-export default function LugarQuickActions({ modo = "estabelecimento", acoes = [] }) {
+export default function LugarQuickActions({
+  modo = "estabelecimento",
+  variant = "default",
+  acoes = [],
+}) {
   if (!acoes.length) return null;
 
   const isEstabelecimento = modo === "estabelecimento";
+  const isAirbnb = variant === "airbnb";
 
   return (
-    <section className="mt-6">
+    <section className={isAirbnb ? "" : "mt-6"}>
       <div
         className={
           isEstabelecimento
-            ? "mx-auto flex w-full max-w-sm justify-center gap-2.5"
-            : "flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
+            ? isAirbnb
+              ? "flex flex-wrap gap-2"
+              : "mx-auto flex w-full max-w-sm justify-center gap-2.5"
+            : `flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch]${isAirbnb ? "" : ""}`
         }
         role="list"
         aria-label={
@@ -159,10 +196,13 @@ export default function LugarQuickActions({ modo = "estabelecimento", acoes = []
                   label={acao.label}
                   href={acao.href}
                   Icon={Icon}
+                  variant={variant}
                 />
               );
             })
-          : acoes.map((acao) => <ChipPublico key={acao.id} acao={acao} />)}
+          : acoes.map((acao) => (
+              <ChipPublico key={acao.id} acao={acao} variant={variant} />
+            ))}
       </div>
     </section>
   );

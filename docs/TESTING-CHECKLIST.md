@@ -24,6 +24,7 @@ Use a ferramenta com **153 casos de teste**, passo a passo por dispositivo, resu
 | Cadastro | Primeiro login (Google/SMS) + `/perfil/editar` | — |
 | Busca IA | Home `SmartSearch`, `/?busca=1`, `/?q=` | Login + limite 5/dia (free) |
 | Relatórios admin | `/admin/relatorios` | Admin/dev; lugar ativo + período |
+| QR estabelecimento | Admin editar local → PDF; scan `/q/{slug}` | Natureza/Aventura sem QR |
 | Ver lugar | Cards → `/lugares/[id]` | Nenhuma |
 | Favoritar | Coração home/detalhe, `/favoritos` | Login |
 | Avaliar | Detalhe → `AvaliacaoForm` | Login; moderação admin |
@@ -51,8 +52,22 @@ Use a ferramenta com **153 casos de teste**, passo a passo por dispositivo, resu
 | J | Perfil | 9 |
 | K | Casos extremos | 8 |
 | L | Admin | 27 |
+| L-QR | QR codes (admin + scan) | 6 |
 | N | Feedback e erros PT | 5 |
 | M | Smoke pós-release | 6 |
+
+---
+
+## L-QR — QR codes (manual)
+
+| ID | Caso | Passos | Esperado |
+|----|------|--------|----------|
+| L-QR-1 | Admin — restaurante | Editar local Gastronomia → seção QR | Preview, URL `/q/{slug}`, botão PDF |
+| L-QR-2 | PDF | Baixar PDF | A6 com QR, nome, CTA, URL curta |
+| L-QR-3 | Scan | Abrir `/q/{slug}` no browser (guest) | 302 → `/lugares/{id}?ref=qr`; banner QR uma vez/sessão |
+| L-QR-4 | Relatório | `/admin/relatorios` após scan | KPI **Escaneamentos QR** incrementa |
+| L-QR-5 | Natureza | Editar praia | Sem seção QR |
+| L-QR-6 | Inativo | `status=desativado` → `/q/{slug}` | 404 |
 
 ---
 

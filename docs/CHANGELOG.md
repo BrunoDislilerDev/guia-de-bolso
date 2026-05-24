@@ -13,8 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Place view logging** — `visualizou_lugar` on place detail for logged-in users (`app/lugares/[id]/page.js`, `lib/logs.js`); counted in establishment reports alongside legacy `acesso_app` with `detalhes.lugar_id`.
 - **AI roteiro timeline UI** — `lib/roteiroParse.js` parses strict markdown into days/periods/stops; `RoteiroItineraryView` accordion timeline in `RoteiroBottomSheet` and `RoteiroViewModal` (`components/rotas/RoteiroSection.js`).
 - **Client image compression** — `lib/imageCompress.js` for avatars and admin uploads via `lib/storageUpload.js`.
+- **Establishment QR codes** — short URL `/q/{slug}` with redirect + `escaneou_qr` log; admin preview/PDF download (`LugarQrSection`, `lib/qrPdf.js`, `lib/lugarQr.js`, `lib/slug.js`); slug on `lugares`; eligible categories exclude Natureza/Aventura; scan KPI in `/admin/relatorios`.
+- **Place detail redesign (Airbnb-style)** — branch `redesign/detalhe-lugar`: `LugarDetalheAirbnb`, shared `hooks/useLugarDetalhe.js`, legacy preserved in `LugarDetalheLegacy`; toggle via `NEXT_PUBLIC_LUGAR_DETALHE_V2` (defaults to V2 in `development`).
 
 ### Changed
+
+- **Admin establishment reports** — KPI **Escaneamentos QR** (`escaneou_qr`) separate from page views; included in PDF and WhatsApp summary.
+- **Place profile visibility** — full public profile (gallery, tags, quick actions, long about) for all active places; only Parceiro badge remains tied to paid highlight (`lib/lugarVisibilidade.js`, `PlaceCard.js`).
 
 - **Admin tag limit** — places and curated routes allow **5 tags** (was 3) in `LocalForm` / `RotaForm` (`MAX_TAGS`, `MAX_TAGS_ROTA` in `lib/rotas.js`).
 - **Onboarding assets** — backgrounds from `/public/onboarding/*.jpg` (compressed local JPGs); guest finish/skip routes to `/login?from=onboarding`, logged-in users to home (`components/Onboarding.js`, `app/page.js`, `lib/authImagery.js`).
