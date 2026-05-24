@@ -200,6 +200,7 @@ export default function LugarHero({
                   ? "bg-[#3ecf8e] text-[#053d24]"
                   : "bg-[#ff6b5a] text-white"
               }`}
+              title={status.resumo || status.detail}
             >
               {status.aberto ? "Aberto agora" : "Fechado"}
             </span>

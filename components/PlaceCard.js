@@ -112,6 +112,7 @@ export default function PlaceCard({
           className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
             status.aberto ? "bg-[#1a4a3a]" : "bg-[#d9534f]"
           }`}
+          title={status.resumo || status.detail || status.label}
         >
           {status.label}
         </span>

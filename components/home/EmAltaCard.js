@@ -69,6 +69,11 @@ export default function EmAltaCard({ lugar, priority = false }) {
       <div className="flex flex-1 flex-col p-3">
         <h3 className="line-clamp-1 text-sm font-bold text-[#1a2e28]">{lugar.nome}</h3>
         <p className="mt-1 line-clamp-1 text-xs text-[#5a6b66]">{distancia}</p>
+        {status && (status.resumo || status.detail) && (
+          <p className="mt-0.5 line-clamp-1 text-[10px] font-medium text-[#1a4a3a]">
+            {status.resumo || status.detail}
+          </p>
+        )}
         {tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {tags.map((tag) => (

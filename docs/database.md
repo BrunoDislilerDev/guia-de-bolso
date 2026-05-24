@@ -98,7 +98,7 @@ Core content: beaches, restaurants, trails, services, etc.
 | `categoria` | `text` | Natureza, Gastronomia, Noite, Serviços, Hospedagem, Cultura, Aventura, Bem-estar, Compras |
 | `subcategoria` | `text` | e.g. Praias, Restaurantes — must match `subcategorias.nome` for same `categoria` |
 | `status` | `text` | `ativo`, `desativado`, `em_analise` — public app only reads `ativo` |
-| `horarios` | `jsonb` | Weekly hours: keys `dom`…`sab`, values `fechado`, `24h`, or `HH:MM-HH:MM` |
+| `horarios` | `jsonb` | Weekly hours: keys `dom`…`sab`, values `fechado`, `24h`, `HH:MM-HH:MM`, multiple intervals comma-separated (`11:00-15:00,18:00-23:00`), or overnight (`18:30-00:00`, `22:00-02:00` — when `fim <= inicio`, closing is on the next calendar day) |
 | `telefone` | `text` | Phone |
 | `instagram` | `text` | Handle or URL |
 | `cardapio_url` | `text` | Menu link |
