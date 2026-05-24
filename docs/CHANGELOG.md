@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **AI roteiro timeline UI** — `lib/roteiroParse.js` parses strict markdown into days/periods/stops; `RoteiroItineraryView` accordion timeline in `RoteiroBottomSheet` and `RoteiroViewModal` (`components/rotas/RoteiroSection.js`).
 - **Client image compression** — `lib/imageCompress.js` for avatars and admin uploads via `lib/storageUpload.js`.
 - **Establishment QR codes** — short URL `/q/{slug}` with redirect + `escaneou_qr` log; admin preview/PDF download (`LugarQrSection`, `lib/qrPdf.js`, `lib/lugarQr.js`, `lib/slug.js`); slug on `lugares`; eligible categories exclude Natureza/Aventura; scan KPI in `/admin/relatorios`.
-- **Place detail redesign (Airbnb-style)** — branch `redesign/detalhe-lugar`: `LugarDetalheAirbnb`, shared `hooks/useLugarDetalhe.js`, legacy preserved in `LugarDetalheLegacy`; toggle via `NEXT_PUBLIC_LUGAR_DETALHE_V2` (defaults to V2 in `development`).
+- **Place detail redesign (Airbnb-style)** — `LugarDetalheAirbnb`, shared `hooks/useLugarDetalhe.js`, legacy preserved in `LugarDetalheLegacy`; opt-out via `NEXT_PUBLIC_LUGAR_DETALHE_V2=false` (V2 is default everywhere).
 
 ### Changed
 

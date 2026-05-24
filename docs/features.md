@@ -290,7 +290,7 @@ Decide to go now, contact the business, or navigate.
 
 **Main flows**
 1. Open `/lugares/[id]` → parallel load place, photos (`fotos` jsonb + `fotos_lugar`), location, tags, reviews, favorite/review state.
-2. **Layout:** default in development is **Airbnb-style** (`LugarDetalheAirbnb`); set `NEXT_PUBLIC_LUGAR_DETALHE_V2=false` for legacy hero overlay. Production uses legacy until flag is `true`.
+2. **Layout:** default is **Airbnb-style** (`LugarDetalheAirbnb`) in all environments; set `NEXT_PUBLIC_LUGAR_DETALHE_V2=false` for legacy hero overlay rollback.
 2. **Establishment** (restaurant, salon, etc.): full gallery, tags, quick actions (Call / Instagram / Menu / Site when URLs exist), long about text — **all active places**, not only Parceiro; open/closed badge on hero when hours apply.
 3. **Public** (beach, trail, etc.): info chips via quick actions — no call/menu row.
 4. **Outdoor** (`Natureza`, `Aventura` with lat/lng): `LugarClimaWidget` shows live summary; tap **Ver mais** → `ClimaSheet` if logged in, else `LoginModal` (`clima`).
