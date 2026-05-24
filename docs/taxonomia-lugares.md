@@ -6,7 +6,7 @@
 |--------|---------|-------------------|
 | **Categoria** | Grupo fixo no app | Natureza |
 | **Subcategoria** | **Tipo** do lugar (filtro na página da categoria) | Praias, Trilhas, Cachoeiras |
-| **Tags** (máx. 3) | **Atributos** e experiência | Surfe, Pôr do sol imperdível, Mar agitado |
+| **Tags** (máx. 5) | **Atributos** e experiência | Surfe, Pôr do sol imperdível, Mar agitado |
 
 Não crie subcategoria para coisas que já são tag (Surfe, pôr do sol, mergulho, romântico, pet friendly, etc.).
 
@@ -55,7 +55,7 @@ Tags que já existiam e cobrem o caso: **Pôr do sol imperdível**, **Nascer do 
 
 1. Categoria → ex. Natureza  
 2. Subcategoria → ex. **Praias** (não “Surf”)  
-3. Tags → ex. **Surfe** + **Pôr do sol imperdível** + **Mar agitado** (máx. 3)
+3. Tags → ex. **Surfe** + **Pôr do sol imperdível** + **Mar agitado** (máx. 5)
 
 Tags com **`aplica_em_rotas`** also appear on route forms after `supabase/rotas_taxonomia.sql`.
 

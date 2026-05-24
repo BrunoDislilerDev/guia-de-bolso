@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-22T14:29:00.421Z",
+  "generatedAt": "2026-05-24T01:14:15.794Z",
   "sections": [
     {
       "id": "A",
@@ -3913,7 +3913,7 @@
     {
       "id": "l-11",
       "sectionId": "L",
-      "title": "Tags máx 3 e subcategoria",
+      "title": "Tags máx 5 e subcategoria",
       "route": "/admin/locais",
       "roles": [
         "admin"
@@ -3924,18 +3924,18 @@
       "steps": {
         "mobile": [
           "Abra o app no celular (~390px).",
-          "Tags máx 3 e subcategoria"
+          "Tags máx 5 e subcategoria"
         ],
         "desktop": [
           "No desktop, use janela ~390px ou DevTools iPhone.",
-          "Tags máx 3 e subcategoria"
+          "Tags máx 5 e subcategoria"
         ],
         "tablet": [
           "No tablet (~768px) ou iPad; layout mobile centralizado.",
-          "Tags máx 3 e subcategoria"
+          "Tags máx 5 e subcategoria"
         ]
       },
-      "expected": "Limite 3 tags; subcategoria OK.",
+      "expected": "Limite 5 tags; subcategoria OK.",
       "warnings": []
     },
     {

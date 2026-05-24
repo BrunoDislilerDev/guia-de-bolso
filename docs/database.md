@@ -154,7 +154,7 @@ Controlled vocabulary for place attributes (pet friendly, vista mar, etc.).
 | `categorias` | `jsonb` | Array of category names where tag is valid *(migration: `tags_categorias.sql`)* |
 | `aplica_em_rotas` | `boolean` | When true, tag appears in admin route form *(migration: `rotas_taxonomia.sql`)* |
 
-Admin limits **3 tags per place**. Filtering: `lib/tags.js` (`filterTagsByCategoria`).
+Admin limits **5 tags per place**. Filtering: `lib/tags.js` (`filterTagsByCategoria`).
 
 ---
 
@@ -286,7 +286,7 @@ Admin-managed curated routes (trails, city walks). **Distinct from** AI `roteiro
 | `fotos` | `jsonb` | Gallery URLs *(migration: `fotos_migration.sql`)* |
 | `created_at` | `timestamptz` | |
 
-**Tags:** junction `rotas_tags` → `tags` (subset com `tags.aplica_em_rotas = true`). Admin: máx. 3 tags; replace on save.
+**Tags:** junction `rotas_tags` → `tags` (subset com `tags.aplica_em_rotas = true`). Admin: máx. 5 tags; replace on save.
 
 ---
 

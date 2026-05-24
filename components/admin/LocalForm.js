@@ -63,7 +63,7 @@ const categorias = [
   "Compras",
 ];
 
-const MAX_TAGS = 3;
+const MAX_TAGS = 5;
 
 /**
  * Aplica máscara brasileira ao telefone enquanto o usuário digita (até 11 dígitos).
@@ -186,7 +186,7 @@ export default function LocalForm({
         return current.filter((id) => id !== tagId);
       }
       if (current.length >= MAX_TAGS) {
-        setTagLimitMessage("Você pode selecionar no máximo 3 tags.");
+        setTagLimitMessage(`Você pode selecionar no máximo ${MAX_TAGS} tags.`);
         return current;
       }
       setTagLimitMessage("");
@@ -426,7 +426,7 @@ export default function LocalForm({
         {tagLimitMessage && (
           <p className="mb-2 text-xs font-semibold text-[#d9534f]">{tagLimitMessage}</p>
         )}
-        <p className="mb-2 text-xs text-[#5a6b66]">Máximo de 3 tags por local.</p>
+        <p className="mb-2 text-xs text-[#5a6b66]">Máximo de {MAX_TAGS} tags por local.</p>
         <div className="grid gap-2 rounded-2xl bg-[#f7faf9] p-3 md:grid-cols-3">
           {visibleTags.length === 0 ? (
             <p className="text-sm text-[#5a6b66]">
