@@ -15,7 +15,12 @@ import LugarSectionAirbnb, {
   LugarCardAirbnb,
   LugarDividerAirbnb,
 } from "@/components/lugar/airbnb/LugarSectionAirbnb";
-import { INFO_CHIP_CLASS } from "@/components/lugar/airbnb/lugarAirbnbTokens";
+import LugarStickyHeader from "@/components/lugar/airbnb/LugarStickyHeader";
+import {
+  DESTAQUE_CHIP_PREMIUM_CLASS,
+  DETALHE_CARD_OVERLAP_CLASS,
+} from "@/components/lugar/airbnb/lugarAirbnbTokens";
+import { useDetalheScroll } from "@/hooks/useDetalheScroll";
 import { getBadgeParceiroLabel } from "@/lib/destaques";
 import { lugarExibeClima } from "@/lib/clima";
 import { formatHorario, getDiasHorario } from "@/lib/horarios";
@@ -77,6 +82,7 @@ export default function LugarDetalheAirbnb(props) {
     openRoute,
   } = props;
 
+  const scroll = useDetalheScroll();
   const temNota = totalAvaliacoes > 0 && mediaAvaliacoes > 0;
   const localSubtitle = [
     lugar.subcategoria,
@@ -87,28 +93,44 @@ export default function LugarDetalheAirbnb(props) {
     .join(" · ");
 
   return (
-    <div className="min-h-screen bg-white pb-28 text-[#1a2e28]">
+    <div className="min-h-screen bg-[#f0f4f3] pb-28 text-[#1a2e28]">
       {toast && (
         <div className="fixed left-4 right-4 top-4 z-[60] mx-auto max-w-md rounded-xl bg-[#1a4a3a] px-4 py-3 text-center text-sm font-semibold text-white shadow-lg">
           {toast}
         </div>
       )}
 
-      <div className="mx-auto max-w-md">
-        <LugarGalleryAirbnb
-          nome={lugar.nome}
-          imagens={imagens}
-          isFavorito={isFavorito}
-          onFavoritar={handleFavoritar}
-          onShare={handleShare}
-          parceiroBadgeLabel={
-            visibilidade.showBadgeParceiro
-              ? getBadgeParceiroLabel().toUpperCase()
-              : null
-          }
-        />
+      <LugarStickyHeader
+        title={lugar.nome}
+        opacity={scroll.headerOpacity}
+        visible={scroll.showCollapsedTitle}
+        isFavorito={isFavorito}
+        onFavoritar={handleFavoritar}
+        onShare={handleShare}
+      />
 
-        <div className="px-6 pt-5">
+      <div className="mx-auto max-w-md">
+        <div
+          className="sticky top-0 z-0"
+          style={{ height: scroll.heroHeightPx }}
+        >
+          <LugarGalleryAirbnb
+            nome={lugar.nome}
+            imagens={imagens}
+            isFavorito={isFavorito}
+            onFavoritar={handleFavoritar}
+            onShare={handleShare}
+            scroll={scroll}
+            hideTopActions={scroll.progress > 0.22}
+            parceiroBadgeLabel={
+              visibilidade.showBadgeParceiro
+                ? getBadgeParceiroLabel().toUpperCase()
+                : null
+            }
+          />
+        </div>
+
+        <div className={`${DETALHE_CARD_OVERLAP_CLASS} px-7 pt-8 pb-2`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -130,22 +152,24 @@ export default function LugarDetalheAirbnb(props) {
                 )}
               </div>
 
-              <h1 className="font-display text-[26px] font-bold leading-tight tracking-tight text-[#1a2e28]">
+              <h1 className="font-display text-[28px] font-bold leading-[1.15] tracking-tight text-[#1a2e28]">
                 {lugar.nome}
               </h1>
 
               {localSubtitle && (
-                <p className="mt-1 text-sm text-[#5a6b66]">{localSubtitle}</p>
+                <p className="mt-2 text-[13px] leading-snug text-[#5a6b66]">{localSubtitle}</p>
               )}
             </div>
 
             {temNota && (
-              <div className="flex shrink-0 items-center gap-1 rounded-lg border border-[#e8eeee] px-2.5 py-1.5">
-                <span className="text-sm font-semibold text-[#1a2e28]">★</span>
-                <span className="text-sm font-bold text-[#1a2e28]">
+              <div className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+                <span className="text-sm font-semibold text-amber-500">★</span>
+                <span className="text-sm font-bold text-amber-600">
                   {mediaAvaliacoes.toFixed(1)}
                 </span>
-                <span className="text-xs text-[#5a6b66]">({totalAvaliacoes})</span>
+                <span className="text-xs font-medium text-amber-700/90">
+                  ({totalAvaliacoes})
+                </span>
               </div>
             )}
           </div>
@@ -164,19 +188,17 @@ export default function LugarDetalheAirbnb(props) {
             </div>
           )}
 
-          <p className="mt-4 text-[15px] leading-relaxed text-[#3d4f4a]">
+          <p className="mt-5 text-[15px] leading-[1.65] text-[#3d4f4a]">
             {fraseConvencimento}
           </p>
-        </div>
 
-        <div className="px-6">
           <LugarDividerAirbnb />
 
           {acoesRapidas.length > 0 && (
             <LugarSectionAirbnb title={ehEstabelecimento ? "Contato" : "Informações"}>
               <LugarQuickActions
                 modo={modoAcoes}
-                variant="airbnb"
+                variant={modoAcoes === "publico" ? "premium" : "airbnb"}
                 acoes={acoesRapidas}
               />
             </LugarSectionAirbnb>
@@ -188,12 +210,16 @@ export default function LugarDetalheAirbnb(props) {
               <LugarSectionAirbnb title="Destaques">
                 <div className="flex flex-wrap gap-2">
                   {tagsExibidas.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className={`${INFO_CHIP_CLASS} px-2 py-1.5 text-[10px] font-semibold leading-tight`}
-                    >
-                      {tag.icone && <span className="mr-0.5">{tag.icone}</span>}
-                      {tag.nome}
+                    <span key={tag.id} className={DESTAQUE_CHIP_PREMIUM_CLASS}>
+                      {tag.icone && (
+                        <span
+                          className="shrink-0 text-base leading-none opacity-80 grayscale"
+                          aria-hidden
+                        >
+                          {tag.icone}
+                        </span>
+                      )}
+                      <span>{tag.nome}</span>
                     </span>
                   ))}
                 </div>
@@ -219,6 +245,7 @@ export default function LugarDetalheAirbnb(props) {
               <LugarDividerAirbnb />
               <LugarSectionAirbnb title="Clima na região">
                 <LugarClimaWidget
+                  variant="premium"
                   nomeLugar={lugar.nome}
                   latitude={Number(localizacao.latitude)}
                   longitude={Number(localizacao.longitude)}
@@ -237,6 +264,7 @@ export default function LugarDetalheAirbnb(props) {
               <LugarDividerAirbnb />
               <LugarSectionAirbnb title="Onde fica">
                 <LugarLocalizacaoCard
+                  variant="airbnb"
                   nome={lugar.nome}
                   endereco={enderecoExibicao}
                   mapUrl={mapsLink}
@@ -288,11 +316,7 @@ export default function LugarDetalheAirbnb(props) {
         </div>
       </div>
 
-      <LugarCtaBarAirbnb
-        label={ctaLabel}
-        subtitle={distancia}
-        onClick={() => openRoute()}
-      />
+      <LugarCtaBarAirbnb label={ctaLabel} onClick={() => openRoute()} />
 
       <LugarBottomSheet
         isOpen={showHorarios}

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import RotaGaleria from "@/components/rotas/RotaGaleria";
+import { DETALHE_CARD_OVERLAP_CLASS } from "@/components/lugar/airbnb/lugarAirbnbTokens";
 import { getFotosFromRota } from "@/lib/fotos";
 import { getGoogleMapsDirectionsUrlForRota } from "@/lib/rotaMaps";
 import { getDetalhesFromPonto } from "@/lib/rotaPontos";
@@ -188,7 +189,7 @@ export default async function RotaDetalhePage({ params }) {
           descricao={rota.descricao || ""}
         />
 
-        <main className="px-4 pb-28 pt-6">
+        <main className={`${DETALHE_CARD_OVERLAP_CLASS} px-6 pb-28 pt-6`}>
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#1a4a3a]">
             <span aria-hidden>{categoria.icone}</span>
             {categoria.nome}

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  INFO_CARD_PREMIUM_CLASS,
   INFO_CHIP_PUBLIC_CLASS,
 } from "@/components/lugar/airbnb/lugarAirbnbTokens";
 
@@ -120,8 +121,34 @@ function BotaoEstabelecimento({ label, href, Icon, variant = "default" }) {
  * @param {{ id: string, label: string, emoji: string }} props.acao - Dados da ação informativa.
  * @returns {import("react").JSX.Element}
  */
+function InfoCardPremium({ acao }) {
+  const valor = acao.valor ?? acao.label;
+  const subtitulo = acao.subtitulo ?? "";
+
+  return (
+    <div className={INFO_CARD_PREMIUM_CLASS} role="listitem" aria-label={acao.label}>
+      <span className="text-[26px] leading-none" aria-hidden>
+        {acao.emoji}
+      </span>
+      <span className="text-center text-[15px] font-bold leading-tight tracking-tight text-[#1a2e28]">
+        {valor}
+      </span>
+      {subtitulo ? (
+        <span className="text-center text-[11px] font-medium leading-snug text-[#5a6b66]">
+          {subtitulo}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 function ChipPublico({ acao, variant = "default" }) {
   const isAirbnb = variant === "airbnb";
+  const isPremium = variant === "premium";
+
+  if (isPremium) {
+    return <InfoCardPremium acao={acao} />;
+  }
 
   if (isAirbnb) {
     return (
@@ -156,7 +183,7 @@ function ChipPublico({ acao, variant = "default" }) {
  * Seção de ações rápidas na página do lugar (links externos ou chips informativos).
  * @param {object} props
  * @param {"estabelecimento"|"publico"} [props.modo="estabelecimento"] - Layout e tipo de ação.
- * @param {"default"|"airbnb"} [props.variant="default"] - Estilo visual dos chips.
+ * @param {"default"|"airbnb"|"premium"} [props.variant="default"] - Estilo visual dos chips.
  * @param {Array<{ id: string, label: string, href?: string, emoji?: string }>} [props.acoes=[]] - Lista de ações; vazio oculta a seção.
  * @returns {import("react").JSX.Element|null}
  */
@@ -169,16 +196,19 @@ export default function LugarQuickActions({
 
   const isEstabelecimento = modo === "estabelecimento";
   const isAirbnb = variant === "airbnb";
+  const isPremium = variant === "premium";
 
   return (
-    <section className={isAirbnb ? "" : "mt-6"}>
+    <section className={isAirbnb || isPremium ? "" : "mt-6"}>
       <div
         className={
           isEstabelecimento
             ? isAirbnb
               ? "flex flex-wrap gap-2"
               : "mx-auto flex w-full max-w-sm justify-center gap-2.5"
-            : `flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch]${isAirbnb ? "" : ""}`
+            : isPremium
+              ? "flex flex-wrap gap-3"
+              : `flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch]${isAirbnb ? "" : ""}`
         }
         role="list"
         aria-label={
