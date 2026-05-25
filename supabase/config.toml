@@ -1,0 +1,11 @@
+# Supabase CLI — migrations versionadas
+# Uso: supabase link --project-ref rsdjbqzjdyeaedyqwrvc && supabase db push
+# Docs: docs/migrations.md
+
+project_id = "rsdjbqzjdyeaedyqwrvc"
+
+[db]
+major_version = 15
+
+[db.migrations]
+enabled = true

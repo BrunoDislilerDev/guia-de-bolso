@@ -1,5 +1,5 @@
--- Permite que o usuário autenticado atualize os contadores de uso IA no próprio perfil.
--- Rode após premium_usuario.sql se o contador não persistir no Supabase.
+-- Permite que o usuário autenticado atualize o próprio perfil (contadores IA, nome, foto).
+-- Rode após premium_usuario.sql. Obrigatório também: perfis_privileged_guard.sql (bloqueia role/premium_*).
 
 ALTER TABLE perfis ENABLE ROW LEVEL SECURITY;
 

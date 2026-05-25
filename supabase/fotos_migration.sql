@@ -16,29 +16,11 @@ WHERE (fotos IS NULL OR fotos = '[]'::jsonb)
   AND COALESCE(foto_capa, imagem_capa) <> '';
 
 -- Crie os buckets públicos no Storage: lugares-fotos, rotas-fotos
--- Depois rode as policies abaixo:
-
-CREATE POLICY "Auth upload lugares fotos"
-ON storage.objects FOR INSERT TO authenticated
-WITH CHECK (bucket_id = 'lugares-fotos');
-
-CREATE POLICY "Auth update lugares fotos"
-ON storage.objects FOR UPDATE TO authenticated
-USING (bucket_id = 'lugares-fotos')
-WITH CHECK (bucket_id = 'lugares-fotos');
+-- Leitura pública + escrita admin: rode storage_admin_fotos.sql (não use policies abertas abaixo).
 
 CREATE POLICY "Public read lugares fotos"
 ON storage.objects FOR SELECT TO public
 USING (bucket_id = 'lugares-fotos');
-
-CREATE POLICY "Auth upload rotas fotos"
-ON storage.objects FOR INSERT TO authenticated
-WITH CHECK (bucket_id = 'rotas-fotos');
-
-CREATE POLICY "Auth update rotas fotos"
-ON storage.objects FOR UPDATE TO authenticated
-USING (bucket_id = 'rotas-fotos')
-WITH CHECK (bucket_id = 'rotas-fotos');
 
 CREATE POLICY "Public read rotas fotos"
 ON storage.objects FOR SELECT TO public

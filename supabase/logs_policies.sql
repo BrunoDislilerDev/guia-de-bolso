@@ -10,8 +10,16 @@ ALTER TABLE logs
 ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admin lê logs" ON logs;
+DROP POLICY IF EXISTS "Authenticated insert logs" ON logs;
 
 CREATE POLICY "Admin lê logs"
-ON logs
-FOR SELECT
-USING (true);
+  ON logs
+  FOR SELECT
+  TO authenticated
+  USING (public.is_admin_or_dev());
+
+CREATE POLICY "Authenticated insert logs"
+  ON logs
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id IS NULL OR user_id = auth.uid());
