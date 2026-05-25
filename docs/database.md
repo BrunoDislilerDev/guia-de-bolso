@@ -1,8 +1,14 @@
 # Database
 
-The application database runs on **Supabase (PostgreSQL)** in region **`us-west-2`**. **Row Level Security (RLS)** is required on production tables; only **`perfis`**, **`logs`**, and **Storage** policies are versioned in [`/supabase`](../supabase) — other table policies must exist in the Supabase Dashboard (see [RLS](#row-level-security-rls)). Schema changes are applied manually in the **Supabase SQL Editor** (no automated migration runner in CI).
+> **Índice:** [docs/README.md](./README.md) · **Fluxos:** [data-flows.md](./data-flows.md) · **Auth/RLS:** [authentication.md](./authentication.md), [security-rls.md](./security-rls.md)  
+> **Architecture & evolution:** modeling, normalization, performance, roadmap, and index strategy → [**DATABASE_ARCHITECTURE.md**](./DATABASE_ARCHITECTURE.md).  
+> **Apply order & migration practices:** [**migrations.md**](./migrations.md#manifest).
+
+The application database runs on **Supabase (PostgreSQL)** in region **`us-west-2`**. **Row Level Security (RLS)** is required on production tables; many policies are versioned in [`/supabase`](../supabase) — compare the Dashboard with [RLS](#row-level-security-rls) and [`security-rls.md`](./security-rls.md). Schema changes are applied manually in the **Supabase SQL Editor** (CLI optional; see [migrations.md](./migrations.md)).
 
 **Auth users** live in Supabase’s `auth.users` schema. App data lives in `public`.
+
+**Primary key type:** `lugares.id` is **`bigint`** in production. All `lugar_id` foreign keys and RPCs must use `bigint`, not `uuid`.
 
 ---
 
@@ -36,7 +42,7 @@ erDiagram
   }
 
   lugares {
-    uuid id PK
+    bigint id PK
     text status
     jsonb horarios
     jsonb fotos
@@ -127,7 +133,7 @@ Structured address and coordinates (1:1 with `lugares`).
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `lugar_id` | `uuid` PK/FK | → `lugares.id`, upsert `onConflict: lugar_id` |
+| `lugar_id` | `bigint` PK/FK | → `lugares.id`, upsert `onConflict: lugar_id` |
 | `rua`, `numero`, `bairro`, `cidade`, `estado`, `cep`, `pais` | `text` | Address parts |
 | `endereco_completo` | `text` | Full formatted address |
 | `latitude`, `longitude` | `float` | Used for distance, maps, static map preview |
@@ -141,7 +147,7 @@ Optional normalized photo gallery (legacy path; app merges with `lugares.fotos` 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | (serial/uuid) | PK |
-| `lugar_id` | `uuid` FK | → `lugares` |
+| `lugar_id` | `bigint` FK | → `lugares` |
 | `url` / `imagem_url` / `foto_url` | `text` | App reads any of these field names |
 
 ---
@@ -167,7 +173,7 @@ Join table **many-to-many** `lugares` ↔ `tags`.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `lugar_id` | `uuid` FK | |
+| `lugar_id` | `bigint` FK | |
 | `tag_id` | `integer` FK | → `tags.id` |
 
 Admin replaces all rows on save: `delete` by `lugar_id`, then `insert` batch.
@@ -197,10 +203,10 @@ User bookmarks.
 |--------|------|-------------|
 | `id` | (serial/uuid) | PK |
 | `user_id` | `uuid` FK | → `auth.users` |
-| `lugar_id` | `uuid` FK | → `lugares` |
+| `lugar_id` | `bigint` FK | → `lugares` |
 | `created_at` | `timestamptz` | |
 
-Unique constraint expected on `(user_id, lugar_id)` for idempotent favoriting.
+Unique constraint on `(user_id, lugar_id)` — see `db_indexes.sql` (`idx_favoritos_user_lugar_unique`).
 
 ---
 
@@ -226,7 +232,7 @@ User reviews with moderation.
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | `uuid` | PK |
-| `lugar_id` | `uuid` FK | |
+| `lugar_id` | `bigint` FK | → `lugares` |
 | `user_id` | `uuid` FK | |
 | `nota` | `integer` | 1–5 |
 | `comentario` | `text` | Optional |
@@ -409,7 +415,7 @@ Scheduled promotional slots linking a place to a plan.
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | (serial) | PK |
-| `lugar_id` | `uuid` FK | → `lugares` |
+| `lugar_id` | `bigint` FK | → `lugares` |
 | `plano_id` | FK | → `planos.id` |
 | `data_inicio`, `data_fim` | `date` | Active window |
 | `ativo` | `boolean` | Manual on/off |
@@ -477,9 +483,16 @@ RLS policies for **`rotas`** and related tables are in [`rotas_policies.sql`](..
 | `perfis` | `perfis_select_own` | `perfis_premium_policies.sql` | `SELECT` where `auth.uid() = id` |
 | `perfis` | `perfis_insert_own` | same | `INSERT` own row |
 | `perfis` | `perfis_update_own` | same | `UPDATE` own row |
-| `logs` | `Admin lê logs` | `logs_policies.sql` | `SELECT` with `USING (true)` — **very permissive**; rely on admin UI gate |
-| `roteiros` | Users CRUD own rows | `roteiros_policies.sql` | `SELECT`/`INSERT`/`UPDATE`/`DELETE` where `auth.uid() = user_id` |
-| `storage.objects` | lugares-fotos / rotas-fotos | `fotos_migration.sql` | Authenticated upload/update; public read |
+| `logs` | `Admin lê logs` | `logs_policies.sql` | `SELECT` for `admin`/`dev` via `is_admin_or_dev()` |
+| `lugares` | Public read active + admin write | `lugares_public_read.sql`, `lugares_admin_write.sql` | Active places for anon; admin CRUD |
+| `localizacoes`, `tags`, `lugares_tags` | Public read | `lugares_related_public_read.sql` | Joined to active `lugares` |
+| `avaliacoes` | Insert/select/update IA | `avaliacoes_moderacao.sql` | Approved public; own pending |
+| `feedback` | User insert / admin read | `feedback.sql` | Support tickets |
+| `roteiros` | Users CRUD own rows | `roteiros_policies.sql` | AI saved trips |
+| `rotas` + children | Public read / admin write | `rotas_policies.sql` | Re-run after `rota_dicas.sql` / `rotas_taxonomia.sql` |
+| `rotas_favoritas` | Own rows | `rotas_favoritas.sql` | Route bookmarks |
+| `storage.objects` | lugares-fotos / rotas-fotos read | `fotos_migration.sql` | Public read |
+| `storage.objects` | lugares-fotos / rotas-fotos write | `storage_admin_fotos.sql` | Admin-only upload/update/delete |
 | `storage.objects` | `imagens` avatars | `storage-policies.sql` | Insert/update only under `avatars/{user_id}/` |
 
 ### Expected policies (inferred from app)
@@ -505,12 +518,11 @@ RLS policies for **`rotas`** and related tables are in [`rotas_policies.sql`](..
 
 ## SQL functions (RPC)
 
-Defined in [`supabase/increment_uso_ia.sql`](../supabase/increment_uso_ia.sql).
-
-| Function | Parameter | Returns | Purpose |
-|----------|-----------|---------|---------|
-| `increment_busca_ia` | `p_user_id uuid` | `jsonb` | Auth check, **daily** reset (`YYYY-MM-DD`), increment search count (limit **5**/day), premium bypass |
-| `increment_roteiro_ia` | `p_user_id uuid` | `jsonb` | Same for roteiros (limit 2/day); returns `resets_at` (next midnight SP) in `usage` |
+| Function | Parameter | Returns | Purpose | File |
+|----------|-----------|---------|---------|------|
+| `increment_busca_ia` | `p_user_id uuid` | `jsonb` | Auth check, **daily** reset (`YYYY-MM-DD`), increment search count (limit **5**/day), premium bypass | `increment_uso_ia.sql` |
+| `increment_roteiro_ia` | `p_user_id uuid` | `jsonb` | Same for roteiros (limit 2/day); returns `resets_at` (next midnight SP) in `usage` | `increment_uso_ia.sql` |
+| `lugares_populares_ids` | `p_limit int` | `(lugar_id bigint, favoritos_count bigint)` | Top places by favorite count; use **`lugares_populares_rpc_fix.sql`** if return type was `uuid` | `lugares_populares_rpc.sql` |
 
 **Return payload (conceptual):**
 
@@ -550,33 +562,16 @@ Legacy bucket name **“Guia de Bolso - Imagens”** may still host older assets
 
 ## Migration checklist (new environment)
 
-Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in this order (adjust if your project already has base schema):
+**Authoritative ordered manifest** (base schema → premium → RLS → content → routes → security P0 → indexes/RPC): see [**migrations.md → Manifest**](./migrations.md#manifest).
 
-| Order | File | Purpose |
-|-------|------|---------|
-| 1 | Base schema | Tables created in Supabase UI / early scripts (not in repo) |
-| 2 | `premium_usuario.sql` | Premium + usage columns on `perfis` |
-| 3 | `increment_uso_ia.sql` | RPC functions for atomic **daily** counters (re-run after logic changes) |
-| 3b | `premium_uso_diario.sql` | Optional: documents `uso_ia_mes` as daily key |
-| 4 | `perfis_premium_policies.sql` | RLS on `perfis` for own-row access |
-| 5 | `perfis_role_check.sql` | `CHECK (role IN (...))`, migrate `user` → `usuario` |
-| 6 | `tags_categorias.sql` | `tags.categorias` jsonb + seed updates by tag id |
-| 7 | `fotos_migration.sql` | `lugares.fotos`, `rotas.fotos` + Storage policies for photo buckets |
-| 8 | `storage-policies.sql` | Avatar policies on `imagens` |
-| 9 | `logs_policies.sql` | FK `logs.user_id` → `perfis`, permissive read policy |
-| 10 | `lugares_visibilidade.sql` | `lugares.mostrar_endereco`, `lugares.mostrar_horarios` (default `true`) |
-| 11 | `taxonomia_lugares_cleanup.sql` | Canonical subcategorias per category + migrate/remove redundant subs + seed detail **tags** (Surfe, etc.) |
-| 11b | `subcategoria_piscinas_naturais.sql` | Superseded by `taxonomia_lugares_cleanup.sql` (kept for reference) |
-| 12 | `rotas_taxonomia.sql` | `rotas_tags`, `tags.aplica_em_rotas`, `rota_pontos.lugar_id` |
-| 13 | `rota_dicas.sql` | Ordered tips table `rota_dicas` |
-| 14 | `rotas_policies.sql` | RLS on `rotas`, `rota_pontos`, `rota_dicas`, `rotas_tags` (admin write) |
-| 15 | `rotas_localizacoes.sql` | Structured address/coords for routes (`rotas_localizacoes`) |
-| 16 | `rota_ponto_detalhes.sql` | Multiple ordered descriptions per route step |
-| 17 | `avaliacoes_moderacao.sql` | `aspectos`, `sugestao_ia` on `avaliacoes` |
-| 18 | `plano_comercial_unico.sql` | Normalize single **Parceiro** commercial plan |
-| 19 | `premium_uso_dia_fix.sql` | Optional: documents/fixes daily `uso_ia_mes` semantics |
-| 20 | `roteiros_policies.sql` | RLS on `roteiros` (required for delete to persist) |
-| 21 | `lugares_qr_slug.sql` | `lugares.slug` unique + backfill for eligible categories |
+Quick summary for existing projects that already have base tables:
+
+1. Premium + RPC: `premium_usuario.sql`, `increment_uso_ia.sql`
+2. Perfis RLS + guards: `perfis_rls_fix.sql`, `perfis_premium_policies.sql`, `perfis_privileged_guard.sql`, `perfis_role_check.sql`
+3. Content & taxonomy: `tags_categorias.sql`, `fotos_migration.sql`, `lugares_visibilidade.sql`, `taxonomia_lugares_cleanup.sql`, `lugares_qr_slug.sql`
+4. Routes: `rotas_taxonomia.sql`, `rota_dicas.sql`, **`rotas_policies.sql`** (re-run after route child tables), `rotas_localizacoes.sql`, `rota_ponto_detalhes.sql`, `rotas_favoritas.sql`
+5. Security P0: `lugares_public_read.sql`, `lugares_related_public_read.sql`, `lugares_admin_write.sql`, `logs_policies.sql`, `storage_admin_fotos.sql`
+6. Performance: `db_indexes.sql`, `db_indexes_phase2.sql`, `lugares_populares_rpc.sql`, **`lugares_populares_rpc_fix.sql`**
 
 ---
 
@@ -683,21 +678,25 @@ Run SQL scripts from [`/supabase`](../supabase) in a **fresh environment** in th
 
 ---
 
-## Indexes and performance (recommendations)
+## Indexes and performance
 
-Not defined in repo migrations. Suggested for production:
+Versioned SQL:
 
-- `lugares(status, categoria)` — also supports `/categorias` single-pass count (`select categoria where status = ativo`)
-- `lugares_tags(lugar_id)`, `lugares_tags(tag_id)`
-- `favoritos(user_id)`, `favoritos(lugar_id)`
-- `avaliacoes(lugar_id, status)`
-- `localizacoes(lugar_id)` unique
-- `logs(created_at DESC)`
+| File | Phase | Contents |
+|------|-------|----------|
+| [`db_indexes.sql`](../supabase/db_indexes.sql) | 1 | Listings, favoritos, avaliacoes, logs, destaques, roteiros, perfis premium |
+| [`db_indexes_phase2.sql`](../supabase/db_indexes_phase2.sql) | 2 | Taxonomy joins, destaques by lugar, reviews, route steps, logs JSONB GIN |
+| [`lugares_qr_slug.sql`](../supabase/lugares_qr_slug.sql) | — | Partial unique index on `lugares.slug` |
+
+Strategy, hotspots, and roadmap: [**DATABASE_ARCHITECTURE.md §8**](./DATABASE_ARCHITECTURE.md#8-indexes).
 
 ---
 
 ## Related documentation
 
+- [**DATABASE_ARCHITECTURE.md**](./DATABASE_ARCHITECTURE.md) — modeling, normalization, integrity, performance, roadmap
+- [**migrations.md**](./migrations.md) — manifest, CLI workflow, best practices
 - [Architecture](./architecture.md) — how the app talks to Supabase
 - [API](./api.md) — Route Handlers that use RPC and catalog queries
-- [Deployment](./deployment.md) — env vars and migration checklist
+- [Deployment](./deployment.md) — env vars and Supabase production setup
+- [security-rls.md](./security-rls.md) — P0 RLS apply order and manual tests

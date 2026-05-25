@@ -2,6 +2,10 @@
 
 Este arquivo fornece contexto completo do projeto para o agente de IA. Leia antes de qualquer modificação.
 
+**Documentação técnica para equipe (fonte única):** [`docs/README.md`](./docs/README.md) — arquitetura, APIs, banco, deploy, onboarding.
+
+**Padrões obrigatórios de código e arquitetura:** [ENGINEERING_GUIDE.md](./ENGINEERING_GUIDE.md) (estrutura, estado, segurança, abstrações) e [CODING_STANDARDS.md](./CODING_STANDARDS.md) (nomenclatura, componentes, API, erros). Em conflito com convenções antigas neste arquivo, prevalecem os guias de engenharia.
+
 ---
 
 ## Sobre o projeto

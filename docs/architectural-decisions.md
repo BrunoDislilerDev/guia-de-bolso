@@ -1,0 +1,200 @@
+# Decisões arquiteturais
+
+Registro das decisões técnicas principais do **Guia de Bolso** (formato ADR simplificado). Novas decisões devem ser acrescentadas no topo com data e status.
+
+| Status | Significado |
+|--------|-------------|
+| **Aceito** | Em produção / prática atual |
+| **Proposto** | Planejado, não implementado |
+| **Substituído** | Não usar mais; histórico mantido |
+
+---
+
+## ADR-001 — Next.js 16 App Router sem backend separado
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Contexto** | Time pequeno, deploy serverless, produto mobile-first |
+| **Decisão** | UI + Route Handlers no mesmo repo Next.js na Vercel |
+| **Consequências** | (+) Menos ops, cold start aceitável; (−) lógica pesada deve ficar em `lib/`, não em handlers gigantes |
+
+---
+
+## ADR-002 — JavaScript sem TypeScript
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Contexto** | Velocidade de iteração e perfil do maintainer |
+| **Decisão** | JS puro; testes com `node --test` |
+| **Consequências** | (+) onboarding rápido; (−) menos segurança estática — compensar com testes em `lib/` críticos |
+
+---
+
+## ADR-003 — Supabase como BaaS (Postgres + Auth + Storage)
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | PostgreSQL com RLS, Auth (Google + SMS), Storage para mídia |
+| **Consequências** | (+) RLS como fronteira de segurança; (−) migrations manuais no SQL Editor |
+
+---
+
+## ADR-004 — Leitura pública direta do browser com RLS
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | Catálogo `lugares` ativo lido via cliente Supabase no browser, sem BFF para cada query |
+| **Exceção** | `GET /api/lugares` para respostas cacheáveis na CDN |
+| **Consequências** | Policies devem estar corretas; anon key nunca substitui service role no cliente |
+
+---
+
+## ADR-005 — IA apenas em Route Handlers
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | `ANTHROPIC_API_KEY` só em `app/api/*` |
+| **Consequências** | Busca e roteiro sempre passam por cotas server (`premiumServer`, RPC) |
+
+---
+
+## ADR-006 — Cotas IA com RPC SECURITY DEFINER
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | Incremento atômico via `increment_busca_ia` / `increment_roteiro_ia`; bucket diário `YYYY-MM-DD` (SP) |
+| **Consequências** | Cliente não pode “zerar” contador com update direto; alinhar dia em `GET /api/uso-premium` |
+
+---
+
+## ADR-007 — Sem estado global React para auth/premium
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | Hooks locais (`usePremiumUsage`, `getUser` por página) |
+| **Consequências** | (+) menos acoplamento; (−) cuidado para não triplicar fetch — extrair hooks |
+
+---
+
+## ADR-008 — Admin com guard server + RLS
+
+| | |
+|---|---|
+| **Status** | Aceito (atualizado) |
+| **Decisão** | `app/admin/layout.js` valida sessão e `canAccessAdmin`; complemento client `AdminShell` |
+| **Consequências** | Rotas admin não dependem só de redirect client-side |
+
+---
+
+## ADR-009 — Migrations SQL versionadas, apply manual
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | Arquivos em `/supabase`, ordem em `docs/migrations.md` |
+| **Consequências** | (+) auditável no Git; (−) exige disciplina em releases — sem `db push` automático documentado |
+
+---
+
+## ADR-010 — `lugares.id` como bigint
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | PK numérica em produção; FKs e RPCs usam bigint |
+| **Consequências** | Docs antigos com UUID estão obsoletos — ver `database.md` |
+
+---
+
+## ADR-011 — Taxonomia híbrida (código + tabelas)
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | Categorias fixas em `lib/categorias.js`; `subcategorias` e `tags` no banco |
+| **Consequências** | Nova categoria macro exige deploy; subcategoria/tag via `/admin/taxonomia` |
+
+---
+
+## ADR-012 — Imagens via next/image + Supabase Storage
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | URLs públicas Storage; hosts em `next.config.mjs`; compressão client antes upload admin |
+| **Consequências** | Novo domínio de imagem exige atualizar `remotePatterns` |
+
+---
+
+## ADR-013 — Clima via Open-Meteo (sem chave)
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | Fetch direto do browser em `lib/clima.js` |
+| **Consequências** | Dependência de disponibilidade externa; sem custo de API key |
+
+---
+
+## ADR-014 — Rate limit IA em memória (processo)
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | `lib/iaRateLimit.js` por instância serverless |
+| **Consequências** | Proteção básica; escala multi-região pode precisar Redis/KV (comentado no código) |
+
+---
+
+## ADR-015 — CI GitHub Actions + deploy Vercel
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | PR: lint + test + build; merge `main` → deploy Vercel |
+| **Consequências** | Secrets duplicados GitHub + Vercel para build passar |
+
+---
+
+## ADR-016 — Headers de segurança em vercel.json
+
+| | |
+|---|---|
+| **Status** | Aceito |
+| **Decisão** | `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` |
+| **Consequências** | Geolocation permitida apenas `(self)` para UX de distância |
+
+---
+
+## Decisões propostas (roadmap)
+
+| ID | Tema | Notas |
+|----|------|-------|
+| P-001 | Cobrança Asaas | Portal estabelecimento + `premium_ativo` automatizado |
+| P-002 | PWA / offline | Service worker para catálogo mínimo |
+| P-003 | Schema baseline export | `supabase/schema_baseline.sql` do projeto produção |
+| P-004 | Rate limit distribuído | Vercel KV ou Redis para IA e feedback |
+| P-005 | Role `estabelecimento` | Painel self-service separado do admin municipal |
+
+---
+
+## Como propor nova decisão
+
+1. Abra PR com seção neste arquivo (data, contexto, decisão, consequências).
+2. Atualize docs afetadas (`architecture.md`, `database.md`, etc.).
+3. Se impactar segurança, atualize [`SECURITY_CHECKLIST.md`](../SECURITY_CHECKLIST.md).
+
+---
+
+## Referências
+
+- [`architecture.md`](./architecture.md)
+- [`DATABASE_ARCHITECTURE.md`](./DATABASE_ARCHITECTURE.md)
+- [`features.md`](./features.md) — capacidades de produto

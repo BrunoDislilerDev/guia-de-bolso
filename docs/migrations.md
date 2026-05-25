@@ -1,0 +1,171 @@
+# Migrations Supabase
+
+Single source of truth for **apply order**, **best practices**, and **CLI workflow**. Schema reference: [database.md](./database.md). Architecture and roadmap: [DATABASE_ARCHITECTURE.md](./DATABASE_ARCHITECTURE.md).
+
+---
+
+## Modes of operation
+
+### Current (SQL Editor)
+
+Files in [`supabase/`](../supabase/) are pasted into the **Supabase SQL Editor** in the order below. Idempotent scripts (`IF NOT EXISTS`, `DROP POLICY IF EXISTS`) are safe to re-run when noted.
+
+### Recommended (CLI)
+
+1. Install [Supabase CLI](https://supabase.com/docs/guides/cli).
+2. `supabase login` and `supabase link --project-ref rsdjbqzjdyeaedyqwrvc`
+3. Copy new scripts to `supabase/migrations/` with timestamp prefix: `20260525120000_descricao.sql`
+4. `supabase db push` on **staging** before production.
+
+[`supabase/config.toml`](../supabase/config.toml) enables `[db.migrations]`.
+
+### Staging
+
+Use a separate Supabase project for Vercel Preview. Apply the full manifest there first, then run [security-rls.md](./security-rls.md) manual tests.
+
+---
+
+## Best practices
+
+### One manifest, one order
+
+Use the [Manifest](#manifest) below. Do not maintain parallel checklists in README or deployment docs — link here instead.
+
+### File design
+
+| Rule | Why |
+|------|-----|
+| **One concern per file** | Easier review and partial apply on legacy DBs |
+| **DDL separate from seeds** | `taxonomia_lugares_cleanup.sql`, `plano_comercial_unico.sql` change data |
+| **Idempotent DDL** | `CREATE INDEX IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS` |
+| **Policies: DROP then CREATE** | `DROP POLICY IF EXISTS "name" ON table` before `CREATE POLICY` |
+| **Re-run tightening scripts** | `rotas_policies.sql` after `rota_dicas.sql` / `rotas_taxonomia.sql` |
+
+### Policy ordering trap
+
+Early route migrations may create **permissive** write policies (`USING (true)`). Always run **`rotas_policies.sql`** afterward so only admin/dev can write routes and children.
+
+### Rollback
+
+There is **no automatic down migration** in this repo. To revert:
+
+- Write a compensating SQL file (e.g. `DROP INDEX`, `ALTER TABLE DROP COLUMN`), or
+- Restore from Supabase backup / point-in-time recovery.
+
+Document what was applied in the PR or deploy notes.
+
+### Post-apply checklist
+
+1. [security-rls.md](./security-rls.md) — manual RLS tests (non-admin cannot read `logs`, upload photos, escalate `role`).
+2. Confirm `authenticated` can execute `increment_busca_ia`, `increment_roteiro_ia`, `lugares_populares_ids`.
+3. `EXPLAIN ANALYZE` on heavy paths: full active `lugares` select (busca), admin log filter, popular places RPC.
+4. Compare Dashboard policies vs repo for `favoritos`, `destaques` (not fully versioned yet).
+
+### Baseline export (recommended)
+
+Periodically export production schema to `supabase/schema_baseline.sql` (read-only reference, not applied automatically). Helps when base `CREATE TABLE` is missing from the repo.
+
+---
+
+## Manifest {#manifest}
+
+Run in order for a **new environment** that already has base tables from the Supabase Dashboard (`lugares`, `perfis`, `favoritos`, etc.). Skip steps already applied; never skip **`rotas_policies.sql`** after route child tables.
+
+### A — Base and premium
+
+| # | File | Purpose |
+|---|------|---------|
+| 0 | *(Dashboard)* | Core tables: `lugares`, `localizacoes`, `perfis`, `favoritos`, `tags`, `lugares_tags`, `subcategorias`, `avaliacoes`, `destaques`, `planos`, `logs`, … |
+| 1 | `premium_usuario.sql` | `premium_*`, `buscas_ia`, `roteiros_ia`, `uso_ia_mes` on `perfis` |
+| 2 | `increment_uso_ia.sql` | RPC `increment_busca_ia`, `increment_roteiro_ia` |
+| 2b | `premium_uso_diario.sql` | Optional: comment on `uso_ia_mes` (daily key) |
+| 2c | `premium_uso_dia_fix.sql` | Optional: one-time fix for legacy month keys |
+| 3 | `perfis_email_admin.sql` | `perfis.email` + admin read |
+
+### B — Helpers and perfis RLS
+
+| # | File | Purpose |
+|---|------|---------|
+| 4 | `rotas_policies.sql` | Defines `is_admin_user()` (needed before some policies) |
+| 5 | `perfis_rls_fix.sql` | `is_admin_or_dev()`, admin SELECT all perfis |
+| 6 | `perfis_premium_policies.sql` | Own-row insert/select/update usage |
+| 7 | `perfis_privileged_guard.sql` | Trigger: block self-escalation on `role`, premium |
+| 8 | `perfis_role_check.sql` | CHECK roles; migrate `user` → `usuario` |
+
+### C — Content, storage, taxonomy
+
+| # | File | Purpose |
+|---|------|---------|
+| 9 | `tags_categorias.sql` | `tags.categorias` jsonb + seed |
+| 10 | `fotos_migration.sql` | `lugares.fotos`, `rotas.fotos`; public storage read |
+| 11 | `storage-policies.sql` | Avatar policies on `imagens` |
+| 12 | `logs_policies.sql` | FK `logs.user_id` → `perfis`; RLS |
+| 13 | `lugares_visibilidade.sql` | `mostrar_endereco`, `mostrar_horarios` |
+| 14 | `taxonomia_lugares_cleanup.sql` | Subcategorias + tag seeds + lugar migrations |
+| 14b | `subcategoria_piscinas_naturais.sql` | **Superseded** by #14 — reference only |
+| 15 | `lugares_qr_slug.sql` | `lugares.slug` unique + backfill |
+
+### D — Routes (curated)
+
+| # | File | Purpose |
+|---|------|---------|
+| 16 | `rotas_taxonomia.sql` | `rotas_tags`, `tags.aplica_em_rotas`, `rota_pontos.lugar_id` |
+| 17 | `rota_dicas.sql` | Table `rota_dicas` |
+| 18 | **`rotas_policies.sql`** | **Tighten** RLS on `rotas`, `rota_pontos`, `rota_dicas`, `rotas_tags` |
+| 19 | `rotas_localizacoes.sql` | 1:1 address/coords for routes |
+| 20 | `rota_ponto_detalhes.sql` | Ordered lines per step |
+| 21 | `rotas_favoritas.sql` | User route bookmarks |
+
+### E — Reviews, plans, AI trips
+
+| # | File | Purpose |
+|---|------|---------|
+| 22 | `avaliacoes_moderacao.sql` | Moderation columns + RLS |
+| 23 | `plano_comercial_unico.sql` | Single Parceiro plan seed |
+| 24 | `roteiros_policies.sql` | RLS on AI `roteiros` |
+| 25 | `feedback.sql` | Support table + RLS |
+
+### F — Security P0 (lugares + storage write)
+
+| # | File | Purpose |
+|---|------|---------|
+| 26 | `lugares_public_read.sql` | Public read active `lugares` |
+| 27 | `lugares_related_public_read.sql` | `localizacoes`, `tags`, `lugares_tags` |
+| 28 | `lugares_admin_write.sql` | Admin CRUD `lugares` |
+| 29 | `storage_admin_fotos.sql` | Admin-only upload to photo buckets |
+
+### G — Performance and RPC
+
+| # | File | Purpose |
+|---|------|---------|
+| 30 | `db_indexes.sql` | Phase 1 indexes |
+| 31 | `db_indexes_phase2.sql` | Phase 2 indexes (taxonomy, logs GIN, …) |
+| 32 | `lugares_populares_rpc.sql` | RPC popular places |
+| 33 | `lugares_populares_rpc_fix.sql` | Ensures `lugar_id bigint` return (re-run safe) |
+
+### H — Optional / ops
+
+| # | File | Purpose |
+|---|------|---------|
+| — | `grant_admin_role.sql` | Manual bootstrap admin by email |
+| — | `logs_retention.sql` | Ops comments only |
+| — | `schema_baseline.sql` | *(future)* exported production schema |
+
+### P0 security quick path (existing production)
+
+If you only need to align security on a live DB, minimum order from [security-rls.md](./security-rls.md):
+
+1. `rotas_policies.sql`
+2. `perfis_rls_fix.sql` → `perfis_premium_policies.sql` → `perfis_privileged_guard.sql`
+3. `lugares_public_read.sql` + `lugares_admin_write.sql` + `lugares_related_public_read.sql`
+4. `logs_policies.sql`
+5. `storage_admin_fotos.sql` (after buckets exist)
+6. `db_indexes.sql` + `db_indexes_phase2.sql` + `lugares_populares_rpc_fix.sql`
+
+---
+
+## Related
+
+- [DATABASE_ARCHITECTURE.md](./DATABASE_ARCHITECTURE.md) — roadmap phases 0–4
+- [database.md](./database.md) — columns, RPC, query catalog
+- [deployment.md](./deployment.md) — production Supabase setup

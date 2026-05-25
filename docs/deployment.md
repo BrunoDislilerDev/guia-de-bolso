@@ -2,6 +2,8 @@
 
 This guide covers deploying **Guia de Bolso** to production using **Vercel** (frontend + serverless API) and **Supabase** (database, auth, storage).
 
+> **Variáveis:** [environment.md](./environment.md) · **Onboarding:** [onboarding.md](./onboarding.md) · **Migrations:** [migrations.md](./migrations.md)
+
 | Environment | URL |
 |-------------|-----|
 | **Production** | https://guia-de-bolso-puce.vercel.app |
@@ -53,6 +55,8 @@ Before the first production deploy:
 ---
 
 ## Environment variables
+
+**Full reference:** [environment.md](./environment.md).
 
 ### Local development
 
@@ -156,7 +160,7 @@ npm run start
 | **Install Command** | `npm install` (default) |
 | **Node.js Version** | **20.x** (recommended; set in Project → Settings → General) |
 
-No `vercel.json` is required for the default Next.js flow.
+[`vercel.json`](../vercel.json) adds security headers (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`). No custom rewrites are required for the default Next.js flow.
 
 ### Build-time vs runtime
 
@@ -169,7 +173,7 @@ No `vercel.json` is required for the default Next.js flow.
 
 ### Primary pipeline: Vercel + GitHub
 
-This project uses **Vercel’s Git integration** as the main CI/CD path (no custom workflow file is required in the repo).
+This project uses **Vercel’s Git integration** for deploys, plus **GitHub Actions** for lint/test/build on every PR (see below).
 
 ```mermaid
 flowchart LR
@@ -194,9 +198,11 @@ flowchart LR
 3. Merge to `main` → automatic production build and promote.
 4. Run [production smoke tests](#production-smoke-tests).
 
-### Recommended: GitHub Actions (optional quality gate)
+### GitHub Actions (quality gate)
 
-The repository does not ship a workflow file by default. To run lint/build on every PR **before** or **alongside** Vercel, add `.github/workflows/ci.yml`:
+The repository ships [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — lint, unit tests, and build on PRs and pushes to `main`. Vercel still performs the deploy.
+
+To replicate locally or customize the workflow, reference:
 
 ```yaml
 name: CI
@@ -275,7 +281,7 @@ https://*.vercel.app/auth/callback
 
 ### 3. SQL migrations
 
-Run scripts from [`/supabase`](../supabase) in the **SQL Editor** in order. **Authoritative order:** [Database → Migration checklist](./database.md#migration-checklist-new-environment) (steps 1–19, including routes taxonomy, reviews moderation, and commercial plan).
+Run scripts from [`/supabase`](../supabase) in the **SQL Editor** in order. **Authoritative order:** [Migrations → Manifest](./migrations.md#manifest) (base schema → premium → RLS → routes → security P0 → indexes/RPC).
 
 Minimum for a legacy DB that already has base schema:
 
@@ -292,7 +298,7 @@ Minimum for a legacy DB that already has base schema:
 | 7 | `fotos_migration.sql` |
 | 8 | `storage-policies.sql` |
 | 9 | `logs_policies.sql` |
-| 10+ | See [database.md](./database.md#migration-checklist-new-environment) for `lugares_visibilidade`, taxonomy, routes, `avaliacoes_moderacao`, `plano_comercial_unico`, etc. |
+| 10+ | See [migrations.md](./migrations.md#manifest) for full list (`lugares_visibilidade`, taxonomy, routes, `avaliacoes_moderacao`, `db_indexes_phase2`, etc.) |
 
 After migrations:
 
@@ -449,6 +455,8 @@ Use this list for **first launch** and **each major release**.
 ## Related documentation
 
 - [Architecture](./architecture.md) — system design and auth flow
-- [Database](./database.md) — schema, RLS, migrations
+- [DATABASE_ARCHITECTURE.md](./DATABASE_ARCHITECTURE.md) — modeling, performance, roadmap
+- [database.md](./database.md) — schema reference
+- [migrations.md](./migrations.md) — SQL manifest and best practices
 - [API](./api.md) — Route Handlers and env usage
 - [Contributing](./contributing.md) — local development conventions

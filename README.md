@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://guia-de-bolso-puce.vercel.app"><strong>Live application</strong></a>
   &nbsp;·&nbsp;
-  <a href="./docs/README.md">Documentation</a>
+  <a href="./docs/README.md"><strong>Documentação técnica</strong></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/BrunoDislilerDev/guia-de-bolso/issues">Report an issue</a>
 </p>
@@ -153,6 +153,8 @@ Recommended capture size: **390×844** (mobile viewport). See `docs/screenshots/
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
+| `/api/health` | `GET` | Deploy smoke check |
+| `/api/lugares` | `GET` | Public catalog (CDN-cacheable) |
 | `/api/buscar` | `POST` | AI-powered place search |
 | `/api/roteiro` | `POST` | Generate multi-day itinerary |
 | `/api/roteiro/salvar` | `POST` | Persist user itinerary |
@@ -187,7 +189,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Database migrations
 
-Apply SQL scripts in the Supabase **SQL Editor** using the full ordered checklist in [`docs/database.md`](./docs/database.md#migration-checklist-new-environment) (premium columns, RPC counters, RLS, tags, photos, storage, logs).
+Apply SQL scripts in the Supabase **SQL Editor** using the ordered manifest in [`docs/migrations.md`](./docs/migrations.md#manifest). Architecture and performance notes: [`docs/DATABASE_ARCHITECTURE.md`](./docs/DATABASE_ARCHITECTURE.md).
 
 ### NPM scripts
 
@@ -202,28 +204,16 @@ Apply SQL scripts in the Supabase **SQL Editor** using the full ordered checklis
 
 ## Environment variables
 
-Create **`.env.local`** at the repository root. Do not commit secrets.
+Copy [`.env.example`](./.env.example) to `.env.local`. Full reference (scopes, Vercel, CI): **[`docs/environment.md`](./docs/environment.md)**.
 
-| Variable | Required | Scope | Description |
-|----------|:--------:|-------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Client + server | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Client + server | Supabase anonymous key |
-| `ANTHROPIC_API_KEY` | Yes | Server only | Anthropic API secret |
-| `ANTHROPIC_MODEL` | Recommended | Server only | Model ID (e.g. `claude-sonnet-4-5`) |
+| Variable | Required | Scope |
+|----------|:--------:|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Client + server |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Client + server |
+| `ANTHROPIC_API_KEY` | Yes | Server only |
+| `ANTHROPIC_MODEL` | Recommended | Server only |
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
-ANTHROPIC_API_KEY=sk-ant-...
-ANTHROPIC_MODEL=claude-sonnet-4-5
-```
-
-**Auth redirect URLs** (Supabase Dashboard → Authentication):
-
-| Environment | Site URL | Redirect URL |
-|-------------|----------|--------------|
-| Local | `http://localhost:3000` | `http://localhost:3000/auth/callback` |
-| Production | `https://guia-de-bolso-puce.vercel.app` | `https://guia-de-bolso-puce.vercel.app/auth/callback` |
+**Auth redirect URLs** (Supabase Dashboard → Authentication): see [`docs/authentication.md`](./docs/authentication.md).
 
 ---
 
@@ -270,14 +260,17 @@ git push → Vercel build → Production
 
 ## Project structure
 
+Full tree: **[`docs/project-structure.md`](./docs/project-structure.md)**.
+
 ```text
 guia-de-bolso/
 ├── app/                 # Next.js routes & API handlers
-├── components/          # UI (home/, lugar/, admin/, shared)
-├── lib/                 # Domain logic & integrations
+├── components/          # UI by domain (home/, lugar/, admin/, …)
+├── hooks/               # Shared React hooks
+├── lib/                 # Domain logic & Supabase clients
 ├── supabase/            # SQL migrations (manual apply)
-├── docs/                # Technical documentation
-├── public/              # Static assets
+├── docs/                # ← Technical documentation (single source)
+├── e2e/                 # Playwright smoke tests
 └── .env.example         # Environment template
 ```
 
@@ -285,16 +278,22 @@ guia-de-bolso/
 
 ## Documentation
 
-Full index: **[docs/README.md](./docs/README.md)**
+**Índice mestre (handoff para equipe):** **[docs/README.md](./docs/README.md)**
 
-| Guide | Description |
-|-------|-------------|
-| [architecture.md](./docs/architecture.md) | System design & data flows |
-| [database.md](./docs/database.md) | Schema, RLS, migrations |
-| [api.md](./docs/api.md) | HTTP API reference |
-| [features.md](./docs/features.md) | Feature matrix & access rules |
-| [deployment.md](./docs/deployment.md) | Production operations |
-| [contributing.md](./docs/contributing.md) | Contribution guidelines |
+| Documento | Conteúdo |
+|-----------|----------|
+| [onboarding.md](./docs/onboarding.md) | Onboarding técnico |
+| [architecture.md](./docs/architecture.md) | Arquitetura do sistema |
+| [project-structure.md](./docs/project-structure.md) | Estrutura de pastas |
+| [authentication.md](./docs/authentication.md) | Fluxo de autenticação |
+| [data-flows.md](./docs/data-flows.md) | Fluxo de dados |
+| [api.md](./docs/api.md) | APIs HTTP |
+| [database.md](./docs/database.md) | Banco de dados |
+| [conventions.md](./docs/conventions.md) | Convenções do projeto |
+| [environment.md](./docs/environment.md) | Variáveis de ambiente |
+| [architectural-decisions.md](./docs/architectural-decisions.md) | Decisões arquiteturais |
+| [deployment.md](./docs/deployment.md) | Deploy e CI |
+| [CODING_STANDARDS.md](./CODING_STANDARDS.md) | Estilo linha a linha |
 
 ---
 

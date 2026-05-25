@@ -5,6 +5,8 @@ Server routes live under `app/api/` as **Next.js Route Handlers**. All AI and pr
 Base URL (production): `https://guia-de-bolso-puce.vercel.app/api`  
 Local: `http://localhost:3000/api`
 
+> Índice geral: [docs/README.md](./README.md). Fluxos: [data-flows.md](./data-flows.md), [authentication.md](./authentication.md).
+
 ## Authentication
 
 Most protected routes use Supabase session cookies via `@supabase/ssr`:
@@ -17,6 +19,46 @@ const user = await getAuthUser();
 Unauthenticated requests to AI routes return `401` with `{ code: "LOGIN_REQUIRED", error, usage? }` where applicable. `POST /api/roteiro/salvar` returns `401` with `{ error }` only (no `code`).
 
 ## Endpoints
+
+### `GET /api/health`
+
+Deploy and uptime smoke check. No authentication.
+
+**Success (200):**
+
+```json
+{
+  "ok": true,
+  "service": "guia-de-bolso",
+  "timestamp": "2026-05-25T12:00:00.000Z"
+}
+```
+
+Implementation: `app/api/health/route.js`.
+
+---
+
+### `GET /api/lugares`
+
+Public read of active places via server-side anon client (`getAnonServerClient`). Responses include CDN-friendly cache headers (`lib/apiCacheHeaders.js`).
+
+**Auth:** None  
+**Query parameters:**
+
+| Param | Description |
+|-------|-------------|
+| `mode=populares` | Trending places (RPC/favorites); `limit` 1–50 (default 8) |
+| `mode=destaques` | Active commercial highlights |
+| `ids` | Comma-separated place ids → `{ lugares: [...] }` |
+| `categoria` | Filter by category name (with default list query) |
+| `limit` | 1–100 for default active list (default 50) |
+
+**Success:** `{ "lugares": [...] }` or `{ "destaques": [...] }`  
+**Errors:** `503` if Supabase env missing on server; `500` on query failure
+
+Implementation: `app/api/lugares/route.js`, queries in `lib/lugaresQuery.js` / `lib/lugaresPopulares.js` / `lib/destaques.js`. Client wrapper: `lib/fetchLugaresApi.js`.
+
+---
 
 ### `POST /api/buscar`
 
@@ -301,13 +343,15 @@ Not all data goes through `/api`. The browser Supabase client reads public data 
 
 ## Environment variables (API)
 
+Full reference: [environment.md](./environment.md).
+
 | Variable | Required by |
 |----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | All routes using Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth session, `/api/lugares` |
 | `ANTHROPIC_API_KEY` | `/api/buscar`, `/api/roteiro`, `/api/avaliacoes/analisar` |
 | `SUPABASE_SERVICE_ROLE_KEY` | `/api/feedback` (guest insert only; server-side) |
 | `ANTHROPIC_MODEL` | Model id (default `claude-sonnet-4-5`) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Auth session |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth session |
 
 ## Rate limits and cost control
 

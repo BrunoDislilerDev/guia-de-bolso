@@ -2,6 +2,8 @@
 
 Thank you for contributing to Guia de Bolso. This guide covers local setup, conventions, and how to propose changes.
 
+> **Convenções detalhadas:** [conventions.md](./conventions.md) · **Onboarding:** [onboarding.md](./onboarding.md) · **Variáveis:** [environment.md](./environment.md)
+
 ## Getting started
 
 ### Prerequisites
@@ -31,7 +33,7 @@ ANTHROPIC_MODEL=claude-sonnet-4-5
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 ```
 
-Run database migrations — see [Database](./database.md#migration-checklist-new-environment).
+Run database migrations — see [Migrations manifest](./migrations.md#manifest).
 
 Start the dev server:
 
@@ -52,47 +54,9 @@ npm run lint    # ESLint
 
 ## Project conventions
 
-### Language
-
-- **JavaScript only** — no TypeScript (project decision)
-- User-facing copy in **Brazilian Portuguese (pt-BR)**
-- Code comments in Portuguese or English (be consistent within a file)
-
-### Framework
-
-- **Next.js 16 App Router** — read `node_modules/next/dist/docs/` before changing routing or server APIs (project may differ from older Next.js versions)
-- Prefer **Client Components** only when needed (hooks, browser APIs, auth state)
-- Keep business logic in `lib/`, not scattered in UI files
-
-### Styling
-
-- **Tailwind CSS 4**
-- Mobile-first layout (~`max-w-md` centered column)
-- Brand greens: `#1a4a3a` (primary), background `#f0f4f3`
-- Use existing patterns from `components/home/` and `components/lugar/`
-
-### File organization
-
-| Path | Purpose |
-|------|---------|
-| `app/` | Routes and pages |
-| `components/` | Reusable UI (group by domain) |
-| `lib/` | Helpers, Supabase clients, domain logic |
-| `supabase/` | SQL migrations (manual) |
-| `docs/` | Project documentation |
-| `public/` | Static assets |
-
-### Supabase
-
-- Never commit secrets or `.env.local`
-- Schema changes require a new `.sql` file in `supabase/` with a short header comment
-- Document migration order in `docs/database.md` and root `README.md`
-
-### AI features
-
-- API keys only in server routes (`app/api/`)
-- Respect premium limits — test with `premium_ativo = false` on your profile
-- Keep prompts concise; use summarized place context (`lib/busca.js`)
+**Canonical:** [conventions.md](./conventions.md) (structure, API, RLS, security, tests).  
+**Line-level style:** [CODING_STANDARDS.md](../CODING_STANDARDS.md).  
+**Index:** [ENGINEERING_GUIDE.md](../ENGINEERING_GUIDE.md) → `docs/`.
 
 ---
 
@@ -143,12 +107,16 @@ npm run lint    # ESLint
 
 ---
 
-## Unit tests (optional, no CI yet)
+## Tests e CI
 
 ```bash
-node lib/horarios.test.js
-node lib/premium.test.js
+npm test          # todos os lib/*.test.js
+npm run lint
+npm run build
+npm run test:e2e  # Playwright (app rodando ou PLAYWRIGHT_BASE_URL)
 ```
+
+GitHub Actions (`.github/workflows/ci.yml`) roda lint, test e build em PRs para `main`. Configure os secrets do Supabase/Anthropic no repositório para o build passar.
 
 ---
 
@@ -175,14 +143,17 @@ Include:
 
 ## Documentation
 
-When adding features, update as needed:
+Central index: **[docs/README.md](./README.md)**. When adding features, update as needed:
 
-- `README.md` — high-level overview
-- `docs/CHANGELOG.md` — release notes (semver)
-- `docs/features.md` — product behavior
-- `docs/api.md` — new endpoints
-- `docs/database.md` — schema changes
-- `CLAUDE.md` — agent context (optional, for AI assistants)
+| Change | File |
+|--------|------|
+| Endpoint | `docs/api.md` |
+| Schema / RLS | `docs/database.md`, `supabase/*.sql`, `docs/migrations.md` |
+| Product behavior | `docs/features.md`, `docs/CHANGELOG.md` |
+| Env var | `.env.example`, `docs/environment.md` |
+| ADR | `docs/architectural-decisions.md` |
+| Overview | `README.md` (brief), detail in `docs/` |
+| Agents | `CLAUDE.md` (optional) |
 
 ---
 
@@ -193,6 +164,8 @@ For questions about contributing, open a GitHub issue or contact the maintainer.
 
 ## Related docs
 
+- [Engineering guide](../ENGINEERING_GUIDE.md)
+- [Coding standards](../CODING_STANDARDS.md)
 - [Architecture](./architecture.md)
 - [Deployment](./deployment.md)
 - [Features](./features.md)

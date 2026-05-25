@@ -4,6 +4,8 @@ Guia de Bolso is a **mobile-first web application** for local discovery in Imbit
 
 This document describes how the frontend, backend, data plane, authentication, and external services fit together in production.
 
+> **Documentação em português (handoff):** [Fluxo de autenticação](./authentication.md) · [Fluxo de dados](./data-flows.md) · [Estrutura de pastas](./project-structure.md) · [Decisões arquiteturais](./architectural-decisions.md) · [Índice](./README.md)
+
 ---
 
 ## System context
@@ -197,7 +199,7 @@ Admin pages wrap content in **`AdminShell`**, which uses `useAdminAuth()`:
 2. Fetch `perfis` row for current user.
 3. Redirect to `/` if unauthenticated or `role` is not admin-capable (`lib/adminRoles.js`).
 
-There is **no server-side admin layout guard**; protection is client-side plus RLS on writes.
+**Server guard:** `app/admin/layout.js` redirects unauthenticated users to `/login?next=/admin` and non-admin roles to `/?admin=denied` before rendering children. **Client:** `AdminShell` + `useAdminAuth` for UX. **Database:** RLS on all admin writes.
 
 **Layout (`AdminShell` + subcomponents):**
 
@@ -242,6 +244,8 @@ lib/supabase.js
 
 | Endpoint | Auth | Responsibility |
 |----------|------|----------------|
+| `GET /api/lugares` | Public | Cached catalog reads (`mode=populares`, `destaques`, `ids`, `categoria`, `limit`) via anon server client |
+| `GET /api/health` | Public | Deploy smoke `{ ok, service, timestamp }` |
 | `POST /api/buscar` | Required (non-empty `query`) | Premium check → load places → Claude ranking → filter → `increment_busca_ia`; empty `query` returns `{ lugares: [] }` without auth |
 | `POST /api/roteiro` | Required | Generate itinerary (Claude), premium check, token-optimized prompt |
 | `POST /api/roteiro/salvar` | Required | Insert into `roteiros` |
@@ -569,6 +573,11 @@ Single-region deployment. No multi-region failover documented.
 
 ## Related documentation
 
+- [Authentication flow (pt-BR)](./authentication.md)
+- [Data flows (pt-BR)](./data-flows.md)
+- [Project structure (pt-BR)](./project-structure.md)
+- [Environment variables](./environment.md)
+- [Architectural decisions](./architectural-decisions.md)
 - [Database schema & RLS](./database.md)
 - [HTTP API reference](./api.md)
 - [Feature matrix](./features.md)

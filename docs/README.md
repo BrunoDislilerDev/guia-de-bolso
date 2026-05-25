@@ -1,135 +1,152 @@
-# Documentation
+# Documentação técnica — Guia de Bolso
 
-Technical documentation for **[Guia de Bolso](https://guia-de-bolso-puce.vercel.app)** — a mobile-first local discovery app for Imbituba (SC, Brazil).
+**Fonte única** de documentação para equipes de engenharia, DevOps, QA e produto. Aplicação em produção: [guia-de-bolso-puce.vercel.app](https://guia-de-bolso-puce.vercel.app).
 
-New to the project? Start with the [root README](../README.md), then follow the [recommended reading order](#recommended-reading-order) below.
-
----
-
-## Documentation index
-
-| Document | Description |
-|----------|-------------|
-| [**Architecture**](./architecture.md) | System design: frontend, backend, data flows, authentication, third-party services |
-| [**Database**](./database.md) | PostgreSQL schema, relationships, RLS policies, SQL migrations, common queries |
-| [**API**](./api.md) | HTTP reference for `/api/buscar`, `/api/roteiro`, `/api/uso-premium`, and related contracts |
-| [**Features**](./features.md) | User-facing capabilities: goals, flows, edge cases, and access by role |
-| [**Deployment**](./deployment.md) | Vercel + Supabase: env vars, build steps, CI/CD, production checklist |
-| [**Contributing**](./contributing.md) | Local setup, conventions, branching, and pull request guidelines |
-| [**Changelog**](./CHANGELOG.md) | Release history (Semantic Versioning) |
-| [**Testing checklist**](./TESTING-CHECKLIST.md) | Manual QA — interactive checklist at [`/checklist-testes.html`](../public/checklist-testes.html) (153 cases, mobile/tablet/desktop) |
-| [**Costs & revenue**](./CUSTOS.md) | Monthly costs (R$), AI usage, B2B/B2C projections — edit with [`custos-planilha.csv`](./custos-planilha.csv) |
-| [**Place taxonomy**](./taxonomia-lugares.md) | Subcategorias vs tags; admin `/admin/taxonomia` |
-| [**Legal (draft)**](./legal/) | Privacy policy & terms — source in `lib/legalContent.js`; review with counsel before formal release |
+Porta de entrada do repositório: [README.md](../README.md) (visão executiva). Contexto para agentes de IA: [CLAUDE.md](../CLAUDE.md).
 
 ---
 
-## By topic
+## Comece aqui
 
-### Build & run locally
-
-1. [Contributing → Getting started](./contributing.md#getting-started)
-2. Copy [`.env.example`](../.env.example) to `.env.local`
-3. [Database → Migration checklist](./database.md#migration-checklist-new-environment)
-4. `npm install` → `npm run dev`
-
-### Ship to production
-
-1. [Deployment → Environment variables](./deployment.md#environment-variables)
-2. [Deployment → Supabase production setup](./deployment.md#supabase-production-setup)
-3. [Deployment → Production checklist](./deployment.md#production-checklist)
-
-### Understand the product
-
-1. [Features](./features.md) — what users can do
-2. [Architecture](./architecture.md) — how it is built
-3. [API](./api.md) — server endpoints for AI and premium
-
-### Operate & extend data
-
-1. [Database](./database.md) — tables, RLS, RPC functions
-2. SQL scripts in [`/supabase`](../supabase/)
-3. [API](./api.md) — when adding server-side behavior
+| Perfil | Rota de leitura |
+|--------|-----------------|
+| **Desenvolvedor novo** | [Onboarding técnico](./onboarding.md) → [Estrutura de pastas](./project-structure.md) → [Arquitetura](./architecture.md) → [Convenções](./conventions.md) |
+| **DevOps / release** | [Deploy](./deployment.md) → [Variáveis de ambiente](./environment.md) → [Migrations](./migrations.md) |
+| **Backend / dados** | [Banco de dados](./database.md) → [Arquitetura do banco](./DATABASE_ARCHITECTURE.md) → [Fluxo de dados](./data-flows.md) → [RLS](./security-rls.md) |
+| **API / integrações** | [APIs HTTP](./api.md) → [Autenticação](./authentication.md) → [Decisões arquiteturais](./architectural-decisions.md) |
+| **Produto / QA** | [Features](./features.md) → [Checklist de testes](./TESTING-CHECKLIST.md) |
 
 ---
 
-## Recommended reading order
+## Índice completo
 
-**For developers joining the team**
+### Fundamentos
 
-```text
-README (root) → Architecture → Database → API → Contributing → Features
-```
+| Documento | Conteúdo |
+|-----------|----------|
+| [**Onboarding técnico**](./onboarding.md) | Primeiros dias: setup, leituras, fluxos para validar |
+| [**Estrutura de pastas**](./project-structure.md) | `app/`, `components/`, `lib/`, `supabase/`, `e2e/` |
+| [**Arquitetura do sistema**](./architecture.md) | Stack, frontend/backend, integrações, diagramas |
+| [**Fluxo de autenticação**](./authentication.md) | OAuth, SMS, sessão, admin, Premium |
+| [**Fluxo de dados**](./data-flows.md) | Leituras, IA, writes, admin, analytics |
+| [**Convenções**](./conventions.md) | Código, SQL, API, UI, Git, testes |
+| [**Decisões arquiteturais**](./architectural-decisions.md) | ADRs aceitas e roadmap técnico |
 
-**For DevOps / release**
+### Dados e APIs
 
-```text
-Deployment → Database (migrations) → Architecture (env & services)
-```
+| Documento | Conteúdo |
+|-----------|----------|
+| [**APIs HTTP**](./api.md) | Route Handlers, códigos de erro, premium |
+| [**Banco de dados**](./database.md) | Tabelas, colunas, RLS, RPC, queries comuns |
+| [**Arquitetura do banco**](./DATABASE_ARCHITECTURE.md) | Modelagem, performance, índices, evolução |
+| [**Migrations**](./migrations.md) | Ordem dos SQL em `/supabase` |
+| [**Segurança RLS**](./security-rls.md) | Resumo de políticas |
 
-**For finance / launch planning**
+### Operações
 
-```text
-CUSTOS.md → custos-planilha.csv (Excel/Sheets)
-```
+| Documento | Conteúdo |
+|-----------|----------|
+| [**Deploy**](./deployment.md) | Vercel, Supabase, CI, checklist produção |
+| [**Variáveis de ambiente**](./environment.md) | Referência `.env` / Vercel / GitHub Actions |
+| [**Staging**](./staging.md) | Preview e ambiente de homologação |
+| [**Contribuição**](./contributing.md) | PR, scripts, áreas sensíveis |
 
-**For product / QA**
+### Produto e negócio
 
-```text
-Features → TESTING-CHECKLIST → API (limits & auth) → Deployment (preview URLs)
+| Documento | Conteúdo |
+|-----------|----------|
+| [**Features**](./features.md) | Matriz de capacidades e regras de acesso |
+| [**Taxonomia de lugares**](./taxonomia-lugares.md) | Subcategorias vs tags |
+| [**Custos**](./CUSTOS.md) | Projeções e planilha |
+| [**Changelog**](./CHANGELOG.md) | Histórico de releases |
+| [**Testes (checklist)**](./TESTING-CHECKLIST.md) | QA manual |
+| [**Legal (rascunho)**](./legal/) | Termos e privacidade |
+
+### Segurança (raiz do repo)
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| [SECURITY.md](../SECURITY.md) | Como reportar vulnerabilidades |
+| [SECURITY_CHECKLIST.md](../SECURITY_CHECKLIST.md) | Auditoria RLS/API |
+
+---
+
+## Mapa de dependência entre documentos
+
+```mermaid
+flowchart TB
+  HUB[docs/README.md]
+  HUB --> ONB[onboarding.md]
+  HUB --> STRUCT[project-structure.md]
+  HUB --> ARCH[architecture.md]
+  HUB --> AUTH[authentication.md]
+  HUB --> DATA[data-flows.md]
+  HUB --> API[api.md]
+  HUB --> DB[database.md]
+  HUB --> ENV[environment.md]
+  HUB --> DEP[deployment.md]
+  HUB --> ADR[architectural-decisions.md]
+  HUB --> CONV[conventions.md]
+  ARCH --> AUTH
+  ARCH --> DATA
+  ARCH --> API
+  DB --> MIG[migrations.md]
+  DEP --> ENV
+  API --> AUTH
+  ONB --> CONV
+  CONV --> CONTRIB[contributing.md]
 ```
 
 ---
 
-## Related project files
+## Ordem de leitura recomendada
 
-| File | Purpose |
-|------|---------|
-| [README.md](../README.md) | Project overview, quick start, stack summary |
-| [CLAUDE.md](../CLAUDE.md) | AI agent context (stack, structure, business rules) |
-| [AGENTS.md](../AGENTS.md) | Cursor / agent rules for Next.js |
-| [.env.example](../.env.example) | Environment variable template |
-| [`/supabase`](../supabase/) | SQL migrations and storage policies |
+**Handoff completo para nova equipe:**
+
+```text
+README (raiz)
+  → onboarding.md
+  → project-structure.md
+  → architecture.md
+  → authentication.md
+  → data-flows.md
+  → api.md
+  → database.md + DATABASE_ARCHITECTURE.md
+  → migrations.md
+  → environment.md
+  → deployment.md
+  → conventions.md + contributing.md
+  → architectural-decisions.md
+  → features.md
+```
+
+---
+
+## Arquivos relacionados (fora de `docs/`)
+
+| Arquivo | Uso |
+|---------|-----|
+| `.env.example` | Template de variáveis |
+| `/supabase/*.sql` | DDL, RLS, RPC |
+| `ENGINEERING_GUIDE.md` | Atalho para esta pasta |
+| `CODING_STANDARDS.md` | Estilo linha a linha (complementa convenções) |
+| `AGENTS.md` | Regras Cursor / Next.js 16 |
 
 ---
 
 ## Assets
 
-| Path | Purpose |
-|------|---------|
-| [`screenshots/`](./screenshots/) | README and marketing screenshots (see `.gitkeep` for naming) |
+| Pasta | Uso |
+|-------|-----|
+| [`screenshots/`](./screenshots/) | Capturas para README (390×844) |
 
 ---
 
-## Quick links
+## Links rápidos
 
-| Resource | URL |
-|----------|-----|
-| Production app | https://guia-de-bolso-puce.vercel.app |
-| GitHub repository | https://github.com/BrunoDislilerDev/guia-de-bolso |
-| Supabase region | `us-west-2` (see [Database](./database.md)) |
-
----
-
-## Document map
-
-```mermaid
-flowchart TB
-  INDEX[docs/README.md]
-  INDEX --> ARCH[architecture.md]
-  INDEX --> DB[database.md]
-  INDEX --> API[api.md]
-  INDEX --> FEAT[features.md]
-  INDEX --> DEP[deployment.md]
-  INDEX --> CONTRIB[contributing.md]
-  INDEX --> CHANGELOG[CHANGELOG.md]
-  INDEX --> TAX[taxonomia-lugares.md]
-  INDEX --> CUSTOS[CUSTOS.md]
-  ARCH --> API
-  ARCH --> DB
-  DB --> DEP
-  API --> FEAT
-  CONTRIB --> ARCH
-  CONTRIB --> DB
-  DEP --> DB
-```
+| Recurso | URL |
+|---------|-----|
+| App produção | https://guia-de-bolso-puce.vercel.app |
+| Repositório | https://github.com/BrunoDislilerDev/guia-de-bolso |
+| Health check | `/api/health` |
+| Supabase (região) | `us-west-2` |
