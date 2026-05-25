@@ -1,5 +1,6 @@
 "use client";
 
+import { forwardRef } from "react";
 import Link from "next/link";
 import IconBack from "@/components/IconBack";
 import {
@@ -43,31 +44,25 @@ function ShareIcon() {
 }
 
 /**
- * Header fixo que aparece ao rolar o detalhe do lugar (título + ações).
- * @param {object} props
- * @returns {import("react").JSX.Element}
+ * Header fixo que aparece ao rolar o detalhe do lugar (opacidade via ref + rAF).
  */
-export default function LugarStickyHeader({
-  title,
-  backHref = "/",
-  opacity = 0,
-  visible = false,
-  isFavorito = false,
-  onFavoritar,
-  onShare,
-  showFavorite = true,
-}) {
-  const show = visible && opacity > 0.05;
-
+const LugarStickyHeader = forwardRef(function LugarStickyHeader(
+  {
+    title,
+    backHref = "/",
+    isFavorito = false,
+    onFavoritar,
+    onShare,
+    showFavorite = true,
+  },
+  ref
+) {
   return (
     <header
-      className="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto max-w-md"
-      style={{
-        opacity: show ? opacity : 0,
-        transform: show ? "translateY(0)" : "translateY(-8px)",
-        transition: "opacity 180ms ease-out, transform 180ms ease-out",
-      }}
-      aria-hidden={!show}
+      ref={ref}
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto max-w-md opacity-0 will-change-[opacity,transform]"
+      style={{ transform: "translate3d(0, -8px, 0)" }}
+      aria-hidden
     >
       <div className="pointer-events-auto border-b border-[#e8eeee]/80 bg-white/88 px-3 pb-2.5 pt-[max(0.5rem,env(safe-area-inset-top))] shadow-[0_4px_24px_rgba(26,46,40,0.06)] backdrop-blur-xl backdrop-saturate-150">
         <div className="flex items-center gap-2">
@@ -111,4 +106,6 @@ export default function LugarStickyHeader({
       </div>
     </header>
   );
-}
+});
+
+export default LugarStickyHeader;

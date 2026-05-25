@@ -33,7 +33,7 @@ export const DETALHE_CARD_OVERLAP_CLASS =
   "relative z-10 -mt-7 overflow-hidden rounded-t-[28px] bg-white shadow-[0_-12px_40px_rgba(26,46,40,0.08)]";
 
 export const DESTAQUE_CHIP_PREMIUM_CLASS =
-  "inline-flex items-center gap-2 rounded-full bg-[#f5f7f6] px-4 py-2.5 text-[13px] font-medium text-[#1a4a3a] ring-1 ring-[#e8eeee] transition-transform active:scale-[0.98]";
+  "inline-flex items-center gap-2 rounded-full bg-[#f5f7f6] px-4 py-2.5 text-[13px] font-medium ring-1 ring-[#e8eeee] transition-transform active:scale-[0.98]";
 
 export const INFO_CARD_PREMIUM_CLASS =
   "flex min-h-[108px] min-w-[5.25rem] flex-1 basis-[calc(50%-0.375rem)] flex-col items-center justify-center gap-2 rounded-2xl bg-[#f5f7f6] px-3 py-5 ring-1 ring-[#e8eeee] transition-transform active:scale-[0.98] sm:basis-[calc(25%-0.5625rem)]";

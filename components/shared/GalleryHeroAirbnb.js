@@ -58,8 +58,8 @@ function ShareIcon({ className = GALLERY_FLOAT_ICON_CLASS }) {
  * Hero de galeria compartilhado (lugares e rotas): full bleed, vidro no contador, card overlap abaixo.
  * Com `scroll`, aplica parallax e altura dinâmica (detalhe do lugar).
  * @param {object} props
- * @param {ReturnType<import("@/hooks/useDetalheScroll").useDetalheScroll>|null} [props.scroll]
- * @param {boolean} [props.hideTopActions=false] - Esconde botões do hero (header sticky assume).
+ * @param {import("react").RefObject<HTMLDivElement|null>} [props.parallaxRef]
+ * @param {import("react").RefObject<HTMLDivElement|null>} [props.heroActionsRef]
  * @returns {import("react").JSX.Element}
  */
 export default function GalleryHeroAirbnb({
@@ -71,8 +71,8 @@ export default function GalleryHeroAirbnb({
   onShare,
   parceiroBadgeLabel = null,
   showFavorite = true,
-  scroll = null,
-  hideTopActions = false,
+  parallaxRef = null,
+  heroActionsRef = null,
 }) {
   const carouselRef = useRef(null);
   const fotos = imagens?.length ? imagens : [];
@@ -82,39 +82,24 @@ export default function GalleryHeroAirbnb({
 
   const temVariasFotos = fotos.length > 1;
   const showFooter = Boolean(parceiroBadgeLabel) || temVariasFotos;
-  const useScroll = scroll != null;
-  const heroOpacity = useScroll ? 1 - scroll.progress * 0.15 : 1;
-  const topActionsOpacity = useScroll
-    ? Math.max(0, 1 - (scroll.progress - 0.15) / 0.35)
-    : 1;
-
-  const heroStyle = useScroll
-    ? { height: "100%", minHeight: scroll.heroHeightPx, opacity: heroOpacity }
-    : undefined;
-
-  const parallaxStyle = useScroll
-    ? {
-        height: "calc(100% + 72px)",
-        transform: `translate3d(0, ${-scroll.parallaxY * 0.32}px, 0)`,
-        willChange: "transform",
-      }
-    : undefined;
+  const useParallax = parallaxRef != null;
 
   return (
-    <div className="relative w-full">
+    <div className="relative h-full w-full">
       <div
         className={
-          useScroll
-            ? "relative h-full min-h-full w-full overflow-hidden bg-[#e8eeee]"
+          useParallax
+            ? "relative h-full w-full overflow-hidden bg-[#e8eeee]"
             : "relative h-[min(52vh,28rem)] w-full overflow-hidden bg-[#e8eeee]"
         }
-        style={heroStyle}
       >
         <div
+          ref={parallaxRef}
           className={
-            useScroll ? "absolute inset-x-0 top-0 w-full" : "absolute inset-0 h-full w-full"
+            useParallax
+              ? "absolute inset-x-0 top-0 h-[calc(100%+64px)] w-full transform-gpu will-change-transform"
+              : "absolute inset-0 h-full w-full"
           }
-          style={parallaxStyle}
         >
           {fotos.length === 0 ? (
             <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
@@ -156,22 +141,15 @@ export default function GalleryHeroAirbnb({
           </div>
         )}
 
-        {!hideTopActions && (
-          <div
-            className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] z-20 transition-opacity duration-150"
-            style={{ opacity: topActionsOpacity }}
-          >
-            <Link href={backHref} className={GALLERY_FLOAT_BTN_CLASS} aria-label="Voltar">
-              <IconBack className={GALLERY_FLOAT_ICON_CLASS} />
-            </Link>
-          </div>
-        )}
+        <div
+          ref={heroActionsRef}
+          className="absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex items-start justify-between px-4 will-change-[opacity]"
+        >
+          <Link href={backHref} className={GALLERY_FLOAT_BTN_CLASS} aria-label="Voltar">
+            <IconBack className={GALLERY_FLOAT_ICON_CLASS} />
+          </Link>
 
-        {!hideTopActions && (
-          <div
-            className="absolute right-4 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex gap-2.5 transition-opacity duration-150"
-            style={{ opacity: topActionsOpacity }}
-          >
+          <div className="flex gap-2.5">
             <button
               type="button"
               onClick={onShare}
@@ -200,7 +178,7 @@ export default function GalleryHeroAirbnb({
               </button>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

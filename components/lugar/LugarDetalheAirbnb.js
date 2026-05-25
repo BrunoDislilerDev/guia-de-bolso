@@ -82,7 +82,8 @@ export default function LugarDetalheAirbnb(props) {
     openRoute,
   } = props;
 
-  const scroll = useDetalheScroll();
+  const { heroShellRef, parallaxRef, heroActionsRef, stickyHeaderRef } =
+    useDetalheScroll();
   const temNota = totalAvaliacoes > 0 && mediaAvaliacoes > 0;
   const localSubtitle = [
     lugar.subcategoria,
@@ -101,9 +102,8 @@ export default function LugarDetalheAirbnb(props) {
       )}
 
       <LugarStickyHeader
+        ref={stickyHeaderRef}
         title={lugar.nome}
-        opacity={scroll.headerOpacity}
-        visible={scroll.showCollapsedTitle}
         isFavorito={isFavorito}
         onFavoritar={handleFavoritar}
         onShare={handleShare}
@@ -111,8 +111,9 @@ export default function LugarDetalheAirbnb(props) {
 
       <div className="mx-auto max-w-md">
         <div
+          ref={heroShellRef}
           className="sticky top-0 z-0"
-          style={{ height: scroll.heroHeightPx }}
+          style={{ height: 448 }}
         >
           <LugarGalleryAirbnb
             nome={lugar.nome}
@@ -120,8 +121,8 @@ export default function LugarDetalheAirbnb(props) {
             isFavorito={isFavorito}
             onFavoritar={handleFavoritar}
             onShare={handleShare}
-            scroll={scroll}
-            hideTopActions={scroll.progress > 0.22}
+            parallaxRef={parallaxRef}
+            heroActionsRef={heroActionsRef}
             parceiroBadgeLabel={
               visibilidade.showBadgeParceiro
                 ? getBadgeParceiroLabel().toUpperCase()
@@ -212,14 +213,11 @@ export default function LugarDetalheAirbnb(props) {
                   {tagsExibidas.map((tag) => (
                     <span key={tag.id} className={DESTAQUE_CHIP_PREMIUM_CLASS}>
                       {tag.icone && (
-                        <span
-                          className="shrink-0 text-base leading-none opacity-80 grayscale"
-                          aria-hidden
-                        >
+                        <span className="shrink-0 text-base leading-none" aria-hidden>
                           {tag.icone}
                         </span>
                       )}
-                      <span>{tag.nome}</span>
+                      <span className="text-[#5a6b66]">{tag.nome}</span>
                     </span>
                   ))}
                 </div>
