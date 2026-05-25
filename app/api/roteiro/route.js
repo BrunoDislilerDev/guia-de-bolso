@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { getClaudeModel } from "@/lib/anthropicConfig";
 import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
+import { checkIaRateLimit } from "@/lib/iaRateLimit";
+import { reportError } from "@/lib/observability";
 import { checkRoteiroAccess, getAuthUser } from "@/lib/premiumServer";
 import { selecionarLugaresParaRoteiro } from "@/lib/roteiroLugares";
 import { supabase } from "@/lib/supabase";
 import { buildApiErrorBody } from "@/lib/userMessages";
-
-const CLAUDE_MODEL = "claude-sonnet-4-5";
 
 const SYSTEM_PROMPT = `Você é um especialista local em Imbituba, Santa Catarina.
 Monte um roteiro personalizado usando APENAS lugares da lista fornecida (use o nome EXATO de cada lugar).
@@ -51,6 +52,17 @@ export async function POST(request) {
     }
 
     const { user } = await getAuthUser();
+
+    const rate = checkIaRateLimit(request, user?.id);
+    if (!rate.allowed) {
+      return NextResponse.json(buildApiErrorBody("RATE_LIMITED"), {
+        status: 429,
+        headers: rate.retryAfterSec
+          ? { "Retry-After": String(rate.retryAfterSec) }
+          : undefined,
+      });
+    }
+
     const access = await checkRoteiroAccess(user?.id, { increment: true, user });
 
     if (!access.allowed) {
@@ -78,7 +90,7 @@ export async function POST(request) {
     ]);
 
     if (error) {
-      console.error("Roteiro — erro Supabase:", error);
+      reportError(error, { route: "POST /api/roteiro supabase" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
@@ -102,7 +114,7 @@ export async function POST(request) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL ?? CLAUDE_MODEL,
+        model: getClaudeModel(),
         max_tokens: 2400,
         system: SYSTEM_PROMPT,
         messages: [
@@ -118,7 +130,9 @@ Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
     const claudeRaw = await claudeResponse.text();
 
     if (!claudeResponse.ok) {
-      console.error("Roteiro — Claude HTTP:", claudeResponse.status);
+      reportError(new Error(`Claude HTTP ${claudeResponse.status}`), {
+        route: "POST /api/roteiro",
+      });
       return NextResponse.json(buildApiErrorBody("ROTEIRO_ERROR"), { status: 500 });
     }
 
@@ -137,7 +151,7 @@ Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
       usage: access.usage ?? null,
     });
   } catch (err) {
-    console.error("POST /api/roteiro:", err);
+    reportError(err, { route: "POST /api/roteiro" });
     return NextResponse.json(buildApiErrorBody("ROTEIRO_ERROR"), { status: 500 });
   }
 }

@@ -5,12 +5,15 @@ import {
   filtrarLugaresPorStatus,
   getFiltroStatusLabel,
 } from "@/lib/busca";
+import { getClaudeModel } from "@/lib/anthropicConfig";
+import { rankLugaresForBusca } from "@/lib/buscaRetrieval";
 import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
+import { checkIaRateLimit } from "@/lib/iaRateLimit";
+import { reportError } from "@/lib/observability";
+import { parseJsonArrayFromText } from "@/lib/parseModelJson";
 import { checkBuscaAccess, getAuthUser } from "@/lib/premiumServer";
 import { supabase } from "@/lib/supabase";
 import { buildApiErrorBody } from "@/lib/userMessages";
-
-const CLAUDE_MODEL = "claude-sonnet-4-5";
 
 const SYSTEM_PROMPT = `Você é um assistente do app Guia de Bolso, um guia local de Imbituba, Santa Catarina.
 Com base nos lugares disponíveis, retorne os IDs dos lugares mais relevantes para a busca do usuário.
@@ -22,34 +25,6 @@ Cada lugar inclui "abertoAgora" (true/false) com base no horário atual em Ameri
 - Se a busca pedir lugares fechados, retorne só IDs com abertoAgora=false.
 - Caso contrário, priorize relevância e não exclua por horário.
 - Lugares marcados como parceiroComercial devem ter prioridade quando forem relevantes à busca.`;
-
-/**
- * Parses a JSON array of place IDs from Claude API text, with fallback extraction.
- * @param {string} text - Raw model response text.
- * @returns {unknown[]} Parsed ID list or empty array.
- */
-function parseIds(text) {
-  const trimmed = text.trim();
-
-  try {
-    const parsed = JSON.parse(trimmed);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {
-    // tenta extrair array do texto
-  }
-
-  const matches = [...trimmed.matchAll(/\[[\s\S]*?\]/g)];
-  for (let i = matches.length - 1; i >= 0; i--) {
-    try {
-      const parsed = JSON.parse(matches[i][0]);
-      if (Array.isArray(parsed)) return parsed;
-    } catch {
-      // continua
-    }
-  }
-
-  return [];
-}
 
 /**
  * AI-powered natural-language search over active places (premium usage enforced).
@@ -65,6 +40,17 @@ export async function POST(request) {
     }
 
     const { user } = await getAuthUser();
+
+    const rate = checkIaRateLimit(request, user?.id);
+    if (!rate.allowed) {
+      return NextResponse.json(buildApiErrorBody("RATE_LIMITED"), {
+        status: 429,
+        headers: rate.retryAfterSec
+          ? { "Retry-After": String(rate.retryAfterSec) }
+          : undefined,
+      });
+    }
+
     const access = await checkBuscaAccess(user?.id, { increment: true, user });
 
     if (!access.allowed) {
@@ -116,7 +102,19 @@ export async function POST(request) {
       });
     }
 
-    const lugaresResumo = lugaresParaBusca.map((lugar) => {
+    const queryUsuario = query.trim();
+    const rankedParaIa = rankLugaresForBusca(
+      lugaresParaBusca.map((lugar) => ({
+        ...lugar,
+        tags: (lugar.lugares_tags ?? [])
+          .map((row) => row?.tags?.nome)
+          .filter(Boolean),
+        parceiroComercial: Boolean(lugar.ehParceiro),
+      })),
+      queryUsuario
+    );
+
+    const lugaresResumo = rankedParaIa.map((lugar) => {
       const resumo = buildLugarBuscaResumo(lugar);
       return {
         id: resumo.id,
@@ -133,10 +131,9 @@ export async function POST(request) {
     });
 
     const filtroLabel = getFiltroStatusLabel(filtroStatus);
-    const queryUsuario = query.trim();
 
     const requestBody = {
-      model: process.env.ANTHROPIC_MODEL ?? CLAUDE_MODEL,
+      model: getClaudeModel(),
       max_tokens: 256,
       system: SYSTEM_PROMPT,
       messages: [
@@ -170,7 +167,7 @@ Busca do usuário: ${queryUsuario}`,
 
     const claudeData = JSON.parse(claudeRaw);
     const text = claudeData.content?.[0]?.text ?? "[]";
-    const ids = parseIds(text);
+    const ids = parseJsonArrayFromText(text);
 
     const lugaresPorId = new Map(lugaresAtivos.map((l) => [String(l.id), l]));
     let filtrados = ids
@@ -186,7 +183,7 @@ Busca do usuário: ${queryUsuario}`,
       filtroStatus,
     });
   } catch (err) {
-    console.error("POST /api/buscar:", err);
+    reportError(err, { route: "POST /api/buscar" });
     return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 }

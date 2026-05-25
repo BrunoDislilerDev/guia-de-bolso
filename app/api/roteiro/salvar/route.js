@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { reportError } from "@/lib/observability";
+import { getAuthUser } from "@/lib/premiumServer";
 import { parseDiasViagem } from "@/lib/roteiroDias";
-import { createClient } from "@/lib/supabase/server";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
 /**
@@ -10,10 +11,7 @@ import { buildApiErrorBody } from "@/lib/userMessages";
  */
 export async function POST(request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user, supabase } = await getAuthUser();
 
     if (!user) {
       return NextResponse.json(
@@ -50,13 +48,13 @@ export async function POST(request) {
       .single();
 
     if (error) {
-      console.error("Erro ao salvar roteiro:", error);
+      reportError(error, { route: "POST /api/roteiro/salvar" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     return NextResponse.json({ success: true, roteiro });
   } catch (err) {
-    console.error("Salvar roteiro error:", err);
+    reportError(err, { route: "POST /api/roteiro/salvar" });
     return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 }

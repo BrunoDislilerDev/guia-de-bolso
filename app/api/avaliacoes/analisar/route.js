@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { getClaudeModel } from "@/lib/anthropicConfig";
+import { checkIaRateLimit } from "@/lib/iaRateLimit";
+import { reportError } from "@/lib/observability";
+import { parseJsonObjectFromText } from "@/lib/parseModelJson";
 import { getAuthUser } from "@/lib/premiumServer";
 import { buildApiErrorBody } from "@/lib/userMessages";
-
-const CLAUDE_MODEL = "claude-sonnet-4-5";
 
 const SYSTEM_PROMPT = `Você é moderador de avaliações de um app de turismo local 
 em Imbituba, SC. Analise a avaliação e retorne APENAS um JSON válido 
@@ -16,31 +18,6 @@ sem markdown com:
 Rejeitar se: spam, palavrões, conteúdo irrelevante, propaganda.
 Revisar se: vago demais, suspeito mas não claramente spam.
 Aprovar se: experiência genuína, mesmo que negativa.`;
-
-/**
- * @param {string} text
- * @returns {object|null}
- */
-function parseModeracaoJson(text) {
-  const trimmed = String(text || "").trim();
-
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    // tenta extrair objeto JSON
-  }
-
-  const matches = [...trimmed.matchAll(/\{[\s\S]*?\}/g)];
-  for (let i = matches.length - 1; i >= 0; i--) {
-    try {
-      return JSON.parse(matches[i][0]);
-    } catch {
-      // continua
-    }
-  }
-
-  return null;
-}
 
 /**
  * Pré-análise de avaliação com Claude após envio pelo usuário.
@@ -61,6 +38,16 @@ export async function POST(request) {
     const { user, supabase } = await getAuthUser();
     if (!user) {
       return NextResponse.json(buildApiErrorBody("UNAUTHORIZED"), { status: 401 });
+    }
+
+    const rate = checkIaRateLimit(request, user.id);
+    if (!rate.allowed) {
+      return NextResponse.json(buildApiErrorBody("RATE_LIMITED"), {
+        status: 429,
+        headers: rate.retryAfterSec
+          ? { "Retry-After": String(rate.retryAfterSec) }
+          : undefined,
+      });
     }
 
     const { data: avaliacao, error: fetchError } = await supabase
@@ -97,7 +84,7 @@ export async function POST(request) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL ?? CLAUDE_MODEL,
+        model: getClaudeModel(),
         max_tokens: 500,
         system: SYSTEM_PROMPT,
         messages: [
@@ -115,13 +102,15 @@ Comentário: "${avaliacao.comentario || "sem comentário"}"`,
     const claudeRaw = await claudeResponse.text();
 
     if (!claudeResponse.ok) {
-      console.error("Analisar avaliação — Claude HTTP:", claudeResponse.status);
+      reportError(new Error(`Claude HTTP ${claudeResponse.status}`), {
+        route: "POST /api/avaliacoes/analisar",
+      });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     const claudeData = JSON.parse(claudeRaw);
     const text = claudeData.content?.[0]?.text ?? "";
-    const resultado = parseModeracaoJson(text);
+    const resultado = parseJsonObjectFromText(text);
 
     if (!resultado) {
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
@@ -148,13 +137,13 @@ Comentário: "${avaliacao.comentario || "sem comentário"}"`,
       .eq("id", avaliacao_id);
 
     if (updateError) {
-      console.error("Analisar avaliação — update:", updateError);
+      reportError(updateError, { route: "POST /api/avaliacoes/analisar update" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("POST /api/avaliacoes/analisar:", err);
+    reportError(err, { route: "POST /api/avaliacoes/analisar" });
     return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { reportError } from "@/lib/observability";
+import { getAuthUser } from "@/lib/premiumServer";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
 /**
@@ -16,10 +17,7 @@ export async function DELETE(_request, { params }) {
       return NextResponse.json(buildApiErrorBody("VALIDATION"), { status: 400 });
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user, supabase } = await getAuthUser();
 
     if (!user) {
       return NextResponse.json(
@@ -40,7 +38,7 @@ export async function DELETE(_request, { params }) {
       .maybeSingle();
 
     if (error) {
-      console.error("DELETE roteiro:", error);
+      reportError(error, { route: "DELETE /api/roteiro/[id]" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
@@ -56,7 +54,7 @@ export async function DELETE(_request, { params }) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("DELETE /api/roteiro/[id]:", err);
+    reportError(err, { route: "DELETE /api/roteiro/[id]" });
     return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 }
