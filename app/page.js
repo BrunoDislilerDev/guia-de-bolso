@@ -750,6 +750,7 @@ function Home() {
                   lugar={heroLugar}
                   popularIds={popularIds}
                   temperatura={temperaturaClima}
+                  userPosition={userPosition}
                   onFavoritar={handleFavoritar}
                   isFavorito={isFavorito}
                 />

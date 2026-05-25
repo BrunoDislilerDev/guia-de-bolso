@@ -1,49 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { fetchLocalizacaoLugar } from "@/lib/data/lugarDetalheQueries";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { getBadgeParceiroLabel } from "@/lib/destaques";
 import { getTempoExperiencia, isEmAlta } from "@/lib/homeContext";
+import {
+  getCoordenadasLugar,
+  getDistanciaKmLugar,
+  getDistanciaLugar,
+  getTempoCarroEstimado,
+} from "@/lib/localizacao";
+import { createClient } from "@/lib/supabase";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
-
-/**
- * Extrai distância em km a partir do texto formatado ("2.3km de você", "500m de você").
- * @param {string} [texto]
- * @returns {number|null}
- */
-function parseDistanciaKm(texto) {
-  if (!texto || typeof texto !== "string") return null;
-
-  const kmMatch = texto.match(/([\d.,]+)\s*km/i);
-  if (kmMatch) {
-    const km = Number(kmMatch[1].replace(",", "."));
-    return Number.isFinite(km) ? km : null;
-  }
-
-  const mMatch = texto.match(/([\d.,]+)\s*m\b/i);
-  if (mMatch) {
-    const metros = Number(mMatch[1].replace(",", "."));
-    return Number.isFinite(metros) ? metros / 1000 : null;
-  }
-
-  return null;
-}
-
-/**
- * Estima tempo de carro em cidade (30 km/h), arredondado ao múltiplo de 5 min.
- * @param {number|null} distanciaKm
- * @returns {string|null}
- */
-function getTempoCarro(distanciaKm) {
-  if (!Number.isFinite(distanciaKm) || distanciaKm <= 0) return null;
-
-  const minutos = (distanciaKm / 30) * 60;
-  const arredondado = Math.round(minutos / 5) * 5;
-  const final = Math.max(5, arredondado);
-
-  return `~${final} min`;
-}
 
 /**
  * @param {object} props
@@ -122,18 +92,53 @@ export default function OQueFazerAgora({
   lugar,
   popularIds,
   temperatura = null,
+  userPosition = null,
   onFavoritar,
   isFavorito,
 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [localizacao, setLocalizacao] = useState(null);
+
+  useEffect(() => {
+    if (!lugar?.id) {
+      setLocalizacao(null);
+      return undefined;
+    }
+
+    if (getCoordenadasLugar(lugar)) {
+      setLocalizacao(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const supabase = createClient();
+    if (!supabase) return undefined;
+
+    fetchLocalizacaoLugar(supabase, lugar.id).then(({ data }) => {
+      if (!cancelled && data) setLocalizacao(data);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lugar?.id]);
+
+  const lugarComLocalizacao = useMemo(() => {
+    if (!lugar) return null;
+    if (localizacao) return { ...lugar, localizacoes: localizacao };
+    return lugar;
+  }, [lugar, localizacao]);
 
   if (!lugar) {
     return <HeroSkeleton />;
   }
 
-  const distancia = lugar.distancia_calculada || lugar.distancia;
-  const distanciaKm = parseDistanciaKm(distancia);
-  const tempoCarro = getTempoCarro(distanciaKm);
+  const distanciaKm = getDistanciaKmLugar(lugarComLocalizacao, userPosition);
+  const distancia =
+    getDistanciaLugar(lugarComLocalizacao, userPosition) ||
+    lugar.distancia_calculada ||
+    lugar.distancia;
+  const tempoCarro = getTempoCarroEstimado(distanciaKm);
   const tempNum = Number(temperatura);
   const temperaturaExibicao = Number.isFinite(tempNum)
     ? `${Math.round(tempNum)}°`
