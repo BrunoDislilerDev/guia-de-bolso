@@ -25,7 +25,7 @@ function IconSend({ className = "h-[17px] w-[17px]" }) {
  */
 export default function ExplorarBuscaBar() {
   return (
-    <section className="home-explorar-search-section relative mb-6 mt-4">
+    <section className="home-explorar-search-section relative mb-6 mt-1">
       <Link
         href="/?busca=1"
         className={`home-ai-search-surface group block ${HOME_SURFACE_CLASS} shadow-none ring-[#e8eeee] transition-shadow duration-200 active:scale-[0.98]`}

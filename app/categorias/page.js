@@ -7,6 +7,7 @@ import ExplorarBuscaBar from "@/components/explorar/ExplorarBuscaBar";
 import ExplorarCategoriaCard from "@/components/explorar/ExplorarCategoriaCard";
 import ExplorarDestaqueCard from "@/components/explorar/ExplorarDestaqueCard";
 import ExplorarHeader from "@/components/explorar/ExplorarHeader";
+import { useStickyShellRef } from "@/hooks/useHomeHeaderScroll";
 import ExplorarSkeleton from "@/components/explorar/ExplorarSkeleton";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 import { HOME_CAROUSEL_TRACK_CLASS } from "@/components/home/homeTokens";
@@ -25,6 +26,7 @@ import { fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
  * @returns {import("react").JSX.Element}
  */
 export default function CategoriasPage() {
+  const stickyShellRef = useStickyShellRef();
   const [counts, setCounts] = useState({});
   const [capas, setCapas] = useState({});
   const [loading, setLoading] = useState(true);
@@ -92,9 +94,18 @@ export default function CategoriasPage() {
           loading={loading}
           totalLugares={totalLugares}
           categoriasComLugares={categoriasComLugares}
-        >
-          {!loading && <ExplorarBuscaBar />}
-        </ExplorarHeader>
+        />
+
+        <div ref={stickyShellRef} className="explorar-header-shell -mx-4 px-4 pb-4 pt-2">
+          {loading ? (
+            <div
+              className="home-explorar-search-section mb-6 mt-1 h-[60px] animate-pulse rounded-[24px] bg-[#e8eeee]"
+              aria-hidden
+            />
+          ) : (
+            <ExplorarBuscaBar />
+          )}
+        </div>
 
         <SupabaseConfigAlert />
         {loading ? (

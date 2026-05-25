@@ -144,79 +144,8 @@ body {
   }
 }
 
-/* Home: header sticky — esconde topo e mantém busca IA + chips visíveis */
-.home-header-shell {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  isolation: isolate;
-}
-
-.home-header-top {
-  overflow: hidden;
-}
-
-.home-header-shell.is-scrolled .home-header-top {
-  display: none;
-}
-
-.home-header-search-slot {
-  position: relative;
-  z-index: 2;
-  flex-shrink: 0;
-}
-
-.home-header-shell.is-scrolled {
-  padding-top: 0.5rem;
-  padding-bottom: 0.65rem;
-  background-color: #f0f4f3;
-}
-
-.home-header-shell.is-scrolled .home-ai-search-input-row {
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-}
-
-.home-header-shell.is-scrolled .home-smart-search-section {
-  margin-bottom: 0;
-  margin-top: 0;
-}
-
-.home-header-shell.is-scrolled::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -28px;
-  z-index: 1;
-  height: 32px;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    #f0f4f3 0%,
-    rgba(240, 244, 243, 0.65) 45%,
-    rgba(240, 244, 243, 0) 100%
-  );
-}
-
-.home-header-shell.is-scrolled .home-ai-search-surface {
-  background-color: #fff;
-  box-shadow:
-    0 10px 32px rgba(26, 46, 40, 0.14),
-    0 4px 12px rgba(26, 46, 40, 0.08),
-    0 0 0 1px rgba(232, 238, 238, 0.9);
-}
-
-.home-header-shell.is-scrolled .home-ai-chips-wrap {
-  padding-top: 0.625rem;
-  padding-bottom: 0.875rem;
-}
-
-.home-ai-search-active {
-  box-shadow: 0 0 0 1px rgba(26, 74, 58, 0.1);
-}
-
-/* Explorar: mesmo padrão sticky da home — só busca IA ao rolar */
+/* Home / Explorar: shell sticky só com busca IA (topo rola naturalmente) */
+.home-header-shell,
 .explorar-header-shell {
   position: sticky;
   top: 0;
@@ -224,43 +153,19 @@ body {
   isolation: isolate;
 }
 
-.explorar-header-top {
-  overflow: hidden;
-}
-
-.explorar-header-search-slot {
-  position: relative;
-  z-index: 2;
-  flex-shrink: 0;
-}
-
-.explorar-header-shell.is-scrolled {
-  padding-top: 0.5rem;
-  padding-bottom: 0.65rem;
+.home-header-shell.is-stuck,
+.explorar-header-shell.is-stuck {
   background-color: #f0f4f3;
 }
 
-.explorar-header-shell.is-scrolled .explorar-header-top {
-  display: none;
-}
-
-.explorar-header-shell.is-scrolled .home-explorar-search-section {
-  margin-bottom: 0;
-  margin-top: 0;
-}
-
-.explorar-header-shell.is-scrolled .home-ai-search-input-row {
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-}
-
-.explorar-header-shell.is-scrolled::after {
+.home-header-shell.is-stuck::after,
+.explorar-header-shell.is-stuck::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   bottom: -28px;
-  z-index: 1;
+  z-index: -1;
   height: 32px;
   pointer-events: none;
   background: linear-gradient(
@@ -271,12 +176,17 @@ body {
   );
 }
 
-.explorar-header-shell.is-scrolled .home-ai-search-surface {
+.home-header-shell.is-stuck .home-ai-search-surface,
+.explorar-header-shell.is-stuck .home-ai-search-surface {
   background-color: #fff;
   box-shadow:
     0 10px 32px rgba(26, 46, 40, 0.14),
     0 4px 12px rgba(26, 46, 40, 0.08),
     0 0 0 1px rgba(232, 238, 238, 0.9);
+}
+
+.home-ai-search-active {
+  box-shadow: 0 0 0 1px rgba(26, 74, 58, 0.1);
 }
 
 @keyframes home-reveal {
@@ -306,14 +216,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .home-reveal {
     animation: none;
-  }
-
-  .home-header-shell.is-scrolled .home-header-top {
-    display: none;
-  }
-
-  .explorar-header-shell.is-scrolled .explorar-header-top {
-    display: none;
   }
 
   .home-image-fade {

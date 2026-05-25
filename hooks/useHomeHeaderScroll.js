@@ -2,51 +2,45 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-const SCROLL_ON = 56;
-const SCROLL_OFF = 24;
-
 /**
- * Alterna `.is-scrolled` no shell via callback ref (sem setState).
+ * Adiciona sombra/fade no shell sticky quando o conteúdo passa por baixo (IntersectionObserver).
+ * Não altera layout — evita piscar do toggle display:none no scroll.
  * @returns {(node: HTMLDivElement | null) => void}
  */
-export function useHomeHeaderShellRef() {
+export function useStickyShellRef() {
   const cleanupRef = useRef(null);
 
   useEffect(() => () => cleanupRef.current?.(), []);
 
-  return useCallback((el) => {
+  return useCallback((shellEl) => {
     cleanupRef.current?.();
     cleanupRef.current = null;
 
-    if (!el) return;
+    if (!shellEl) return;
 
-    let rafId = 0;
-    let isScrolled = false;
+    const sentinel = document.createElement("div");
+    sentinel.setAttribute("aria-hidden", "true");
+    sentinel.className = "sticky-shell-sentinel h-px w-full shrink-0";
 
-    const apply = () => {
-      rafId = 0;
-      const y = window.scrollY;
-      let next = isScrolled;
+    shellEl.insertAdjacentElement("afterend", sentinel);
 
-      if (!isScrolled && y > SCROLL_ON) next = true;
-      else if (isScrolled && y < SCROLL_OFF) next = false;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        shellEl.classList.toggle("is-stuck", !entry.isIntersecting);
+      },
+      { root: null, threshold: 0, rootMargin: "0px" }
+    );
 
-      if (next === isScrolled) return;
-      isScrolled = next;
-      el.classList.toggle("is-scrolled", next);
-    };
-
-    const onScroll = () => {
-      if (!rafId) rafId = requestAnimationFrame(apply);
-    };
-
-    apply();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    observer.observe(sentinel);
+    shellEl.classList.remove("is-stuck");
 
     cleanupRef.current = () => {
-      window.removeEventListener("scroll", onScroll);
-      if (rafId) cancelAnimationFrame(rafId);
-      el.classList.remove("is-scrolled");
+      observer.disconnect();
+      sentinel.remove();
+      shellEl.classList.remove("is-stuck");
     };
   }, []);
 }
+
+/** @deprecated Use useStickyShellRef */
+export const useHomeHeaderShellRef = useStickyShellRef;
