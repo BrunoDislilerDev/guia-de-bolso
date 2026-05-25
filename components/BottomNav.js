@@ -109,9 +109,9 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-label={label}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 transition-all ${
+              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 transition-all active:scale-95 ${
                 active
-                  ? "bg-[#1a4a3a] text-white shadow-sm"
+                  ? "bg-[#1a4a3a] text-white shadow-[0_4px_14px_rgba(26,74,58,0.35)]"
                   : "text-[#5a6b66] hover:text-[#1a4a3a]"
               }`}
               aria-current={active ? "page" : undefined}

@@ -134,14 +134,17 @@ export default function RotaGaleria({
         </div>
       )}
 
-      <GalleryHeroAirbnb
-        nome={nome}
-        imagens={imagens}
-        backHref={backHref}
-        isFavorito={isFavorito}
-        onFavoritar={handleFavoritar}
-        onShare={handleShare}
-      />
+      <div className="detalhe-hero-sticky sticky top-0 z-0">
+        <GalleryHeroAirbnb
+          nome={nome}
+          imagens={imagens}
+          backHref={backHref}
+          isFavorito={isFavorito}
+          onFavoritar={handleFavoritar}
+          onShare={handleShare}
+          immersiveScroll
+        />
+      </div>
 
       <LoginModal
         isOpen={isModalOpen}

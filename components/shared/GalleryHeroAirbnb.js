@@ -55,11 +55,29 @@ function ShareIcon({ className = GALLERY_FLOAT_ICON_CLASS }) {
 }
 
 /**
- * Hero de galeria compartilhado (lugares e rotas): full bleed, vidro no contador, card overlap abaixo.
- * Com `scroll`, aplica parallax e altura dinâmica (detalhe do lugar).
  * @param {object} props
- * @param {import("react").RefObject<HTMLDivElement|null>} [props.parallaxRef]
- * @param {import("react").RefObject<HTMLDivElement|null>} [props.heroActionsRef]
+ * @param {string} props.src
+ * @param {string} props.alt
+ * @param {boolean} [props.priority]
+ */
+function HeroPhoto({ src, alt, priority = false }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      decoding="async"
+      fetchPriority={priority ? "high" : "auto"}
+      loading={priority ? "eager" : "lazy"}
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  );
+}
+
+/**
+ * Hero de galeria compartilhado (lugares e rotas): full bleed, vidro no contador, card overlap abaixo.
+ * @param {object} props
+ * @param {boolean} [props.immersiveScroll=false] - Colapso/parallax via CSS scroll (detalhe lugar).
  * @returns {import("react").JSX.Element}
  */
 export default function GalleryHeroAirbnb({
@@ -71,8 +89,7 @@ export default function GalleryHeroAirbnb({
   onShare,
   parceiroBadgeLabel = null,
   showFavorite = true,
-  parallaxRef = null,
-  heroActionsRef = null,
+  immersiveScroll = false,
 }) {
   const carouselRef = useRef(null);
   const fotos = imagens?.length ? imagens : [];
@@ -82,22 +99,20 @@ export default function GalleryHeroAirbnb({
 
   const temVariasFotos = fotos.length > 1;
   const showFooter = Boolean(parceiroBadgeLabel) || temVariasFotos;
-  const useParallax = parallaxRef != null;
 
   return (
     <div className="relative h-full w-full">
       <div
         className={
-          useParallax
+          immersiveScroll
             ? "relative h-full w-full overflow-hidden bg-[#e8eeee]"
             : "relative h-[min(52vh,28rem)] w-full overflow-hidden bg-[#e8eeee]"
         }
       >
         <div
-          ref={parallaxRef}
           className={
-            useParallax
-              ? "absolute inset-x-0 top-0 h-[calc(100%+64px)] w-full transform-gpu will-change-transform"
+            immersiveScroll
+              ? "detalhe-hero-media-layer absolute inset-x-0 top-0 w-full"
               : "absolute inset-0 h-full w-full"
           }
         >
@@ -107,14 +122,18 @@ export default function GalleryHeroAirbnb({
             <div ref={carouselRef} className={`${CAROUSEL_TRACK_CLASS} h-full min-h-full w-full`}>
               {fotos.map((foto, index) => (
                 <div key={`${foto}-${index}`} className={CAROUSEL_SLIDE_RELAXED_CLASS}>
-                  <Image
-                    src={foto}
-                    alt={nome}
-                    fill
-                    sizes="(max-width: 448px) 100vw, 448px"
-                    className="object-cover"
-                    priority={index === 0}
-                  />
+                  {immersiveScroll ? (
+                    <HeroPhoto src={foto} alt={nome} priority={index === 0} />
+                  ) : (
+                    <Image
+                      src={foto}
+                      alt={nome}
+                      fill
+                      sizes="(max-width: 448px) 100vw, 448px"
+                      className="object-cover"
+                      priority={index === 0}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -142,8 +161,9 @@ export default function GalleryHeroAirbnb({
         )}
 
         <div
-          ref={heroActionsRef}
-          className="absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex items-start justify-between px-4 will-change-[opacity]"
+          className={`absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex items-start justify-between px-4 ${
+            immersiveScroll ? "detalhe-hero-actions-fade" : ""
+          }`}
         >
           <Link href={backHref} className={GALLERY_FLOAT_BTN_CLASS} aria-label="Voltar">
             <IconBack className={GALLERY_FLOAT_ICON_CLASS} />

@@ -14,8 +14,7 @@ export default function LugarGalleryAirbnb({
   onFavoritar,
   onShare,
   parceiroBadgeLabel = null,
-  parallaxRef = null,
-  heroActionsRef = null,
+  immersiveScroll = true,
 }) {
   return (
     <GalleryHeroAirbnb
@@ -26,8 +25,7 @@ export default function LugarGalleryAirbnb({
       onFavoritar={onFavoritar}
       onShare={onShare}
       parceiroBadgeLabel={parceiroBadgeLabel}
-      parallaxRef={parallaxRef}
-      heroActionsRef={heroActionsRef}
+      immersiveScroll={immersiveScroll}
     />
   );
 }

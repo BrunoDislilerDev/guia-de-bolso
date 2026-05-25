@@ -20,7 +20,6 @@ import {
   DESTAQUE_CHIP_PREMIUM_CLASS,
   DETALHE_CARD_OVERLAP_CLASS,
 } from "@/components/lugar/airbnb/lugarAirbnbTokens";
-import { useDetalheScroll } from "@/hooks/useDetalheScroll";
 import { getBadgeParceiroLabel } from "@/lib/destaques";
 import { lugarExibeClima } from "@/lib/clima";
 import { formatHorario, getDiasHorario } from "@/lib/horarios";
@@ -82,8 +81,6 @@ export default function LugarDetalheAirbnb(props) {
     openRoute,
   } = props;
 
-  const { heroShellRef, parallaxRef, heroActionsRef, stickyHeaderRef } =
-    useDetalheScroll();
   const temNota = totalAvaliacoes > 0 && mediaAvaliacoes > 0;
   const localSubtitle = [
     lugar.subcategoria,
@@ -102,7 +99,6 @@ export default function LugarDetalheAirbnb(props) {
       )}
 
       <LugarStickyHeader
-        ref={stickyHeaderRef}
         title={lugar.nome}
         isFavorito={isFavorito}
         onFavoritar={handleFavoritar}
@@ -110,19 +106,13 @@ export default function LugarDetalheAirbnb(props) {
       />
 
       <div className="mx-auto max-w-md">
-        <div
-          ref={heroShellRef}
-          className="sticky top-0 z-0"
-          style={{ height: 448 }}
-        >
+        <div className="detalhe-hero-sticky sticky top-0 z-0">
           <LugarGalleryAirbnb
             nome={lugar.nome}
             imagens={imagens}
             isFavorito={isFavorito}
             onFavoritar={handleFavoritar}
             onShare={handleShare}
-            parallaxRef={parallaxRef}
-            heroActionsRef={heroActionsRef}
             parceiroBadgeLabel={
               visibilidade.showBadgeParceiro
                 ? getBadgeParceiroLabel().toUpperCase()

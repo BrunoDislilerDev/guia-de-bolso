@@ -64,3 +64,100 @@ body {
   -webkit-appearance: none;
   appearance: none;
 }
+
+/*
+ * Detalhe imersivo (lugar + rota): hero sticky altura fixa, scroll normal.
+ * Parallax/header/botões só com transform/opacity — sem animar height/margin.
+ */
+.detalhe-hero-sticky,
+.lugar-hero-sticky {
+  height: min(52vh, 28rem);
+  overflow: hidden;
+}
+
+.detalhe-hero-media-layer,
+.lugar-hero-media-layer {
+  height: calc(min(52vh, 28rem) + 2.5rem);
+}
+
+@supports (animation-timeline: scroll(root block)) {
+  .detalhe-hero-media-layer,
+  .lugar-hero-media-layer {
+    animation: detalhe-hero-parallax linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 360px;
+  }
+
+  .detalhe-hero-actions-fade,
+  .lugar-hero-actions-fade {
+    animation: detalhe-hero-actions linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 360px;
+  }
+
+  .detalhe-sticky-header-reveal,
+  .lugar-sticky-header-reveal {
+    animation: detalhe-header-reveal linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 360px;
+  }
+}
+
+@keyframes detalhe-hero-parallax {
+  to {
+    transform: translate3d(0, -3.5rem, 0);
+  }
+}
+
+@keyframes detalhe-hero-actions {
+  0%,
+  18% {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  28%,
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@keyframes detalhe-header-reveal {
+  0%,
+  22% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+    pointer-events: none;
+  }
+  32% {
+    opacity: 0.45;
+    transform: translate3d(0, -3px, 0);
+    pointer-events: none;
+  }
+  42%,
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detalhe-hero-media-layer,
+  .lugar-hero-media-layer,
+  .detalhe-hero-actions-fade,
+  .lugar-hero-actions-fade,
+  .detalhe-sticky-header-reveal,
+  .lugar-sticky-header-reveal {
+    animation: none !important;
+  }
+
+  .detalhe-sticky-header-reveal,
+  .lugar-sticky-header-reveal {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
