@@ -1,17 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { getCategoriaHref } from "@/lib/categorias";
 
 /**
  * Card horizontal em destaque para uma categoria.
- * @param {object} props
- * @param {import("@/lib/categorias").CategoriaExplore} props.categoria
- * @param {number} props.count
- * @param {string} [props.imagemUrl]
- * @returns {import("react").JSX.Element}
  */
 export default function ExplorarDestaqueCard({ categoria, count, imagemUrl }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
   const vazio = count === 0;
   const href = getCategoriaHref(categoria.nome);
 
@@ -22,7 +19,10 @@ export default function ExplorarDestaqueCard({ categoria, count, imagemUrl }) {
         <img
           src={imagemUrl}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          onLoad={() => setImgLoaded(true)}
+          className={`home-image-fade absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+            imgLoaded ? "is-loaded" : ""
+          }`}
         />
       ) : (
         <div
@@ -31,23 +31,23 @@ export default function ExplorarDestaqueCard({ categoria, count, imagemUrl }) {
         />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0d2820]/90 via-[#0d2820]/35 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#061612] via-[#061612]/55 to-[#061612]/10" />
 
       {categoria.destaque && !vazio && (
-        <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1a4a3a]">
+        <span className="absolute left-3.5 top-3.5 rounded-full border border-white/20 bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md">
           {categoria.destaque}
         </span>
       )}
 
-      <div className="relative p-4 text-white">
+      <div className="relative p-4 pb-5 text-white">
         <span className="text-2xl" aria-hidden>
           {categoria.icone}
         </span>
-        <h3 className="mt-2 text-xl font-bold leading-tight">{categoria.nome}</h3>
-        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/85">
+        <h3 className="mt-2 text-xl font-bold leading-tight drop-shadow-sm">{categoria.nome}</h3>
+        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/88">
           {categoria.descricaoCurta}
         </p>
-        <p className="mt-2 text-xs font-semibold text-white/90">
+        <p className="mt-2 text-xs font-semibold tabular-nums text-white/90">
           {vazio
             ? "Em breve"
             : `${count} ${count === 1 ? "lugar" : "lugares"}`}
@@ -61,10 +61,10 @@ export default function ExplorarDestaqueCard({ categoria, count, imagemUrl }) {
     </>
   );
 
-  const shellClass = `relative flex h-[168px] w-[260px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 ${
+  const shellClass = `relative flex h-[168px] w-[260px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[26px] ring-1 ring-[#e8eeee] ${
     vazio
       ? "pointer-events-none cursor-not-allowed opacity-70"
-      : "group transition active:scale-[0.98]"
+      : "group transition-transform duration-300 active:scale-[0.98]"
   }`;
 
   if (vazio) {

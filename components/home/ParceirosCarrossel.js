@@ -1,53 +1,63 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { getBadgeParceiroLabel } from "@/lib/destaques";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader";
+import { HOME_CAROUSEL_TRACK_CLASS } from "@/components/home/homeTokens";
 
 /**
  * Carrossel de estabelecimentos com destaque comercial vigente.
- * @param {object} props
- * @param {object[]} [props.lugares] - Lugares parceiros (ehParceiro).
- * @returns {import("react").ReactElement|null}
  */
 export default function ParceirosCarrossel({ lugares = [] }) {
   if (!lugares.length) return null;
 
   return (
-    <section className="mb-8" aria-labelledby="parceiros-carrossel-title">
-      <div className="mb-3">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#1a4a3a]">
-          Parceiros do guia
-        </p>
-        <h2 id="parceiros-carrossel-title" className="text-lg font-bold text-[#1a2e28]">
-          Destaques da semana
-        </h2>
-      </div>
+    <section
+      className="mb-10 home-reveal overflow-visible"
+      aria-labelledby="parceiros-carrossel-title"
+    >
+      <HomeSectionHeader eyebrow="Parceiros do guia" title="Destaques da semana" />
 
-      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+      <div className={`${HOME_CAROUSEL_TRACK_CLASS} -mx-4 px-4`}>
         {lugares.map((lugar) => (
-          <Link
-            key={lugar.id}
-            href={`/lugares/${lugar.id}`}
-            className="group relative flex h-[200px] w-[280px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 transition active:scale-[0.98]"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={getCapaFromLugar(lugar)}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d2820]/95 via-[#0d2820]/40 to-transparent" />
-            <span className="absolute left-3 top-3 rounded-full bg-[#f5e6b8] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#7a6520]">
-              {getBadgeParceiroLabel()}
-            </span>
-            <div className="relative p-4 text-white">
-              <h3 className="text-lg font-bold leading-tight">{lugar.nome}</h3>
-              <p className="mt-1 line-clamp-1 text-xs text-white/85">{lugar.categoria}</p>
-            </div>
-          </Link>
+          <ParceiroCard key={lugar.id} lugar={lugar} />
         ))}
       </div>
     </section>
+  );
+}
+
+function ParceiroCard({ lugar }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const distancia = lugar.distancia_calculada || lugar.distancia;
+
+  return (
+    <Link
+      href={`/lugares/${lugar.id}`}
+      className="group relative flex h-[220px] w-[292px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[26px] ring-1 ring-[#e8eeee] transition-transform duration-300 active:scale-[0.98]"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={getCapaFromLugar(lugar)}
+        alt=""
+        onLoad={() => setImgLoaded(true)}
+        className={`home-image-fade absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+          imgLoaded ? "is-loaded" : ""
+        }`}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#061612] via-[#061612]/55 to-transparent" />
+      <span className="absolute left-3.5 top-3.5 rounded-full bg-[#f5e6b8]/95 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#7a6520] shadow-sm">
+        {getBadgeParceiroLabel()}
+      </span>
+      <div className="relative p-4 pb-5">
+        <h3 className="text-lg font-bold leading-tight text-white drop-shadow-sm">{lugar.nome}</h3>
+        <p className="mt-1 text-xs font-medium text-white/85">{lugar.categoria}</p>
+        {distancia && (
+          <p className="mt-2 text-xs font-semibold tabular-nums text-white/75">{distancia}</p>
+        )}
+      </div>
+    </Link>
   );
 }

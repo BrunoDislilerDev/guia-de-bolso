@@ -18,6 +18,7 @@ import SearchBrowsePanel from "@/components/home/SearchBrowsePanel";
 import SearchResultsPanel from "@/components/home/SearchResultsPanel";
 import SearchStatusFilter from "@/components/home/SearchStatusFilter";
 import SmartSearch from "@/components/home/SmartSearch";
+import { useHomeHeaderShellRef } from "@/hooks/useHomeHeaderScroll";
 import { FILTRO_STATUS_BUSCA } from "@/lib/busca";
 import { buildReportContext } from "@/lib/reportContext";
 import { getNetworkErrorMessage, mapApiErrorResponse } from "@/lib/userMessages";
@@ -657,6 +658,7 @@ function Home() {
     return () => window.clearTimeout(focusTimer);
   }, [onboardingChecked, showOnboarding, authLoading, searchParams]);
 
+  const headerShellRef = useHomeHeaderShellRef();
   const isFavorito = (lugar) => favoritos.includes(String(lugar.id));
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const buscaLimiteDiarioAtingido =
@@ -690,39 +692,44 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
-      <div className="mx-auto max-w-md px-4 pb-32 pt-5">
-        <HomeContextHeader
-          user={user}
-          avatarUrl={avatarUrl}
-          temperatura={temperaturaClima}
-          weatherEmoji={climaEmoji}
-          weatherCondition={climaCondition}
-          climaLoading={!homeLoading && pertoLoading}
-          climaErro={!homeLoading && sectionErrors.clima}
-          getUserInitial={getUserInitial}
-        />
+      <div className="mx-auto max-w-md px-4 pb-32">
+        <div ref={headerShellRef} className="home-header-shell -mx-4 px-4 pt-5 pb-4">
+          <div className="home-header-top">
+            <HomeContextHeader
+              user={user}
+              avatarUrl={avatarUrl}
+              temperatura={temperaturaClima}
+              weatherEmoji={climaEmoji}
+              weatherCondition={climaCondition}
+              climaLoading={!homeLoading && pertoLoading}
+              climaErro={!homeLoading && sectionErrors.clima}
+              getUserInitial={getUserInitial}
+            />
+            <SupabaseConfigAlert />
+          </div>
 
-        <SupabaseConfigAlert />
-
-        <SmartSearch
-          searchContainerRef={searchContainerRef}
-          searchInputRef={searchInputRef}
-          termoBusca={termoBusca}
-          searchMode={searchMode}
-          onSubmit={(e) => {
-            e.preventDefault();
-            executarBusca(termoBusca);
-          }}
-          onFocus={handleSearchFocus}
-          onBlur={handleSearchBlur}
-          onChange={setTermoBusca}
-          onClose={fecharBusca}
-          onChipClick={(chip) => {
-            if (chip.filtro) setFiltroBuscaStatus(chip.filtro);
-            executarBusca(chip.query, chip.filtro);
-          }}
-          showChips={!searchMode}
-        />
+          <div className="home-header-search-slot">
+            <SmartSearch
+              searchContainerRef={searchContainerRef}
+              searchInputRef={searchInputRef}
+              termoBusca={termoBusca}
+              searchMode={searchMode}
+              onSubmit={(e) => {
+                e.preventDefault();
+                executarBusca(termoBusca);
+              }}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
+              onChange={setTermoBusca}
+              onClose={fecharBusca}
+              onChipClick={(chip) => {
+                if (chip.filtro) setFiltroBuscaStatus(chip.filtro);
+                executarBusca(chip.query, chip.filtro);
+              }}
+              showChips={!searchMode}
+            />
+          </div>
+        </div>
 
         <div
           className={`transition-all duration-300 ease-out ${
@@ -809,16 +816,21 @@ function Home() {
               {sectionErrors.perto ? (
                 <SectionUnavailable title="Perto de você" />
               ) : pertoLoading ? (
-                <section className="mb-4">
-                  <div className="mb-4">
-                    <p className="text-xs font-medium text-[#5a6b66]">
-                      Descoberta complementar
-                    </p>
-                    <h2 className="text-lg font-bold text-[#1a2e28]">Perto de você</h2>
-                  </div>
-                  <p className="py-4 text-center text-sm text-[#5a6b66]">
-                    Carregando lugares perto de você...
+                <section className="mb-6 home-reveal">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1a4a3a]/75">
+                    Descoberta complementar
                   </p>
+                  <h2 className="mt-1 font-display text-xl font-bold text-[#1a2e28]">
+                    Perto de você
+                  </h2>
+                  <div className="mt-4 flex gap-3.5 overflow-hidden">
+                    {[1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="h-[420px] w-[300px] shrink-0 animate-pulse rounded-[28px] bg-[#e8eeee]"
+                      />
+                    ))}
+                  </div>
                 </section>
               ) : (
                 <PertoDeVoce

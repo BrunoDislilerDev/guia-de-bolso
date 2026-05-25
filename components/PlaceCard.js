@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getStatusFuncionamento } from "@/lib/horarios";
@@ -7,12 +8,6 @@ import { getCapaFromLugar } from "@/lib/fotos";
 import { getBadgeParceiroLabel } from "@/lib/destaques";
 import { getTagsFromLugar } from "@/lib/tags";
 
-/**
- * IconPin - Location pin icon for distance display.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
 function IconPin({ className = "h-4 w-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -21,13 +16,6 @@ function IconPin({ className = "h-4 w-4" }) {
   );
 }
 
-/**
- * FavoriteIcon - Heart icon reflecting favorite state.
- * @param {object} props
- * @param {boolean} props.active - Whether the place is favorited.
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
 function FavoriteIcon({ active, className = "h-5 w-5" }) {
   return (
     <svg
@@ -43,11 +31,6 @@ function FavoriteIcon({ active, className = "h-5 w-5" }) {
   );
 }
 
-/**
- * Returns aggregated rating from the place record when available.
- * @param {object} lugar - Place record.
- * @returns {number|null} Average rating or null.
- */
 function getRatingMedio(lugar) {
   const value = lugar.rating_medio ?? lugar.media_avaliacoes;
   if (value === null || value === undefined) return null;
@@ -57,60 +40,79 @@ function getRatingMedio(lugar) {
 
 /**
  * PlaceCard - Full-height place card with image, status, and optional favorite action.
- * @param {object} props
- * @param {object} props.lugar - Place record from Supabase.
- * @param {boolean} [props.isFavorito] - Whether the current user favorited this place.
- * @param {(lugar: object) => void} [props.onFavoritar] - Called when the favorite button is pressed.
- * @param {boolean} [props.priority] - Preload image for above-the-fold cards.
- * @returns {import('react').ReactElement}
+ * @param {"default"|"immersive"} [props.variant]
  */
 export default function PlaceCard({
   lugar,
   isFavorito = false,
   onFavoritar,
   priority = false,
+  variant = "default",
 }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
   const status = getStatusFuncionamento(lugar.horarios, lugar.mostrar_horarios);
   const distancia = lugar.distancia_calculada || lugar.distancia;
   const tags = getTagsFromLugar(lugar).slice(0, 2);
   const rating = getRatingMedio(lugar);
   const imagemUrl = getCapaFromLugar(lugar);
+  const immersive = variant === "immersive";
 
   return (
-    <article className="relative min-h-[380px] overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md">
+    <article
+      className={`group relative overflow-hidden transition-shadow duration-300 ${
+        immersive
+          ? "min-h-[420px] rounded-[28px] ring-1 ring-[#e8eeee] shadow-none"
+          : "min-h-[380px] rounded-2xl shadow-[0_6px_24px_rgba(26,46,40,0.08)] ring-1 ring-[#e8eeee] hover:shadow-[0_10px_32px_rgba(26,46,40,0.12)]"
+      }`}
+    >
       {imagemUrl ? (
         <Image
           src={imagemUrl}
           alt={lugar.nome}
           fill
-          sizes="(max-width: 768px) 100vw, 400px"
-          className="object-cover"
+          sizes={immersive ? "300px" : "(max-width: 768px) 100vw, 400px"}
+          onLoad={() => setImgLoaded(true)}
+          className={`home-image-fade object-cover transition-transform duration-500 group-hover:scale-105 ${
+            imgLoaded ? "is-loaded" : ""
+          }`}
           priority={priority}
         />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+      <div
+        className={`absolute inset-0 ${
+          immersive
+            ? "bg-gradient-to-t from-[#061612] via-[#061612]/55 to-[#061612]/10"
+            : "bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+        }`}
+      />
 
       <div className="absolute left-4 top-4 flex flex-col items-start gap-2">
         {rating !== null && (
-          <span className="rounded-full bg-black/55 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+          <span className="rounded-full border border-white/15 bg-black/45 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
             ⭐ {rating.toFixed(1)}
           </span>
         )}
-        <span className="rounded-full bg-[#d4ede8] px-3 py-1 text-xs font-semibold text-[#1a4a3a]">
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-md ${
+            immersive
+              ? "border border-white/20 bg-white/15 text-white"
+              : "bg-[#d4ede8] text-[#1a4a3a]"
+          }`}
+        >
           {lugar.categoria}
         </span>
         {lugar.ehParceiro && (
-          <span className="rounded-full bg-[#f5e6b8] px-3 py-1 text-xs font-bold text-[#7a6520]">
+          <span className="rounded-full bg-[#f5e6b8]/95 px-3 py-1 text-xs font-bold text-[#7a6520] shadow-sm">
             {getBadgeParceiroLabel()}
           </span>
         )}
       </div>
       {status && (
         <span
-          className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
-            status.aberto ? "bg-[#1a4a3a]" : "bg-[#d9534f]"
+          className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm ${
+            status.aberto ? "bg-[#1a4a3a]/90" : "bg-[#d9534f]/90"
           }`}
           title={status.resumo || status.detail || status.label}
         >
@@ -120,13 +122,17 @@ export default function PlaceCard({
 
       <Link
         href={`/lugares/${lugar.id}`}
-        className="absolute inset-0 flex flex-col justify-end p-4 pr-16"
+        className={`absolute inset-0 flex flex-col justify-end ${immersive ? "p-5 pr-16" : "p-4 pr-16"}`}
       >
         <div>
-          <h3 className="text-2xl font-bold leading-tight text-white">
+          <h3
+            className={`font-bold leading-tight text-white drop-shadow-sm ${
+              immersive ? "text-[1.5rem] tracking-tight" : "text-2xl"
+            }`}
+          >
             {lugar.nome}
           </h3>
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/80">
+          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/88">
             {lugar.descricao}
           </p>
           {tags.length > 0 && (
@@ -134,7 +140,11 @@ export default function PlaceCard({
               {tags.map((tag) => (
                 <span
                   key={tag.id}
-                  className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#1a2e28] shadow-sm"
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                    immersive
+                      ? "border border-white/20 bg-white/15 text-white backdrop-blur-md"
+                      : "bg-white text-[#1a2e28] shadow-sm"
+                  }`}
                 >
                   {tag.icone && <span className="mr-1">{tag.icone}</span>}
                   {tag.nome}
@@ -142,10 +152,12 @@ export default function PlaceCard({
               ))}
             </div>
           )}
-          <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-white">
-            <IconPin className="h-4 w-4 text-white" />
-            {distancia}
-          </p>
+          {distancia && (
+            <p className="mt-3 flex items-center gap-1.5 text-sm font-semibold tabular-nums text-white/90">
+              <IconPin className="h-4 w-4 shrink-0 text-white/80" />
+              {distancia}
+            </p>
+          )}
         </div>
       </Link>
 
@@ -153,7 +165,7 @@ export default function PlaceCard({
         <button
           type="button"
           onClick={() => onFavoritar(lugar)}
-          className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white shadow-sm backdrop-blur-md"
+          className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-white backdrop-blur-md transition-transform active:scale-90"
           aria-label={isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         >
           <FavoriteIcon active={isFavorito} />

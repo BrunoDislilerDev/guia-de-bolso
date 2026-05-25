@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getCapaFromLugar } from "@/lib/fotos";
@@ -20,12 +21,9 @@ function getRatingMedio(lugar) {
 
 /**
  * EmAltaCard - Compact trending place card for the home carousel.
- * @param {object} props
- * @param {object} props.lugar - Place record from Supabase.
- * @param {boolean} [props.priority] - Preload image for the first visible carousel card.
- * @returns {import('react').ReactElement}
  */
 export default function EmAltaCard({ lugar, priority = false }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
   const status = getStatusFuncionamento(lugar.horarios, lugar.mostrar_horarios);
   const tags = getTagsFromLugar(lugar).slice(0, 2);
   const distancia = lugar.distancia_calculada || lugar.distancia;
@@ -35,51 +33,57 @@ export default function EmAltaCard({ lugar, priority = false }) {
   return (
     <Link
       href={`/lugares/${lugar.id}`}
-      className="group flex w-[200px] shrink-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md"
+      className="group flex w-[208px] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] bg-white ring-1 ring-[#e8eeee] transition-transform duration-300 active:scale-[0.98]"
     >
-      <div className="relative h-28 overflow-hidden">
+      <div className="relative h-[120px] overflow-hidden">
         {imagemUrl ? (
           <Image
             src={imagemUrl}
             alt={lugar.nome}
-            width={400}
-            height={300}
-            sizes="200px"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            width={416}
+            height={312}
+            sizes="208px"
+            onLoad={() => setImgLoaded(true)}
+            className={`home-image-fade h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+              imgLoaded ? "is-loaded" : ""
+            }`}
             priority={priority}
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
         )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
         {status && (
           <span
-            className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-              status.aberto ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
+            className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm backdrop-blur-sm ${
+              status.aberto ? "bg-emerald-500/95 text-white" : "bg-red-500/95 text-white"
             }`}
           >
             {status.aberto ? "Aberto" : "Fechado"}
           </span>
         )}
         {rating !== null && (
-          <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+          <span className="absolute right-2.5 top-2.5 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-md">
             ⭐ {rating.toFixed(1)}
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-3">
-        <h3 className="line-clamp-1 text-sm font-bold text-[#1a2e28]">{lugar.nome}</h3>
-        <p className="mt-1 line-clamp-1 text-xs text-[#5a6b66]">{distancia}</p>
+      <div className="flex flex-1 flex-col p-3.5">
+        <h3 className="line-clamp-1 text-[15px] font-bold tracking-tight text-[#1a2e28]">
+          {lugar.nome}
+        </h3>
+        <p className="mt-1 line-clamp-1 text-xs font-medium text-[#5a6b66]">{distancia}</p>
         {status && (status.resumo || status.detail) && (
-          <p className="mt-0.5 line-clamp-1 text-[10px] font-medium text-[#1a4a3a]">
+          <p className="mt-0.5 line-clamp-1 text-[10px] font-medium text-[#1a4a3a]/80">
             {status.resumo || status.detail}
           </p>
         )}
         {tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {tags.map((tag) => (
               <span
                 key={tag.id ?? tag.nome}
-                className="rounded-full bg-[#f0f4f3] px-2 py-0.5 text-[10px] font-medium text-[#1a4a3a]"
+                className="rounded-full border border-[#e8eeee] bg-[#f8fafa] px-2.5 py-0.5 text-[10px] font-semibold text-[#1a4a3a]"
               >
                 {tag.nome}
               </span>

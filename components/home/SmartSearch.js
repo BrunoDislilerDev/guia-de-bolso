@@ -1,14 +1,9 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
+import { HOME_CHIP_CLASS, HOME_SURFACE_CLASS } from "@/components/home/homeTokens";
 import { QUICK_SEARCH_CHIPS } from "@/lib/homeContext";
 
-/**
- * IconSparkle - Sparkle icon for AI search branding.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
 function IconSparkle({ className = "h-4 w-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -17,12 +12,6 @@ function IconSparkle({ className = "h-4 w-4" }) {
   );
 }
 
-/**
- * IconSend - Send/submit icon for the search button.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
 function IconSend({ className = "h-4 w-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -31,12 +20,6 @@ function IconSend({ className = "h-4 w-4" }) {
   );
 }
 
-/**
- * IconClose - Close icon for exiting search mode.
- * @param {object} props
- * @param {string} [props.className]
- * @returns {import('react').ReactElement}
- */
 function IconClose({ className = "h-3.5 w-3.5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -45,21 +28,10 @@ function IconClose({ className = "h-3.5 w-3.5" }) {
   );
 }
 
-/**
- * QuickChip - Suggested quick-search chip button.
- * @param {object} props
- * @param {object} props.chip - Chip config with id, label, and emoji.
- * @param {(chip: object) => void} props.onClick - Called when the chip is pressed.
- * @returns {import('react').ReactElement}
- */
 const QuickChip = memo(function QuickChip({ chip, onClick }) {
   return (
-    <button
-      type="button"
-      onClick={() => onClick(chip)}
-      className="flex shrink-0 snap-start items-center gap-1.5 rounded-full border border-white/80 bg-white px-3.5 py-2 text-xs font-medium text-[#1a4a3a] shadow-[0_2px_8px_rgba(26,74,58,0.08)] ring-1 ring-[#d8ebe4]/80 transition-all active:scale-[0.97] active:bg-[#f4faf7]"
-    >
-      <span className="text-sm leading-none" aria-hidden>
+    <button type="button" onClick={() => onClick(chip)} className={HOME_CHIP_CLASS}>
+      <span className="text-base leading-none" aria-hidden>
         {chip.emoji}
       </span>
       <span className="whitespace-nowrap">{chip.label}</span>
@@ -67,22 +39,6 @@ const QuickChip = memo(function QuickChip({ chip, onClick }) {
   );
 });
 
-/**
- * SmartSearch - AI-powered search input with quick suggestion chips.
- * @param {object} props
- * @param {import('react').RefObject<HTMLFormElement>} props.searchContainerRef - Ref for the search form.
- * @param {import('react').RefObject<HTMLInputElement>} props.searchInputRef - Ref for the search input.
- * @param {string} props.termoBusca - Current search query value.
- * @param {boolean} props.searchMode - Whether expanded search mode is active.
- * @param {(e: import('react').FormEvent) => void} props.onSubmit - Form submit handler.
- * @param {(e: import('react').FocusEvent) => void} [props.onFocus] - Input focus handler.
- * @param {(e: import('react').FocusEvent) => void} [props.onBlur] - Input blur handler.
- * @param {(value: string) => void} props.onChange - Query change handler.
- * @param {() => void} props.onClose - Closes search mode.
- * @param {(chip: object) => void} props.onChipClick - Quick chip click handler.
- * @param {boolean} [props.showChips] - Whether to show quick suggestion chips.
- * @returns {import('react').ReactElement}
- */
 function SmartSearch({
   searchContainerRef,
   searchInputRef,
@@ -98,18 +54,8 @@ function SmartSearch({
 }) {
   const [focused, setFocused] = useState(false);
 
-  /**
-   * Forwards quick chip selection to the parent handler.
-   * @param {object} chip - Quick search chip config.
-   * @returns {void}
-   */
   const handleChip = useCallback((chip) => onChipClick(chip), [onChipClick]);
 
-  /**
-   * Marks the search field as focused and forwards the focus event.
-   * @param {import('react').FocusEvent} e - Focus event.
-   * @returns {void}
-   */
   const handleFocus = useCallback(
     (e) => {
       setFocused(true);
@@ -118,11 +64,6 @@ function SmartSearch({
     [onFocus]
   );
 
-  /**
-   * Marks the search field as blurred and forwards the blur event.
-   * @param {import('react').FocusEvent} e - Blur event.
-   * @returns {void}
-   */
   const handleBlur = useCallback(
     (e) => {
       setFocused(false);
@@ -134,104 +75,88 @@ function SmartSearch({
   const hasQuery = termoBusca.trim().length > 0;
   const active = focused || searchMode;
 
+  const showChipRow = showChips && !searchMode;
+
   return (
-    <section className="relative z-10 mb-4">
+    <section className="home-smart-search-section relative mb-6 mt-1">
       <form ref={searchContainerRef} onSubmit={onSubmit}>
         <div
-          className={`overflow-hidden rounded-[20px] bg-white transition-shadow duration-300 ease-out ${
-            active
-              ? "shadow-[0_8px_24px_-6px_rgba(26,46,40,0.14)]"
-              : "shadow-[0_2px_14px_-4px_rgba(26,46,40,0.08)]"
+          className={`home-ai-search-surface ${HOME_SURFACE_CLASS} transition-shadow duration-300 ease-out ${
+            active ? "home-ai-search-active" : "shadow-none ring-[#e8eeee]"
           }`}
         >
-            <div className="flex items-center gap-2.5 px-3 py-2.5">
-              <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors duration-300 ${
-                  active
-                    ? "bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54] text-white shadow-sm"
-                    : "bg-[#eef6f2] text-[#1a4a3a]"
-                }`}
-              >
-                <IconSparkle className="h-[18px] w-[18px]" />
-              </div>
-
-              <div className="relative min-w-0 flex-1">
-                <label htmlFor="smart-search-input" className="sr-only">
-                  Busca inteligente com IA
-                </label>
-                <p
-                  className={`text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1a4a3a]/45 transition-all duration-200 ${
-                    active ? "mb-0.5 h-0 overflow-hidden opacity-0" : "mb-0.5"
-                  }`}
-                  aria-hidden={active}
-                >
-                  Pergunte à IA
-                </p>
-                <input
-                  id="smart-search-input"
-                  ref={searchInputRef}
-                  type="search"
-                  enterKeyHint="search"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  value={termoBusca}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  onChange={(e) => onChange(e.target.value)}
-                  placeholder="O que fazer agora?"
-                  className={`w-full appearance-none border-0 bg-transparent text-[15px] leading-snug text-[#1a2e28] shadow-none ring-0 placeholder:text-[#9aa8a3]/90 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 ${
-                    searchMode ? "pr-8" : ""
-                  }`}
-                />
-                {searchMode && (
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-[#5a6b66] transition-colors active:bg-[#eef3f1]"
-                    aria-label="Fechar busca"
-                  >
-                    <IconClose />
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                aria-label="Buscar"
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-200 active:scale-95 ${
-                  hasQuery || active
-                    ? "bg-[#1a4a3a] text-white shadow-md shadow-[#1a4a3a]/25"
-                    : "bg-[#e8f0ec] text-[#9aa8a3]"
-                }`}
-              >
-                <IconSend className="h-[17px] w-[17px] -rotate-45" />
-              </button>
+          <div className="home-ai-search-input-row flex items-center gap-3 px-4 py-3.5">
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
+                active
+                  ? "bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54] text-white shadow-[0_4px_14px_rgba(26,74,58,0.35)]"
+                  : "bg-[#eef6f2] text-[#1a4a3a]"
+              }`}
+            >
+              <IconSparkle className="h-[18px] w-[18px]" />
             </div>
+
+            <div className="relative min-w-0 flex-1">
+              <label htmlFor="smart-search-input" className="sr-only">
+                Busca inteligente com IA
+              </label>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1a4a3a]/50">
+                Pergunte à IA
+              </p>
+              <input
+                id="smart-search-input"
+                ref={searchInputRef}
+                type="search"
+                enterKeyHint="search"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                value={termoBusca}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="O que você quer descobrir hoje?"
+                className={`mt-0.5 w-full appearance-none border-0 bg-transparent text-[16px] leading-snug text-[#1a2e28] shadow-none outline-none ring-0 placeholder:text-[#9aa8a3] focus:outline-none focus-visible:outline-none ${
+                  searchMode ? "pr-8" : ""
+                }`}
+              />
+              {searchMode && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-[#5a6b66] transition-colors active:bg-[#eef3f1]"
+                  aria-label="Fechar busca"
+                >
+                  <IconClose />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              aria-label="Buscar"
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all duration-200 active:scale-95 ${
+                hasQuery || active
+                  ? "bg-[#1a4a3a] text-white shadow-[0_6px_20px_rgba(26,74,58,0.32)]"
+                  : "bg-[#e8f0ec] text-[#9aa8a3]"
+              }`}
+            >
+              <IconSend className="h-[17px] w-[17px] -rotate-45" />
+            </button>
+          </div>
+
+          {showChipRow && (
+            <div className="home-ai-chips-wrap border-t border-[#eef2f0] px-4 pt-3 pb-4">
+              <div className="home-ai-chips-row flex gap-2.5 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+                {QUICK_SEARCH_CHIPS.map((chip) => (
+                  <QuickChip key={chip.id} chip={chip} onClick={handleChip} />
+                ))}
+                <span className="w-5 shrink-0 snap-end" aria-hidden />
+              </div>
+            </div>
+          )}
         </div>
       </form>
-
-      {showChips && !searchMode && (
-        <div className="relative mt-3 -mx-1">
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-5 bg-gradient-to-r from-[#f0f4f3] via-[#f0f4f3]/80 to-transparent"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#f0f4f3] via-[#f0f4f3]/80 to-transparent"
-            aria-hidden
-          />
-          <div
-            className="flex gap-2 overflow-x-auto scroll-smooth px-1 pb-0.5 scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
-            role="list"
-            aria-label="Sugestões rápidas"
-          >
-            {QUICK_SEARCH_CHIPS.map((chip) => (
-              <QuickChip key={chip.id} chip={chip} onClick={handleChip} />
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   );
 }

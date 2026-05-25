@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
-import Logo from "@/components/Logo";
 import ExplorarAtalhos from "@/components/explorar/ExplorarAtalhos";
 import ExplorarBuscaBar from "@/components/explorar/ExplorarBuscaBar";
 import ExplorarCategoriaCard from "@/components/explorar/ExplorarCategoriaCard";
 import ExplorarDestaqueCard from "@/components/explorar/ExplorarDestaqueCard";
+import ExplorarHeader from "@/components/explorar/ExplorarHeader";
 import ExplorarSkeleton from "@/components/explorar/ExplorarSkeleton";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader";
+import { HOME_CAROUSEL_TRACK_CLASS } from "@/components/home/homeTokens";
 import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
 import { isSupabasePublicConfigured } from "@/lib/supabase/publicEnv";
 import {
@@ -85,49 +87,32 @@ export default function CategoriasPage() {
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
-      <header className="sticky top-0 z-30 border-b border-[#e8eeee]/80 bg-[#f0f4f3]/90 px-4 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur-md">
-        <div className="mx-auto max-w-md">
-          <div className="mb-3 flex items-center gap-3">
-            <Logo size="sm" />
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#1a4a3a]">
-              Imbituba, SC
-            </p>
-          </div>
-          <h1 className="font-display text-2xl font-extrabold tracking-tight text-[#1a2e28]">
-            Explorar
-          </h1>
-          <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">
-            {loading
-              ? "Carregando lugares da região…"
-              : `${totalLugares} lugares em ${categoriasComLugares} categorias`}
-          </p>
-        </div>
-      </header>
+      <div className="mx-auto max-w-md px-4 pb-32">
+        <ExplorarHeader
+          loading={loading}
+          totalLugares={totalLugares}
+          categoriasComLugares={categoriasComLugares}
+        >
+          {!loading && <ExplorarBuscaBar />}
+        </ExplorarHeader>
 
-      <main className="mx-auto max-w-md px-4 pb-32 pt-5">
         <SupabaseConfigAlert />
         {loading ? (
           <ExplorarSkeleton />
         ) : (
-          <div className="space-y-8">
-            <ExplorarBuscaBar />
-
+          <>
             {destaques.length > 0 && (
-              <section aria-labelledby="explorar-destaques-title">
-                <div className="mb-3 flex items-end justify-between gap-2">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#1a4a3a]">
-                      Em destaque
-                    </p>
-                    <h2
-                      id="explorar-destaques-title"
-                      className="font-display text-lg font-extrabold text-[#1a2e28]"
-                    >
-                      Mais visitadas agora
-                    </h2>
-                  </div>
-                </div>
-                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+              <section
+                className="home-reveal mb-10 overflow-visible"
+                style={{ animationDelay: "60ms" }}
+                aria-labelledby="explorar-destaques-title"
+              >
+                <HomeSectionHeader
+                  eyebrow="Em destaque"
+                  title="Mais visitadas agora"
+                  titleId="explorar-destaques-title"
+                />
+                <div className={`${HOME_CAROUSEL_TRACK_CLASS} -mx-4 px-4`}>
                   {destaques.map((categoria, index) => (
                     <ExplorarDestaqueCard
                       key={categoria.nome}
@@ -143,16 +128,12 @@ export default function CategoriasPage() {
               </section>
             )}
 
-            <section aria-labelledby="explorar-grid-title">
-              <div className="mb-3">
-                <h2
-                  id="explorar-grid-title"
-                  className="font-display text-lg font-extrabold text-[#1a2e28]"
-                >
-                  Todas as categorias
-                </h2>
-              </div>
-
+            <section
+              className="home-reveal mb-10"
+              style={{ animationDelay: "100ms" }}
+              aria-labelledby="explorar-grid-title"
+            >
+              <HomeSectionHeader title="Todas as categorias" titleId="explorar-grid-title" />
               <div className="grid grid-cols-2 gap-3">
                 {categoriasOrdenadas.map((categoria) => (
                   <ExplorarCategoriaCard
@@ -166,9 +147,9 @@ export default function CategoriasPage() {
             </section>
 
             <ExplorarAtalhos />
-          </div>
+          </>
         )}
-      </main>
+      </div>
 
       <BottomNav />
     </div>
