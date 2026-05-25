@@ -1,6 +1,7 @@
 import { ensurePerfil } from "@/lib/ensurePerfil";
-import { createClient } from "@/lib/supabase/server";
 import { registrarLog } from "@/lib/logs";
+import { safeRedirectPath } from "@/lib/safeRedirectPath";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 /**
@@ -11,7 +12,7 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const next = safeRedirectPath(searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();

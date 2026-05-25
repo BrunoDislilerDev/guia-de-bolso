@@ -8,7 +8,8 @@ import AuthFlow from "@/components/AuthFlow";
 import Logo from "@/components/Logo";
 import LegalConsentLine from "@/components/legal/LegalConsentLine";
 import { LOGIN_HERO_IMAGE, LOGIN_VALUE_PILLS } from "@/lib/authImagery";
-import { createClient } from "@/lib/supabase/client";
+import { safeRedirectPath } from "@/lib/safeRedirectPath";
+import { createClient } from "@/lib/supabase";
 
 /**
  * Skeleton da tela de login.
@@ -68,15 +69,16 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const authError = searchParams.get("error") === "auth";
+  const redirectAfterLogin = safeRedirectPath(searchParams.get("next"));
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace("/");
+      if (user) router.replace(redirectAfterLogin);
       else setCheckingSession(false);
     });
-  }, [router]);
+  }, [router, redirectAfterLogin]);
 
   if (checkingSession) {
     return <LoginLoadingSkeleton />;
@@ -161,7 +163,7 @@ function LoginPageContent() {
             </div>
           )}
 
-          <AuthFlow variant="immersive" />
+          <AuthFlow variant="immersive" redirectAfterLogin={redirectAfterLogin} />
 
           <Link
             href="/"

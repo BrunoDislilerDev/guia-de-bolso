@@ -6,6 +6,7 @@ import IconApple from "@/components/IconApple";
 import IconBack from "@/components/IconBack";
 import LegalConsentLine from "@/components/legal/LegalConsentLine";
 import { ensurePerfil } from "@/lib/ensurePerfil";
+import { safeRedirectPath } from "@/lib/safeRedirectPath";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -102,9 +103,14 @@ function cleanPhone(value) {
  * @param {"default" | "immersive"} [props.variant] - Visual da página /login.
  * @returns {import('react').ReactElement}
  */
-export default function AuthFlow({ compact = false, variant = "default" }) {
+export default function AuthFlow({
+  compact = false,
+  variant = "default",
+  redirectAfterLogin = "/",
+}) {
   const immersive = variant === "immersive" && !compact;
   const router = useRouter();
+  const postLoginPath = safeRedirectPath(redirectAfterLogin);
   const [screen, setScreen] = useState("main");
   const [oauthLoading, setOauthLoading] = useState(false);
   const [phone, setPhone] = useState("");
@@ -148,9 +154,15 @@ export default function AuthFlow({ compact = false, variant = "default" }) {
   async function handleGoogle() {
     setOauthLoading(true);
     const supabase = createClient();
+    const nextQuery =
+      postLoginPath !== "/"
+        ? `?next=${encodeURIComponent(postLoginPath)}`
+        : "";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback${nextQuery}`,
+      },
     });
     if (error) setOauthLoading(false);
   }
@@ -216,7 +228,7 @@ export default function AuthFlow({ compact = false, variant = "default" }) {
     }
 
     setScreen("success");
-    setTimeout(() => router.push("/"), 1500);
+    setTimeout(() => router.push(postLoginPath), 1500);
   }
 
   function updateCode(index, value) {
