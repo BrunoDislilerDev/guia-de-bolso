@@ -187,11 +187,7 @@ export default function LugarDetalheAirbnb(props) {
 
           {acoesRapidas.length > 0 && (
             <LugarSectionAirbnb title={ehEstabelecimento ? "Contato" : "Informações"}>
-              <LugarQuickActions
-                modo={modoAcoes}
-                variant={modoAcoes === "publico" ? "premium" : "airbnb"}
-                acoes={acoesRapidas}
-              />
+              <LugarQuickActions modo={modoAcoes} variant="premium" acoes={acoesRapidas} />
             </LugarSectionAirbnb>
           )}
 

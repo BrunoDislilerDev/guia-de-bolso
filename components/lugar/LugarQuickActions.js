@@ -69,7 +69,56 @@ const ICONS_ESTABELECIMENTO = {
 };
 
 /**
- * Botão ou link de ação rápida para estabelecimentos (ligar, Instagram, etc.).
+ * Card de contato (estabelecimento) — mesmo visual dos cards de informação (praia, trilha).
+ * @param {object} props
+ * @param {{ id: string, label: string, href?: string|null }} props.acao
+ * @param {import("react").ComponentType<{ className?: string }>} props.Icon
+ * @returns {import("react").JSX.Element}
+ */
+function InfoCardContato({ acao, Icon }) {
+  const content = (
+    <>
+      <span
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#1a4a3a] ring-1 ring-[#e8eeee]"
+        aria-hidden
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="text-center text-[15px] font-bold leading-tight tracking-tight text-[#1a2e28]">
+        {acao.label}
+      </span>
+      <span className="text-center text-[11px] font-medium leading-snug text-[#5a6b66]">Abrir</span>
+    </>
+  );
+
+  if (!acao.href) {
+    return (
+      <div
+        className={`${INFO_CARD_PREMIUM_CLASS} opacity-50`}
+        role="listitem"
+        aria-label={`${acao.label} indisponível`}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={acao.href}
+      target={acao.href.startsWith("tel:") ? undefined : "_blank"}
+      rel={acao.href.startsWith("tel:") ? undefined : "noopener noreferrer"}
+      className={INFO_CARD_PREMIUM_CLASS}
+      role="listitem"
+      aria-label={acao.label}
+    >
+      {content}
+    </a>
+  );
+}
+
+/**
+ * Botão ou link de ação rápida para estabelecimentos — layout legado.
  * @param {object} props
  * @param {string} props.label - Texto exibido abaixo do ícone.
  * @param {string} [props.href] - URL externa; se ausente, renderiza botão desabilitado.
@@ -197,17 +246,16 @@ export default function LugarQuickActions({
   const isEstabelecimento = modo === "estabelecimento";
   const isAirbnb = variant === "airbnb";
   const isPremium = variant === "premium";
+  const cardsPremium = isPremium || (isAirbnb && isEstabelecimento);
 
   return (
     <section className={isAirbnb || isPremium ? "" : "mt-6"}>
       <div
         className={
-          isEstabelecimento
-            ? isAirbnb
-              ? "flex flex-wrap gap-2"
-              : "mx-auto flex w-full max-w-sm justify-center gap-2.5"
-            : isPremium
-              ? "flex flex-wrap gap-3"
+          cardsPremium
+            ? "flex flex-wrap gap-3"
+            : isEstabelecimento
+              ? "mx-auto flex w-full max-w-sm justify-center gap-2.5"
               : `flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch]${isAirbnb ? "" : ""}`
         }
         role="list"
@@ -220,6 +268,9 @@ export default function LugarQuickActions({
         {isEstabelecimento
           ? acoes.map((acao) => {
               const Icon = ICONS_ESTABELECIMENTO[acao.id] || IconGlobe;
+              if (cardsPremium) {
+                return <InfoCardContato key={acao.id} acao={acao} Icon={Icon} />;
+              }
               return (
                 <BotaoEstabelecimento
                   key={acao.id}
