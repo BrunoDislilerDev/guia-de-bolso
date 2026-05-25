@@ -19,6 +19,8 @@ import SearchResultsPanel from "@/components/home/SearchResultsPanel";
 import SearchStatusFilter from "@/components/home/SearchStatusFilter";
 import SmartSearch from "@/components/home/SmartSearch";
 import { useStickyShellRef } from "@/hooks/useHomeHeaderScroll";
+import { useUserPosition } from "@/hooks/useUserPosition";
+import { fetchFavoritoIds, toggleFavoritoLugar } from "@/lib/favoritos";
 import { FILTRO_STATUS_BUSCA } from "@/lib/busca";
 import { buildReportContext } from "@/lib/reportContext";
 import { getNetworkErrorMessage, mapApiErrorResponse } from "@/lib/userMessages";
@@ -139,7 +141,7 @@ function Home() {
   const searchContainerRef = useRef(null);
 
   const [favoritos, setFavoritos] = useState([]);
-  const [userPosition, setUserPosition] = useState(null);
+  const { userPosition } = useUserPosition();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [motivoModal, setMotivoModal] = useState("favoritar");
@@ -190,20 +192,6 @@ function Home() {
       setOnboardingChecked(true);
     }, 0);
     return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserPosition({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      () => undefined,
-      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 }
-    );
   }, []);
 
   useEffect(() => {
@@ -423,13 +411,7 @@ function Home() {
     if (!user || !isSupabasePublicConfigured()) return;
     const supabase = createClient();
     if (!supabase) return;
-    supabase
-      .from("favoritos")
-      .select("lugar_id")
-      .eq("user_id", user.id)
-      .then(({ data }) => {
-        setFavoritos((data ?? []).map((f) => String(f.lugar_id)));
-      });
+    fetchFavoritoIds(supabase, user.id).then(setFavoritos);
   }, [user]);
 
   /**
@@ -446,35 +428,7 @@ function Home() {
 
     const supabase = createClient();
     if (!supabase) return;
-    const lugarId = String(lugar.id);
-    const jaFavorito = favoritos.includes(lugarId);
-
-    if (jaFavorito) {
-      setFavoritos((atuais) => atuais.filter((id) => id !== lugarId));
-      const { error } = await supabase
-        .from("favoritos")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("lugar_id", lugar.id);
-      if (error) setFavoritos((atuais) => [...atuais, lugarId]);
-      else
-        await registrarLog(supabase, user, "desfavoritou", {
-          lugar_id: lugar.id,
-          lugar_nome: lugar.nome,
-        });
-      return;
-    }
-
-    setFavoritos((atuais) => [...atuais, lugarId]);
-    const { error } = await supabase
-      .from("favoritos")
-      .insert({ user_id: user.id, lugar_id: lugar.id });
-    if (error) setFavoritos((atuais) => atuais.filter((id) => id !== lugarId));
-    else
-      await registrarLog(supabase, user, "favoritou", {
-        lugar_id: lugar.id,
-        lugar_nome: lugar.nome,
-      });
+    await toggleFavoritoLugar(supabase, user, lugar, favoritos, setFavoritos);
   }
 
   /** Resets search UI state and blurs the input. */

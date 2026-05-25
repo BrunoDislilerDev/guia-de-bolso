@@ -1,9 +1,20 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  fetchAvaliacoesLugar,
+  fetchFavoritoLugar,
+  fetchFotosLugarLegado,
+  fetchJaAvaliouLugar,
+  fetchLocalizacaoLugar,
+  fetchLugarAtivo,
+  fetchLugarEhParceiroVigente,
+  fetchSubcategoria,
+  fetchTagsLugar,
+} from "@/lib/data/lugarDetalheQueries";
+import { useUserPosition } from "@/hooks/useUserPosition";
 import { AVALIACAO_STATUS_APROVADOS } from "@/lib/avaliacoes";
-import { fetchLugarEhParceiroVigente } from "@/lib/destaques";
 import { getCapaFromLugar, getFotosFromLugar } from "@/lib/fotos";
 import {
   getAcoesRapidasEstabelecimento,
@@ -27,6 +38,7 @@ import {
   getTextoSobre,
   getVisibilidadePerfil,
 } from "@/lib/lugarVisibilidade";
+import { toggleFavoritoLugarBoolean } from "@/lib/favoritos";
 import { saveLugarVisitado } from "@/lib/lugaresVisitados";
 import { getDistanciaLugar } from "@/lib/localizacao";
 import { registrarLog } from "@/lib/logs";
@@ -42,6 +54,7 @@ export function useLugarDetalhe() {
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const supabase = useMemo(() => createClient(), []);
   const [lugar, setLugar] = useState(null);
   const [fotos, setFotos] = useState([]);
   const viewLoggedRef = useRef(false);
@@ -62,27 +75,11 @@ export function useLugarDetalhe() {
   const [localizacao, setLocalizacao] = useState(null);
   const [subcategoria, setSubcategoria] = useState(null);
   const [tags, setTags] = useState([]);
-  const [userPosition, setUserPosition] = useState(null);
+  const { userPosition } = useUserPosition();
   const [ehParceiro, setEhParceiro] = useState(false);
   const [showQrBanner, setShowQrBanner] = useState(false);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserPosition({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      () => undefined,
-      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 }
-    );
-  }, []);
-
-  useEffect(() => {
-    const supabase = createClient();
-
     supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       setUser(currentUser);
       if (!currentUser) {
@@ -102,20 +99,12 @@ export function useLugarDetalhe() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (!id) return;
 
-    const supabase = createClient();
-
-    supabase
-      .from("lugares")
-      .select("*")
-      .eq("id", id)
-      .eq("status", "ativo")
-      .maybeSingle()
-      .then(({ data, error }) => {
+    fetchLugarAtivo(supabase, id).then(({ data, error }) => {
         if (error) {
           setFetchError(true);
           setLugar(null);
@@ -135,11 +124,7 @@ export function useLugarDetalhe() {
         setLoading(false);
       });
 
-    supabase
-      .from("fotos_lugar")
-      .select("*")
-      .eq("lugar_id", id)
-      .then(({ data }) => {
+    fetchFotosLugarLegado(supabase, id).then(({ data }) => {
         setFotos((current) => {
           if (current.length > 0) return current;
           return (data ?? [])
@@ -148,23 +133,14 @@ export function useLugarDetalhe() {
         });
       });
 
-    supabase
-      .from("localizacoes")
-      .select("*")
-      .eq("lugar_id", id)
-      .maybeSingle()
-      .then(({ data }) => setLocalizacao(data));
+    fetchLocalizacaoLugar(supabase, id).then(({ data }) => setLocalizacao(data));
 
-    supabase
-      .from("lugares_tags")
-      .select("tags(*)")
-      .eq("lugar_id", id)
-      .then(({ data }) => {
+    fetchTagsLugar(supabase, id).then(({ data }) => {
         setTags((data ?? []).map((item) => item.tags).filter(Boolean));
       });
 
     fetchLugarEhParceiroVigente(supabase, id).then(setEhParceiro);
-  }, [id]);
+  }, [id, supabase]);
 
   useEffect(() => {
     viewLoggedRef.current = false;
@@ -174,7 +150,6 @@ export function useLugarDetalhe() {
     if (!lugar?.id || viewLoggedRef.current) return;
 
     viewLoggedRef.current = true;
-    const supabase = createClient();
 
     supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       registrarLog(supabase, currentUser, "visualizou_lugar", {
@@ -183,7 +158,7 @@ export function useLugarDetalhe() {
         pagina: `/lugares/${lugar.id}`,
       });
     });
-  }, [lugar]);
+  }, [lugar, supabase]);
 
   useEffect(() => {
     if (searchParams.get("ref") !== "qr" || !lugar?.id || !lugar?.nome) return;
@@ -204,37 +179,22 @@ export function useLugarDetalhe() {
       return () => clearTimeout(timer);
     }
 
-    const supabase = createClient();
-    supabase
-      .from("subcategorias")
-      .select("*")
-      .eq("categoria", lugar.categoria)
-      .eq("nome", lugar.subcategoria)
-      .maybeSingle()
-      .then(({ data }) => setSubcategoria(data));
-  }, [lugar]);
+    fetchSubcategoria(supabase, lugar.categoria, lugar.subcategoria).then(({ data }) =>
+      setSubcategoria(data)
+    );
+  }, [lugar, supabase]);
 
   useEffect(() => {
     if (!user || !lugar) return;
 
-    const supabase = createClient();
+    fetchFavoritoLugar(supabase, user.id, lugar.id).then(({ data }) =>
+      setIsFavorito(Boolean(data))
+    );
 
-    supabase
-      .from("favoritos")
-      .select("lugar_id")
-      .eq("user_id", user.id)
-      .eq("lugar_id", lugar.id)
-      .maybeSingle()
-      .then(({ data }) => setIsFavorito(Boolean(data)));
-
-    supabase
-      .from("avaliacoes")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("lugar_id", lugar.id)
-      .maybeSingle()
-      .then(({ data }) => setJaAvaliou(Boolean(data)));
-  }, [user, lugar]);
+    fetchJaAvaliouLugar(supabase, user.id, lugar.id).then(({ data }) =>
+      setJaAvaliou(Boolean(data))
+    );
+  }, [user, lugar, supabase]);
 
   useEffect(() => {
     const stored = localStorage.getItem(MAP_PREFERENCE_STORAGE_KEY);
@@ -244,30 +204,22 @@ export function useLugarDetalhe() {
   useEffect(() => {
     if (!id) return;
 
-    const supabase = createClient();
+    fetchAvaliacoesLugar(supabase, id).then(async ({ data, error }) => {
+      if (!error) {
+        setAvaliacoes(data ?? []);
+        return;
+      }
 
-    supabase
-      .from("avaliacoes")
-      .select("*, perfis:user_id(nome, foto_url, created_at)")
-      .eq("lugar_id", id)
-      .in("status", AVALIACAO_STATUS_APROVADOS)
-      .order("created_at", { ascending: false })
-      .then(async ({ data, error }) => {
-        if (!error) {
-          setAvaliacoes(data ?? []);
-          return;
-        }
+      const { data: fallbackData } = await supabase
+        .from("avaliacoes")
+        .select("*")
+        .eq("lugar_id", id)
+        .in("status", AVALIACAO_STATUS_APROVADOS)
+        .order("created_at", { ascending: false });
 
-        const { data: fallbackData } = await supabase
-          .from("avaliacoes")
-          .select("*")
-          .eq("lugar_id", id)
-          .in("status", AVALIACAO_STATUS_APROVADOS)
-          .order("created_at", { ascending: false });
-
-        setAvaliacoes(fallbackData ?? []);
-      });
-  }, [id]);
+      setAvaliacoes(fallbackData ?? []);
+    });
+  }, [id, supabase]);
 
   async function handleFavoritar() {
     if (!user) {
@@ -276,40 +228,7 @@ export function useLugarDetalhe() {
       return;
     }
 
-    const supabase = createClient();
-    const proximoEstado = !isFavorito;
-    setIsFavorito(proximoEstado);
-
-    if (isFavorito) {
-      const { error } = await supabase
-        .from("favoritos")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("lugar_id", lugar.id);
-
-      if (error) {
-        setIsFavorito(true);
-      } else {
-        await registrarLog(supabase, user, "desfavoritou", {
-          lugar_id: lugar.id,
-          lugar_nome: lugar.nome,
-        });
-      }
-      return;
-    }
-
-    const { error } = await supabase
-      .from("favoritos")
-      .insert({ user_id: user.id, lugar_id: lugar.id });
-
-    if (error) {
-      setIsFavorito(false);
-    } else {
-      await registrarLog(supabase, user, "favoritou", {
-        lugar_id: lugar.id,
-        lugar_nome: lugar.nome,
-      });
-    }
+    await toggleFavoritoLugarBoolean(supabase, user, lugar, isFavorito, setIsFavorito);
   }
 
   async function handleOpenAvaliacao() {
@@ -319,7 +238,6 @@ export function useLugarDetalhe() {
       return;
     }
 
-    const supabase = createClient();
     const { data } = await supabase
       .from("avaliacoes")
       .select("id")
@@ -352,7 +270,7 @@ export function useLugarDetalhe() {
     }
 
     setShowRotas(false);
-    registrarLog(createClient(), user, "ir_agora", {
+    registrarLog(supabase, user, "ir_agora", {
       lugar_id: lugar.id,
       lugar_nome: lugar.nome,
       app: appKey,
