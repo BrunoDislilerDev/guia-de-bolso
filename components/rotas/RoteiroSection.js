@@ -409,10 +409,6 @@ export default function RoteiroSection({ isLoggedIn, roteirosIniciais = [] }) {
         isOpen={paywallOpen}
         feature="roteiro"
         onClose={() => setPaywallOpen(false)}
-        onLogin={() => {
-          setPaywallOpen(false);
-          setLoginOpen(true);
-        }}
       />
 
       <RoteiroViewModal

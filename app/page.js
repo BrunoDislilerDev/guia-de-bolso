@@ -547,6 +547,7 @@ function Home() {
           })
         );
         setResultadosBusca([]);
+        await refreshPremiumUsage();
         return;
       }
 
@@ -564,6 +565,7 @@ function Home() {
         buildReportContext({ code: "NETWORK", route: "/", extra: { query: termo } })
       );
       setResultadosBusca([]);
+      await refreshPremiumUsage();
     } finally {
       setLoadingBusca(false);
     }
@@ -800,11 +802,6 @@ function Home() {
         isOpen={paywallOpen}
         feature={paywallFeature}
         onClose={() => setPaywallOpen(false)}
-        onLogin={() => {
-          setPaywallOpen(false);
-          setMotivoModal("premium");
-          setIsModalOpen(true);
-        }}
       />
     </div>
   );

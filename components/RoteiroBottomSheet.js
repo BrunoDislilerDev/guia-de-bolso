@@ -240,6 +240,7 @@ export default function RoteiroBottomSheet({
             message: mapped.message,
           })
         );
+        onUsageRefresh?.(null);
         setView("form");
         return;
       }
@@ -252,6 +253,7 @@ export default function RoteiroBottomSheet({
     } catch {
       setErro(getNetworkErrorMessage());
       setErroContext(buildReportContext({ code: "NETWORK", route: "/rotas" }));
+      onUsageRefresh?.(null);
       setView("form");
     } finally {
       setLoading(false);

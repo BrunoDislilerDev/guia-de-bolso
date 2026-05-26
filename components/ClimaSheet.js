@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   formatNumber,
   getUvProgress,
@@ -46,6 +47,24 @@ function MetricRow({ label, value }) {
  * @returns {import('react').ReactElement|null}
  */
 export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleEscape(event) {
+      if (event.key === "Escape") onClose();
+    }
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const maxWave = Math.max(
@@ -71,7 +90,7 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
       `}</style>
 
       <div
-        className="w-full max-w-md h-auto max-h-[90vh] flex flex-col rounded-t-[24px] bg-white shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-md flex-col rounded-t-[24px] bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
         style={{ animation: "climaSheetIn 260ms ease-out forwards" }}
         role="dialog"
@@ -81,8 +100,7 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
         <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200" />
 
         <div
-          className="overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4"
-          style={{ maxHeight: "calc(90vh - 2rem)" }}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4"
         >
           <h2 id="clima-sheet-title" className="text-xl font-bold text-[#1a2e28]">
             {praia?.nome}
@@ -220,11 +238,13 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
               Dados indisponíveis no momento.
             </p>
           )}
+        </div>
 
+        <div className="shrink-0 border-t border-gray-100 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
           <button
             type="button"
             onClick={onClose}
-            className="mt-6 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white"
+            className="w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white"
           >
             Fechar
           </button>

@@ -11,7 +11,7 @@ import { enrichLugarFlags } from "@/lib/lugarBadges";
 import { checkIaRateLimit } from "@/lib/iaRateLimit";
 import { reportError } from "@/lib/observability";
 import { parseJsonArrayFromText } from "@/lib/parseModelJson";
-import { checkBuscaAccess, getAuthUser } from "@/lib/premiumServer";
+import { checkBuscaAccess, getAuthUser, recordBuscaIaUsage } from "@/lib/premiumServer";
 import { supabase } from "@/lib/supabase/anon";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
@@ -51,7 +51,7 @@ export async function POST(request) {
       });
     }
 
-    const access = await checkBuscaAccess(user?.id, { increment: true, user });
+    const access = await checkBuscaAccess(user?.id, { increment: false, user });
 
     if (!access.allowed) {
       return NextResponse.json(
@@ -165,9 +165,11 @@ Busca do usuário: ${queryUsuario}`,
 
     filtrados = filtrarLugaresPorStatus(filtrados, filtroStatus);
 
+    const recorded = await recordBuscaIaUsage(user?.id, { user });
+
     return NextResponse.json({
       lugares: filtrados,
-      usage: access.usage ?? null,
+      usage: recorded.usage ?? access.usage ?? null,
       filtroStatus,
     });
   } catch (err) {

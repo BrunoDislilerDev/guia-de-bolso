@@ -367,7 +367,6 @@ export default function PerfilPage() {
         isOpen={paywallOpen}
         feature="geral"
         onClose={() => setPaywallOpen(false)}
-        onLogin={() => setPaywallOpen(false)}
       />
     </div>
   );

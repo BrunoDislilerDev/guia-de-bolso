@@ -3,7 +3,7 @@ import { getClaudeModel } from "@/lib/anthropicConfig";
 import { enrichLugarFlags } from "@/lib/lugarBadges";
 import { checkIaRateLimit } from "@/lib/iaRateLimit";
 import { reportError } from "@/lib/observability";
-import { checkRoteiroAccess, getAuthUser } from "@/lib/premiumServer";
+import { checkRoteiroAccess, getAuthUser, recordRoteiroIaUsage } from "@/lib/premiumServer";
 import { selecionarLugaresParaRoteiro } from "@/lib/roteiroLugares";
 import { supabase } from "@/lib/supabase/anon";
 import { buildApiErrorBody } from "@/lib/userMessages";
@@ -63,7 +63,7 @@ export async function POST(request) {
       });
     }
 
-    const access = await checkRoteiroAccess(user?.id, { increment: true, user });
+    const access = await checkRoteiroAccess(user?.id, { increment: false, user });
 
     if (!access.allowed) {
       return NextResponse.json(
@@ -137,11 +137,13 @@ Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
       nome: lugar.nome,
     }));
 
+    const recorded = await recordRoteiroIaUsage(user?.id, { user });
+
     return NextResponse.json({
       conteudo,
       titulo: `Roteiro ${dias} - ${perfil}`,
       lugaresCatalog,
-      usage: access.usage ?? null,
+      usage: recorded.usage ?? access.usage ?? null,
     });
   } catch (err) {
     reportError(err, { route: "POST /api/roteiro" });

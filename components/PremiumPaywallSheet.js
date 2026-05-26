@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import DailyLimitCountdown from "@/components/DailyLimitCountdown";
 import { PREMIUM_BENEFITS } from "@/lib/premiumBenefits";
 import { LIMITS, PREMIUM_PRICE_LABEL } from "@/lib/premium";
@@ -31,7 +32,6 @@ const COPY = {
  * @param {boolean} props.isOpen - Whether the sheet is visible.
  * @param {() => void} props.onClose - Called when the user dismisses the sheet.
  * @param {'busca'|'roteiro'|'clima'|'geral'} [props.feature] - Feature context for copy.
- * @param {() => void} [props.onLogin] - Optional handler to open login flow.
  * @param {boolean} [props.showCountdown=true] - Exibe contador até o reset diário.
  * @returns {import('react').ReactElement|null}
  */
@@ -39,9 +39,26 @@ export default function PremiumPaywallSheet({
   isOpen,
   onClose,
   feature = "geral",
-  onLogin,
   showCountdown = true,
 }) {
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleEscape(event) {
+      if (event.key === "Escape") onClose();
+    }
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const copy = COPY[feature] ?? COPY.geral;
@@ -60,85 +77,77 @@ export default function PremiumPaywallSheet({
       `}</style>
 
       <div
-        className="w-full rounded-t-[24px] bg-white px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl"
+        className="flex max-h-[90vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: "premiumSheetIn 240ms ease-out forwards" }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="premium-paywall-title"
       >
-        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#d8dfdc]" />
+        <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-[#d8dfdc]" />
 
-        <div className="text-center">
-          <span className="text-3xl" aria-hidden>
-            ✨
-          </span>
-          <h2 id="premium-paywall-title" className="mt-2 text-xl font-bold text-[#1a2e28]">
-            {copy.title}
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-[#5a6b66]">{copy.description}</p>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-2">
+          <div className="text-center">
+            <span className="text-3xl" aria-hidden>
+              ✨
+            </span>
+            <h2 id="premium-paywall-title" className="mt-2 text-xl font-bold text-[#1a2e28]">
+              {copy.title}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#5a6b66]">{copy.description}</p>
+          </div>
+
+          {showCountdown && isLimitFeature && (
+            <div className="mt-5">
+              <DailyLimitCountdown />
+            </div>
+          )}
+
+          <ul className="mt-5 space-y-2.5 rounded-2xl bg-[#f0f4f3] p-4 text-sm text-[#1a4a3a]">
+            {PREMIUM_BENEFITS.map((item) => (
+              <li key={item} className="flex items-start gap-2.5">
+                <span
+                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600/15 text-xs font-bold text-emerald-700"
+                  aria-hidden
+                >
+                  ✓
+                </span>
+                <span className="leading-snug">{item}</span>
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-4 text-center text-xs leading-relaxed text-[#5a6b66]">
+            Plano gratuito: até {LIMITS.busca} buscas e {LIMITS.roteiro} roteiros com IA por dia,
+            renovados à meia-noite.
+          </p>
+
+          <p className="mt-4 text-center text-2xl font-bold text-[#1a4a3a]">
+            {PREMIUM_PRICE_LABEL}
+          </p>
+          <p className="mt-1 text-center text-xs text-[#5a6b66]">
+            Uso ilimitado · Pagamento recorrente · Cancele quando quiser
+          </p>
         </div>
 
-        {showCountdown && isLimitFeature && (
-          <div className="mt-5">
-            <DailyLimitCountdown />
-          </div>
-        )}
-
-        <ul className="mt-5 space-y-2.5 rounded-2xl bg-[#f0f4f3] p-4 text-sm text-[#1a4a3a]">
-          {PREMIUM_BENEFITS.map((item) => (
-            <li key={item} className="flex items-start gap-2.5">
-              <span
-                className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600/15 text-xs font-bold text-emerald-700"
-                aria-hidden
-              >
-                ✓
-              </span>
-              <span className="leading-snug">{item}</span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-4 text-center text-xs leading-relaxed text-[#5a6b66]">
-          Plano gratuito: até {LIMITS.busca} buscas e {LIMITS.roteiro} roteiros com IA por dia,
-          renovados à meia-noite.
-        </p>
-
-        <p className="mt-4 text-center text-2xl font-bold text-[#1a4a3a]">
-          {PREMIUM_PRICE_LABEL}
-        </p>
-        <p className="mt-1 text-center text-xs text-[#5a6b66]">
-          Uso ilimitado · Pagamento recorrente · Cancele quando quiser
-        </p>
-
-        <button
-          type="button"
-          className="mt-5 w-full rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white"
-          onClick={onClose}
-        >
-          Pagamento em breve
-        </button>
-
-        {onLogin && (
+        <div className="shrink-0 border-t border-gray-100 px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3">
           <button
             type="button"
-            onClick={() => {
-              onClose();
-              onLogin();
-            }}
-            className="mt-3 w-full py-2 text-sm font-medium text-[#1a4a3a]"
+            disabled
+            aria-disabled="true"
+            className="w-full cursor-not-allowed rounded-xl bg-[#1a4a3a] py-3.5 text-sm font-semibold text-white opacity-50"
           >
-            Fazer login
+            Pagamento em breve
           </button>
-        )}
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-2 w-full py-2 text-sm text-[#5a6b66]"
-        >
-          Agora não
-        </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-2 w-full py-2 text-sm text-[#5a6b66]"
+          >
+            Agora não
+          </button>
+        </div>
       </div>
     </div>
   );
