@@ -26,6 +26,7 @@ import {
   getTagIds,
 } from "@/lib/tags";
 import { isLugarElegivelQr } from "@/lib/lugarQr";
+import { getEffectiveCategoria } from "@/lib/lugarTaxonomia";
 import {
   fetchTakenSlugs,
   isMissingSlugColumnError,
@@ -290,6 +291,7 @@ export default function LocalForm({
 
     const payload = {
       ...formFields,
+      categoria: getEffectiveCategoria(formFields),
       ...(slugReady ? { slug: slugValue } : {}),
       mostrar_endereco: Boolean(form.mostrar_endereco),
       mostrar_horarios: Boolean(form.mostrar_horarios),

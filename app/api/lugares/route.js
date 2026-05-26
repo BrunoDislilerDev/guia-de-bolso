@@ -4,6 +4,10 @@ import { queryLugaresAtivos, queryLugaresByIds } from "@/lib/lugaresQuery";
 import { fetchLugaresPopularesForClient } from "@/lib/lugaresPopulares";
 import { reportError } from "@/lib/observability";
 import { getAnonServerClient } from "@/lib/supabaseAnonServer";
+import {
+  filterLugaresByCategoria,
+  normalizeLugaresTaxonomia,
+} from "@/lib/lugarTaxonomia";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
 function jsonCached(body, status = 200) {
@@ -38,14 +42,14 @@ export async function GET(request) {
       reportError(error, { route: `GET /api/lugares?mode=${mode}` });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
-    return jsonCached({ lugares: data });
+    return jsonCached({ lugares: normalizeLugaresTaxonomia(data) });
   }
 
   if (mode === "populares") {
     const limit = Math.min(Math.max(Number(searchParams.get("limit")) || 8, 1), 50);
     try {
       const lugares = await fetchLugaresPopularesForClient(supabase, limit);
-      return jsonCached({ lugares });
+      return jsonCached({ lugares: normalizeLugaresTaxonomia(lugares) });
     } catch (err) {
       reportError(err, { route: "GET /api/lugares?mode=populares" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
@@ -60,18 +64,33 @@ export async function GET(request) {
       reportError(error, { route: "GET /api/lugares?ids" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
-    return jsonCached({ lugares: data });
+    return jsonCached({ lugares: normalizeLugaresTaxonomia(data) });
   }
 
   const limit = Math.min(Math.max(Number(searchParams.get("limit")) || 50, 1), 100);
   const categoria = searchParams.get("categoria")?.trim();
-  const eq = categoria ? { categoria } : {};
-  const { data, error } = await queryLugaresAtivos(supabase, { limit, eq });
+
+  if (categoria) {
+    const fetchLimit = Math.min(Math.max(limit * 4, 120), 250);
+    const { data, error } = await queryLugaresAtivos(supabase, { limit: fetchLimit });
+
+    if (error) {
+      reportError(error, { route: "GET /api/lugares" });
+      return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
+    }
+
+    const lugares = normalizeLugaresTaxonomia(
+      filterLugaresByCategoria(data, categoria).slice(0, limit)
+    );
+    return jsonCached({ lugares });
+  }
+
+  const { data, error } = await queryLugaresAtivos(supabase, { limit });
 
   if (error) {
     reportError(error, { route: "GET /api/lugares" });
     return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
   }
 
-  return jsonCached({ lugares: data });
+  return jsonCached({ lugares: normalizeLugaresTaxonomia(data) });
 }

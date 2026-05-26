@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   formatNumber,
   getUvProgress,
   getWaveBarColor,
 } from "@/lib/clima";
+
+const DRAG_CLOSE_PX = 110;
+const DRAG_MAX_PX = 260;
 
 /**
  * Returns Tailwind background class for the UV index bar segment.
@@ -47,11 +50,39 @@ function MetricRow({ label, value }) {
  * @returns {import('react').ReactElement|null}
  */
 export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
+  const sheetRef = useRef(null);
   const scrollAreaRef = useRef(null);
   const dragStartYRef = useRef(null);
   const isDraggingRef = useRef(false);
+  const dragYRef = useRef(0);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  const resetDrag = useCallback(() => {
+    dragYRef.current = 0;
+    dragStartYRef.current = null;
+    isDraggingRef.current = false;
+    setDragY(0);
+    setIsDragging(false);
+  }, []);
+
+  const finishDrag = useCallback(() => {
+    if (!isDraggingRef.current) return;
+
+    const shouldClose = dragYRef.current >= DRAG_CLOSE_PX;
+    isDraggingRef.current = false;
+    dragStartYRef.current = null;
+    setIsDragging(false);
+
+    if (shouldClose) {
+      resetDrag();
+      onClose();
+      return;
+    }
+
+    dragYRef.current = 0;
+    setDragY(0);
+  }, [onClose, resetDrag]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -72,13 +103,60 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
   }, [isOpen, onClose]);
 
   useEffect(() => {
-    if (!isOpen) {
-      setDragY(0);
-      setIsDragging(false);
-      dragStartYRef.current = null;
-      isDraggingRef.current = false;
+    if (!isOpen) resetDrag();
+  }, [isOpen, resetDrag]);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!isOpen || !sheet) return undefined;
+
+    function canStartDrag(target) {
+      if (!(target instanceof Element)) return false;
+
+      const scrollTop = scrollAreaRef.current?.scrollTop ?? 0;
+      const onHandle = Boolean(target.closest("[data-drag-handle='true']"));
+      const inScroll = Boolean(scrollAreaRef.current?.contains(target));
+
+      if (onHandle) return true;
+      if (inScroll && scrollTop > 4) return false;
+      return true;
     }
-  }, [isOpen]);
+
+    function handleTouchStart(event) {
+      if (event.touches.length !== 1) return;
+      if (!canStartDrag(event.target)) return;
+
+      dragStartYRef.current = event.touches[0].clientY;
+      isDraggingRef.current = true;
+      setIsDragging(true);
+    }
+
+    function handleTouchMove(event) {
+      if (!isDraggingRef.current || dragStartYRef.current === null) return;
+
+      const deltaY = event.touches[0].clientY - dragStartYRef.current;
+      const nextDragY = Math.max(0, Math.min(DRAG_MAX_PX, deltaY));
+
+      if (nextDragY > 0) {
+        event.preventDefault();
+      }
+
+      dragYRef.current = nextDragY;
+      setDragY(nextDragY);
+    }
+
+    sheet.addEventListener("touchstart", handleTouchStart, { passive: true });
+    sheet.addEventListener("touchmove", handleTouchMove, { passive: false });
+    sheet.addEventListener("touchend", finishDrag, { passive: true });
+    sheet.addEventListener("touchcancel", finishDrag, { passive: true });
+
+    return () => {
+      sheet.removeEventListener("touchstart", handleTouchStart);
+      sheet.removeEventListener("touchmove", handleTouchMove);
+      sheet.removeEventListener("touchend", finishDrag);
+      sheet.removeEventListener("touchcancel", finishDrag);
+    };
+  }, [isOpen, finishDrag]);
 
   if (!isOpen) return null;
 
@@ -86,49 +164,6 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
     ...(clima?.waveChart ?? []).map((point) => Number(point.height) || 0),
     1
   );
-
-  function handleTouchStart(event) {
-    if (event.touches.length !== 1) return;
-
-    const target = event.target;
-    const touchedHandle = target instanceof Element && target.closest("[data-drag-handle='true']");
-    const scrollTop = scrollAreaRef.current?.scrollTop ?? 0;
-
-    if (!touchedHandle && scrollTop > 0) return;
-
-    dragStartYRef.current = event.touches[0].clientY;
-    isDraggingRef.current = true;
-    setIsDragging(true);
-  }
-
-  function handleTouchMove(event) {
-    if (!isDraggingRef.current || dragStartYRef.current === null) return;
-
-    const deltaY = event.touches[0].clientY - dragStartYRef.current;
-    const nextDragY = Math.max(0, Math.min(260, deltaY));
-
-    if (nextDragY > 0 && event.cancelable) {
-      event.preventDefault();
-    }
-
-    setDragY(nextDragY);
-  }
-
-  function finishDrag() {
-    if (!isDraggingRef.current) return;
-
-    const shouldClose = dragY >= 110;
-    isDraggingRef.current = false;
-    dragStartYRef.current = null;
-    setIsDragging(false);
-
-    if (shouldClose) {
-      onClose();
-      return;
-    }
-
-    setDragY(0);
-  }
 
   return (
     <div
@@ -148,12 +183,9 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
       `}</style>
 
       <div
+        ref={sheetRef}
         className="flex max-h-[90vh] w-full max-w-md flex-col rounded-t-[24px] bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={finishDrag}
-        onTouchCancel={finishDrag}
         style={{
           animation:
             !isDragging && dragY === 0 ? "climaSheetIn 260ms ease-out forwards" : undefined,
@@ -166,12 +198,16 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
       >
         <div
           data-drag-handle="true"
-          className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200"
-        />
+          className="flex shrink-0 cursor-grab flex-col items-center px-5 pt-2 active:cursor-grabbing"
+          aria-hidden
+        >
+          <span className="h-1.5 w-12 rounded-full bg-gray-200" />
+          <span className="mt-2 h-4 w-full max-w-[120px] rounded-full bg-transparent" />
+        </div>
 
         <div
           ref={scrollAreaRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-1 touch-pan-y"
         >
           <h2 id="clima-sheet-title" className="text-xl font-bold text-[#1a2e28]">
             {praia?.nome}
@@ -311,7 +347,7 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
           )}
         </div>
 
-        <div className="shrink-0 border-t border-gray-100 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
+        <div className="shrink-0 border-t border-gray-100 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 touch-auto">
           <button
             type="button"
             onClick={onClose}
