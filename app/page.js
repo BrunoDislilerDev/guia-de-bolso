@@ -25,17 +25,15 @@ import { FILTRO_STATUS_BUSCA } from "@/lib/busca";
 import { buildReportContext } from "@/lib/reportContext";
 import { getNetworkErrorMessage, mapApiErrorResponse } from "@/lib/userMessages";
 import { fetchClimaApis } from "@/lib/clima";
+import { IMBITUBA_COORDS, sortLugaresPorDistancia } from "@/lib/homeContext";
+import { enrichLugaresFlags } from "@/lib/lugarBadges";
 import {
-  IMBITUBA_COORDS,
-  pickHeroLugar,
-  sortLugaresPorDistancia,
-} from "@/lib/homeContext";
-import {
-  buildParceiroIdSet,
-  enrichLugaresComParceiro,
-  lugaresFromDestaquesVigentes,
-} from "@/lib/destaques";
-import { fetchDestaquesFromApi, fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
+  pickEmAltaCuradoria,
+  pickHeroRotaCiclo,
+  pickParceirosPorCategoria,
+} from "@/lib/homeSelection";
+import { fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
+import { fetchRotasFromApi } from "@/lib/fetchRotasApi";
 import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
 import { isSupabasePublicConfigured } from "@/lib/supabase/publicEnv";
 import { getLugaresVisitados } from "@/lib/lugaresVisitados";
@@ -73,14 +71,20 @@ async function fetchLugaresAtivos(limit = 50) {
 }
 
 /**
- * Loads nearby candidates, excluding partner spotlight ids.
- * @param {string[]} [excludeIds] - Lugar ids já em destaque/hero.
+ * Loads active routes for the home hero.
  * @returns {Promise<object[]>}
  */
-async function fetchLugaresProximos(excludeIds = []) {
-  const exclude = new Set(excludeIds.map(String));
+async function fetchRotasAtivas() {
+  return fetchRotasFromApi({ limit: 50 });
+}
+
+/**
+ * Loads nearby candidates for "Perto de você".
+ * @returns {Promise<object[]>}
+ */
+async function fetchLugaresProximos() {
   const data = await fetchLugaresFromApi({ limit: 20 });
-  return data.filter((l) => !exclude.has(String(l.id))).slice(0, 6);
+  return data.slice(0, 6);
 }
 
 
@@ -113,10 +117,10 @@ function Home() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  const [rotasAtivas, setRotasAtivas] = useState([]);
   const [lugaresAtivos, setLugaresAtivos] = useState([]);
-  const [lugaresPopulares, setLugaresPopulares] = useState([]);
+  const [lugaresEmAlta, setLugaresEmAlta] = useState([]);
   const [lugaresProximos, setLugaresProximos] = useState([]);
-  const [parceiroIds, setParceiroIds] = useState(() => new Set());
   const [lugaresParceiros, setLugaresParceiros] = useState([]);
   const [temperaturaClima, setTemperaturaClima] = useState(null);
   const [climaEmoji, setClimaEmoji] = useState(null);
@@ -160,26 +164,11 @@ function Home() {
     setUsage: setPremiumUsage,
   } = usePremiumUsage(user);
 
-  const popularIds = useMemo(
-    () => new Set(lugaresPopulares.map((l) => l.id)),
-    [lugaresPopulares]
-  );
-
-  const parceiroIdsKey = useMemo(
-    () => Array.from(parceiroIds).sort().join(","),
-    [parceiroIds]
-  );
-
-  const heroLugar = useMemo(() => {
-    const withDist = lugaresAtivos.map((l) => withDistanciaDinamica(l, userPosition));
-    return pickHeroLugar(withDist, userPosition, popularIds, parceiroIds);
-  }, [lugaresAtivos, userPosition, popularIds, parceiroIds]);
+  const heroRota = useMemo(() => pickHeroRotaCiclo(rotasAtivas), [rotasAtivas]);
 
   const emAltaExibidos = useMemo(() => {
-    return lugaresPopulares
-      .slice(0, 8)
-      .map((l) => withDistanciaDinamica(l, userPosition));
-  }, [lugaresPopulares, userPosition]);
+    return lugaresEmAlta.map((l) => withDistanciaDinamica(l, userPosition));
+  }, [lugaresEmAlta, userPosition]);
 
   const proximosExibidos = useMemo(() => {
     const sorted = sortLugaresPorDistancia(lugaresProximos, userPosition);
@@ -268,37 +257,36 @@ function Home() {
 
     async function loadPrimary() {
       try {
-        const [ativosResult, popularesResult, destaquesResult] = await Promise.allSettled([
+        const [ativosSettled, rotasSettled] = await Promise.allSettled([
           fetchLugaresAtivos(),
-          fetchLugaresPopulares(null, 8),
-          fetchDestaquesFromApi(),
+          fetchRotasAtivas(),
         ]);
 
         if (cancelled) return;
 
         const errors = { hero: false, emAlta: false };
 
-        const destaquesVigentes =
-          destaquesResult.status === "fulfilled" ? destaquesResult.value : [];
-        const idsParceiros = buildParceiroIdSet(destaquesVigentes);
-        setParceiroIds(idsParceiros);
+        const rotas =
+          rotasSettled.status === "fulfilled" ? rotasSettled.value ?? [] : [];
+        if (rotasSettled.status === "rejected") {
+          console.error("[home] rotas ativas:", rotasSettled.reason);
+        }
+        setRotasAtivas(rotas);
 
-        if (ativosResult.status === "fulfilled") {
-          const enriched = enrichLugaresComParceiro(ativosResult.value, idsParceiros);
-          setLugaresAtivos(enriched);
-          setLugaresParceiros(lugaresFromDestaquesVigentes(destaquesVigentes, enriched));
-        } else {
-          console.error("[home] lugares ativos:", ativosResult.reason);
-          errors.hero = true;
-          setLugaresParceiros(lugaresFromDestaquesVigentes(destaquesVigentes));
+        if (ativosSettled.status !== "fulfilled") {
+          console.error("[home] lugares ativos:", ativosSettled.reason);
+          throw ativosSettled.reason;
         }
 
-        if (popularesResult.status === "fulfilled") {
-          setLugaresPopulares(
-            enrichLugaresComParceiro(popularesResult.value, idsParceiros)
-          );
-        } else {
-          console.error("[home] lugares populares:", popularesResult.reason);
+        const enriched = enrichLugaresFlags(ativosSettled.value);
+        setLugaresAtivos(enriched);
+        setLugaresParceiros(pickParceirosPorCategoria(enriched));
+        setLugaresEmAlta(pickEmAltaCuradoria(enriched));
+
+        if (!pickHeroRotaCiclo(rotas)) {
+          errors.hero = true;
+        }
+        if (pickEmAltaCuradoria(enriched).length === 0) {
           errors.emAlta = true;
         }
 
@@ -332,19 +320,15 @@ function Home() {
 
     async function loadSecondary() {
       try {
-        const exclude = [...parceiroIds];
-        if (heroLugar?.id) exclude.push(String(heroLugar.id));
         const [proximosResult, climaResult] = await Promise.allSettled([
-          fetchLugaresProximos(exclude),
+          fetchLugaresProximos(),
           fetchClimaApis(IMBITUBA_COORDS.latitude, IMBITUBA_COORDS.longitude),
         ]);
 
         if (cancelled) return;
 
         if (proximosResult.status === "fulfilled") {
-          setLugaresProximos(
-            enrichLugaresComParceiro(proximosResult.value, parceiroIds)
-          );
+          setLugaresProximos(enrichLugaresFlags(proximosResult.value));
           setSectionErrors((prev) => ({ ...prev, perto: false }));
         } else {
           setSectionErrors((prev) => ({ ...prev, perto: true }));
@@ -372,7 +356,7 @@ function Home() {
     return () => {
       cancelled = true;
     };
-  }, [homeLoading, parceiroIdsKey, parceiroIds, heroLugar?.id]);
+  }, [homeLoading]);
 
   useEffect(() => {
     if (searchMode !== "browse") return undefined;
@@ -746,14 +730,7 @@ function Home() {
               {sectionErrors.hero ? (
                 <SectionUnavailable title="O que fazer agora" />
               ) : (
-                <OQueFazerAgora
-                  lugar={heroLugar}
-                  popularIds={popularIds}
-                  temperatura={temperaturaClima}
-                  userPosition={userPosition}
-                  onFavoritar={handleFavoritar}
-                  isFavorito={isFavorito}
-                />
+                <OQueFazerAgora rota={heroRota} temperatura={temperaturaClima} />
               )}
               <ParceirosCarrossel
                 lugares={lugaresParceiros.map((l) =>

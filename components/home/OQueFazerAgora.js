@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { fetchLocalizacaoLugar } from "@/lib/data/lugarDetalheQueries";
-import { getCapaFromLugar } from "@/lib/fotos";
-import { getBadgeParceiroLabel } from "@/lib/destaques";
-import { getTempoExperiencia, isEmAlta } from "@/lib/homeContext";
+import { getCapaFromRota } from "@/lib/fotos";
 import {
-  getCoordenadasLugar,
-  getDistanciaKmLugar,
-  getDistanciaLugar,
-  getTempoCarroEstimado,
-} from "@/lib/localizacao";
-import { createClient } from "@/lib/supabase";
+  formatRotaDistancia,
+  formatRotaDuracao,
+  getRotaNome,
+} from "@/lib/rotaDetalheDisplay";
+import { formatCategoriaRotaLabel } from "@/lib/rotas";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 
 /**
@@ -32,14 +28,6 @@ function MetricPill({ icon, value }) {
   );
 }
 
-function IconPin() {
-  return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-    </svg>
-  );
-}
-
 function IconClock() {
   return (
     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -48,18 +36,26 @@ function IconClock() {
   );
 }
 
-function IconSun() {
+function IconPin() {
   return (
     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10 10h2v-3h-2v3zm9.24-2.16l1.41 1.41 1.8-1.79-1.41-1.41-1.8 1.8zM20 13h3v-2h-3v2zM6.76 19.16l-1.42 1.42 1.79 1.8 1.41-1.41-1.78-1.81zM12 6a6 6 0 100 12 6 6 0 000-12z" />
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
     </svg>
   );
 }
 
-function IconCar() {
+function IconBolt() {
   return (
     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v7c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-7l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+      <path d="M13 2L3 14h8l-1 8 11-13h-8l0-7z" />
+    </svg>
+  );
+}
+
+function IconSun() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10 10h2v-3h-2v3zm9.24-2.16l1.41 1.41 1.8-1.79-1.41-1.41-1.8 1.8zM20 13h3v-2h-3v2zM6.76 19.16l-1.42 1.42 1.79 1.8 1.41-1.41-1.78-1.81zM12 6a6 6 0 100 12 6 6 0 000-12z" />
     </svg>
   );
 }
@@ -86,66 +82,21 @@ function HeroSkeleton() {
 }
 
 /**
- * OQueFazerAgora - Hero suggestion card for the top contextual place pick.
+ * Hero da home — rota curada do dia (round-robin).
  */
-export default function OQueFazerAgora({
-  lugar,
-  popularIds,
-  temperatura = null,
-  userPosition = null,
-  onFavoritar,
-  isFavorito,
-}) {
+export default function OQueFazerAgora({ rota, temperatura = null }) {
   const [imgLoaded, setImgLoaded] = useState(false);
-  const [localizacao, setLocalizacao] = useState(null);
 
-  useEffect(() => {
-    if (!lugar?.id) {
-      setLocalizacao(null);
-      return undefined;
-    }
-
-    if (getCoordenadasLugar(lugar)) {
-      setLocalizacao(null);
-      return undefined;
-    }
-
-    let cancelled = false;
-    const supabase = createClient();
-    if (!supabase) return undefined;
-
-    fetchLocalizacaoLugar(supabase, lugar.id).then(({ data }) => {
-      if (!cancelled && data) setLocalizacao(data);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [lugar?.id]);
-
-  const lugarComLocalizacao = useMemo(() => {
-    if (!lugar) return null;
-    if (localizacao) return { ...lugar, localizacoes: localizacao };
-    return lugar;
-  }, [lugar, localizacao]);
-
-  if (!lugar) {
+  if (!rota) {
     return <HeroSkeleton />;
   }
 
-  const distanciaKm = getDistanciaKmLugar(lugarComLocalizacao, userPosition);
-  const distancia =
-    getDistanciaLugar(lugarComLocalizacao, userPosition) ||
-    lugar.distancia_calculada ||
-    lugar.distancia;
-  const tempoCarro = getTempoCarroEstimado(distanciaKm);
   const tempNum = Number(temperatura);
   const temperaturaExibicao = Number.isFinite(tempNum)
     ? `${Math.round(tempNum)}°`
     : "--°";
-  const emAlta = isEmAlta(lugar.id, popularIds);
-  const favorito = isFavorito?.(lugar);
-  const capa = getCapaFromLugar(lugar);
+  const capa = getCapaFromRota(rota);
+  const dificuldade = rota.dificuldade || "Fácil";
 
   return (
     <section className="mb-10 home-reveal">
@@ -164,63 +115,37 @@ export default function OQueFazerAgora({
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#061612] via-[#061612]/70 to-[#061612]/15" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/25" />
 
-        <div className="absolute left-4 right-4 top-4 flex items-start justify-between gap-2">
-          <div className="flex flex-wrap gap-2">
-            {lugar.ehParceiro && (
-              <span className="rounded-full bg-[#f5e6b8]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#7a6520] shadow-sm">
-                {getBadgeParceiroLabel()}
-              </span>
-            )}
-            {emAlta && !lugar.ehParceiro && (
-              <span className="rounded-full bg-[#f5d76e]/95 px-3 py-1.5 text-[10px] font-bold text-[#5c4200] shadow-sm">
-                Em alta hoje 🔥
-              </span>
-            )}
-            <span className="rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md">
-              {lugar.categoria}
-            </span>
-          </div>
-          {onFavoritar && (
-            <button
-              type="button"
-              onClick={() => onFavoritar(lugar)}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-white backdrop-blur-md transition-transform active:scale-90"
-              aria-label={favorito ? "Remover dos favoritos" : "Favoritar"}
-            >
-              <svg
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill={favorito ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-              </svg>
-            </button>
-          )}
+        <div className="absolute left-4 right-4 top-4 flex flex-wrap gap-2">
+          <span className="rounded-full bg-[#d4ede8]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#1a4a3a] shadow-sm">
+            Rota curada
+          </span>
+          <span className="rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md">
+            {formatCategoriaRotaLabel(rota.categoria)}
+          </span>
         </div>
 
         <div className="absolute inset-x-0 bottom-0 p-5 pb-6">
           <h3 className="font-display text-[1.65rem] font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-sm">
-            {lugar.nome}
+            {getRotaNome(rota)}
           </h3>
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/90">
-            {lugar.descricao}
-          </p>
+          {rota.descricao && (
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/90">
+              {rota.descricao}
+            </p>
+          )}
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <MetricPill icon={<IconPin />} value={distancia || "—"} />
-            <MetricPill icon={<IconClock />} value={getTempoExperiencia(lugar)} />
+            <MetricPill icon={<IconClock />} value={formatRotaDuracao(rota)} />
+            <MetricPill icon={<IconPin />} value={formatRotaDistancia(rota)} />
+            <MetricPill icon={<IconBolt />} value={dificuldade} />
             <MetricPill icon={<IconSun />} value={temperaturaExibicao} />
-            <MetricPill icon={<IconCar />} value={tempoCarro || "—"} />
           </div>
 
           <Link
-            href={`/lugares/${lugar.id}`}
+            href={`/rotas/${rota.id}`}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1a4a3a] py-4 text-center text-sm font-bold uppercase tracking-wide text-white shadow-[0_8px_24px_rgba(26,74,58,0.45)] transition-transform active:scale-[0.98]"
           >
-            Explorar
+            Ver rota
             <span aria-hidden>→</span>
           </Link>
         </div>

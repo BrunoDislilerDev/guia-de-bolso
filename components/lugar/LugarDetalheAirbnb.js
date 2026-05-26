@@ -20,7 +20,7 @@ import {
   DESTAQUE_CHIP_PREMIUM_CLASS,
   DETALHE_CARD_OVERLAP_CLASS,
 } from "@/components/lugar/airbnb/lugarAirbnbTokens";
-import { getBadgeParceiroLabel } from "@/lib/destaques";
+import { getBadgeCuradoriaLabel, getBadgeParceiroLabel } from "@/lib/lugarBadges";
 import { lugarExibeClima } from "@/lib/clima";
 import { formatHorario, getDiasHorario } from "@/lib/horarios";
 
@@ -118,6 +118,11 @@ export default function LugarDetalheAirbnb(props) {
                 ? getBadgeParceiroLabel().toUpperCase()
                 : null
             }
+            curadoriaBadgeLabel={
+              visibilidade.showBadgeCuradoria
+                ? getBadgeCuradoriaLabel().toUpperCase()
+                : null
+            }
           />
         </div>
 
@@ -130,6 +135,16 @@ export default function LugarDetalheAirbnb(props) {
                 >
                   {lugar.categoria}
                 </span>
+                {visibilidade.showBadgeParceiro && (
+                  <span className="rounded-md bg-[#f5e6b8] px-2 py-0.5 text-[11px] font-bold text-[#7a6520]">
+                    {getBadgeParceiroLabel()}
+                  </span>
+                )}
+                {visibilidade.showBadgeCuradoria && (
+                  <span className="rounded-md bg-[#d4ede8] px-2 py-0.5 text-[11px] font-bold text-[#1a4a3a]">
+                    {getBadgeCuradoriaLabel()}
+                  </span>
+                )}
                 {ehEstabelecimento && (
                   <span
                     className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${

@@ -19,14 +19,13 @@ import {
 import {
   buildResumoOperacional,
   calcVariation,
-  countDestaquesExpirando7d,
+  countParceirosAtivos,
   countPremiumAtivos,
   fetchCount,
   fetchCountInPeriod,
   getCutoffIso,
   getSaudacao,
 } from "@/lib/adminDashboard";
-import { fetchDestaquesVigentes } from "@/lib/destaques";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -83,7 +82,7 @@ export default function AdminDashboard() {
 
   const [operacional, setOperacional] = useState({
     emAnalise: 0,
-    destaquesExpirando: 0,
+    parceirosAtivos: 0,
     premiumAtivos: 0,
     feedbackNovos: 0,
   });
@@ -105,8 +104,7 @@ export default function AdminDashboard() {
       emAnaliseCounts,
       usuariosNovosCounts,
       irAgoraCounts,
-      destaquesVigentes,
-      destaquesExpirando,
+      parceirosAtivos,
       premiumAtivos,
       avaliacoes,
       logsRes,
@@ -128,8 +126,7 @@ export default function AdminDashboard() {
       fetchCountInPeriod(supabase, "logs", days, {
         eq: { field: "acao", value: "ir_agora" },
       }),
-      fetchDestaquesVigentes(supabase),
-      countDestaquesExpirando7d(supabase),
+      countParceirosAtivos(supabase),
       countPremiumAtivos(supabase),
       supabase
         .from("avaliacoes")
@@ -163,9 +160,9 @@ export default function AdminDashboard() {
         variation: calcVariation(lugaresCounts.total, lugaresCounts.past, periodLabel),
       },
       parceirosVigentes: {
-        total: destaquesVigentes.length,
+        total: parceirosAtivos,
         variation: {
-          text: "Parceiros com destaque vigente",
+          text: "Lugares com Parceiro do Guia ativo",
           className: "text-[#5a6b66]",
           direction: "flat",
         },
@@ -194,7 +191,7 @@ export default function AdminDashboard() {
 
     setOperacional({
       emAnalise: emAnaliseCounts.total,
-      destaquesExpirando,
+      parceirosAtivos,
       premiumAtivos,
       feedbackNovos: feedbackNovosRes.count ?? 0,
     });
@@ -215,7 +212,7 @@ export default function AdminDashboard() {
       buildResumoOperacional({
         avaliacoesPendentes: metrics.avaliacoesPendentes.total,
         emAnalise: operacional.emAnalise,
-        destaquesExpirando: operacional.destaquesExpirando,
+        parceirosAtivos: operacional.parceirosAtivos,
       }),
     [metrics.avaliacoesPendentes.total, operacional]
   );
@@ -310,14 +307,14 @@ export default function AdminDashboard() {
             />
             <DashboardMetricCard
               className="sm:col-span-1 lg:col-span-3"
-              label="Parceiros vigentes"
-              hint="Destaques ativos hoje"
+              label="Parceiros do Guia"
+              hint="Flag eh_parceiro ativo"
               value={metrics.parceirosVigentes.total}
               icon={IconSparkles}
               iconWrap="bg-amber-100"
               iconColor="text-amber-700"
               variation={metrics.parceirosVigentes.variation}
-              href="/admin/destaques"
+              href="/admin/locais"
             />
             <DashboardMetricCard
               className="sm:col-span-1 lg:col-span-4"

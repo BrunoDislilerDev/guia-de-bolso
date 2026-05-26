@@ -114,7 +114,9 @@ Core content: beaches, restaurants, trails, services, etc.
 | `mostrar_horarios` | `boolean` | Show hours UI and open/closed badges when `horarios` is set *(migration)* |
 | `imagem_url` | `text` | Legacy cover; first photo synced here on save |
 | `fotos` | `jsonb` | Array of public image URLs *(migration: `fotos_migration.sql`)* |
-| `destaque` | `boolean` | Legacy highlight flag on row |
+| `destaque` | `boolean` | Legacy highlight flag on row (unused in app) |
+| `eh_parceiro` | `boolean` NOT NULL DEFAULT false | Plano Parceiro do Guia (R$ 199) — carrossel e badge *(migration: `lugares_parceiro_curadoria.sql`)* |
+| `conteudo_curadoria` | `boolean` NOT NULL DEFAULT false | Conteúdo autoral curado pela equipe — hero e Em alta *(migration)* |
 | `distancia` | `text` | Legacy static label; app prefers `localizacoes` + GPS (`distancia_calculada`) |
 | `rating_medio` | `numeric` | *(optional, not in repo migrations)* — if present, `PlaceCard` / `EmAltaCard` show stars without extra queries |
 | `media_avaliacoes` | `numeric` | *(optional alias)* — same client read path as `rating_medio` |
@@ -582,11 +584,12 @@ Quick summary for existing projects that already have base tables:
 
 | Use case | Query |
 |----------|--------|
-| Active places (hero) | `lugares` `.select("*, localizacoes(*), lugares_tags(tags(*))")` `.eq("status","ativo")` `.limit(50)` — phase 1 |
-| Trending (“Em alta”) / browse “Populares” | `fetchLugaresPopulares` (`lib/lugaresPopulares.js`): aggregate `favoritos` by `lugar_id`, fallback newest active — phase 1 (home: 8, browse: 5) |
-| Hero (“Sugestão do momento”) | All active places in phase 1 → `pickHeroLugar` (`lib/homeContext.js`) scores open + partner + trending + time-of-day category + distance |
-| “Perto de você” | Active `lugares` via API `.limit(20)`, exclude hero + **all** `parceiroIds` client-side, `.slice(0, 6)`, sort by GPS — phase 2 |
-| Parceiros carousel | `destaques` vigentes + active `lugares`; `buildParceiroIdSet` / `enrichLugaresComParceiro` (`lib/destaques.js`) |
+| Active places | `GET /api/lugares` → active `lugares` with joins — `enrichLugaresFlags` (`lib/lugarBadges.js`) |
+| Hero (“Sugestão do momento”) | `GET /api/rotas` → `pickHeroRotaCiclo` (`lib/homeSelection.js`) — round-robin diário, rotas ativas com capa |
+| “Em alta hoje” | `conteudo_curadoria = true` → `pickEmAltaCuradoria` — daily deterministic shuffle (not `lugares_populares`) |
+| Parceiros carousel | `eh_parceiro = true` → `pickParceirosPorCategoria` — one per category, `weeklySeed` |
+| “Perto de você” | Active `lugares` via API `.limit(20)`, exclude **hero id only**, `.slice(0, 6)`, sort by GPS — phase 2 |
+| Browse “Populares” (search overlay) | `fetchLugaresPopulares` (`lib/lugaresPopulares.js`) — unchanged |
 | Favorites on home | `favoritos` `.select("lugar_id")` `.eq("user_id", user.id)` |
 | AI search | **Not SQL** — `POST /api/buscar` loads catalog server-side |
 
@@ -649,9 +652,9 @@ Quick summary for existing projects that already have base tables:
 | Place CRUD | `lugares` insert/update; `localizacoes` upsert; `lugares_tags` replace |
 | Routes CRUD | `rotas` + `rota_pontos` + `rota_ponto_detalhes` + `rota_dicas` + `rotas_tags` + `rotas_localizacoes` |
 | Reviews moderation | `avaliacoes` `.update({ status })` |
-| Highlights | `destaques` + joins `lugares`, `planos` |
+| Parceiro / curadoria | Toggles `eh_parceiro`, `conteudo_curadoria` on `lugares` (`LocalForm`) — table `destaques` legada |
 | Users | `perfis` `.select("*")` `.update({ role })` |
-| Dashboard (`/admin`) | `fetchCount` / `fetchCountInPeriod` (`lib/adminDashboard.js`): active `lugares`, pending `avaliacoes`, `perfis` created in period, `logs` with `acao = ir_agora` in period, `em_analise` count; `fetchDestaquesVigentes` + expiring-within-7d; `countPremiumAtivos`; recent `logs` (3 rows); pending review list (5 rows) |
+| Dashboard (`/admin`) | `fetchCount` / `fetchCountInPeriod` (`lib/adminDashboard.js`): active `lugares`, pending `avaliacoes`, `perfis` created in period, `logs` with `acao = ir_agora` in period, `em_analise` count; `countParceirosAtivos` (`eh_parceiro`); `countPremiumAtivos`; recent `logs` (3 rows); pending review list (5 rows) |
 | Logs admin (`/admin/logs`) | `logs` paginated/filtered via `lib/adminLogs.js` (`acao`, date range, `user_id`, text search on `user_nome` / `user_email` / `detalhes.lugar_nome`) |
 | Taxonomia admin | `subcategorias` insert/update/delete (usage count on `lugares.categoria` + `lugares.subcategoria`); `tags` CRUD + `lugares_tags` / `rotas_tags` usage checks |
 | Relatórios (`/admin/relatorios`) | `buildRelatorioEstabelecimento` (`lib/adminRelatorios.js`): `logs` counts for `visualizou_lugar` + `acesso_app` (with `detalhes.lugar_id`), `escaneou_qr`, `ir_agora`, `favoritou`; active `favoritos` count; `avaliacoes` approved in period; compares to previous period via `getReportPeriodRanges` |

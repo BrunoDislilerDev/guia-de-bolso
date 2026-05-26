@@ -5,7 +5,7 @@ import Link from "next/link";
 const ATALHOS = [
   { href: "/admin/avaliacoes?tab=pendente", label: "Moderar avaliações" },
   { href: "/admin/locais", label: "Locais" },
-  { href: "/admin/destaques", label: "Destaques" },
+  { href: "/admin/locais?status=parceiros", label: "Parceiros" },
   { href: "/admin/logs", label: "Logs" },
 ];
 

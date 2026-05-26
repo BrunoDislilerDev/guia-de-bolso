@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isLugarElegivelQr } from "@/lib/lugarQr";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/anon";
 import { createServiceClient } from "@/lib/supabase/service";
 
 /**

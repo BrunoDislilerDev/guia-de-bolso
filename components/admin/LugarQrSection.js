@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { fetchLugarEhParceiroVigente } from "@/lib/destaques";
+import { isParceiro } from "@/lib/lugarBadges";
 import { buildQrUrl, isLugarElegivelQr } from "@/lib/lugarQr";
 import { downloadQrPdf } from "@/lib/qrPdf";
 import { getClientSiteUrl } from "@/lib/siteUrl";
@@ -20,7 +20,7 @@ export default function LugarQrSection({ lugar, slugColumnReady = true }) {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState(false);
-  const [ehParceiro, setEhParceiro] = useState(false);
+  const ehParceiro = isParceiro(lugar);
 
   const elegivel = isLugarElegivelQr(lugar);
   const slug = lugar?.slug?.trim() || "";
@@ -51,13 +51,6 @@ export default function LugarQrSection({ lugar, slugColumnReady = true }) {
       cancelled = true;
     };
   }, [elegivel, slug, qrUrl]);
-
-  useEffect(() => {
-    if (!lugar?.id) return;
-
-    const supabase = createClient();
-    fetchLugarEhParceiroVigente(supabase, lugar.id).then(setEhParceiro);
-  }, [lugar?.id]);
 
   if (!elegivel) return null;
 

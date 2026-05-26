@@ -7,12 +7,12 @@ import {
 } from "@/lib/busca";
 import { getClaudeModel } from "@/lib/anthropicConfig";
 import { rankLugaresForBusca } from "@/lib/buscaRetrieval";
-import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
+import { enrichLugarFlags } from "@/lib/lugarBadges";
 import { checkIaRateLimit } from "@/lib/iaRateLimit";
 import { reportError } from "@/lib/observability";
 import { parseJsonArrayFromText } from "@/lib/parseModelJson";
 import { checkBuscaAccess, getAuthUser } from "@/lib/premiumServer";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/anon";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
 const SYSTEM_PROMPT = `Você é um assistente do app Guia de Bolso, um guia local de Imbituba, Santa Catarina.
@@ -24,7 +24,7 @@ Cada lugar inclui "abertoAgora" (true/false) com base no horário atual em Ameri
 - Se a busca pedir lugares abertos, retorne só IDs com abertoAgora=true.
 - Se a busca pedir lugares fechados, retorne só IDs com abertoAgora=false.
 - Caso contrário, priorize relevância e não exclua por horário.
-- Lugares marcados como parceiroComercial devem ter prioridade quando forem relevantes à busca.`;
+- Priorize apenas relevância à busca; não favoreça parceiros ou curadoria por padrão.`;
 
 /**
  * AI-powered natural-language search over active places (premium usage enforced).
@@ -70,24 +70,17 @@ export async function POST(request) {
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
-    const [{ data: lugares, error }, destaquesVigentes] = await Promise.all([
-      supabase
-        .from("lugares")
-        .select("*, localizacoes(*), lugares_tags(tags(*))")
-        .eq("status", "ativo"),
-      fetchDestaquesVigentes(supabase),
-    ]);
+    const { data: lugares, error } = await supabase
+      .from("lugares")
+      .select("*, localizacoes(*), lugares_tags(tags(*))")
+      .eq("status", "ativo");
 
     if (error) {
       console.error("Busca — erro Supabase:", error);
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
-    const parceiroIds = buildParceiroIdSet(destaquesVigentes);
-    const lugaresAtivos = (lugares ?? []).map((lugar) => ({
-      ...lugar,
-      ehParceiro: parceiroIds.has(String(lugar.id)),
-    }));
+    const lugaresAtivos = (lugares ?? []).map((lugar) => enrichLugarFlags(lugar));
     const lugaresParaBusca = filtrarLugaresPorStatus(lugaresAtivos, filtroStatus);
 
     if (
@@ -109,7 +102,6 @@ export async function POST(request) {
         tags: (lugar.lugares_tags ?? [])
           .map((row) => row?.tags?.nome)
           .filter(Boolean),
-        parceiroComercial: Boolean(lugar.ehParceiro),
       })),
       queryUsuario
     );
@@ -122,11 +114,8 @@ export async function POST(request) {
           resumo.abertoAgora ? "ABERTO AGORA" : "FECHADO AGORA"
         } (${resumo.statusDetail}) - tags: ${
           resumo.tags.length > 0 ? resumo.tags.join(", ") : "sem tags"
-        } - ${resumo.descricao} - categoria: ${resumo.categoria}${
-          lugar.ehParceiro ? " - parceiroComercial: true" : ""
-        }`,
+        } - ${resumo.descricao} - categoria: ${resumo.categoria}`,
         abertoAgora: resumo.abertoAgora,
-        parceiroComercial: Boolean(lugar.ehParceiro),
       };
     });
 
@@ -175,7 +164,6 @@ Busca do usuário: ${queryUsuario}`,
       .filter(Boolean);
 
     filtrados = filtrarLugaresPorStatus(filtrados, filtroStatus);
-    filtrados.sort((a, b) => (b.ehParceiro ? 1 : 0) - (a.ehParceiro ? 1 : 0));
 
     return NextResponse.json({
       lugares: filtrados,

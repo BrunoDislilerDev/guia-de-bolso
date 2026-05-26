@@ -55,6 +55,8 @@ export const emptyLocalForm = {
   site_url: "",
   descricao_longa: "",
   status: "ativo",
+  eh_parceiro: false,
+  conteudo_curadoria: false,
   horarios: emptyHorario,
   mostrar_endereco: true,
   mostrar_horarios: true,
@@ -506,13 +508,43 @@ export default function LocalForm({
         </div>
       )}
 
-      <p className="mt-4 rounded-xl bg-[#eef8f4] px-3 py-2 text-xs text-[#5a6b66]">
-        Destaque comercial (carrossel e perfil completo no app) é gerenciado em{" "}
-        <a href="/admin/destaques" className="font-semibold text-[#1a4a3a] underline">
-          Admin → Destaques
-        </a>
-        .
-      </p>
+      <div className="mt-4 space-y-3 rounded-xl bg-[#eef8f4] px-3 py-3 text-sm text-[#1a2e28]">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={Boolean(form.eh_parceiro)}
+            onChange={(e) =>
+              setForm((current) => ({ ...current, eh_parceiro: e.target.checked }))
+            }
+            className="mt-1 h-4 w-4 rounded border-[#c5d5cf] text-[#1a4a3a]"
+          />
+          <span>
+            <strong>Parceiro do Guia</strong>
+            <span className="mt-0.5 block text-xs font-normal text-[#5a6b66]">
+              Estabelecimento no plano R$ 199/mês — carrossel Parceiros do Guia e badge no app.
+            </span>
+          </span>
+        </label>
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={Boolean(form.conteudo_curadoria)}
+            onChange={(e) =>
+              setForm((current) => ({
+                ...current,
+                conteudo_curadoria: e.target.checked,
+              }))
+            }
+            className="mt-1 h-4 w-4 rounded border-[#c5d5cf] text-[#1a4a3a]"
+          />
+          <span>
+            <strong>Curadoria do Guia</strong>
+            <span className="mt-0.5 block text-xs font-normal text-[#5a6b66]">
+              Conteúdo curado pela equipe (praia, trilha, igreja…) — hero e Em alta hoje.
+            </span>
+          </span>
+        </label>
+      </div>
 
       <PhotoUploader
         items={photoItems}

@@ -10,7 +10,6 @@ export const ADMIN_NAV_LINKS = [
   { href: "/admin/rotas", label: "Rotas", icon: "rotas" },
   { href: "/admin/avaliacoes", label: "Avaliações", icon: "avaliacoes" },
   { href: "/admin/feedback", label: "Feedback", icon: "feedback" },
-  { href: "/admin/destaques", label: "Destaques", icon: "destaques" },
   { href: "/admin/relatorios", label: "Relatórios", icon: "relatorios" },
   { href: "/admin/usuarios", label: "Usuários", icon: "usuarios" },
   { href: "/admin/logs", label: "Logs", icon: "logs" },

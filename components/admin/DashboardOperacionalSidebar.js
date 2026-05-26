@@ -5,7 +5,7 @@ import Link from "next/link";
 /**
  * Resumo operacional (atalhos clicáveis) — sem duplicar timeline de logs.
  * @param {object} props
- * @param {{ emAnalise: number, destaquesExpirando: number, premiumAtivos: number, feedbackNovos?: number }} props.counts
+ * @param {{ emAnalise: number, parceirosAtivos: number, premiumAtivos: number, feedbackNovos?: number }} props.counts
  * @returns {import("react").JSX.Element}
  */
 export default function DashboardOperacionalSidebar({ counts }) {
@@ -18,11 +18,12 @@ export default function DashboardOperacionalSidebar({ counts }) {
       bg: "bg-amber-50",
     },
     {
-      label: "Destaques expirando (7d)",
-      value: counts.destaquesExpirando,
-      href: "/admin/destaques?status=expirando",
-      accent: "text-orange-700",
-      bg: "bg-orange-50",
+      label: "Parceiros ativos",
+      value: counts.parceirosAtivos,
+      href: "/admin/locais",
+      hint: "Toggle Parceiro do Guia no local",
+      accent: "text-amber-700",
+      bg: "bg-amber-50",
     },
     {
       label: "Premium IA ativos",

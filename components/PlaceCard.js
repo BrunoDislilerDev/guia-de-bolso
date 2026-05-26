@@ -5,7 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { getStatusFuncionamento } from "@/lib/horarios";
 import { getCapaFromLugar } from "@/lib/fotos";
-import { getBadgeParceiroLabel } from "@/lib/destaques";
+import {
+  getBadgeCuradoriaLabel,
+  getBadgeParceiroLabel,
+  isConteudoCuradoria,
+  isParceiro,
+} from "@/lib/lugarBadges";
 import { getTagsFromLugar } from "@/lib/tags";
 
 function IconPin({ className = "h-4 w-4" }) {
@@ -103,9 +108,14 @@ export default function PlaceCard({
         >
           {lugar.categoria}
         </span>
-        {lugar.ehParceiro && (
+        {isParceiro(lugar) && (
           <span className="rounded-full bg-[#f5e6b8]/95 px-3 py-1 text-xs font-bold text-[#7a6520] shadow-sm">
             {getBadgeParceiroLabel()}
+          </span>
+        )}
+        {isConteudoCuradoria(lugar) && (
+          <span className="rounded-full bg-[#d4ede8]/95 px-3 py-1 text-xs font-bold text-[#1a4a3a] shadow-sm">
+            {getBadgeCuradoriaLabel()}
           </span>
         )}
       </div>

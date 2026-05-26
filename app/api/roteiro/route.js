@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getClaudeModel } from "@/lib/anthropicConfig";
-import { buildParceiroIdSet, fetchDestaquesVigentes } from "@/lib/destaques";
+import { enrichLugarFlags } from "@/lib/lugarBadges";
 import { checkIaRateLimit } from "@/lib/iaRateLimit";
 import { reportError } from "@/lib/observability";
 import { checkRoteiroAccess, getAuthUser } from "@/lib/premiumServer";
 import { selecionarLugaresParaRoteiro } from "@/lib/roteiroLugares";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/anon";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
 const SYSTEM_PROMPT = `Você é um especialista local em Imbituba, Santa Catarina.
@@ -81,24 +81,17 @@ export async function POST(request) {
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
-    const [{ data: lugaresRaw, error }, destaquesVigentes] = await Promise.all([
-      supabase
-        .from("lugares")
-        .select("id, nome, descricao, categoria, subcategoria, lugares_tags(tags(nome))")
-        .eq("status", "ativo"),
-      fetchDestaquesVigentes(supabase),
-    ]);
+    const { data: lugaresRaw, error } = await supabase
+      .from("lugares")
+      .select("id, nome, descricao, categoria, subcategoria, eh_parceiro, conteudo_curadoria, lugares_tags(tags(nome))")
+      .eq("status", "ativo");
 
     if (error) {
       reportError(error, { route: "POST /api/roteiro supabase" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
-    const parceiroIds = buildParceiroIdSet(destaquesVigentes);
-    const lugaresComParceiro = (lugaresRaw ?? []).map((lugar) => ({
-      ...lugar,
-      ehParceiro: parceiroIds.has(String(lugar.id)),
-    }));
+    const lugaresComParceiro = (lugaresRaw ?? []).map((lugar) => enrichLugarFlags(lugar));
 
     const lugares = selecionarLugaresParaRoteiro(lugaresComParceiro, interesses);
 

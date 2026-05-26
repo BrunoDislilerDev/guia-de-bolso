@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { getCapaFromLugar } from "@/lib/fotos";
-import { getBadgeParceiroLabel } from "@/lib/destaques";
+import { getBadgeParceiroLabel } from "@/lib/lugarBadges";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 import { HOME_CAROUSEL_TRACK_CLASS } from "@/components/home/homeTokens";
 
 /**
- * Carrossel de estabelecimentos com destaque comercial vigente.
+ * Carrossel de estabelecimentos no plano Parceiro do Guia (R$ 199).
  */
 export default function ParceirosCarrossel({ lugares = [] }) {
   if (!lugares.length) return null;
@@ -18,7 +18,7 @@ export default function ParceirosCarrossel({ lugares = [] }) {
       className="mb-10 home-reveal overflow-visible"
       aria-labelledby="parceiros-carrossel-title"
     >
-      <HomeSectionHeader eyebrow="Parceiros do guia" title="Destaques da semana" />
+      <HomeSectionHeader eyebrow="Parceiros" title="Parceiros do Guia" />
 
       <div className={`${HOME_CAROUSEL_TRACK_CLASS} -mx-4 px-4`}>
         {lugares.map((lugar) => (

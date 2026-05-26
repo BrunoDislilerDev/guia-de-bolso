@@ -88,6 +88,7 @@ export default function GalleryHeroAirbnb({
   onFavoritar,
   onShare,
   parceiroBadgeLabel = null,
+  curadoriaBadgeLabel = null,
   showFavorite = true,
   immersiveScroll = false,
 }) {
@@ -98,7 +99,8 @@ export default function GalleryHeroAirbnb({
   });
 
   const temVariasFotos = fotos.length > 1;
-  const showFooter = Boolean(parceiroBadgeLabel) || temVariasFotos;
+  const showFooter =
+    Boolean(parceiroBadgeLabel || curadoriaBadgeLabel) || temVariasFotos;
 
   return (
     <div className="relative h-full w-full">
@@ -147,11 +149,19 @@ export default function GalleryHeroAirbnb({
 
         {showFooter && (
           <div className={GALLERY_FOOTER_ROW_CLASS}>
-            {parceiroBadgeLabel ? (
-              <span className={PARCEIRO_BADGE_GRADIENT_CLASS}>{parceiroBadgeLabel}</span>
-            ) : (
-              <span className="shrink-0" aria-hidden />
-            )}
+            <div className="flex min-w-0 flex-wrap gap-1.5">
+              {parceiroBadgeLabel ? (
+                <span className={PARCEIRO_BADGE_GRADIENT_CLASS}>{parceiroBadgeLabel}</span>
+              ) : null}
+              {curadoriaBadgeLabel ? (
+                <span className="rounded-full bg-[#d4ede8]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1a4a3a] shadow-sm">
+                  {curadoriaBadgeLabel}
+                </span>
+              ) : null}
+              {!parceiroBadgeLabel && !curadoriaBadgeLabel ? (
+                <span className="shrink-0" aria-hidden />
+              ) : null}
+            </div>
             {temVariasFotos ? (
               <GalleryPhotoCounter current={fotoAtual + 1} total={fotos.length} />
             ) : (

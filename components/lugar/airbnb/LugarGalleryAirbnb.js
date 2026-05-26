@@ -14,6 +14,7 @@ export default function LugarGalleryAirbnb({
   onFavoritar,
   onShare,
   parceiroBadgeLabel = null,
+  curadoriaBadgeLabel = null,
   immersiveScroll = true,
 }) {
   return (
@@ -25,6 +26,7 @@ export default function LugarGalleryAirbnb({
       onFavoritar={onFavoritar}
       onShare={onShare}
       parceiroBadgeLabel={parceiroBadgeLabel}
+      curadoriaBadgeLabel={curadoriaBadgeLabel}
       immersiveScroll={immersiveScroll}
     />
   );

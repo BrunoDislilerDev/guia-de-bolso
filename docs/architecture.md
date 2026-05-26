@@ -104,7 +104,6 @@ Requires `perfis.role` ∈ `admin`, `dev` (`lib/adminRoles.js` → `canAccessAdm
 | `/admin/lugares` | Legacy alias of locais grid |
 | `/admin/rotas`, `/admin/rotas/nova`, `/admin/rotas/[id]/editar` | Curated route CRUD |
 | `/admin/avaliacoes` | Review moderation (`?tab=` for filter chips) |
-| `/admin/destaques` | Commercial highlights (`?status=expirando` \| `expirado`) |
 | `/admin/usuarios` | User management, roles, Premium IA |
 | `/admin/logs` | Activity log browser (`?acao=`, `?user_id=`, period filters) |
 | `/admin/taxonomia` | CRUD for `subcategorias` and `tags` (no manual SQL) |

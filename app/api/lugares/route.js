@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { lugaresApiCacheHeaders } from "@/lib/apiCacheHeaders";
 import { queryLugaresAtivos, queryLugaresByIds } from "@/lib/lugaresQuery";
-import { fetchDestaquesVigentes } from "@/lib/destaques";
 import { fetchLugaresPopularesForClient } from "@/lib/lugaresPopulares";
 import { reportError } from "@/lib/observability";
 import { getAnonServerClient } from "@/lib/supabaseAnonServer";
@@ -13,7 +12,7 @@ function jsonCached(body, status = 200) {
 
 /**
  * GET /api/lugares — leitura pública de lugares ativos (role anon no servidor).
- * Query: limit, categoria, ids (csv), mode=populares
+ * Query: limit, categoria, ids (csv), mode=populares|parceiros|curadoria
  */
 export async function GET(request) {
   const supabase = getAnonServerClient();
@@ -25,13 +24,21 @@ export async function GET(request) {
   const mode = searchParams.get("mode");
 
   if (mode === "destaques") {
-    try {
-      const destaques = await fetchDestaquesVigentes(supabase);
-      return jsonCached({ destaques });
-    } catch (err) {
-      reportError(err, { route: "GET /api/lugares?mode=destaques" });
+    return jsonCached({ destaques: [], deprecated: true });
+  }
+
+  if (mode === "parceiros" || mode === "curadoria") {
+    const limit = Math.min(Math.max(Number(searchParams.get("limit")) || 50, 1), 100);
+    const eq =
+      mode === "parceiros"
+        ? { eh_parceiro: true }
+        : { conteudo_curadoria: true };
+    const { data, error } = await queryLugaresAtivos(supabase, { limit, eq });
+    if (error) {
+      reportError(error, { route: `GET /api/lugares?mode=${mode}` });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
+    return jsonCached({ lugares: data });
   }
 
   if (mode === "populares") {

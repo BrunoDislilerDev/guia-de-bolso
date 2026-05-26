@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
-import { buildParceiroIdSet, fetchDestaquesVigentes, isLugarParceiroVigente } from "@/lib/destaques";
+import { isConteudoCuradoria, isParceiro } from "@/lib/lugarBadges";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase";
 
@@ -28,28 +28,25 @@ const categoryStyles = {
   Serviços: "bg-[#c5dff5] text-[#2a5a7a]",
   Hospedagem: "bg-[#f5e6b8] text-[#7a6520]",
   Cultura: "bg-purple-100 text-purple-700",
-  Aventura: "bg-orange-100 text-orange-700",
-  "Bem-estar": "bg-pink-100 text-pink-700",
-  Compras: "bg-blue-100 text-blue-700",
+  Aventura: "bg-orange-100 text-orange-800",
+  "Bem-estar": "bg-pink-100 text-pink-800",
+  Compras: "bg-sky-100 text-sky-800",
 };
 
 /**
  * @param {object} lugar
  * @returns {string}
  */
-function getFoto(lugar) {
-  return getCapaFromLugar(lugar) || lugar.foto_url || "";
+function getCidade(lugar) {
+  return lugar.localizacoes?.cidade || "Imbituba";
 }
 
 /**
  * @param {object} lugar
- * @returns {string}
+ * @returns {boolean}
  */
-function getCidade(lugar) {
-  const localizacao = Array.isArray(lugar.localizacoes)
-    ? lugar.localizacoes[0]
-    : lugar.localizacoes;
-  return lugar.cidade || localizacao?.cidade || "";
+function isAtivo(lugar) {
+  return lugar.status === "ativo";
 }
 
 /**
@@ -58,49 +55,27 @@ function getCidade(lugar) {
  */
 function getInitials(nome) {
   return String(nome || "?")
-    .split(" ")
-    .filter(Boolean)
+    .split(/\s+/)
     .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-}
-
-/**
- * @param {object} lugar
- * @returns {boolean}
- */
-function isAtivo(lugar) {
-  return lugar.status === "ativo" || lugar.ativa === true;
-}
-
-/**
- * @param {object} lugar
- * @returns {{ label: string, className: string }}
- */
-function getStatusMeta(lugar) {
-  if (lugar.status === "em_analise") {
-    return { label: "Em análise", className: "bg-amber-100 text-amber-800" };
-  }
-  if (isAtivo(lugar)) {
-    return { label: "Publicado", className: "bg-[#d4ede8] text-[#1a4a3a]" };
-  }
-  return { label: "Inativo", className: "bg-red-50 text-red-600" };
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 /**
  * @param {object} props
  * @param {string} props.label
- * @param {string} props.value
+ * @param {number|string} props.value
  * @param {string} [props.hint]
- * @param {string} props.accent
+ * @param {string} [props.accent]
  * @returns {import("react").JSX.Element}
  */
-function StatCard({ label, value, hint, accent }) {
+function StatCard({ label, value, hint, accent = "text-[#1a2e28]" }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#5a6b66]">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#9aa8a3]">{label}</p>
       <p className={`mt-1 text-2xl font-bold tabular-nums ${accent}`}>{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-[#9aa8a3]">{hint}</p>}
+      {hint && <p className="mt-0.5 text-[11px] text-[#9aa8a3]">{hint}</p>}
     </div>
   );
 }
@@ -117,10 +92,10 @@ function FilterChip({ active, onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+      className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
         active
-          ? "bg-[#1a4a3a] text-white shadow-md shadow-[#1a4a3a]/20"
-          : "bg-white text-[#5a6b66] ring-1 ring-[#e3e9e6] hover:bg-[#f7faf9] hover:text-[#1a4a3a]"
+          ? "bg-[#1a4a3a] text-white shadow-sm"
+          : "bg-[#f0f4f3] text-[#5a6b66] hover:bg-[#e3e9e6]"
       }`}
     >
       {children}
@@ -135,27 +110,23 @@ function FilterChip({ active, onClick, children }) {
  * @returns {import("react").JSX.Element}
  */
 function LugarCard({ lugar, onDeactivate }) {
-  const foto = getFoto(lugar);
+  const capa = getCapaFromLugar(lugar);
+  const categoriaClass = categoryStyles[lugar.categoria] || "bg-[#f0f4f3] text-[#1a4a3a]";
   const cidade = getCidade(lugar);
   const ativo = isAtivo(lugar);
-  const statusMeta = getStatusMeta(lugar);
-  const categoriaClass =
-    categoryStyles[lugar.categoria] || "bg-gray-100 text-gray-600";
+  const statusMeta =
+    lugar.status === "em_analise"
+      ? { label: "Em análise", className: "bg-amber-100 text-amber-800" }
+      : ativo
+        ? { label: "Ativo", className: "bg-emerald-100 text-emerald-800" }
+        : { label: "Inativo", className: "bg-zinc-100 text-zinc-600" };
 
   return (
-    <article
-      className={`group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 transition-all hover:shadow-lg ${
-        ativo ? "ring-black/5 hover:ring-[#1a4a3a]/15" : "opacity-90 ring-red-100"
-      }`}
-    >
-      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700">
-        {foto ? (
+    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      <div className="relative h-40 bg-[#e8eeee]">
+        {capa ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={foto}
-            alt=""
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <img src={capa} alt="" className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-white/90">
             {getInitials(lugar.nome)}
@@ -171,9 +142,14 @@ function LugarCard({ lugar, onDeactivate }) {
               {lugar.categoria}
             </span>
           )}
-          {lugar.ehParceiroVigente && (
+          {lugar.ehParceiroFlag && (
             <span className="rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-amber-950 shadow-sm">
-              ✨ Parceiro vigente
+              Parceiro
+            </span>
+          )}
+          {lugar.ehCuradoriaFlag && (
+            <span className="rounded-full bg-[#d4ede8] px-2.5 py-1 text-xs font-bold text-[#1a4a3a] shadow-sm">
+              Curadoria
             </span>
           )}
         </div>
@@ -191,11 +167,6 @@ function LugarCard({ lugar, onDeactivate }) {
 
       <div className="p-4">
         <div className="flex flex-wrap items-center gap-2">
-          {lugar.plano && (
-            <span className="rounded-lg bg-[#f7faf9] px-2 py-1 text-xs font-semibold text-[#5a6b66]">
-              Plano: {lugar.plano}
-            </span>
-          )}
           {lugar.telefone && (
             <span className="rounded-lg bg-[#f7faf9] px-2 py-1 text-xs font-semibold text-[#5a6b66]">
               📞 Contato
@@ -256,7 +227,6 @@ export default function LugaresGridPage() {
   const searchParams = useSearchParams();
   const statusFromUrl = searchParams.get("status");
   const [lugares, setLugares] = useState([]);
-  const [parceiroIds, setParceiroIds] = useState(() => new Set());
   const [search, setSearch] = useState("");
   const [categoria, setCategoria] = useState("Todas");
   const [status, setStatus] = useState(
@@ -267,17 +237,15 @@ export default function LugaresGridPage() {
 
   const loadLugares = useCallback(async () => {
     const supabase = createClient();
-    const [lugaresRes, destaquesVigentes] = await Promise.all([
-      supabase.from("lugares").select("*, localizacoes(cidade)").order("nome"),
-      fetchDestaquesVigentes(supabase),
-    ]);
+    const lugaresRes = await supabase
+      .from("lugares")
+      .select("*, localizacoes(cidade)")
+      .order("nome");
 
     if (lugaresRes.error) {
       console.error("[admin lugares]", lugaresRes.error.message);
     }
 
-    const ids = buildParceiroIdSet(destaquesVigentes);
-    setParceiroIds(ids);
     setLugares(lugaresRes.data ?? []);
   }, []);
 
@@ -324,17 +292,17 @@ export default function LugaresGridPage() {
   const stats = useMemo(() => {
     const ativos = lugares.filter((l) => isAtivo(l)).length;
     const emAnalise = lugares.filter((l) => l.status === "em_analise").length;
-    const destaques = lugares.filter(
-      (l) => isAtivo(l) && isLugarParceiroVigente(l.id, parceiroIds)
-    ).length;
+    const parceiros = lugares.filter((l) => isAtivo(l) && isParceiro(l)).length;
+    const curadoria = lugares.filter((l) => isAtivo(l) && isConteudoCuradoria(l)).length;
     return {
       total: lugares.length,
       ativos,
       inativos: lugares.length - ativos - emAnalise,
       emAnalise,
-      destaques,
+      parceiros,
+      curadoria,
     };
-  }, [lugares, parceiroIds]);
+  }, [lugares]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -354,9 +322,12 @@ export default function LugaresGridPage() {
         (status === "Ativos" && ativo) ||
         (status === "Inativos" && !ativo && lugar.status !== "em_analise") ||
         (status === "Em análise" && lugar.status === "em_analise") ||
-        (status === "Parceiro vigente" &&
+        (status === "Parceiros" && ativo && isParceiro(lugar)) ||
+        (status === "Curadoria" && ativo && isConteudoCuradoria(lugar)) ||
+        (status === "Ambos" &&
           ativo &&
-          isLugarParceiroVigente(lugar.id, parceiroIds));
+          isParceiro(lugar) &&
+          isConteudoCuradoria(lugar));
       const matchesCidade = cidade === "Todas" || getCidade(lugar) === cidade;
 
       return matchesSearch && matchesCategoria && matchesStatus && matchesCidade;
@@ -403,7 +374,7 @@ export default function LugaresGridPage() {
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
         <StatCard label="Total" value={stats.total} accent="text-[#1a4a3a]" />
         <StatCard
           label="Publicados"
@@ -412,10 +383,16 @@ export default function LugaresGridPage() {
           accent="text-emerald-700"
         />
         <StatCard
-          label="Parceiros vigentes"
-          value={stats.destaques}
-          hint="destaques ativos"
+          label="Parceiros"
+          value={stats.parceiros}
+          hint="plano R$ 199"
           accent="text-amber-700"
+        />
+        <StatCard
+          label="Curadoria"
+          value={stats.curadoria}
+          hint="conteúdo autoral"
+          accent="text-[#1a4a3a]"
         />
         <StatCard
           label="Em análise"
@@ -464,7 +441,15 @@ export default function LugaresGridPage() {
               Status
             </p>
             <div className="flex flex-wrap gap-2">
-              {["Todos", "Ativos", "Inativos", "Em análise", "Parceiro vigente"].map((item) => (
+              {[
+                "Todos",
+                "Ativos",
+                "Inativos",
+                "Em análise",
+                "Parceiros",
+                "Curadoria",
+                "Ambos",
+              ].map((item) => (
                 <FilterChip
                   key={item}
                   active={status === item}
@@ -512,7 +497,8 @@ export default function LugaresGridPage() {
               key={lugar.id}
               lugar={{
                 ...lugar,
-                ehParceiroVigente: isLugarParceiroVigente(lugar.id, parceiroIds),
+                ehParceiroFlag: isParceiro(lugar),
+                ehCuradoriaFlag: isConteudoCuradoria(lugar),
               }}
               onDeactivate={() => handleDelete(lugar)}
             />

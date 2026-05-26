@@ -132,24 +132,12 @@ Large hero card with one **contextual place**: photo, badges (e.g. trending), a 
 Get a single strong recommendation without searching.
 
 **Main flows**
-1. Phase 1 loads active places + trending IDs + vigent `destaques` → `pickHeroLugar(lugaresAtivos, userPosition, popularIds, parceiroIds)` picks one place.
-2. Secondary home load fetches Open-Meteo for Imbituba → `temperaturaClima` passed into the hero (shown as e.g. `23°C`, or `--°C` if unavailable).
-3. **De carro** estimates minutes from parsed `distancia_calculada` at 30 km/h, rounded to the nearest 5 (`~5 min`, `~10 min`, …).
-4. User taps card or CTA → `/lugares/[id]`.
-5. User toggles favorite on hero (login required).
+1. Phase 1 loads active routes via `GET /api/rotas` → `pickHeroRotaCiclo` picks **one** route per day (round-robin: no repeat until all eligible routes shown, then restarts). Pool: `ativa !== false` + valid cover (`getCapaFromRota`). TZ: America/Sao_Paulo via `dailySeed`.
+2. Secondary home load fetches Open-Meteo for Imbituba → `temperaturaClima` passed into the hero.
+3. Metrics: duration, distance, difficulty (+ temperature). CTA → `/rotas/[id]`.
 
-**Selection criteria (`pickHeroLugar` / `scoreLugar` in `lib/homeContext.js`)**  
-Pool = places **open now** (`getStatusFuncionamento`); if none open, all active places. Highest score wins:
-
-| Signal | Weight |
-|--------|--------|
-| Open now | +40 |
-| Vigent commercial partner (`parceiroIds` / `ehParceiro`) | +50 |
-| In trending set (`popularIds` from `fetchLugaresPopulares`) | +25 |
-| Category matches time of day (SP): morning → Natureza/Gastronomia; afternoon → +Natureza/Gastronomia/Aventura; night → Noite/Gastronomia | +12–18 |
-| Distance &lt; 5 km / &lt; 15 km (when GPS available) | +20 / +10 |
-
-Badge **“Em alta hoje 🔥”** on the hero when the place is trending and not a partner.
+**Selection criteria**  
+Stable order by route `id`; index = `daysSinceEpoch(dailySeed) % pool.length`. Not places/curadoria.
 
 **Edge cases**
 - No places / still loading → placeholder “Carregando sugestão…”.
@@ -159,36 +147,34 @@ Badge **“Em alta hoje 🔥”** on the hero when the place is trending and not
 
 ---
 
-## 7. Home — Parceiros comerciais (“Destaques da semana”)
+## 7. Home — Parceiros do Guia
 
 **Description**  
-Horizontal carousel of places with an **active commercial highlight** in table `destaques` (single Parceiro plan). Shown between the hero and “Em alta hoje”. **Not** driven by `lugares.destaque` (legacy boolean) or favorite count.
-
-**Criteria (`lib/destaques.js`)** — row included when: `ativo`, `data_inicio ≤ hoje ≤ data_fim`, joined `lugares.status = ativo`. Order follows `fetchDestaquesVigentes` query (`data_inicio` desc).
+Horizontal carousel of places with `lugares.eh_parceiro = true` (plano único R$ 199). Shown between the hero and “Em alta hoje”. **One partner per category** per week, chosen deterministically (`weeklySeed`, `lib/homeSelection.js`). Table `destaques` is legacy and not used by the app.
 
 **User goal**  
-Discover official partner businesses promoted in the guide.
+Discover official partner businesses in the guide.
 
 **Main flows**
-1. Home loads active places and vigent `destaques` → `ParceirosCarrossel` lists partner places with distance when GPS is available.
-2. Partner cards show badge; **tags on cards** for all places with tags; tap → place detail.
+1. Home loads active places → `pickParceirosPorCategoria` → `ParceirosCarrossel` with badge “Parceiro do Guia”.
+2. Admin toggles `eh_parceiro` on each place in **Locais** (no separate Destaques screen).
 
 **Edge cases**
-- No active highlights → carousel omitted (not an error state).
-- Same partner visibility rules apply in AI search and category cards (`lib/destaques.js`, `lib/lugarVisibilidade.js`).
+- Category without a partner → omitted from carousel.
+- Carousel hidden when no partners are flagged.
 
 ---
 
 ## 8. Home — “Em alta hoje”
 
 **Description**  
-Horizontal list of **trending** places — same ranking as **Populares agora** (see §4), capped at **8** cards on the home feed.
+Horizontal list of **curated** places (`conteudo_curadoria = true`), up to **6** cards, order shuffled daily via `dailySeed` (`pickEmAltaCuradoria`). **Not** the favorites-based `lugares_populares` ranking.
 
 **User goal**  
-See what others save most often.
+Discover editorial highlights (beaches, trails, churches, etc.) picked by the guide team.
 
 **Main flows**
-1. `fetchLugaresPopulares` (`lib/lugaresPopulares.js` → API `mode=populares`) counts rows in `favoritos` per `lugar_id`, orders by count, loads place rows — up to **8** → `EmAltaCard` with `next/image` (first card may use `priority` preload).
+1. Active places with `conteudo_curadoria` → deterministic daily list → `EmAltaCard`.
 2. Star rating renders only when the place row includes `rating_medio` or `media_avaliacoes` (no per-card Supabase query).
 
 **Edge cases**

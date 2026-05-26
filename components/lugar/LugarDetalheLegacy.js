@@ -15,7 +15,7 @@ import LugarHorariosCompact from "@/components/lugar/LugarHorariosCompact";
 import LugarLocalizacaoCard from "@/components/lugar/LugarLocalizacaoCard";
 import LugarQuickActions from "@/components/lugar/LugarQuickActions";
 import LugarTags from "@/components/lugar/LugarTags";
-import { getBadgeParceiroLabel } from "@/lib/destaques";
+import { getBadgeCuradoriaLabel, getBadgeParceiroLabel } from "@/lib/lugarBadges";
 import { buildReportContext } from "@/lib/reportContext";
 import { lugarExibeClima } from "@/lib/clima";
 import { formatHorario, getDiasHorario } from "@/lib/horarios";
@@ -118,11 +118,18 @@ export default function LugarDetalheLegacy(props) {
         )}
 
         <div className="px-4 pb-8 pt-5">
-          {visibilidade.showBadgeParceiro && (
-            <span className="mb-3 inline-flex rounded-full bg-[#f5e6b8] px-3 py-1 text-xs font-bold text-[#7a6520]">
-              {getBadgeParceiroLabel()}
-            </span>
-          )}
+          <div className="mb-3 flex flex-wrap gap-2">
+            {visibilidade.showBadgeParceiro && (
+              <span className="inline-flex rounded-full bg-[#f5e6b8] px-3 py-1 text-xs font-bold text-[#7a6520]">
+                {getBadgeParceiroLabel()}
+              </span>
+            )}
+            {visibilidade.showBadgeCuradoria && (
+              <span className="inline-flex rounded-full bg-[#d4ede8] px-3 py-1 text-xs font-bold text-[#1a4a3a]">
+                {getBadgeCuradoriaLabel()}
+              </span>
+            )}
+          </div>
           <p className="text-base font-semibold leading-snug text-[#1a4a3a]">
             {fraseConvencimento}
           </p>

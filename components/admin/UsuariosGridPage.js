@@ -594,8 +594,8 @@ export default function UsuariosGridPage() {
               </dl>
 
               <p className="mt-2 text-[11px] leading-relaxed text-[#9aa8a3]">
-                Parceiro comercial (destaque R$ 199) é gerenciado em Admin → Destaques,
-                não neste Premium.
+                Parceiro do Guia (R$ 199) é o toggle &quot;Parceiro do Guia&quot; em Admin →
+                Locais, não neste Premium.
               </p>
 
               {detalheLoading ? (

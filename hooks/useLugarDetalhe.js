@@ -9,7 +9,6 @@ import {
   fetchJaAvaliouLugar,
   fetchLocalizacaoLugar,
   fetchLugarAtivo,
-  fetchLugarEhParceiroVigente,
   fetchSubcategoria,
   fetchTagsLugar,
 } from "@/lib/data/lugarDetalheQueries";
@@ -33,6 +32,7 @@ import {
   instagramUrl,
   wazeUrl,
 } from "@/lib/lugarDetalheMaps";
+import { isConteudoCuradoria, isParceiro } from "@/lib/lugarBadges";
 import {
   getFotosParaExibicao,
   getTextoSobre,
@@ -76,7 +76,6 @@ export function useLugarDetalhe() {
   const [subcategoria, setSubcategoria] = useState(null);
   const [tags, setTags] = useState([]);
   const { userPosition } = useUserPosition();
-  const [ehParceiro, setEhParceiro] = useState(false);
   const [showQrBanner, setShowQrBanner] = useState(false);
 
   useEffect(() => {
@@ -139,7 +138,6 @@ export function useLugarDetalhe() {
         setTags((data ?? []).map((item) => item.tags).filter(Boolean));
       });
 
-    fetchLugarEhParceiroVigente(supabase, id).then(setEhParceiro);
   }, [id, supabase]);
 
   useEffect(() => {
@@ -320,7 +318,9 @@ export function useLugarDetalhe() {
     }
   }
 
-  const visibilidade = lugar ? getVisibilidadePerfil(ehParceiro) : null;
+  const ehParceiro = lugar ? isParceiro(lugar) : false;
+  const ehCuradoria = lugar ? isConteudoCuradoria(lugar) : false;
+  const visibilidade = lugar ? getVisibilidadePerfil(ehParceiro, ehCuradoria) : null;
   const capaUrl = lugar ? getCapaFromLugar(lugar) : null;
   const fotosCompletas = lugar
     ? fotos.length > 0

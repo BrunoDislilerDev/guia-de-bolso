@@ -106,6 +106,7 @@ Run in order for a **new environment** that already has base tables from the Sup
 | 14 | `taxonomia_lugares_cleanup.sql` | Subcategorias + tag seeds + lugar migrations |
 | 14b | `subcategoria_piscinas_naturais.sql` | **Superseded** by #14 — reference only |
 | 15 | `lugares_qr_slug.sql` | `lugares.slug` unique + backfill |
+| 15b | `lugares_parceiro_curadoria.sql` | `eh_parceiro`, `conteudo_curadoria`; migra vigentes de `destaques` |
 
 ### D — Routes (curated)
 
