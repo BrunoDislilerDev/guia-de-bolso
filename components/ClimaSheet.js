@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   formatNumber,
   getUvProgress,
@@ -47,6 +47,12 @@ function MetricRow({ label, value }) {
  * @returns {import('react').ReactElement|null}
  */
 export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
+  const scrollAreaRef = useRef(null);
+  const dragStartYRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -65,12 +71,64 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setDragY(0);
+      setIsDragging(false);
+      dragStartYRef.current = null;
+      isDraggingRef.current = false;
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const maxWave = Math.max(
     ...(clima?.waveChart ?? []).map((point) => Number(point.height) || 0),
     1
   );
+
+  function handleTouchStart(event) {
+    if (event.touches.length !== 1) return;
+
+    const target = event.target;
+    const touchedHandle = target instanceof Element && target.closest("[data-drag-handle='true']");
+    const scrollTop = scrollAreaRef.current?.scrollTop ?? 0;
+
+    if (!touchedHandle && scrollTop > 0) return;
+
+    dragStartYRef.current = event.touches[0].clientY;
+    isDraggingRef.current = true;
+    setIsDragging(true);
+  }
+
+  function handleTouchMove(event) {
+    if (!isDraggingRef.current || dragStartYRef.current === null) return;
+
+    const deltaY = event.touches[0].clientY - dragStartYRef.current;
+    const nextDragY = Math.max(0, Math.min(260, deltaY));
+
+    if (nextDragY > 0 && event.cancelable) {
+      event.preventDefault();
+    }
+
+    setDragY(nextDragY);
+  }
+
+  function finishDrag() {
+    if (!isDraggingRef.current) return;
+
+    const shouldClose = dragY >= 110;
+    isDraggingRef.current = false;
+    dragStartYRef.current = null;
+    setIsDragging(false);
+
+    if (shouldClose) {
+      onClose();
+      return;
+    }
+
+    setDragY(0);
+  }
 
   return (
     <div
@@ -92,14 +150,27 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
       <div
         className="flex max-h-[90vh] w-full max-w-md flex-col rounded-t-[24px] bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
-        style={{ animation: "climaSheetIn 260ms ease-out forwards" }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={finishDrag}
+        onTouchCancel={finishDrag}
+        style={{
+          animation:
+            !isDragging && dragY === 0 ? "climaSheetIn 260ms ease-out forwards" : undefined,
+          transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
+          transition: isDragging ? "none" : "transform 180ms ease-out",
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="clima-sheet-title"
       >
-        <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200" />
+        <div
+          data-drag-handle="true"
+          className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-gray-200"
+        />
 
         <div
+          ref={scrollAreaRef}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4"
         >
           <h2 id="clima-sheet-title" className="text-xl font-bold text-[#1a2e28]">
