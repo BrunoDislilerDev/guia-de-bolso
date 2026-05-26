@@ -51,11 +51,15 @@ Tags que já existiam e cobrem o caso: **Pôr do sol imperdível**, **Nascer do 
 
 **Dia a dia:** use **`/admin/taxonomia`** to add, rename, or retire subcategorias and tags (with usage guards and place migration on rename). No SQL required for routine edits.
 
+**Tags no banco:** cada tag tem `subcategorias` (jsonb) — lista de `{ categoria, nome }` onde ela aparece. O campo `categorias` é mantido para compatibilidade e rotas. Bootstrap: `supabase/tags_subcategorias.sql`.
+
 **Formulário de lugar** (`/admin/locais`):
 
 1. Categoria → ex. Natureza  
 2. Subcategoria → ex. **Praias** (não “Surf”)  
-3. Tags → ex. **Surfe** + **Pôr do sol imperdível** + **Mar agitado** (máx. 5)
+3. Tags → só então aparecem checkboxes; ex. **Surfe** + **Pôr do sol imperdível** + **Mar agitado** (máx. **5** selecionadas)
+
+**Taxonomia → Tags:** vincule a tag às **subcategorias** (não só à categoria ampla).
 
 Tags com **`aplica_em_rotas`** also appear on route forms after `supabase/rotas_taxonomia.sql`.
 

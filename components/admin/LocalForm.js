@@ -21,8 +21,8 @@ import {
   uploadEntityPhotos,
 } from "@/lib/storageUpload";
 import {
-  filterTagIdsByCategoria,
-  filterTagsByCategoria,
+  filterTagIdsBySubcategoria,
+  filterTagsBySubcategoria,
   getTagIds,
 } from "@/lib/tags";
 import { isLugarElegivelQr } from "@/lib/lugarQr";
@@ -180,14 +180,27 @@ export default function LocalForm({
 
   useEffect(() => {
     if (tags.length === 0) return;
+    if (!form.subcategoria?.trim()) {
+      setSelectedTagIds([]);
+      setTagLimitMessage("");
+      return;
+    }
 
     setSelectedTagIds((current) =>
-      filterTagIdsByCategoria(current, tags, form.categoria).slice(0, MAX_TAGS)
+      filterTagIdsBySubcategoria(
+        current,
+        tags,
+        form.categoria,
+        form.subcategoria
+      ).slice(0, MAX_TAGS)
     );
     setTagLimitMessage("");
-  }, [form.categoria, tags]);
+  }, [form.categoria, form.subcategoria, tags]);
 
-  const visibleTags = filterTagsByCategoria(tags, form.categoria);
+  const tagsProntas = Boolean(form.categoria?.trim() && form.subcategoria?.trim());
+  const visibleTags = tagsProntas
+    ? filterTagsBySubcategoria(tags, form.categoria, form.subcategoria)
+    : [];
 
   /**
    * Alterna seleção de tag respeitando o limite de {@link MAX_TAGS}.
@@ -520,13 +533,20 @@ export default function LocalForm({
         {tagLimitMessage && (
           <p className="mb-2 text-xs font-semibold text-[#d9534f]">{tagLimitMessage}</p>
         )}
-        <p className="mb-2 text-xs text-[#5a6b66]">Máximo de {MAX_TAGS} tags por local.</p>
-        <div className="grid gap-2 rounded-2xl bg-[#f7faf9] p-3 md:grid-cols-3">
-          {visibleTags.length === 0 ? (
-            <p className="text-sm text-[#5a6b66]">
+        <p className="mb-2 text-xs text-[#5a6b66]">
+          Máximo de {MAX_TAGS} tags por local. Escolha categoria e subcategoria para ver as
+          opções.
+        </p>
+        <div className="grid max-h-[min(28rem,70vh)] gap-2 overflow-y-auto rounded-2xl bg-[#f7faf9] p-3 md:grid-cols-3">
+          {!tagsProntas ? (
+            <p className="text-sm text-[#5a6b66] md:col-span-3">
+              Selecione a <strong>subcategoria</strong> acima para exibir as tags compatíveis.
+            </p>
+          ) : visibleTags.length === 0 ? (
+            <p className="text-sm text-[#5a6b66] md:col-span-3">
               {tags.length === 0
                 ? "Nenhuma tag cadastrada."
-                : `Nenhuma tag disponível para ${form.categoria}.`}
+                : `Nenhuma tag cadastrada para ${form.subcategoria} (${form.categoria}).`}
             </p>
           ) : (
             visibleTags.map((tag) => {

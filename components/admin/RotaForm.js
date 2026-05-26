@@ -13,7 +13,11 @@ import {
   movePhotoItemToCover,
   revokePhotoItemPreview,
 } from "@/lib/photoItems";
-import { mapPontoFromDb, sortPontoDetalhes } from "@/lib/rotaPontos";
+import {
+  assignPontoDetalhesOrdem,
+  mapPontoFromDb,
+  sortPontoDetalhes,
+} from "@/lib/rotaPontos";
 import {
   CATEGORIA_ROTA_PADRAO,
   CATEGORIAS_ROTA,
@@ -398,7 +402,7 @@ export default function RotaForm({
         itemIndex === pontoIndex
           ? {
               ...ponto,
-              detalhes: sortPontoDetalhes(
+              detalhes: assignPontoDetalhesOrdem(
                 ponto.detalhes.map((detalhe, index) =>
                   index === detalheIndex ? { ...detalhe, texto } : detalhe
                 )
@@ -415,7 +419,7 @@ export default function RotaForm({
         itemIndex === pontoIndex
           ? {
               ...ponto,
-              detalhes: sortPontoDetalhes(
+              detalhes: assignPontoDetalhesOrdem(
                 ponto.detalhes.filter((_, index) => index !== detalheIndex)
               ),
             }
@@ -437,7 +441,7 @@ export default function RotaForm({
 
         return {
           ...ponto,
-          detalhes: sortPontoDetalhes(next),
+          detalhes: assignPontoDetalhesOrdem(next),
         };
       })
     );
@@ -912,15 +916,17 @@ export default function RotaForm({
                               <div className="mt-2 flex flex-wrap gap-2">
                                 <button
                                   type="button"
+                                  disabled={detalheIndex === 0}
                                   onClick={() => moveDetalhePonto(index, detalheIndex, -1)}
-                                  className="rounded-lg bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700"
+                                  className="rounded-lg bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                   ↑
                                 </button>
                                 <button
                                   type="button"
+                                  disabled={detalheIndex === ponto.detalhes.length - 1}
                                   onClick={() => moveDetalhePonto(index, detalheIndex, 1)}
-                                  className="rounded-lg bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700"
+                                  className="rounded-lg bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                   ↓
                                 </button>

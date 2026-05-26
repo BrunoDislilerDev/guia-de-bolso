@@ -160,10 +160,11 @@ Controlled vocabulary for place attributes (pet friendly, vista mar, etc.).
 |--------|------|-------------|
 | `id` | `integer` PK | |
 | `nome` | `text` | Label |
-| `categorias` | `jsonb` | Array of category names where tag is valid *(migration: `tags_categorias.sql`)* |
+| `categorias` | `jsonb` | Array of category names (derivado das subcategorias ou legado) *(migration: `tags_categorias.sql`)* |
+| `subcategorias` | `jsonb` | Array `[{ "categoria": "Natureza", "nome": "Praias" }, …]` — onde a tag aparece no admin de locais *(migration: `tags_subcategorias.sql`)* |
 | `aplica_em_rotas` | `boolean` | When true, tag appears in admin route form *(migration: `rotas_taxonomia.sql`)* |
 
-Admin limits **5 tags per place**. Filtering: `lib/tags.js` (`filterTagsByCategoria`).
+Admin limits **5 tags per place**. Filtering: `lib/tags.js` (`filterTagsBySubcategoria`; fallback `filterTagsByCategoria` se `subcategorias` vazio).
 
 ---
 

@@ -15,9 +15,13 @@ import {
   fetchTagUsageMap,
   fetchTagsAdmin,
   formatCategoriasLabel,
+  formatSubcategoriasLabel,
+  tagFormHasSubcategoria,
+  toggleTagFormSubcategoria,
   updateSubcategoriaAdmin,
   updateTagAdmin,
 } from "@/lib/adminTaxonomia";
+import { tagMatchesSubcategoria } from "@/lib/tagSubcategorias";
 import { createClient } from "@/lib/supabase";
 
 const TABS = [
@@ -136,6 +140,7 @@ export default function TaxonomiaPage() {
   const [tags, setTags] = useState([]);
   const [tagUsage, setTagUsage] = useState(new Map());
   const [filtroCategoriaTag, setFiltroCategoriaTag] = useState("Todas");
+  const [filtroSubcategoriaTag, setFiltroSubcategoriaTag] = useState("Todas");
   const [buscaTag, setBuscaTag] = useState("");
 
   const [subModal, setSubModal] = useState(null);
@@ -155,6 +160,7 @@ export default function TaxonomiaPage() {
     nome: "",
     icone: "",
     categorias: [],
+    subcategorias: [],
     aplica_em_rotas: false,
   });
 
@@ -195,6 +201,13 @@ export default function TaxonomiaPage() {
     });
   }, [subcategorias, filtroCategoriaSub, buscaSub]);
 
+  const subcategoriasFiltroTag = useMemo(() => {
+    if (filtroCategoriaTag === "Todas" || filtroCategoriaTag === "Rotas") {
+      return subcategorias;
+    }
+    return subcategorias.filter((item) => item.categoria === filtroCategoriaTag);
+  }, [subcategorias, filtroCategoriaTag]);
+
   const tagsFiltradas = useMemo(() => {
     const term = buscaTag.trim().toLowerCase();
     return tags.filter((item) => {
@@ -203,10 +216,23 @@ export default function TaxonomiaPage() {
       } else if (filtroCategoriaTag !== "Todas") {
         if (!item.categorias?.includes(filtroCategoriaTag)) return false;
       }
+
+      if (filtroSubcategoriaTag !== "Todas") {
+        const [cat, sub] = filtroSubcategoriaTag.split("::");
+        if (!tagMatchesSubcategoria(item, cat, sub)) return false;
+      }
+
       if (!term) return true;
-      return item.nome?.toLowerCase().includes(term);
+      return (
+        item.nome?.toLowerCase().includes(term) ||
+        item.subcategorias?.some(
+          (ref) =>
+            ref.nome?.toLowerCase().includes(term) ||
+            ref.categoria?.toLowerCase().includes(term)
+        )
+      );
     });
-  }, [tags, filtroCategoriaTag, buscaTag]);
+  }, [tags, filtroCategoriaTag, filtroSubcategoriaTag, buscaTag]);
 
   const stats = useMemo(
     () => ({
@@ -257,7 +283,8 @@ export default function TaxonomiaPage() {
     setTagForm({
       nome: "",
       icone: "",
-      categorias: [CATEGORIAS_TAXONOMIA[0]],
+      categorias: [],
+      subcategorias: [],
       aplica_em_rotas: false,
     });
     setTagModal({ mode: "create" });
@@ -272,6 +299,7 @@ export default function TaxonomiaPage() {
       nome: item.nome,
       icone: item.icone || "",
       categorias: [...(item.categorias || [])],
+      subcategorias: [...(item.subcategorias || [])],
       aplica_em_rotas: Boolean(item.aplica_em_rotas),
     });
     setTagModal({ mode: "edit", id: item.id });
@@ -377,13 +405,14 @@ export default function TaxonomiaPage() {
     await loadData();
   }
 
-  function toggleTagCategoria(nome) {
-    setTagForm((current) => {
-      const set = new Set(current.categorias);
-      if (set.has(nome)) set.delete(nome);
-      else set.add(nome);
-      return { ...current, categorias: [...set] };
-    });
+  /**
+   * @param {{ categoria: string, nome: string }} ref
+   */
+  function toggleTagSubcategoria(ref) {
+    setTagForm((current) => ({
+      ...current,
+      subcategorias: toggleTagFormSubcategoria(current.subcategorias, ref),
+    }));
   }
 
   const subMudou =
@@ -601,12 +630,38 @@ export default function TaxonomiaPage() {
                 <FilterChip
                   key={cat.nome}
                   active={filtroCategoriaTag === cat.nome}
-                  onClick={() => setFiltroCategoriaTag(cat.nome)}
+                  onClick={() => {
+                    setFiltroCategoriaTag(cat.nome);
+                    setFiltroSubcategoriaTag("Todas");
+                  }}
                 >
                   {cat.icone} {cat.nome}
                 </FilterChip>
               ))}
             </div>
+            {subcategoriasFiltroTag.length > 0 && filtroCategoriaTag !== "Rotas" && (
+              <div className="flex flex-wrap gap-2 border-t border-[#e3e9e6] pt-3">
+                <FilterChip
+                  active={filtroSubcategoriaTag === "Todas"}
+                  onClick={() => setFiltroSubcategoriaTag("Todas")}
+                >
+                  Todas subcategorias
+                </FilterChip>
+                {subcategoriasFiltroTag.map((sub) => {
+                  const key = `${sub.categoria}::${sub.nome}`;
+                  return (
+                    <FilterChip
+                      key={key}
+                      active={filtroSubcategoriaTag === key}
+                      onClick={() => setFiltroSubcategoriaTag(key)}
+                    >
+                      {sub.icone ? `${sub.icone} ` : ""}
+                      {sub.nome}
+                    </FilterChip>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -642,6 +697,9 @@ export default function TaxonomiaPage() {
                     </div>
                     <h3 className="mt-2 font-bold text-[#1a2e28]">{item.nome}</h3>
                     <p className="mt-1 text-xs text-[#5a6b66]">
+                      {formatSubcategoriasLabel(item.subcategorias)}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-[#9aa8a3]">
                       {formatCategoriasLabel(item.categorias)}
                     </p>
                     <p className="mt-0.5 text-xs text-[#9aa8a3]">
@@ -792,29 +850,51 @@ export default function TaxonomiaPage() {
           </Field>
 
           <div>
-            <p className="text-sm font-semibold text-[#1a2e28]">Categorias</p>
+            <p className="text-sm font-semibold text-[#1a2e28]">Subcategorias</p>
             <p className="mt-0.5 text-xs text-[#9aa8a3]">
-              Onde a tag aparece no formulário de locais.
+              Onde a tag aparece no formulário de locais (após escolher categoria e
+              subcategoria).
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-3 max-h-56 space-y-3 overflow-y-auto rounded-xl bg-[#f7faf9] p-3">
               {CATEGORIAS_EXPLORE.map((cat) => {
-                const active = tagForm.categorias.includes(cat.nome);
+                const subs = subcategorias.filter((item) => item.categoria === cat.nome);
+                if (subs.length === 0) return null;
+
                 return (
-                  <button
-                    key={cat.nome}
-                    type="button"
-                    onClick={() => toggleTagCategoria(cat.nome)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-                      active
-                        ? "bg-[#1a4a3a] text-white"
-                        : "bg-[#f0f4f3] text-[#5a6b66] ring-1 ring-[#e3e9e6]"
-                    }`}
-                  >
-                    {cat.icone} {cat.nome}
-                  </button>
+                  <div key={cat.nome}>
+                    <p className="text-xs font-bold text-[#1a4a3a]">
+                      {cat.icone} {cat.nome}
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {subs.map((sub) => {
+                        const ref = { categoria: sub.categoria, nome: sub.nome };
+                        const active = tagFormHasSubcategoria(tagForm.subcategorias, ref);
+                        return (
+                          <button
+                            key={`${sub.categoria}-${sub.id}`}
+                            type="button"
+                            onClick={() => toggleTagSubcategoria(ref)}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                              active
+                                ? "bg-[#1a4a3a] text-white"
+                                : "bg-white text-[#5a6b66] ring-1 ring-[#e3e9e6]"
+                            }`}
+                          >
+                            {sub.icone ? `${sub.icone} ` : ""}
+                            {sub.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
+            {tagForm.subcategorias.length > 0 && (
+              <p className="mt-2 text-xs text-[#5a6b66]">
+                Selecionadas: {formatSubcategoriasLabel(tagForm.subcategorias)}
+              </p>
+            )}
           </div>
 
           <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-[#f7faf9] p-3 text-sm">
