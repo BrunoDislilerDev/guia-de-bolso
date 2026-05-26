@@ -99,6 +99,8 @@ Run in order for a **new environment** that already has base tables from the Sup
 | 9 | `tags_categorias.sql` | `tags.categorias` jsonb + seed |
 | 9b | `tags_subcategorias.sql` | `tags.subcategorias` jsonb + reclassificação + novas tags por subcategoria |
 | 9c | `tags_subcategorias_expansao.sql` | Mais tags por subcategoria (Lagoas, Dunas, Mirantes, Gastronomia, Noite, Cultura, etc.) |
+| 9d | `tags_subcategorias_minimo10.sql` | Garante ≥10 tags por subcategoria (Serviços, Aventura, Compras) |
+| 9e | **`tags_subcategorias_vinculos_definitivo.sql`** | **Correção final** de vínculos multi-subcategoria (rodar por último) |
 | 10 | `fotos_migration.sql` | `lugares.fotos`, `rotas.fotos`; public storage read |
 | 11 | `storage-policies.sql` | Avatar policies on `imagens` |
 | 12 | `logs_policies.sql` | FK `logs.user_id` → `perfis`; RLS |

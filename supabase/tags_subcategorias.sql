@@ -152,9 +152,17 @@ WHERE nome IN (
 ) AND categorias::text LIKE '%Noite%';
 
 UPDATE tags SET subcategorias = '[
+  {"categoria":"Noite","nome":"Bares"},
+  {"categoria":"Noite","nome":"Pubs"},
   {"categoria":"Noite","nome":"Baladas"}
 ]'::jsonb
-WHERE nome IN ('Música eletrônica', 'Agitado', 'Melhor à noite');
+WHERE nome IN ('Agitado', 'Melhor à noite');
+
+UPDATE tags SET subcategorias = '[
+  {"categoria":"Noite","nome":"Bares"},
+  {"categoria":"Noite","nome":"Baladas"}
+]'::jsonb
+WHERE nome IN ('Música eletrônica');
 
 -- ─── Serviços ───
 UPDATE tags SET subcategorias = '[

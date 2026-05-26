@@ -123,32 +123,49 @@ WHERE nome IN (
 );
 
 -- ═══════════════════════════════════════════════════════════════
--- NOITE
+-- NOITE (multi-subcategoria: cada UPDATE sobrescreve o array inteiro)
 -- ═══════════════════════════════════════════════════════════════
-UPDATE tags SET subcategorias = '[{"categoria":"Noite","nome":"Bares"}]'::jsonb,
-categorias = '["Noite"]'::jsonb
-WHERE nome IN (
-  'Happy hour', 'Drinks autorais', 'Música ao vivo', 'Agitado',
-  'Ambiente intimista', 'Melhor à noite', 'Romântico', 'Chopp gelado',
-  'Carta de cervejas', 'Petiscos variados', 'Transmissão de jogos',
-  'Aceita cartão', 'Wi-Fi', 'Estacionamento', 'Fila nos fins de semana'
-);
 
-UPDATE tags SET subcategorias = '[{"categoria":"Noite","nome":"Pubs"}]'::jsonb,
-categorias = '["Noite"]'::jsonb
-WHERE nome IN (
-  'Cerveja artesanal', 'Ambiente descontraído', 'Música ao vivo',
-  'Happy hour', 'Petiscos variados', 'Transmissão de jogos',
-  'Melhor à noite', 'Romântico', 'Aceita cartão'
-);
-
+-- Baladas — exclusivas
 UPDATE tags SET subcategorias = '[{"categoria":"Noite","nome":"Baladas"}]'::jsonb,
 categorias = '["Noite"]'::jsonb
 WHERE nome IN (
-  'Música eletrônica', 'Agitado', 'Melhor à noite', 'Open bar',
-  'Lista VIP', 'Segurança reforçada', 'After party', 'Dress code',
-  'Estacionamento', 'Aceita cartão', 'Fila nos fins de semana'
+  'Open bar', 'Lista VIP', 'Segurança reforçada', 'After party', 'Dress code'
 );
+
+-- Bares + Pubs (compartilhadas)
+UPDATE tags SET subcategorias = '[
+  {"categoria":"Noite","nome":"Bares"},
+  {"categoria":"Noite","nome":"Pubs"}
+]'::jsonb,
+categorias = '["Noite"]'::jsonb
+WHERE nome IN (
+  'Happy hour', 'Drinks autorais', 'Música ao vivo', 'Ambiente intimista', 'Romântico',
+  'Chopp gelado', 'Carta de cervejas', 'Petiscos variados', 'Transmissão de jogos',
+  'Aceita cartão', 'Wi-Fi', 'Estacionamento'
+);
+
+-- Pubs — exclusivas
+UPDATE tags SET subcategorias = '[{"categoria":"Noite","nome":"Pubs"}]'::jsonb,
+categorias = '["Noite"]'::jsonb
+WHERE nome IN ('Cerveja artesanal', 'Ambiente descontraído');
+
+-- Bares + Pubs + Baladas
+UPDATE tags SET subcategorias = '[
+  {"categoria":"Noite","nome":"Bares"},
+  {"categoria":"Noite","nome":"Pubs"},
+  {"categoria":"Noite","nome":"Baladas"}
+]'::jsonb,
+categorias = '["Noite"]'::jsonb
+WHERE nome IN ('Agitado', 'Melhor à noite');
+
+-- Bares + Baladas
+UPDATE tags SET subcategorias = '[
+  {"categoria":"Noite","nome":"Bares"},
+  {"categoria":"Noite","nome":"Baladas"}
+]'::jsonb,
+categorias = '["Noite"]'::jsonb
+WHERE nome IN ('Música eletrônica', 'Fila nos fins de semana');
 
 -- ═══════════════════════════════════════════════════════════════
 -- CULTURA
