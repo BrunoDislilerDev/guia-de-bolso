@@ -140,6 +140,7 @@ function Home() {
   const [resultadosBusca, setResultadosBusca] = useState([]);
   const [loadingBusca, setLoadingBusca] = useState(false);
   const [visitadosRecentes, setVisitadosRecentes] = useState([]);
+  const [lugaresPopulares, setLugaresPopulares] = useState([]);
   const [loadingPopulares, setLoadingPopulares] = useState(false);
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
@@ -368,7 +369,13 @@ function Home() {
 
     fetchLugaresPopulares(supabase, 5)
       .then((data) => {
-        if (!cancelled) setVisitadosRecentes(getLugaresVisitados());
+        if (cancelled) return;
+        setLugaresPopulares(data ?? []);
+        setVisitadosRecentes(getLugaresVisitados());
+      })
+      .catch((err) => {
+        console.error("[home] lugares populares:", err);
+        if (!cancelled) setLugaresPopulares([]);
       })
       .finally(() => {
         if (!cancelled) setLoadingPopulares(false);
