@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { getBadgeParceiroLabel } from "@/lib/lugarBadges";
 import {
   countRoteiroParadas,
   getRoteiroResumo,
@@ -21,9 +22,10 @@ function stripMarkdownBold(text) {
  * @param {object} props
  * @param {import("@/lib/roteiroParse").RoteiroParada} props.parada
  * @param {boolean} props.isLast
+ * @param {boolean} [props.ehParceiro]
  * @returns {import("react").JSX.Element}
  */
-function RoteiroParadaItem({ parada, isLast }) {
+function RoteiroParadaItem({ parada, isLast, ehParceiro = false }) {
   const atividades = (parada.atividades ?? []).filter(Boolean);
 
   return (
@@ -42,9 +44,16 @@ function RoteiroParadaItem({ parada, isLast }) {
       </div>
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <h4 className="text-base font-bold leading-snug text-[#1a2e28]">
-            {stripMarkdownBold(parada.nome)}
-          </h4>
+          <div className="min-w-0 flex-1">
+            <h4 className="text-base font-bold leading-snug text-[#1a2e28]">
+              {stripMarkdownBold(parada.nome)}
+            </h4>
+            {ehParceiro ? (
+              <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                {getBadgeParceiroLabel()}
+              </span>
+            ) : null}
+          </div>
           {parada.duracao ? (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f0f4f3] px-2 py-0.5 text-[11px] font-semibold text-[#5a6b66] ring-1 ring-[#e3e9e6]">
               <span aria-hidden>⏱</span>
@@ -93,9 +102,10 @@ function RoteiroParadaItem({ parada, isLast }) {
  * Bloco de período (manhã/tarde/noite) com paradas.
  * @param {object} props
  * @param {import("@/lib/roteiroParse").RoteiroPeriodo} props.periodo
+ * @param {Map<string, boolean>} [props.parceiroPorLugarId]
  * @returns {import("react").JSX.Element|null}
  */
-function RoteiroPeriodoBlock({ periodo }) {
+function RoteiroPeriodoBlock({ periodo, parceiroPorLugarId }) {
   if (!periodo.paradas?.length) return null;
 
   return (
@@ -114,6 +124,9 @@ function RoteiroPeriodoBlock({ periodo }) {
             key={`${periodo.id}-${parada.ordem}-${parada.nome}`}
             parada={parada}
             isLast={index === periodo.paradas.length - 1}
+            ehParceiro={Boolean(
+              parada.lugarId && parceiroPorLugarId?.get(String(parada.lugarId))
+            )}
           />
         ))}
       </ol>
@@ -126,9 +139,10 @@ function RoteiroPeriodoBlock({ periodo }) {
  * @param {object} props
  * @param {import("@/lib/roteiroParse").RoteiroDia} props.dia
  * @param {boolean} props.defaultOpen
+ * @param {Map<string, boolean>} [props.parceiroPorLugarId]
  * @returns {import("react").JSX.Element}
  */
-function RoteiroDiaAccordion({ dia, defaultOpen }) {
+function RoteiroDiaAccordion({ dia, defaultOpen, parceiroPorLugarId }) {
   const [open, setOpen] = useState(defaultOpen);
 
   const paradasNoDia =
@@ -168,7 +182,11 @@ function RoteiroDiaAccordion({ dia, defaultOpen }) {
       {open && (
         <div className="border-t border-[#e8eeee] px-4 pb-4 pt-1">
           {dia.periodos.map((periodo) => (
-            <RoteiroPeriodoBlock key={periodo.id ?? periodo.label} periodo={periodo} />
+            <RoteiroPeriodoBlock
+              key={periodo.id ?? periodo.label}
+              periodo={periodo}
+              parceiroPorLugarId={parceiroPorLugarId}
+            />
           ))}
           {dia.paradasSemPeriodo.length > 0 ? (
             <ol className="mt-3 list-none p-0">
@@ -177,6 +195,9 @@ function RoteiroDiaAccordion({ dia, defaultOpen }) {
                   key={`sem-periodo-${parada.ordem}-${parada.nome}`}
                   parada={parada}
                   isLast={index === dia.paradasSemPeriodo.length - 1}
+                  ehParceiro={Boolean(
+                    parada.lugarId && parceiroPorLugarId?.get(String(parada.lugarId))
+                  )}
                 />
               ))}
             </ol>
@@ -213,6 +234,16 @@ export default function RoteiroItineraryView({
     () => parseRoteiroMarkdown(conteudo, lugaresCatalog),
     [conteudo, lugaresCatalog]
   );
+
+  const parceiroPorLugarId = useMemo(() => {
+    const map = new Map();
+    for (const item of lugaresCatalog ?? []) {
+      if (item?.id) {
+        map.set(String(item.id), Boolean(item.ehParceiro));
+      }
+    }
+    return map;
+  }, [lugaresCatalog]);
 
   const resumo = getRoteiroResumo(parsed);
   const totalParadas = countRoteiroParadas(parsed);
@@ -310,6 +341,7 @@ export default function RoteiroItineraryView({
             key={`dia-${dia.numero}-${dia.titulo}`}
             dia={dia}
             defaultOpen={index === 0 || parsed.dias.length === 1}
+            parceiroPorLugarId={parceiroPorLugarId}
           />
         ))}
       </div>

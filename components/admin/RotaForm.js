@@ -24,6 +24,12 @@ import {
   MAX_TAGS_ROTA,
   normalizeCategoriaRota,
 } from "@/lib/rotas";
+import {
+  ROTA_DO_DIA_FIXAR_OPCOES,
+  aplicarFixacaoRotaDoDia,
+  isRotaFixadaHoje,
+  removerFixacaoRotaDoDia,
+} from "@/lib/rotaDoDia";
 import { createClient } from "@/lib/supabase";
 import {
   ROTAS_FOTOS_BUCKET,
@@ -44,7 +50,6 @@ const emptyForm = {
   dificuldade: "Fácil",
   duracao_minutos: "",
   distancia_km: "",
-  destaque: false,
   ativa: true,
 };
 
@@ -539,13 +544,8 @@ export default function RotaForm({
       dificuldade: form.dificuldade,
       duracao_minutos: form.duracao_minutos ? Number(form.duracao_minutos) : null,
       distancia_km: form.distancia_km ? Number(form.distancia_km) : null,
-      destaque: Boolean(form.destaque),
       ativa: Boolean(form.ativa),
     };
-
-    if (payload.destaque) {
-      await supabase.from("rotas").update({ destaque: false }).neq("id", editingId || 0);
-    }
 
     let rotaId = editingId;
 
@@ -777,20 +777,68 @@ export default function RotaForm({
           <label className="flex items-center gap-2 text-sm font-semibold text-[#1a2e28]">
             <input
               type="checkbox"
-              checked={Boolean(form.destaque)}
-              onChange={(event) => setForm({ ...form, destaque: event.target.checked })}
-            />
-            Destaque
-          </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-[#1a2e28]">
-            <input
-              type="checkbox"
               checked={Boolean(form.ativa)}
               onChange={(event) => setForm({ ...form, ativa: event.target.checked })}
             />
             Ativa
           </label>
         </div>
+
+        {editingId && (
+          <div className="md:col-span-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
+            <p className="text-sm font-bold text-[#1a2e28]">Rota do dia</p>
+            <p className="mt-1 text-xs text-[#5a6b66]">
+              Sem fixação, o app alterna uma rota publicada por dia. Fixar substitui a rotação
+              automática até a data indicada.
+            </p>
+            {isRotaFixadaHoje(initialData) ? (
+              <p className="mt-2 text-xs font-semibold text-amber-900">
+                Fixada até {String(initialData?.rota_do_dia_fixada_ate ?? "").slice(0, 10)}
+              </p>
+            ) : null}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {ROTA_DO_DIA_FIXAR_OPCOES.map((opcao) => (
+                <button
+                  key={opcao.dias}
+                  type="button"
+                  disabled={saving}
+                  onClick={async () => {
+                    const supabase = createClient();
+                    const { error } = await aplicarFixacaoRotaDoDia(
+                      supabase,
+                      editingId,
+                      opcao.dias
+                    );
+                    if (error) {
+                      setSaveError(error.message || "Não foi possível fixar.");
+                      return;
+                    }
+                    setSaveError("");
+                  }}
+                  className="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-[#1a4a3a] ring-1 ring-amber-200 hover:bg-amber-100 disabled:opacity-50"
+                >
+                  Fixar {opcao.label}
+                </button>
+              ))}
+              {isRotaFixadaHoje(initialData) && (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={async () => {
+                    const supabase = createClient();
+                    const { error } = await removerFixacaoRotaDoDia(supabase, editingId);
+                    if (error) {
+                      setSaveError(error.message || "Não foi possível remover fixação.");
+                    }
+                  }}
+                  className="rounded-xl bg-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-950 hover:bg-amber-300 disabled:opacity-50"
+                >
+                  Remover fixação
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <PhotoUploader

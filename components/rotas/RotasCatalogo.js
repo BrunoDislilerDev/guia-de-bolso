@@ -10,6 +10,7 @@ import {
   getCategoriaRotaMeta,
   normalizeCategoriaRota,
 } from "@/lib/rotas";
+import { resolveRotaDoDia } from "@/lib/rotaDoDia";
 import { getTagsFromRota } from "@/lib/tags";
 
 function IconClock({ className = "h-4 w-4" }) {
@@ -133,15 +134,16 @@ function RotaTags({ rota }) {
   );
 }
 
-function DestaqueCard({ rota }) {
+function RotaDoDiaCard({ rota, modo }) {
   const categoria = getCategoriaRotaMeta(rota.categoria);
+  const badgeLabel = modo === "fixada" ? "📌 Rota do dia" : "🗓️ Rota do dia";
 
   return (
     <Link href={`/rotas/${rota.id}`} className="block overflow-hidden rounded-2xl bg-white shadow-sm">
       <div className="relative h-48 w-full">
         <CoverImage rota={rota} className="h-full w-full" priority />
         <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[#1a4a3a] shadow-sm backdrop-blur-md">
-          ⭐ Destaque
+          {badgeLabel}
         </span>
       </div>
       <div className="p-4">
@@ -206,9 +208,13 @@ export default function RotasCatalogo({ rotas }) {
     );
   }, [rotas, categoriaFiltro]);
 
-  const destaque = rotasFiltradas.find((rota) => rota.destaque === true);
-  const outrasRotas = destaque
-    ? rotasFiltradas.filter((rota) => rota.id !== destaque.id)
+  const { rota: rotaDoDia, modo: modoRotaDoDia } = useMemo(
+    () => resolveRotaDoDia(rotasFiltradas),
+    [rotasFiltradas]
+  );
+
+  const outrasRotas = rotaDoDia
+    ? rotasFiltradas.filter((rota) => rota.id !== rotaDoDia.id)
     : rotasFiltradas;
 
   return (
@@ -254,9 +260,9 @@ export default function RotasCatalogo({ rotas }) {
         </section>
       ) : (
         <ul className="grid list-none gap-4 p-0">
-          {destaque && (
+          {rotaDoDia && (
             <li>
-              <DestaqueCard rota={destaque} />
+              <RotaDoDiaCard rota={rotaDoDia} modo={modoRotaDoDia} />
             </li>
           )}
           {outrasRotas.map((rota) => (

@@ -120,6 +120,7 @@ Run in order for a **new environment** that already has base tables from the Sup
 | 19 | `rotas_localizacoes.sql` | 1:1 address/coords for routes |
 | 20 | `rota_ponto_detalhes.sql` | Ordered lines per step |
 | 21 | `rotas_favoritas.sql` | User route bookmarks |
+| 21b | `rotas_rota_do_dia.sql` | `rota_do_dia_fixada_ate` — fixação opcional no admin (substitui `destaque` no app) |
 
 ### E — Reviews, plans, AI trips
 

@@ -132,9 +132,14 @@ Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
     const claudeData = JSON.parse(claudeRaw);
     const conteudo = claudeData.content?.[0]?.text?.trim() ?? "";
 
+    const parceiroPorId = new Map(
+      lugaresComParceiro.map((lugar) => [String(lugar.id), Boolean(lugar.ehParceiro)])
+    );
+
     const lugaresCatalog = lugares.map((lugar) => ({
       id: String(lugar.id),
       nome: lugar.nome,
+      ehParceiro: parceiroPorId.get(String(lugar.id)) ?? false,
     }));
 
     const recorded = await recordRoteiroIaUsage(user?.id, { user });

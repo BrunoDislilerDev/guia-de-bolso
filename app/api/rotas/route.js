@@ -23,6 +23,7 @@ export async function GET(request) {
   const { data, error } = await supabase
     .from("rotas")
     .select("*")
+    .eq("ativa", true)
     .order("created_at", { ascending: false })
     .limit(limit);
 

@@ -27,7 +27,7 @@ export default async function RotasPage() {
   const { data } = await supabase
     .from("rotas")
     .select("*, rotas_tags(tags(*))")
-    .order("destaque", { ascending: false })
+    .eq("ativa", true)
     .order("created_at", { ascending: false });
 
   let roteiros = [];

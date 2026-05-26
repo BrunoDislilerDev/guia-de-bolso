@@ -27,11 +27,8 @@ import { getNetworkErrorMessage, mapApiErrorResponse } from "@/lib/userMessages"
 import { fetchClimaApis } from "@/lib/clima";
 import { IMBITUBA_COORDS, sortLugaresPorDistancia } from "@/lib/homeContext";
 import { enrichLugaresFlags } from "@/lib/lugarBadges";
-import {
-  pickEmAltaCuradoria,
-  pickHeroRotaCiclo,
-  pickParceirosPorCategoria,
-} from "@/lib/homeSelection";
+import { pickEmAltaCuradoria, pickParceirosPorCategoria } from "@/lib/homeSelection";
+import { resolveRotaDoDia } from "@/lib/rotaDoDia";
 import { fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
 import { fetchRotasFromApi } from "@/lib/fetchRotasApi";
 import { fetchLugaresPopulares } from "@/lib/lugaresPopulares";
@@ -165,7 +162,10 @@ function Home() {
     setUsage: setPremiumUsage,
   } = usePremiumUsage(user);
 
-  const heroRota = useMemo(() => pickHeroRotaCiclo(rotasAtivas), [rotasAtivas]);
+  const heroRota = useMemo(
+    () => resolveRotaDoDia(rotasAtivas, { requireCapa: true }).rota,
+    [rotasAtivas]
+  );
 
   const emAltaExibidos = useMemo(() => {
     return lugaresEmAlta.map((l) => withDistanciaDinamica(l, userPosition));
@@ -284,7 +284,7 @@ function Home() {
         setLugaresParceiros(pickParceirosPorCategoria(enriched));
         setLugaresEmAlta(pickEmAltaCuradoria(enriched));
 
-        if (!pickHeroRotaCiclo(rotas)) {
+        if (!resolveRotaDoDia(rotas, { requireCapa: true }).rota) {
           errors.hero = true;
         }
         if (pickEmAltaCuradoria(enriched).length === 0) {

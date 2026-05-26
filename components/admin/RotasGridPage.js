@@ -5,6 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import { getCapaFromRota } from "@/lib/fotos";
 import { CATEGORIAS_ROTA, getCategoriaRotaMeta, normalizeCategoriaRota } from "@/lib/rotas";
+import {
+  ROTA_DO_DIA_FIXAR_OPCOES,
+  aplicarFixacaoRotaDoDia,
+  isRotaFixadaHoje,
+  removerFixacaoRotaDoDia,
+} from "@/lib/rotaDoDia";
 import { createClient } from "@/lib/supabase";
 
 /**
@@ -109,11 +115,12 @@ function FilterChip({ active, onClick, children }) {
 /**
  * @param {object} props
  * @param {object} props.rota
- * @param {() => void} props.onToggleDestaque
+ * @param {(dias: number) => void} props.onFixarRotaDoDia
+ * @param {() => void} props.onRemoverFixacao
  * @param {() => void} props.onDeactivate
  * @returns {import("react").JSX.Element}
  */
-function RotaCard({ rota, onToggleDestaque, onDeactivate }) {
+function RotaCard({ rota, onFixarRotaDoDia, onRemoverFixacao, onDeactivate }) {
   const capa = getCapaFromRota(rota);
   const meta = getCategoriaRotaMeta(rota.categoria);
   const pontos = getPontosCount(rota);
@@ -145,9 +152,9 @@ function RotaCard({ rota, onToggleDestaque, onDeactivate }) {
           <span className="rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#1a4a3a] shadow-sm backdrop-blur-sm">
             {meta.icone} {meta.nome}
           </span>
-          {rota.destaque && (
+          {isRotaFixadaHoje(rota) && (
             <span className="rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-amber-950 shadow-sm">
-              ✨ Destaque
+              📌 Rota do dia
             </span>
           )}
         </div>
@@ -192,18 +199,26 @@ function RotaCard({ rota, onToggleDestaque, onDeactivate }) {
           </span>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={onToggleDestaque}
-              title={rota.destaque ? "Remover destaque" : "Marcar como destaque"}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
-                rota.destaque
-                  ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                  : "bg-[#f0f4f3] text-[#5a6b66] hover:bg-[#e3e9e6]"
-              }`}
-            >
-              {rota.destaque ? "★ Destaque" : "☆ Destacar"}
-            </button>
+            {isRotaFixadaHoje(rota) ? (
+              <button
+                type="button"
+                onClick={onRemoverFixacao}
+                className="rounded-xl bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-200"
+              >
+                Remover fixação
+              </button>
+            ) : (
+              ROTA_DO_DIA_FIXAR_OPCOES.map((opcao) => (
+                <button
+                  key={opcao.dias}
+                  type="button"
+                  onClick={() => onFixarRotaDoDia(opcao.dias)}
+                  className="rounded-xl bg-[#f0f4f3] px-2.5 py-1.5 text-xs font-semibold text-[#1a4a3a] hover:bg-[#e3e9e6]"
+                >
+                  Fixar {opcao.label}
+                </button>
+              ))
+            )}
             {ativa && (
               <Link
                 href={`/rotas/${rota.id}`}
@@ -281,13 +296,39 @@ export default function RotasGridPage() {
   /**
    * @param {object} rota
    */
-  async function toggleDestaque(rota) {
+  async function fixarRotaDoDia(rota, dias) {
     const supabase = createClient();
+    const { ate, error } = await aplicarFixacaoRotaDoDia(supabase, rota.id, dias);
+
+    if (error) {
+      setMessage(error.message || "Não foi possível fixar a rota do dia.");
+      return;
+    }
+
     setRotas((items) =>
-      items.map((item) => ({ ...item, destaque: item.id === rota.id }))
+      items.map((item) => ({
+        ...item,
+        rota_do_dia_fixada_ate: item.id === rota.id ? ate : null,
+      }))
     );
-    await supabase.from("rotas").update({ destaque: false }).neq("id", rota.id);
-    await supabase.from("rotas").update({ destaque: true }).eq("id", rota.id);
+    setMessage(`Rota do dia fixada até ${ate}.`);
+  }
+
+  async function removerFixacao(rota) {
+    const supabase = createClient();
+    const { error } = await removerFixacaoRotaDoDia(supabase, rota.id);
+
+    if (error) {
+      setMessage(error.message || "Não foi possível remover a fixação.");
+      return;
+    }
+
+    setRotas((items) =>
+      items.map((item) =>
+        item.id === rota.id ? { ...item, rota_do_dia_fixada_ate: null } : item
+      )
+    );
+    setMessage("Fixação da rota do dia removida.");
   }
 
   /**
@@ -306,12 +347,12 @@ export default function RotasGridPage() {
 
   const stats = useMemo(() => {
     const ativas = rotas.filter((r) => r.ativa !== false).length;
-    const destaque = rotas.filter((r) => r.destaque && r.ativa !== false).length;
+    const fixadaHoje = rotas.filter((r) => isRotaFixadaHoje(r)).length;
     return {
       total: rotas.length,
       ativas,
       inativas: rotas.length - ativas,
-      destaque,
+      fixadaHoje,
     };
   }, [rotas]);
 
@@ -333,7 +374,7 @@ export default function RotasGridPage() {
         status === "Todas" ||
         (status === "Ativas" && ativa) ||
         (status === "Inativas" && !ativa) ||
-        (status === "Destaque" && rota.destaque && ativa);
+        (status === "Fixada hoje" && isRotaFixadaHoje(rota));
       const matchesCidade = cidade === "Todas" || rota.cidade === cidade;
 
       return matchesSearch && matchesCategoria && matchesStatus && matchesCidade;
@@ -389,9 +430,9 @@ export default function RotasGridPage() {
           accent="text-emerald-700"
         />
         <StatCard
-          label="Em destaque"
-          value={stats.destaque}
-          hint="carrossel da home"
+          label="Fixada hoje"
+          value={stats.fixadaHoje}
+          hint="override da rotação diária"
           accent="text-amber-700"
         />
         <StatCard label="Inativas" value={stats.inativas} accent="text-[#5a6b66]" />
@@ -436,7 +477,7 @@ export default function RotasGridPage() {
               Status
             </p>
             <div className="flex flex-wrap gap-2">
-              {["Todas", "Ativas", "Inativas", "Destaque"].map((item) => (
+              {["Todas", "Ativas", "Inativas", "Fixada hoje"].map((item) => (
                 <FilterChip
                   key={item}
                   active={status === item}
@@ -483,7 +524,8 @@ export default function RotasGridPage() {
             <RotaCard
               key={rota.id}
               rota={rota}
-              onToggleDestaque={() => toggleDestaque(rota)}
+              onFixarRotaDoDia={(dias) => fixarRotaDoDia(rota, dias)}
+              onRemoverFixacao={() => removerFixacao(rota)}
               onDeactivate={() => softDelete(rota)}
             />
           ))}
