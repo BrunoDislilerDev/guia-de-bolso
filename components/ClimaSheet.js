@@ -1,14 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
+import { useBottomSheetDrag } from "@/hooks/useBottomSheetDrag";
 import {
   formatNumber,
   getUvProgress,
   getWaveBarColor,
 } from "@/lib/clima";
-
-const DRAG_CLOSE_PX = 110;
-const DRAG_MAX_PX = 260;
 
 /**
  * Returns Tailwind background class for the UV index bar segment.
@@ -50,39 +48,10 @@ function MetricRow({ label, value }) {
  * @returns {import('react').ReactElement|null}
  */
 export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
-  const sheetRef = useRef(null);
-  const scrollAreaRef = useRef(null);
-  const dragStartYRef = useRef(null);
-  const isDraggingRef = useRef(false);
-  const dragYRef = useRef(0);
-  const [dragY, setDragY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const resetDrag = useCallback(() => {
-    dragYRef.current = 0;
-    dragStartYRef.current = null;
-    isDraggingRef.current = false;
-    setDragY(0);
-    setIsDragging(false);
-  }, []);
-
-  const finishDrag = useCallback(() => {
-    if (!isDraggingRef.current) return;
-
-    const shouldClose = dragYRef.current >= DRAG_CLOSE_PX;
-    isDraggingRef.current = false;
-    dragStartYRef.current = null;
-    setIsDragging(false);
-
-    if (shouldClose) {
-      resetDrag();
-      onClose();
-      return;
-    }
-
-    dragYRef.current = 0;
-    setDragY(0);
-  }, [onClose, resetDrag]);
+  const { sheetRef, scrollAreaRef, dragY, isDragging, sheetMotionStyle } = useBottomSheetDrag({
+    isOpen,
+    onClose,
+  });
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -101,62 +70,6 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
       window.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (!isOpen) resetDrag();
-  }, [isOpen, resetDrag]);
-
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!isOpen || !sheet) return undefined;
-
-    function canStartDrag(target) {
-      if (!(target instanceof Element)) return false;
-
-      const scrollTop = scrollAreaRef.current?.scrollTop ?? 0;
-      const onHandle = Boolean(target.closest("[data-drag-handle='true']"));
-      const inScroll = Boolean(scrollAreaRef.current?.contains(target));
-
-      if (onHandle) return true;
-      if (inScroll && scrollTop > 4) return false;
-      return true;
-    }
-
-    function handleTouchStart(event) {
-      if (event.touches.length !== 1) return;
-      if (!canStartDrag(event.target)) return;
-
-      dragStartYRef.current = event.touches[0].clientY;
-      isDraggingRef.current = true;
-      setIsDragging(true);
-    }
-
-    function handleTouchMove(event) {
-      if (!isDraggingRef.current || dragStartYRef.current === null) return;
-
-      const deltaY = event.touches[0].clientY - dragStartYRef.current;
-      const nextDragY = Math.max(0, Math.min(DRAG_MAX_PX, deltaY));
-
-      if (nextDragY > 0) {
-        event.preventDefault();
-      }
-
-      dragYRef.current = nextDragY;
-      setDragY(nextDragY);
-    }
-
-    sheet.addEventListener("touchstart", handleTouchStart, { passive: true });
-    sheet.addEventListener("touchmove", handleTouchMove, { passive: false });
-    sheet.addEventListener("touchend", finishDrag, { passive: true });
-    sheet.addEventListener("touchcancel", finishDrag, { passive: true });
-
-    return () => {
-      sheet.removeEventListener("touchstart", handleTouchStart);
-      sheet.removeEventListener("touchmove", handleTouchMove);
-      sheet.removeEventListener("touchend", finishDrag);
-      sheet.removeEventListener("touchcancel", finishDrag);
-    };
-  }, [isOpen, finishDrag]);
 
   if (!isOpen) return null;
 
@@ -189,8 +102,7 @@ export default function ClimaSheet({ isOpen, onClose, praia, clima }) {
         style={{
           animation:
             !isDragging && dragY === 0 ? "climaSheetIn 260ms ease-out forwards" : undefined,
-          transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
-          transition: isDragging ? "none" : "transform 180ms ease-out",
+          ...sheetMotionStyle,
         }}
         role="dialog"
         aria-modal="true"

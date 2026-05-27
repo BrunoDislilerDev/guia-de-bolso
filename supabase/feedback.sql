@@ -37,6 +37,13 @@ FOR INSERT
 TO authenticated
 WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Usuario le proprio feedback" ON feedback;
+CREATE POLICY "Usuario le proprio feedback"
+ON feedback
+FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
 DROP POLICY IF EXISTS "Admin le feedback" ON feedback;
 CREATE POLICY "Admin le feedback"
 ON feedback

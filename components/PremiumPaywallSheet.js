@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import DailyLimitCountdown from "@/components/DailyLimitCountdown";
+import { useBottomSheetDrag } from "@/hooks/useBottomSheetDrag";
 import { PREMIUM_BENEFITS } from "@/lib/premiumBenefits";
 import { LIMITS, PREMIUM_PRICE_LABEL } from "@/lib/premium";
 
@@ -41,6 +42,11 @@ export default function PremiumPaywallSheet({
   feature = "geral",
   showCountdown = true,
 }) {
+  const { sheetRef, scrollAreaRef, dragY, isDragging, sheetMotionStyle } = useBottomSheetDrag({
+    isOpen,
+    onClose,
+  });
+
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -77,16 +83,31 @@ export default function PremiumPaywallSheet({
       `}</style>
 
       <div
+        ref={sheetRef}
         className="flex max-h-[90vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
-        style={{ animation: "premiumSheetIn 240ms ease-out forwards" }}
+        style={{
+          animation:
+            !isDragging && dragY === 0 ? "premiumSheetIn 240ms ease-out forwards" : undefined,
+          ...sheetMotionStyle,
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="premium-paywall-title"
       >
-        <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-[#d8dfdc]" />
+        <div
+          data-drag-handle="true"
+          className="flex shrink-0 cursor-grab flex-col items-center px-6 pt-2 active:cursor-grabbing"
+          aria-hidden
+        >
+          <span className="h-1.5 w-12 rounded-full bg-[#d8dfdc]" />
+          <span className="mt-2 h-4 w-full max-w-[120px] rounded-full bg-transparent" />
+        </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-2">
+        <div
+          ref={scrollAreaRef}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-1 touch-pan-y"
+        >
           <div className="text-center">
             <span className="text-3xl" aria-hidden>
               ✨
@@ -125,12 +146,12 @@ export default function PremiumPaywallSheet({
           <p className="mt-4 text-center text-2xl font-bold text-[#1a4a3a]">
             {PREMIUM_PRICE_LABEL}
           </p>
-          <p className="mt-1 text-center text-xs text-[#5a6b66]">
+          <p className="mt-1 pb-2 text-center text-xs text-[#5a6b66]">
             Uso ilimitado · Pagamento recorrente · Cancele quando quiser
           </p>
         </div>
 
-        <div className="shrink-0 border-t border-gray-100 px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3">
+        <div className="shrink-0 border-t border-gray-100 px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 touch-auto">
           <button
             type="button"
             disabled

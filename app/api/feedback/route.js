@@ -102,28 +102,22 @@ export async function POST(request) {
       updated_at: new Date().toISOString(),
     };
 
-    let insertClient = supabase;
+    const service = createServiceClient();
+    const insertClient = service ?? supabase;
 
-    if (!user) {
-      const service = createServiceClient();
-      if (!service) {
-        console.error("SUPABASE_SERVICE_ROLE_KEY ausente — feedback de visitante indisponível");
-        return NextResponse.json(
-          {
-            error: "Envio temporariamente indisponível. Tente fazer login ou mais tarde.",
-            code: "SERVER",
-          },
-          { status: 503 }
-        );
-      }
-      insertClient = service;
+    if (!user && !service) {
+      console.error("SUPABASE_SERVICE_ROLE_KEY ausente — feedback de visitante indisponível");
+      return NextResponse.json(
+        {
+          error: "Envio temporariamente indisponível. Tente fazer login ou mais tarde.",
+          code: "SERVER",
+        },
+        { status: 503 }
+      );
     }
 
-    const { data, error } = await insertClient
-      .from("feedback")
-      .insert(row)
-      .select("id")
-      .single();
+    // Sem .select(): RLS só permite SELECT para admin; RETURNING falhava para usuários logados.
+    const { error } = await insertClient.from("feedback").insert(row);
 
     if (error) {
       console.error("Erro ao inserir feedback:", error);
@@ -137,7 +131,6 @@ export async function POST(request) {
       {
         success: true,
         message: USER_MESSAGES.FEEDBACK_SUCCESS,
-        id: data?.id,
       },
       { status: 201 }
     );
