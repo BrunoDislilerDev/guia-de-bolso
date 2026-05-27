@@ -43,7 +43,7 @@ export default function LandingNavbar() {
         aria-label="Principal"
       >
         <Link
-          href="/landing"
+          href="/"
           className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-none"
           aria-label="Guia de Bolso — início da landing"
         >

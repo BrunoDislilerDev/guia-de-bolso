@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import LandingButton from "@/components/landing/LandingButton";
 import SectionReveal from "@/components/landing/SectionReveal";
 import { IconCompass } from "@/components/landing/LandingIcons";
 import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
@@ -31,9 +30,9 @@ export default function LandingUsers() {
               rotas e chegue lá com um toque.
             </p>
           </div>
-          <LandingButton href="/" variant="primary">
-            Explorar agora
-          </LandingButton>
+          <p className="rounded-xl bg-white/80 px-4 py-3 text-sm font-semibold text-[#0d5c7a] ring-1 ring-[#0d5c7a]/15">
+            Em breve na App Store e no Google Play
+          </p>
         </div>
 
         <motion.ul

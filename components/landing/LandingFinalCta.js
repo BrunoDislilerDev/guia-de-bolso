@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import LandingButton from "@/components/landing/LandingButton";
 import { fadeUp } from "@/components/landing/landingMotion";
-import { landingContactMailto } from "@/lib/landingContent";
+import { LANDING_SECTION_IDS, landingContactMailto } from "@/lib/landingContent";
 
 /**
  * CTA final da landing.
@@ -47,8 +47,8 @@ export default function LandingFinalCta() {
             >
               Cadastrar Estabelecimento
             </LandingButton>
-            <LandingButton href="/" variant="ghost">
-              Explorar o Guia
+            <LandingButton href={`#${LANDING_SECTION_IDS.usuarios}`} variant="ghost">
+              Saiba mais
             </LandingButton>
           </div>
         </div>

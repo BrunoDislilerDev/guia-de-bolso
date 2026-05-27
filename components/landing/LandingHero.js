@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import LandingButton from "@/components/landing/LandingButton";
 import { easeOut, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
-import { landingContactMailto } from "@/lib/landingContent";
+import { LANDING_SECTION_IDS, landingContactMailto } from "@/lib/landingContent";
 
 /**
  * Hero da landing — gradiente litorâneo, sem imagens externas.
@@ -79,8 +79,8 @@ export default function LandingHero() {
           >
             Quero Cadastrar meu Negócio
           </LandingButton>
-          <LandingButton href="/" variant="secondary">
-            Explorar o Guia
+          <LandingButton href={`#${LANDING_SECTION_IDS.usuarios}`} variant="secondary">
+            Conhecer o app
           </LandingButton>
         </motion.div>
 
