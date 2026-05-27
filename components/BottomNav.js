@@ -99,7 +99,7 @@ export default function BottomNav() {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom))]"
       aria-label="Navegação principal"
     >
-      <div className="pointer-events-auto flex w-full max-w-md items-center justify-between gap-0.5 rounded-[32px] border border-white/40 bg-white/78 px-2 py-2 shadow-[0_12px_40px_rgba(11,26,26,0.14),0_2px_8px_rgba(11,26,26,0.06)] backdrop-blur-2xl backdrop-saturate-150">
+      <div className="pointer-events-auto flex w-full max-w-md items-center justify-between gap-1 rounded-[32px] border border-[#dce8e3]/90 bg-white/84 px-2 py-2 shadow-[0_-1px_0_rgba(255,255,255,0.92),0_10px_30px_rgba(12,30,25,0.11),0_2px_10px_rgba(12,30,25,0.06)] backdrop-blur-2xl backdrop-saturate-150">
         {items.map(({ href, label, Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
@@ -108,27 +108,35 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-label={label}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 transition-all active:scale-95 ${
-                active ? "text-[#1a4a3a]" : "text-[#8a9a95] hover:text-[#5a6b66]"
+              className={`group relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[20px] px-1 py-1.5 transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a4a3a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                active
+                  ? "text-[#1a4a3a]"
+                  : "text-[#6f837d] hover:bg-white/60 hover:text-[#4f635d] active:bg-white/80"
               }`}
               aria-current={active ? "page" : undefined}
             >
               <span
-                className={`flex h-9 w-9 items-center justify-center rounded-2xl transition-all duration-200 ${
+                className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
                   active
-                    ? "bg-[#d4ede8]/90 text-[#1a4a3a] shadow-[inset_0_0_0_1px_rgba(26,74,58,0.08)]"
-                    : ""
+                    ? "border-[#cfe5dd] bg-[#ddf0ea] text-[#1a4a3a] shadow-[0_1px_0_rgba(255,255,255,0.85),inset_0_0_0_1px_rgba(26,74,58,0.04)]"
+                    : "border-[#d7e3de] bg-white/72 text-[#6f837d] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)] group-hover:border-[#c6d8d1] group-hover:bg-white"
                 }`}
               >
                 <Icon active={active} />
               </span>
               <span
-                className={`text-[10px] font-semibold leading-tight ${
-                  active ? "text-[#1a4a3a]" : ""
+                className={`text-[12px] font-semibold leading-tight transition-colors ${
+                  active ? "text-[#1a4a3a]" : "text-[#6f837d]"
                 }`}
               >
                 {label}
               </span>
+              <span
+                aria-hidden
+                className={`h-0.5 rounded-full bg-[#1a4a3a] transition-all duration-200 ${
+                  active ? "w-6 opacity-80" : "w-2 opacity-0"
+                }`}
+              />
             </Link>
           );
         })}
