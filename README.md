@@ -3,7 +3,7 @@
 <p align="center">
   <strong>AI-powered local discovery for Brazil’s southern coast</strong><br />
   Real-time recommendations for Imbituba, Santa Catarina
-</p><br>
+</p>
 
 <p align="center">
   <a href="https://guia-de-bolso-puce.vercel.app"><strong>Live application</strong></a>
@@ -12,7 +12,7 @@
   &nbsp;·&nbsp;
   <a href="https://github.com/BrunoDislilerDev/guia-de-bolso/issues">Report an issue</a>
 </p>
-
+teste
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production-success?style=flat-square" alt="Production" />
   <img src="https://img.shields.io/badge/Next.js-16-000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js 16" />
