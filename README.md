@@ -3,7 +3,7 @@
 <p align="center">
   <strong>AI-powered local discovery for Brazil’s southern coast</strong><br />
   Real-time recommendations for Imbituba, Santa Catarina
-</p><br>
+</p>
 
 <p align="center">
   <a href="https://guia-de-bolso-puce.vercel.app"><strong>Live application</strong></a>
