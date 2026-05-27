@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Admin tag limit** — places and curated routes allow **5 tags** (was 3) in `LocalForm` / `RotaForm` (`MAX_TAGS`, `MAX_TAGS_ROTA` in `lib/rotas.js`).
 - **Onboarding assets** — backgrounds from `/public/onboarding/*.jpg` (compressed local JPGs); guest finish/skip routes to `/login?from=onboarding`, logged-in users to home (`components/Onboarding.js`, `app/page.js`, `lib/authImagery.js`).
-- **Place & route photo carousels** — less accidental horizontal swipes via `lib/horizontalCarousel.js` (`snap-proximity`, index on `scrollend`); used in `LugarHero`, `RotaGaleria`.
+- **Place & route photo carousels** — controlled swipe: `snap-mandatory` + `useControlledPhotoCarousel` (max ±1 slide per gesture) in `lib/horizontalCarousel.js`; `GalleryHeroAirbnb`, `LugarHero`.
 - **Opening-hours UX** — status copy includes pause between shifts and overnight close (`status.resumo`); compact row on detail; optional `title`/subtitle on cards (`PlaceCard`, `EmAltaCard`, `LugarHero`, `getHorarioResumo` in `lib/lugarDetalhe.js`).
 - **Home header** — `HomeContextHeader` shows brand + location with inline Open-Meteo temperature/emoji; contextual phrase card removed.
 - **Hero selection** — `pickHeroLugar` (`lib/homeContext.js`) scores open status, vigent partner, trending IDs, time-of-day category, and distance; documented in `docs/features.md`.

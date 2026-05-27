@@ -13,12 +13,10 @@ import {
   PARCEIRO_BADGE_GRADIENT_CLASS,
 } from "@/components/lugar/airbnb/lugarAirbnbTokens";
 import {
-  CAROUSEL_SLIDE_RELAXED_CLASS,
-  CAROUSEL_TRACK_CLASS,
-  useCarouselScrollIndex,
+  PHOTO_GALLERY_SLIDE_CLASS,
+  PHOTO_GALLERY_TRACK_CLASS,
+  useControlledPhotoCarousel,
 } from "@/lib/horizontalCarousel";
-
-const GALLERY_CAROUSEL_THRESHOLD = 0.58;
 
 function FavoriteIcon({ active, className = GALLERY_FLOAT_ICON_CLASS }) {
   return (
@@ -94,9 +92,7 @@ export default function GalleryHeroAirbnb({
 }) {
   const carouselRef = useRef(null);
   const fotos = imagens?.length ? imagens : [];
-  const fotoAtual = useCarouselScrollIndex(carouselRef, fotos.length, {
-    indexThreshold: GALLERY_CAROUSEL_THRESHOLD,
-  });
+  const fotoAtual = useControlledPhotoCarousel(carouselRef, fotos.length);
 
   const temVariasFotos = fotos.length > 1;
   const showFooter =
@@ -121,9 +117,9 @@ export default function GalleryHeroAirbnb({
           {fotos.length === 0 ? (
             <div className="absolute inset-0 bg-gradient-to-br from-[#1a4a3a] to-[#2d6b54]" />
           ) : (
-            <div ref={carouselRef} className={`${CAROUSEL_TRACK_CLASS} h-full min-h-full w-full`}>
+            <div ref={carouselRef} className={`${PHOTO_GALLERY_TRACK_CLASS} h-full min-h-full w-full`}>
               {fotos.map((foto, index) => (
-                <div key={`${foto}-${index}`} className={CAROUSEL_SLIDE_RELAXED_CLASS}>
+                <div key={`${foto}-${index}`} className={PHOTO_GALLERY_SLIDE_CLASS}>
                   {immersiveScroll ? (
                     <HeroPhoto src={foto} alt={nome} priority={index === 0} />
                   ) : (

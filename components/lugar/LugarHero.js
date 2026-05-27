@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRef } from "react";
 import IconBack from "@/components/IconBack";
 import {
-  CAROUSEL_SLIDE_CLASS,
-  CAROUSEL_TRACK_CLASS,
-  useCarouselScrollIndex,
+  PHOTO_GALLERY_SLIDE_CLASS,
+  PHOTO_GALLERY_TRACK_CLASS,
+  useControlledPhotoCarousel,
 } from "@/lib/horizontalCarousel";
 
 /**
@@ -93,19 +93,19 @@ export default function LugarHero({
   onShare,
 }) {
   const carouselRef = useRef(null);
-  const fotoAtual = useCarouselScrollIndex(carouselRef, imagens.length);
+  const fotoAtual = useControlledPhotoCarousel(carouselRef, imagens.length);
   const temNota = totalAvaliacoes > 0 && mediaAvaliacoes > 0;
 
   return (
     <div className="relative h-[min(52vh,380px)] min-h-[300px] overflow-hidden bg-[#0b1f1a]">
       <div
         ref={carouselRef}
-        className={CAROUSEL_TRACK_CLASS}
+        className={PHOTO_GALLERY_TRACK_CLASS}
       >
         {imagens.map((foto, index) => (
           <div
             key={`${foto}-${index}`}
-            className={CAROUSEL_SLIDE_CLASS}
+            className={PHOTO_GALLERY_SLIDE_CLASS}
           >
             <Image
               src={foto}

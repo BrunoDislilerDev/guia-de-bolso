@@ -260,7 +260,7 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `premiumServer.js` | Server | `getAuthUser`, `checkBuscaAccess`, RPC increment wrappers |
 | `busca.js` | Shared | Open/closed filter, compact summaries for Claude |
 | `horarios.js` | Shared | Brazil timezone hours: `parseHorarioDia`, `validarIntervalos`, `getStatusFuncionamento` (multi-shift + overnight carry-over, optional `mostrar_horarios` for badges, optional `referencia` for tests), `horariosTemCadastro`; tests in `lib/horarios.test.js` |
-| `horizontalCarousel.js` | Client | Shared horizontal snap helpers for place/route photo carousels (`LugarHero`, `RotaGaleria`) |
+| `horizontalCarousel.js` | Client | Photo gallery carousels (`PHOTO_GALLERY_*`, `useControlledPhotoCarousel`) for `GalleryHeroAirbnb`, `LugarHero` |
 | `localizacao.js` | Shared | Haversine distance, `withDistanciaDinamica` |
 | `logs.js` | Shared | Insert into `logs` for analytics |
 | `storageUpload.js` | Client | Admin photo upload to Storage (uses `imageCompress.js` when over 200KB) |

@@ -288,7 +288,7 @@ Decide to go now, contact the business, or navigate.
 - Inactive or missing id → “Lugar não encontrado”.
 - Supabase error loading place → full-page `UserErrorAlert` with “Tentar novamente” (`router.refresh()`) and report hint.
 - No photos → placeholder/gradient from `getCapaFromLugar`; hero uses `next/image` with descriptive `alt` (place name).
-- Photo carousel uses `lib/horizontalCarousel.js` (`snap-proximity`) to reduce accidental swipes between photos.
+- Photo carousel uses `lib/horizontalCarousel.js` (`snap-mandatory`, `useControlledPhotoCarousel` — at most ±1 slide per gesture); used in `GalleryHeroAirbnb`, `LugarHero`.
 - No hours configured or `mostrar_horarios=false` → no compact hours row.
 - No address or `mostrar_endereco=false` → no location card.
 - Climate widget hidden if API fails (no error banner; section omitted).
