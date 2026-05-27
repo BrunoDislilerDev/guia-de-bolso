@@ -446,6 +446,7 @@ function Home() {
   function handleSearchBlur(event) {
     if (termoBusca.trim()) return;
     const next = event.relatedTarget;
+    if (next?.closest?.("[data-search-interactive='true']")) return;
     if (next && searchContainerRef.current?.contains(next)) return;
     window.setTimeout(() => {
       if (searchInputRef.current === document.activeElement) return;
@@ -581,6 +582,17 @@ function Home() {
     executarBusca(plano.query, plano.filtro);
   }
 
+  /**
+   * Applies open/closed filter and reruns current query when available.
+   * @param {string} nextFiltro
+   */
+  function handleFiltroBuscaChange(nextFiltro) {
+    setFiltroBuscaStatus(nextFiltro);
+    const termoAtivo = termoBusca.trim() || termoResultado.trim();
+    if (!termoAtivo) return;
+    executarBusca(termoAtivo, nextFiltro);
+  }
+
   useEffect(() => {
     if (!onboardingChecked || showOnboarding || authLoading) return undefined;
 
@@ -686,7 +698,7 @@ function Home() {
           {searchMode && (
             <SearchStatusFilter
               value={filtroBuscaStatus}
-              onChange={setFiltroBuscaStatus}
+              onChange={handleFiltroBuscaChange}
             />
           )}
           {user && searchMode && (

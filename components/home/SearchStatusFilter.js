@@ -25,6 +25,7 @@ export default function SearchStatusFilter({ value, onChange }) {
           <button
             key={opcao.id}
             type="button"
+            data-search-interactive="true"
             onClick={() => onChange(opcao.id)}
             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
               selected
