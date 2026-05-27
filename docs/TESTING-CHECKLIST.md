@@ -7,7 +7,7 @@ Checklist para QA manual (celular ~390px, tablet e desktop). Complementa [Featur
 Use a ferramenta com **153 casos de teste**, passo a passo por dispositivo, resultado esperado, avisos e botões **Passou / Falhou / Resetar**:
 
 **[Abrir checklist interativo](/checklist-testes.html)**  
-(produção: `https://guia-de-bolso-puce.vercel.app/checklist-testes.html` · local: `http://localhost:3000/checklist-testes.html`)
+(produção: `https://guiadebolso.app/checklist-testes.html` · local: `http://localhost:3000/checklist-testes.html`)
 
 - Contador global no topo (total, passou, falhou, pendente) e barra de progresso
 - Estado salvo no navegador (`localStorage`, chave `guia_checklist_v1`)

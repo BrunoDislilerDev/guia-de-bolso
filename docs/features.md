@@ -289,6 +289,9 @@ Decide to go now, contact the business, or navigate.
 - Supabase error loading place → full-page `UserErrorAlert` with “Tentar novamente” (`router.refresh()`) and report hint.
 - No photos → placeholder/gradient from `getCapaFromLugar`; hero uses `next/image` with descriptive `alt` (place name).
 - Photo carousel uses `lib/horizontalCarousel.js` (`snap-mandatory`, `useControlledPhotoCarousel` — at most ±1 slide per gesture); used in `GalleryHeroAirbnb`, `LugarHero`.
+- **SEO (P0):** canonical place URLs `/lugares/{slug}` (301 from UUID), `generateMetadata` on place/route detail, `app/sitemap.js`, `app/robots.js`, shared helpers in `lib/seo.js` and `lib/lugarPublicPath.js`.
+- **SEO (P1):** JSON-LD (`lib/seoJsonLd.js`) on place, route, and category pages; server `h1` + intro (`LugarSeoStatic`, category SSR header); category list SSR via `CategoriaPageClient` + `queryLugaresAtivos`; visible UI titles use `h2` where `h1` is reserved for SEO shell.
+- **SEO (P2):** home SSR (`fetchHomePageInitialData`, `HomeSeoStatic`, `buildHomeJsonLd`); Explorar SSR (`fetchExplorarPageData`); landing `/imbituba`; `noindex` em login/favoritos/perfil via layouts; sitemap atualizado.
 - No hours configured or `mostrar_horarios=false` → no compact hours row.
 - No address or `mostrar_endereco=false` → no location card.
 - Climate widget hidden if API fails (no error banner; section omitted).

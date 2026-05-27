@@ -186,9 +186,9 @@ export default function RotaDetalhePremium({
           </p>
 
           <div className="mt-3 flex items-start gap-2">
-            <h1 className="font-display min-w-0 flex-1 text-[28px] font-bold leading-[1.12] tracking-tight text-[#1a2e28]">
+            <h2 className="font-display min-w-0 flex-1 text-[28px] font-bold leading-[1.12] tracking-tight text-[#1a2e28]">
               {nome}
-            </h1>
+            </h2>
             <VerifiedIcon />
           </div>
 

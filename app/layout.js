@@ -1,5 +1,6 @@
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import ClientProviders from "@/components/ClientProviders";
+import { DEFAULT_SITE_METADATA, getMetadataBase } from "@/lib/seo";
 import "./globals.css";
 
 const inter = Inter({
@@ -13,8 +14,8 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata = {
-  title: "Guia de Bolso",
-  description: "Explore Imbituba — natureza, gastronomia e noite",
+  metadataBase: getMetadataBase(),
+  ...DEFAULT_SITE_METADATA,
 };
 
 /**

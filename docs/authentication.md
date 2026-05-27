@@ -63,7 +63,7 @@ sequenceDiagram
 | Ambiente | Site URL | Redirect URL |
 |----------|----------|--------------|
 | Local | `http://localhost:3000` | `http://localhost:3000/auth/callback` |
-| Produção | `https://guia-de-bolso-puce.vercel.app` | `.../auth/callback` |
+| Produção | `https://guiadebolso.app` | `.../auth/callback` |
 | Preview Vercel | URL do preview | `https://<preview>/auth/callback` |
 
 Detalhes: [`environment.md`](./environment.md), [`deployment.md`](./deployment.md#1-auth-url-configuration).

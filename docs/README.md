@@ -1,6 +1,6 @@
 # Documentação técnica — Guia de Bolso
 
-**Fonte única** de documentação para equipes de engenharia, DevOps, QA e produto. Aplicação em produção: [guia-de-bolso-puce.vercel.app](https://guia-de-bolso-puce.vercel.app).
+**Fonte única** de documentação para equipes de engenharia, DevOps, QA e produto. Aplicação em produção: [guiadebolso.app](https://guiadebolso.app).
 
 Porta de entrada do repositório: [README.md](../README.md) (visão executiva). Contexto para agentes de IA: [CLAUDE.md](../CLAUDE.md).
 
@@ -146,7 +146,7 @@ README (raiz)
 
 | Recurso | URL |
 |---------|-----|
-| App produção | https://guia-de-bolso-puce.vercel.app |
+| App produção | https://guiadebolso.app |
 | Repositório | https://github.com/BrunoDislilerDev/guia-de-bolso |
 | Health check | `/api/health` |
 | Supabase (região) | `us-west-2` |

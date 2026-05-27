@@ -2,7 +2,7 @@
 
 Server routes live under `app/api/` as **Next.js Route Handlers**. All AI and premium-sensitive operations run here so API keys never reach the browser.
 
-Base URL (production): `https://guia-de-bolso-puce.vercel.app/api`  
+Base URL (production): `https://guiadebolso.app/api`  
 Local: `http://localhost:3000/api`
 
 > Índice geral: [docs/README.md](./README.md). Fluxos: [data-flows.md](./data-flows.md), [authentication.md](./authentication.md).

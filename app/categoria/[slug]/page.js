@@ -1,210 +1,83 @@
-"use client";
-
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import IconBack from "@/components/IconBack";
-import PlaceCard from "@/components/PlaceCard";
-import PlaceCardSkeleton from "@/components/home/PlaceCardSkeleton";
-import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
-import UserErrorAlert from "@/components/UserErrorAlert";
-import { fetchLugaresFromApi } from "@/lib/fetchLugaresApi";
-import { isSupabasePublicConfigured } from "@/lib/supabase/publicEnv";
-import { buildReportContext } from "@/lib/reportContext";
-import { createClient } from "@/lib/supabase";
-import { withDistanciaDinamica } from "@/lib/localizacao";
+import { notFound } from "next/navigation";
+import CategoriaPageClient from "@/components/categoria/CategoriaPageClient";
+import JsonLdScript from "@/components/seo/JsonLdScript";
+import { getCategoriaByNome, getCategoriaHref } from "@/lib/categorias";
+import { queryLugaresAtivos } from "@/lib/lugaresQuery";
+import { buildCategoriaMetadata } from "@/lib/seo";
+import { buildCategoriaJsonLd } from "@/lib/seoJsonLd";
+import { createClient } from "@/lib/supabase/server";
 
 /**
- * Lists active places in a category with optional subcategory filter.
- * @returns {import("react").ReactElement}
+ * @param {string} raw
+ * @returns {string}
  */
-export default function CategoriaPage() {
-  const { slug } = useParams();
-  const categoria = decodeURIComponent(String(slug ?? ""));
-  const [lugares, setLugares] = useState([]);
-  const [subcategorias, setSubcategorias] = useState([]);
-  const [subcategoriaSelecionada, setSubcategoriaSelecionada] = useState("Todos");
-  const [userPosition, setUserPosition] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState(false);
+function decodeCategoriaSlug(raw) {
+  try {
+    return decodeURIComponent(String(raw ?? "").trim());
+  } catch {
+    return String(raw ?? "").trim();
+  }
+}
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
+/**
+ * @param {{ params: Promise<{ slug: string }> }} props
+ * @returns {Promise<import('next').Metadata>}
+ */
+export async function generateMetadata({ params }) {
+  const categoria = decodeCategoriaSlug((await params).slug);
+  const meta = getCategoriaByNome(categoria);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserPosition({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      () => undefined,
-      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 }
-    );
-  }, []);
+  if (!meta) {
+    return {
+      title: `Categoria | Guia de Bolso`,
+      robots: { index: false, follow: false },
+    };
+  }
 
-  useEffect(() => {
-    if (!categoria) return;
+  return buildCategoriaMetadata(categoria);
+}
 
-    if (!isSupabasePublicConfigured()) {
-      setFetchError(true);
-      setLoading(false);
-      return undefined;
-    }
+/**
+ * Listagem pública por categoria — SSR inicial + metadata.
+ * @param {{ params: Promise<{ slug: string }> }} props
+ * @returns {Promise<import('react').ReactElement>}
+ */
+export default async function CategoriaPage({ params }) {
+  const categoria = decodeCategoriaSlug((await params).slug);
+  const meta = getCategoriaByNome(categoria);
 
-    const supabase = createClient();
+  if (!meta) notFound();
 
-    fetchLugaresFromApi({ categoria, limit: 100 })
-      .then((data) => {
-        setFetchError(false);
-        setLugares(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("[categoria] lugares:", err);
-        setFetchError(true);
-        setLugares([]);
-        setLoading(false);
-      });
+  const supabase = await createClient();
 
-    if (!supabase) {
-      return undefined;
-    }
+  const [{ data: lugares, error: lugaresError }, { data: subcategorias }] = await Promise.all([
+    queryLugaresAtivos(supabase, { eq: { categoria }, limit: 100 }),
+    supabase.from("subcategorias").select("*").eq("categoria", categoria).order("nome"),
+  ]);
 
-    supabase
-      .from("subcategorias")
-      .select("*")
-      .eq("categoria", categoria)
-      .order("nome")
-      .then(({ data }) => setSubcategorias(data ?? []));
-  }, [categoria]);
+  if (lugaresError) {
+    console.error("[categoria] lugares:", lugaresError.message);
+  }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSubcategoriaSelecionada("Todos");
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [categoria]);
-
-  /** Só exibe chips de subcategorias com pelo menos um local ativo nesta categoria. */
-  const subcategoriasComLocais = useMemo(() => {
-    const nomesEmUso = new Set(
-      lugares
-        .map((lugar) => lugar.subcategoria?.trim())
-        .filter(Boolean)
-    );
-
-    return subcategorias.filter((item) => nomesEmUso.has(item.nome));
-  }, [lugares, subcategorias]);
-
-  useEffect(() => {
-    if (
-      subcategoriaSelecionada !== "Todos" &&
-      !subcategoriasComLocais.some((item) => item.nome === subcategoriaSelecionada)
-    ) {
-      setSubcategoriaSelecionada("Todos");
-    }
-  }, [subcategoriasComLocais, subcategoriaSelecionada]);
-
-  const lugaresFiltrados =
-    subcategoriaSelecionada === "Todos"
-      ? lugares
-      : lugares.filter((lugar) => lugar.subcategoria === subcategoriaSelecionada);
+  const countLabel = `${(lugares ?? []).length} locais em ${categoria}, Imbituba`;
 
   return (
-    <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
-      <div className="mx-auto max-w-md px-4 pb-10 pt-6">
-        <header className="mb-6 flex items-center gap-3">
-          <Link
-            href="/"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#1a4a3a] shadow-sm"
-            aria-label="Voltar"
-          >
-            <IconBack />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-[#1a2e28]">{categoria}</h1>
-            <p className="text-sm text-[#5a6b66]">
-              {loading
-                ? "Carregando locais..."
-                : `${lugaresFiltrados.length} locais encontrados`}
-            </p>
-          </div>
-        </header>
-
-        <SupabaseConfigAlert />
-
-        {fetchError && (
-          <UserErrorAlert
-            className="mb-5"
-            message="Não foi possível carregar os lugares."
-            reportContext={buildReportContext({
-              code: "SERVER",
-              route: `/categoria/${slug}`,
-            })}
-            action={
-              <Link
-                href="/categorias"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-800 underline"
-              >
-                <IconBack className="h-4 w-4" />
-                Voltar
-              </Link>
-            }
-          />
-        )}
-
-        {subcategoriasComLocais.length > 0 && (
-          <div className="mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
-            {[
-              { id: "todos", nome: "Todos", icone: "" },
-              ...subcategoriasComLocais,
-            ].map((subcategoria) => {
-              const selected = subcategoriaSelecionada === subcategoria.nome;
-              return (
-                <button
-                  key={subcategoria.id ?? subcategoria.nome}
-                  type="button"
-                  onClick={() => setSubcategoriaSelecionada(subcategoria.nome)}
-                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
-                    selected
-                      ? "bg-[#1a4a3a] text-white"
-                      : "bg-white text-[#1a4a3a] shadow-sm"
-                  }`}
-                >
-                  {subcategoria.icone && <span className="mr-1">{subcategoria.icone}</span>}
-                  {subcategoria.nome}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="grid gap-4">
-          {fetchError ? null : loading ? (
-            <>
-              {[0, 1, 2, 3, 4, 5].map((item) => (
-                <PlaceCardSkeleton key={item} />
-              ))}
-            </>
-          ) : lugaresFiltrados.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[#5a6b66]">
-              Nenhum local encontrado nessa categoria.
-            </p>
-          ) : (
-            <ul className="grid list-none gap-4 p-0">
-              {lugaresFiltrados.map((lugar) => (
-                <li key={lugar.id}>
-                  <PlaceCard
-                    lugar={withDistanciaDinamica(lugar, userPosition)}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
+    <>
+      <JsonLdScript data={buildCategoriaJsonLd(categoria, meta.descricao)} />
+      <CategoriaPageClient
+        categoria={categoria}
+        categoriaDescricao={meta.descricao}
+        lugaresCount={(lugares ?? []).length}
+        initialLugares={lugares ?? []}
+        initialSubcategorias={subcategorias ?? []}
+        seoHeader={
+          <header className="min-w-0 flex-1">
+            <h1 className="text-2xl font-bold text-[#1a2e28]">{categoria} em Imbituba</h1>
+            <p className="mt-1 text-sm leading-relaxed text-[#5a6b66]">{meta.descricao}</p>
+            <p className="mt-2 text-sm font-medium text-[#1a4a3a]">{countLabel}</p>
+          </header>
+        }
+      />
+    </>
   );
 }

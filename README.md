@@ -6,7 +6,7 @@
 </p><br>
 
 <p align="center">
-  <a href="https://guia-de-bolso-puce.vercel.app"><strong>Live application</strong></a>
+  <a href="https://guiadebolso.app"><strong>Live application</strong></a>
   &nbsp;·&nbsp;
   <a href="./docs/README.md"><strong>Documentação técnica</strong></a>
   &nbsp;·&nbsp;
@@ -50,7 +50,7 @@ The product combines a curated place catalog, live context (opening hours, geolo
 
 | | |
 |---|---|
-| **Production URL** | https://guia-de-bolso-puce.vercel.app |
+| **Production URL** | https://guiadebolso.app |
 | **Service region** | Imbituba, SC, Brazil |
 | **Primary interface** | Portuguese (pt-BR) |
 | **Target devices** | Mobile web (optimized ~390px viewport) |

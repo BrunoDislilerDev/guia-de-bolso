@@ -7,6 +7,7 @@ import Logo from "@/components/Logo";
 import PerfilSettingsGroup from "@/components/perfil/PerfilSettingsGroup";
 import { useFeedback } from "@/components/FeedbackProvider";
 import { PERFIL_BENEFICIOS } from "@/lib/perfil";
+import { SITE_CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/siteContact";
 
 /**
  * Estado deslogado da aba Perfil.
@@ -97,6 +98,32 @@ export default function PerfilLoggedOut() {
         <Link href="/privacidade" className="font-semibold text-[#1a4a3a] underline">
           Privacidade
         </Link>
+      </p>
+      <p className="text-center text-[11px] leading-relaxed text-[#9aa8a3]">
+        <a
+          href={`mailto:${SITE_CONTACT_EMAIL}`}
+          className="font-semibold text-[#1a4a3a] underline"
+        >
+          {SITE_CONTACT_EMAIL}
+        </a>
+        {" · "}
+        <a
+          href={SOCIAL_LINKS.instagram}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-[#1a4a3a] underline"
+        >
+          Instagram
+        </a>
+        {" · "}
+        <a
+          href={SOCIAL_LINKS.tiktok}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-[#1a4a3a] underline"
+        >
+          TikTok
+        </a>
       </p>
 
       <AppDeveloperCredit showProductLine className="mt-4" />

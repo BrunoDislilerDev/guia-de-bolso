@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Guia de Bolso  Garopaba e Imbituba">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8f4f8"/>
+      <stop offset="50%" style="stop-color:#f5ebe0"/>
+      <stop offset="100%" style="stop-color:#e2f0e8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d5c7a"/>
+      <stop offset="100%" style="stop-color:#1a4a3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="200" cy="120" r="140" fill="#2d9cdb" opacity="0.15"/>
+  <circle cx="1000" cy="500" r="180" fill="#7fd4ae" opacity="0.2"/>
+  <circle cx="900" cy="100" r="100" fill="#c4a574" opacity="0.25"/>
+  <text x="80" y="280" font-family="system-ui, sans-serif" font-size="56" font-weight="700" fill="#1a2e28">Guia de Bolso</text>
+  <text x="80" y="350" font-family="system-ui, sans-serif" font-size="32" fill="#5a6b66">Garopaba · Imbituba · SC</text>
+  <rect x="80" y="400" width="320" height="12" rx="6" fill="url(#accent)" opacity="0.9"/>
+</svg>

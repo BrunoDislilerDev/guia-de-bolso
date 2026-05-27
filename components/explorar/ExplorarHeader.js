@@ -28,9 +28,9 @@ export default function ExplorarHeader({ loading, totalLugares, categoriasComLug
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1a4a3a]/75">
         Descoberta local
       </p>
-      <h1 className="mt-1 font-display text-[1.75rem] font-bold leading-[1.12] tracking-tight text-[#1a2e28]">
+      <h2 className="mt-1 font-display text-[1.75rem] font-bold leading-[1.12] tracking-tight text-[#1a2e28]">
         Explorar
-      </h1>
+      </h2>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <span className={HOME_CONTEXT_PILL_CLASS} aria-label="Imbituba, SC">

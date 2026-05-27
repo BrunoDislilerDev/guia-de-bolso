@@ -23,6 +23,7 @@ import {
   resolveAvatarUrl,
 } from "@/lib/perfil";
 import { isPremiumActive } from "@/lib/premium";
+import { SITE_CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/siteContact";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { createClient } from "@/lib/supabase";
 import { useFeedback } from "@/components/FeedbackProvider";
@@ -285,6 +286,39 @@ export default function PerfilPage() {
                   icon: "🔒",
                   label: "Política de Privacidade",
                   href: "/privacidade?from=perfil",
+                },
+              ]}
+            />
+
+            <PerfilSettingsGroup
+              title="Contato"
+              items={[
+                {
+                  key: "email",
+                  icon: "✉️",
+                  label: "E-mail",
+                  detail: SITE_CONTACT_EMAIL,
+                  onClick: () => {
+                    window.location.href = `mailto:${SITE_CONTACT_EMAIL}`;
+                  },
+                },
+                {
+                  key: "instagram",
+                  icon: "📷",
+                  label: "Instagram",
+                  detail: "@guiadebolsoimbituba",
+                  onClick: () => {
+                    window.open(SOCIAL_LINKS.instagram, "_blank", "noopener,noreferrer");
+                  },
+                },
+                {
+                  key: "tiktok",
+                  icon: "🎵",
+                  label: "TikTok",
+                  detail: "@guiadebolsoimbituba",
+                  onClick: () => {
+                    window.open(SOCIAL_LINKS.tiktok, "_blank", "noopener,noreferrer");
+                  },
                 },
               ]}
             />

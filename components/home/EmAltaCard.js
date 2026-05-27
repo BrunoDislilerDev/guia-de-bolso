@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { getLugarPublicPath } from "@/lib/lugarPublicPath";
 import { getStatusFuncionamento } from "@/lib/horarios";
 import { getTagsFromLugar } from "@/lib/tags";
 
@@ -32,7 +33,7 @@ export default function EmAltaCard({ lugar, priority = false }) {
 
   return (
     <Link
-      href={`/lugares/${lugar.id}`}
+      href={getLugarPublicPath(lugar)}
       className="group flex w-[208px] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] bg-white ring-1 ring-[#e8eeee] transition-transform duration-300 active:scale-[0.98]"
     >
       <div className="relative h-[120px] overflow-hidden">

@@ -13,7 +13,7 @@ Este arquivo fornece contexto completo do projeto para o agente de IA. Leia ante
 **Guia de Bolso** é um app de descoberta local para Imbituba, Santa Catarina, Brasil. Permite que moradores e turistas encontrem praias, restaurantes, trilhas e serviços da cidade com busca por linguagem natural via IA, rotas detalhadas e navegação integrada.
 
 **URLs:**
-- Produção: https://guia-de-bolso-puce.vercel.app
+- Produção: https://guiadebolso.app
 - Repositório: https://github.com/BrunoDislilerDev/guia-de-bolso
 
 ---

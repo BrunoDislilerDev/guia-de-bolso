@@ -158,9 +158,9 @@ export default function LugarDetalheAirbnb(props) {
                 )}
               </div>
 
-              <h1 className="font-display text-[28px] font-bold leading-[1.15] tracking-tight text-[#1a2e28]">
+              <h2 className="font-display text-[28px] font-bold leading-[1.15] tracking-tight text-[#1a2e28]">
                 {lugar.nome}
-              </h1>
+              </h2>
 
               {localSubtitle && (
                 <p className="mt-2 text-[13px] leading-snug text-[#5a6b66]">{localSubtitle}</p>

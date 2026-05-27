@@ -48,10 +48,13 @@ import { getDiaAtualKey, getStatusFuncionamento } from "@/lib/horarios";
 
 /**
  * Estado e ações compartilhados entre layout legado e redesign Airbnb.
+ * @param {string} [lugarIdFromServer] - UUID resolvido no servidor (rota por slug).
  * @returns {object}
  */
-export function useLugarDetalhe() {
-  const { id } = useParams();
+export function useLugarDetalhe(lugarIdFromServer) {
+  const params = useParams();
+  const routeParam = params.slug ?? params.id;
+  const id = lugarIdFromServer ?? routeParam;
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
@@ -153,7 +156,7 @@ export function useLugarDetalhe() {
       registrarLog(supabase, currentUser, "visualizou_lugar", {
         lugar_id: lugar.id,
         lugar_nome: lugar.nome,
-        pagina: `/lugares/${lugar.id}`,
+        pagina: lugar.slug ? `/lugares/${lugar.slug}` : `/lugares/${lugar.id}`,
       });
     });
   }, [lugar, supabase]);

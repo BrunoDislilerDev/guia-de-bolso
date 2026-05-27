@@ -2,6 +2,7 @@
 
 import SearchListItem from "@/components/home/SearchListItem";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { getLugarPublicPath } from "@/lib/lugarPublicPath";
 
 /**
  * IconClock - Clock icon for recently visited places.
@@ -35,7 +36,7 @@ export default function SearchBrowsePanel({ visitados = [], populares = [], load
             {visitados.slice(0, 3).map((lugar) => (
               <SearchListItem
                 key={lugar.id}
-                href={`/lugares/${lugar.id}`}
+                href={getLugarPublicPath(lugar)}
                 imagemUrl={lugar.imagem_url}
                 nome={lugar.nome}
                 categoria={lugar.categoria}
@@ -61,7 +62,7 @@ export default function SearchBrowsePanel({ visitados = [], populares = [], load
             {populares.map((lugar) => (
               <SearchListItem
                 key={lugar.id}
-                href={`/lugares/${lugar.id}`}
+                href={getLugarPublicPath(lugar)}
                 imagemUrl={getCapaFromLugar(lugar)}
                 nome={lugar.nome}
                 categoria={lugar.categoria}

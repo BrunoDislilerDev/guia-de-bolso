@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { getLugarPublicPath } from "@/lib/lugarPublicPath";
 import { getBadgeParceiroLabel } from "@/lib/lugarBadges";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 import { HOME_CAROUSEL_TRACK_CLASS } from "@/components/home/homeTokens";
@@ -35,7 +36,7 @@ function ParceiroCard({ lugar }) {
 
   return (
     <Link
-      href={`/lugares/${lugar.id}`}
+      href={getLugarPublicPath(lugar)}
       className="group relative flex h-[220px] w-[292px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[26px] ring-1 ring-[#e8eeee] transition-transform duration-300 active:scale-[0.98]"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getStatusFuncionamento } from "@/lib/horarios";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { getLugarPublicPath } from "@/lib/lugarPublicPath";
 import {
   getBadgeCuradoriaLabel,
   getBadgeParceiroLabel,
@@ -131,7 +132,7 @@ export default function PlaceCard({
       )}
 
       <Link
-        href={`/lugares/${lugar.id}`}
+        href={getLugarPublicPath(lugar)}
         className={`absolute inset-0 flex flex-col justify-end ${immersive ? "p-5 pr-16" : "p-4 pr-16"}`}
       >
         <div>

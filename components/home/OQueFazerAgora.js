@@ -106,7 +106,9 @@ export default function OQueFazerAgora({ rota, temperatura = null }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={capa}
-          alt=""
+          alt={getRotaNome(rota)}
+          fetchPriority="high"
+          decoding="async"
           onLoad={() => setImgLoaded(true)}
           className={`home-image-fade absolute inset-0 h-full w-full scale-105 object-cover transition-transform duration-700 ease-out group-hover:scale-110 ${
             imgLoaded ? "is-loaded" : ""

@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
+import JsonLdScript from "@/components/seo/JsonLdScript";
 import RotaDetalhePremium from "@/components/rotas/RotaDetalhePremium";
+import RotaSeoStatic from "@/components/rotas/RotaSeoStatic";
+import { buildRotaMetadata } from "@/lib/seo";
+import { buildRotaJsonLd } from "@/lib/seoJsonLd";
 import { getFotosFromRota } from "@/lib/fotos";
 import { getGoogleMapsDirectionsUrlForRota } from "@/lib/rotaMaps";
 import {
@@ -11,6 +15,22 @@ import {
 import { getCategoriaRotaMeta } from "@/lib/rotas";
 import { getTagsFromRota } from "@/lib/tags";
 import { createClient } from "@/lib/supabase/server";
+
+/**
+ * @param {{ params: Promise<{ id: string }> }} props
+ * @returns {Promise<import('next').Metadata>}
+ */
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: rota } = await supabase.from("rotas").select("*").eq("id", id).maybeSingle();
+
+  if (!rota) {
+    return { title: "Rota não encontrada | Guia de Bolso", robots: { index: false, follow: false } };
+  }
+
+  return buildRotaMetadata(rota);
+}
 
 /**
  * Página de detalhe da rota/trilha.
@@ -55,7 +75,10 @@ export default async function RotaDetalhePage({ params }) {
   const fotos = getFotosFromRota(rota);
   const mapsHref = getGoogleMapsDirectionsUrlForRota(rota, localizacao);
   return (
-    <RotaDetalhePremium
+    <>
+      <JsonLdScript data={buildRotaJsonLd(rota)} />
+      <RotaSeoStatic nome={nome} descricao={rota.descricao || ""} categoria={categoria.nome} />
+      <RotaDetalhePremium
       rotaId={id}
       nome={nome}
       descricao={rota.descricao || ""}
@@ -71,5 +94,6 @@ export default async function RotaDetalhePage({ params }) {
       pontos={pontos}
       dicas={dicas}
     />
+    </>
   );
 }

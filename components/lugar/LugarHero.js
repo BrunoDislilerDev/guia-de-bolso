@@ -179,9 +179,9 @@ export default function LugarHero({
           )}
         </div>
 
-        <h1 className="mt-2 font-display text-[1.75rem] font-bold leading-tight tracking-tight text-white">
+        <h2 className="mt-2 font-display text-[1.75rem] font-bold leading-tight tracking-tight text-white">
           {nome}
-        </h1>
+        </h2>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
           {temNota && (

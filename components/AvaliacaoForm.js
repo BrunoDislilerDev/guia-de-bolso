@@ -7,6 +7,7 @@ import {
   getAspectosParaLugar,
 } from "@/lib/avaliacaoAspectos";
 import UserErrorAlert from "@/components/UserErrorAlert";
+import { getLugarPublicPath } from "@/lib/lugarPublicPath";
 import { buildReportContext } from "@/lib/reportContext";
 import { createClient } from "@/lib/supabase";
 
@@ -241,7 +242,7 @@ export default function AvaliacaoForm({ isOpen, onClose, lugar, onSuccess }) {
             message={erro}
             reportContext={buildReportContext({
               code: "SERVER",
-              route: lugar?.id ? `/lugares/${lugar.id}` : null,
+              route: lugar?.id ? getLugarPublicPath(lugar) : null,
             })}
           />
         )}

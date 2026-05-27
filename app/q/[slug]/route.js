@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isLugarElegivelQr } from "@/lib/lugarQr";
+import { getLugarPublicPath } from "@/lib/lugarPublicPath";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { supabase } from "@/lib/supabase/anon";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -59,8 +60,8 @@ export async function GET(request, { params }) {
   }
 
   const origin = getSiteUrl(request.nextUrl.origin);
-  const redirectUrl = new URL(`/lugares/${lugar.id}`, origin);
+  const redirectUrl = new URL(getLugarPublicPath(lugar), origin);
   redirectUrl.searchParams.set("ref", "qr");
 
-  return NextResponse.redirect(redirectUrl, { status: 302 });
+  return NextResponse.redirect(redirectUrl, { status: 301 });
 }

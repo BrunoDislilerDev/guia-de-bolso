@@ -61,7 +61,7 @@ O projeto valida presença de `NEXT_PUBLIC_SUPABASE_*` no build (`next.config.mj
 
 - Base para URLs em PDF/QR quando request não traz `origin`
 - Local: `http://localhost:3000`
-- Produção: `https://guia-de-bolso-puce.vercel.app`
+- Produção: `https://guiadebolso.app`
 
 ### `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
 

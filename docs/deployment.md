@@ -6,7 +6,7 @@ This guide covers deploying **Guia de Bolso** to production using **Vercel** (fr
 
 | Environment | URL |
 |-------------|-----|
-| **Production** | https://guia-de-bolso-puce.vercel.app |
+| **Production** | https://guiadebolso.app |
 | **Repository** | https://github.com/BrunoDislilerDev/guia-de-bolso |
 
 ---
@@ -181,7 +181,7 @@ flowchart LR
   B --> C{Vercel}
   C -->|main branch| D[Production deploy]
   C -->|other branches / PR| E[Preview deploy]
-  D --> F[guia-de-bolso-puce.vercel.app]
+  D --> F[guiadebolso.app]
   E --> G[*.vercel.app preview URL]
 ```
 
@@ -260,8 +260,8 @@ Day-to-day deploys are normally **`git push`** only.
 
 | Field | Production value |
 |-------|------------------|
-| **Site URL** | `https://guia-de-bolso-puce.vercel.app` |
-| **Redirect URLs** | `https://guia-de-bolso-puce.vercel.app/auth/callback` |
+| **Site URL** | `https://guiadebolso.app` |
+| **Redirect URLs** | `https://guiadebolso.app/auth/callback` |
 
 For **preview** deploys, add each origin you use:
 

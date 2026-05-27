@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **SEO P0** — canonical place URLs `/lugares/{slug}` (301 from UUID), `generateMetadata` on place and route detail, dynamic `sitemap.xml` and `robots.txt` (`lib/seo.js`, `lib/lugarPublicPath.js`).
+- **SEO P1** — JSON-LD (LocalBusiness/TouristAttraction, TouristTrip, CollectionPage), server-rendered `h1`/intro on place and category pages, SSR initial list on `/categoria/[slug]` (`lib/seoJsonLd.js`, `lib/lugarSeoData.js`).
+- **SEO P2** — home/Explorar SSR initial data, `/imbituba` landing, WebSite JSON-LD, `noindex` on private routes (`lib/homePageData.js`, `lib/explorarPageData.js`, `lib/noIndexMetadata.js`).
 - **Multi-shift & overnight opening hours** — `lugares.horarios` supports comma-separated daily intervals (`11:00-15:00,18:00-23:00`) and overnight closes (`18:30-00:00`, `22:00-04:00` when `fim <= inicio`); `lib/horarios.js` (`parseHorarioDia`, `getStatusFuncionamento`, carry-over across midnight); admin `HorarioEditor` (two shifts per day, copy between weekdays); unit tests `lib/horarios.test.js`.
 - **Admin establishment reports** (`/admin/relatorios`) — filter by active place and period; KPI cards (views, IR AGORA, favorites, approved reviews) with % vs previous period; review list; copy WhatsApp summary; PDF export (`lib/adminRelatorios.js`, `lib/relatorioPdf.js`, `components/admin/RelatoriosEstabelecimentoPage.js`).
 - **Place view logging** — `visualizou_lugar` on place detail for logged-in users (`app/lugares/[id]/page.js`, `lib/logs.js`); counted in establishment reports alongside legacy `acesso_app` with `detalhes.lugar_id`.
