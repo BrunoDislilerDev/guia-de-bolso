@@ -12,7 +12,7 @@
   &nbsp;·&nbsp;
   <a href="https://github.com/BrunoDislilerDev/guia-de-bolso/issues">Report an issue</a>
 </p>
-
+teste
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production-success?style=flat-square" alt="Production" />
   <img src="https://img.shields.io/badge/Next.js-16-000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js 16" />
