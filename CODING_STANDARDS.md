@@ -198,6 +198,8 @@ export async function POST(request) {
 - [ ] Status HTTP alinhado ao `code` (401/403/429/500)
 - [ ] `console.error` com prefixo da rota; sem stack trace no JSON de resposta
 - [ ] IA: `checkIaRateLimit` + `checkBuscaAccess` / `checkRoteiroAccess`
+- [ ] Anthropic: incluir header `anthropic-beta: prompt-caching-2024-07-31` e usar `cache_control: { type: "ephemeral" }` nos blocos estáticos do prompt
+- [ ] IA observability: medir latência e registrar sucesso/erro com `logIA` nas rotas que chamam Anthropic (`feature` padronizada: `busca`, `roteiro`, `moderacao`)
 - [ ] Busca vazia: early return `{ lugares: [] }` **sem** consumir cota (padrão `/api/buscar`)
 
 ### GET público

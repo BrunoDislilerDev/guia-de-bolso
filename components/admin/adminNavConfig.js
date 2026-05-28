@@ -6,6 +6,7 @@
 /** @type {AdminNavLink[]} */
 export const ADMIN_NAV_LINKS = [
   { href: "/admin", label: "Dashboard", icon: "dashboard" },
+  { href: "/admin/ia", label: "IA & Custos", icon: "ia" },
   { href: "/admin/locais", label: "Locais", icon: "locais" },
   { href: "/admin/rotas", label: "Rotas", icon: "rotas" },
   { href: "/admin/avaliacoes", label: "Avaliações", icon: "avaliacoes" },
@@ -47,6 +48,13 @@ export function AdminNavIcon({ name, className = "h-5 w-5" }) {
       return (
         <svg {...shared}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h4v12H4V6zm6 0h4v8h-4V6zm6 0h4v14h-4V6z" />
+        </svg>
+      );
+    case "ia":
+      return (
+        <svg {...shared}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 17V7m6 10V4m6 13v-7m4 7V9" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 20h18" />
         </svg>
       );
     case "locais":

@@ -9,6 +9,7 @@ import { getClaudeModel } from "@/lib/anthropicConfig";
 import { rankLugaresForBusca } from "@/lib/buscaRetrieval";
 import { enrichLugarFlags } from "@/lib/lugarBadges";
 import { checkIaRateLimit } from "@/lib/iaRateLimit";
+import { logIA } from "@/lib/logIA";
 import { reportError } from "@/lib/observability";
 import { parseJsonArrayFromText } from "@/lib/parseModelJson";
 import { checkBuscaAccess, getAuthUser, recordBuscaIaUsage } from "@/lib/premiumServer";
@@ -124,37 +125,90 @@ export async function POST(request) {
     const requestBody = {
       model: getClaudeModel(),
       max_tokens: 256,
-      system: SYSTEM_PROMPT,
+      system: [
+        {
+          type: "text",
+          text: SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
       messages: [
         {
           role: "user",
-          content: `Filtro de horário: ${filtroLabel}.
+          content: [
+            {
+              type: "text",
+              text: `Filtro de horário: ${filtroLabel}.
 Lugares disponíveis (${lugaresResumo.length}):
-${JSON.stringify(lugaresResumo)}
-
-Busca do usuário: ${queryUsuario}`,
+${JSON.stringify(lugaresResumo)}`,
+              cache_control: { type: "ephemeral" },
+            },
+            {
+              type: "text",
+              text: `Busca do usuário: ${queryUsuario}`,
+            },
+          ],
         },
       ],
     };
 
-    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify(requestBody),
-    });
+    const start = Date.now();
+    let claudeData;
+    try {
+      const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-beta": "prompt-caching-2024-07-31",
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    const claudeRaw = await claudeResponse.text();
+      const claudeRaw = await claudeResponse.text();
 
-    if (!claudeResponse.ok) {
-      console.error("Busca — Claude HTTP:", claudeResponse.status, claudeRaw);
-      return NextResponse.json(buildApiErrorBody("CLAUDE_ERROR"), { status: 500 });
+      if (!claudeResponse.ok) {
+        console.error("Busca — Claude HTTP:", claudeResponse.status, claudeRaw);
+        const latencia = Date.now() - start;
+        await logIA({
+          feature: "busca",
+          userId: user?.id,
+          usage: {},
+          latencia,
+          sucesso: false,
+          erro: `Claude HTTP ${claudeResponse.status}`,
+        });
+        return NextResponse.json(buildApiErrorBody("CLAUDE_ERROR"), { status: 500 });
+      }
+
+      claudeData = JSON.parse(claudeRaw);
+      const latencia = Date.now() - start;
+      await logIA({
+        feature: "busca",
+        userId: user?.id,
+        usage: claudeData.usage,
+        latencia,
+        sucesso: true,
+      });
+    } catch (error) {
+      await logIA({
+        feature: "busca",
+        userId: user?.id,
+        usage: {},
+        latencia: Date.now() - start,
+        sucesso: false,
+        erro: error?.message || "Erro ao chamar Anthropic",
+      });
+      throw error;
     }
 
-    const claudeData = JSON.parse(claudeRaw);
+    console.log("[anthropic-cache][buscar]", {
+      input_tokens: claudeData.usage?.input_tokens,
+      output_tokens: claudeData.usage?.output_tokens,
+      cache_creation_input_tokens: claudeData.usage?.cache_creation_input_tokens,
+      cache_read_input_tokens: claudeData.usage?.cache_read_input_tokens,
+    });
     const text = claudeData.content?.[0]?.text ?? "[]";
     const ids = parseJsonArrayFromText(text);
 

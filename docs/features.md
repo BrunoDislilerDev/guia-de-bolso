@@ -674,6 +674,7 @@ Not for tourists. Requires `perfis.role` ∈ `admin`, `dev`.
 | Destaques | Single commercial plan (Parceiro); vigência dates; `?status=expirando` \| `expirado` | Run paid highlights |
 | Usuários | Roles, Premium IA status, engagement sheet; link to user logs | Access control |
 | Logs (`/admin/logs`) | Filter by action, period, user (`?user_id=`); deep links to place edit | Investigate behavior |
+| IA & Custos (`/admin/ia`) | Filtros por período/feature/moeda, cards de custo/tokens/latência, gráfico diário, projeções e tabela paginada de `logs_ia` com alertas automáticos | Controlar custo, qualidade e escala do uso de IA |
 | Relatórios (`/admin/relatorios`) | Per-establishment report: period presets (30d, this month, previous month, 3 months); KPIs with % vs previous period (views = `visualizou_lugar` + `acesso_app` with `lugar_id`, **QR scans = `escaneou_qr`**, `ir_agora`, favorite logs, approved reviews); review list; copy WhatsApp; PDF (`jspdf`) | Share performance with partners |
 | Taxonomia (`/admin/taxonomia`) | CRUD `subcategorias` (per fixed category) and `tags` (`categorias` jsonb, `aplica_em_rotas`); block delete when in use; migrate places on rename | Maintain catalog vocabulary without SQL |
 
@@ -709,6 +710,28 @@ Establishment displays QR at counter/table; tourist scans and lands on the offic
 - Duplicate names: slug suffix `-2`, `-3`, …
 - Guest scans work without login; service role required for log insert in production.
 - Slug editable manually in admin (disables auto-sync from name).
+
+---
+
+## 31. IA observability e custos (admin)
+
+**Description**  
+Página operacional em `/admin/ia` para monitorar custo, tokens, latência e erros das chamadas Anthropic (`busca`, `roteiro`, `moderacao`), incluindo efeitos de prompt caching.
+
+**User goal**  
+Entender gasto atual, eficiência de cache e risco de escala antes de aumentar base de usuários.
+
+**Main flows**
+1. Operador escolhe período (hoje/7/30/90 dias), feature e moeda (USD/BRL).
+2. Dashboard agrega `logs_ia` em cards: custo total, chamadas, tokens, custo/chamada, latência média, projeção mensal.
+3. Gráfico diário mostra custo por feature; tabela detalhada lista chamadas com paginação.
+4. Simulador estima custo com e sem cache para cenários de crescimento.
+5. Alertas destacam anomalias (erro alto, latência alta, pico de custo).
+
+**Edge cases**
+- Sem dados no período: cards e gráfico mostram estado vazio sem quebrar layout.
+- Falhas de leitura de `logs_ia` no cliente exibem fallback visual no admin.
+- Erros de chamada IA continuam com logging (`sucesso=false`) para visibilidade operacional.
 
 ---
 

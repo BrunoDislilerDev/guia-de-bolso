@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClaudeModel } from "@/lib/anthropicConfig";
 import { enrichLugarFlags } from "@/lib/lugarBadges";
 import { checkIaRateLimit } from "@/lib/iaRateLimit";
+import { logIA } from "@/lib/logIA";
 import { reportError } from "@/lib/observability";
 import { checkRoteiroAccess, getAuthUser, recordRoteiroIaUsage } from "@/lib/premiumServer";
 import { selecionarLugaresParaRoteiro } from "@/lib/roteiroLugares";
@@ -99,37 +100,91 @@ export async function POST(request) {
       ? interesses.join(", ")
       : String(interesses);
 
-    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: getClaudeModel(),
-        max_tokens: 2400,
-        system: SYSTEM_PROMPT,
-        messages: [
-          {
-            role: "user",
-            content: `Roteiro de ${dias} | Perfil: ${perfil} | Interesses: ${interessesTexto}
-Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
-          },
-        ],
-      }),
-    });
-
-    const claudeRaw = await claudeResponse.text();
-
-    if (!claudeResponse.ok) {
-      reportError(new Error(`Claude HTTP ${claudeResponse.status}`), {
-        route: "POST /api/roteiro",
+    const start = Date.now();
+    let claudeData;
+    try {
+      const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-beta": "prompt-caching-2024-07-31",
+        },
+        body: JSON.stringify({
+          model: getClaudeModel(),
+          max_tokens: 2400,
+          system: [
+            {
+              type: "text",
+              text: SYSTEM_PROMPT,
+              cache_control: { type: "ephemeral" },
+            },
+          ],
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Lugares (${lugares.length}): ${JSON.stringify(lugares)}`,
+                  cache_control: { type: "ephemeral" },
+                },
+                {
+                  type: "text",
+                  text: `Roteiro de ${dias} | Perfil: ${perfil} | Interesses: ${interessesTexto}`,
+                },
+              ],
+            },
+          ],
+        }),
       });
-      return NextResponse.json(buildApiErrorBody("ROTEIRO_ERROR"), { status: 500 });
+
+      const claudeRaw = await claudeResponse.text();
+
+      if (!claudeResponse.ok) {
+        reportError(new Error(`Claude HTTP ${claudeResponse.status}`), {
+          route: "POST /api/roteiro",
+        });
+        const latencia = Date.now() - start;
+        await logIA({
+          feature: "roteiro",
+          userId: user?.id,
+          usage: {},
+          latencia,
+          sucesso: false,
+          erro: `Claude HTTP ${claudeResponse.status}`,
+        });
+        return NextResponse.json(buildApiErrorBody("ROTEIRO_ERROR"), { status: 500 });
+      }
+
+      claudeData = JSON.parse(claudeRaw);
+      const latencia = Date.now() - start;
+      await logIA({
+        feature: "roteiro",
+        userId: user?.id,
+        usage: claudeData.usage,
+        latencia,
+        sucesso: true,
+      });
+    } catch (error) {
+      await logIA({
+        feature: "roteiro",
+        userId: user?.id,
+        usage: {},
+        latencia: Date.now() - start,
+        sucesso: false,
+        erro: error?.message || "Erro ao chamar Anthropic",
+      });
+      throw error;
     }
 
-    const claudeData = JSON.parse(claudeRaw);
+    console.log("[anthropic-cache][roteiro]", {
+      input_tokens: claudeData.usage?.input_tokens,
+      output_tokens: claudeData.usage?.output_tokens,
+      cache_creation_input_tokens: claudeData.usage?.cache_creation_input_tokens,
+      cache_read_input_tokens: claudeData.usage?.cache_read_input_tokens,
+    });
     const conteudo = claudeData.content?.[0]?.text?.trim() ?? "";
 
     const parceiroPorId = new Map(

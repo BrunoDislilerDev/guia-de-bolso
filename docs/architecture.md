@@ -106,6 +106,7 @@ Requires `perfis.role` ∈ `admin`, `dev` (`lib/adminRoles.js` → `canAccessAdm
 | `/admin/avaliacoes` | Review moderation (`?tab=` for filter chips) |
 | `/admin/usuarios` | User management, roles, Premium IA |
 | `/admin/logs` | Activity log browser (`?acao=`, `?user_id=`, period filters) |
+| `/admin/ia` | Monitoramento de IA (custo, tokens, latência, erros, projeções) |
 | `/admin/taxonomia` | CRUD for `subcategorias` and `tags` (no manual SQL) |
 
 ### Component organization
@@ -276,6 +277,7 @@ Server-only secrets: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. These never use the
 | `adminRoles.js` | Shared | `canAccessAdmin`, role chips, `user` → `usuario` normalization |
 | `adminDashboard.js` | Client | Dashboard KPI counts, period variation, hero summary (`buildResumoOperacional`) |
 | `adminLogs.js` | Client | Admin log filters, pagination, badges (`getLogAcaoBadgeAdmin`) |
+| `logIA.js` | Server/shared | Cálculo de custo Anthropic + persistência em `logs_ia` |
 | `adminTaxonomia.js` | Client | Subcategoria/tag CRUD, usage guards, `tags.aplica_em_rotas` fallback |
 | `adminAlertas.js` | Client | Aggregated admin alerts (reviews, places, destaques, account deletion) |
 | `destaques.js` | Shared | Vigent highlights, `ehParceiro` enrichment for home/search/AI |
@@ -515,6 +517,8 @@ API returns machine-readable codes: `LOGIN_REQUIRED` (401), `LIMIT_REACHED` (403
 - **Endpoint:** `https://api.anthropic.com/v1/messages`
 - **Search:** low `max_tokens` (256), system prompt returns JSON array of place IDs only
 - **Roteiro:** higher token budget, structured prompt, reduced place context via `lib/roteiroLugares.js`
+- **Prompt caching:** header `anthropic-beta: prompt-caching-2024-07-31` + `cache_control: { type: "ephemeral" }` em blocos estáticos
+- **Observability:** todas as chamadas de IA registram uso/tokens/custo/latência/sucesso em `logs_ia` para análise em `/admin/ia`
 
 ### Supabase Auth providers
 

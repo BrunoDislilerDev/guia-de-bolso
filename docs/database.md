@@ -443,6 +443,29 @@ Inserted via `lib/logs.js` → `registrarLog()`.
 
 ---
 
+### `logs_ia`
+
+Observability e custo por chamada da Anthropic API.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `uuid`/`bigint` | PK (dependendo do schema aplicado) |
+| `created_at` | `timestamptz` | Timestamp do log |
+| `feature` | `text` | `busca`, `roteiro`, `moderacao` |
+| `user_id` | `uuid` FK | Usuário associado (nullable) |
+| `input_tokens` | `integer` | Tokens de entrada |
+| `output_tokens` | `integer` | Tokens de saída |
+| `cache_creation_tokens` | `integer` | Tokens gastos criando cache |
+| `cache_read_tokens` | `integer` | Tokens lidos do cache |
+| `custo_usd` | `numeric` | Custo calculado por chamada |
+| `latencia_ms` | `integer` | Latência total da chamada |
+| `sucesso` | `boolean` | `true` para respostas válidas |
+| `erro` | `text` | Mensagem resumida de erro quando falha |
+
+Inserção via `lib/logIA.js` (`calcularCusto` + `logIA`) nas rotas `POST /api/buscar`, `POST /api/roteiro` e `POST /api/avaliacoes/analisar`.
+
+---
+
 ## Relationships summary
 
 | From | To | Cardinality | Join / notes |
@@ -460,6 +483,7 @@ Inserted via `lib/logs.js` → `registrarLog()`.
 | `rotas_localizacoes` | `rotas` | 1:1 | `rota_id`; maps/navigation only |
 | `roteiros` | user | N:1 | Private to owner |
 | `logs` | `perfis` | N:1 | Optional `user_id` |
+| `logs_ia` | `perfis` | N:1 | Optional `user_id`, custo/latência IA |
 | `subcategorias` | `lugares` | Logical | Text match on `categoria` + `nome`, not FK |
 
 ### Common Supabase select patterns

@@ -109,6 +109,7 @@ Optional success fields: `message` (e.g. filter empty), `filtroStatus` echo.
 4. Claude returns JSON array of place IDs.
 5. Post-filter by `filtroStatus`.
 6. `increment_busca_ia` via RPC; returns updated `usage`.
+7. IA observability: registra `logs_ia` com tokens, custo, latência e sucesso/erro (`lib/logIA.js`).
 
 ---
 
@@ -134,7 +135,7 @@ All three fields are required. `dias` and `perfil` must be non-empty **strings**
 **Success:** `{ "conteudo": "<markdown>", "titulo": "Roteiro 3 - casal", "lugaresCatalog": [{ "id", "nome" }, ...], "usage": { ... } }`  
 **Errors:** Same pattern as `/api/buscar` (`LOGIN_REQUIRED`, `LIMIT_REACHED`)
 
-Implementation: `app/api/roteiro/route.js` (strict markdown system prompt, `max_tokens: 2400`, default model `claude-sonnet-4-5` or `ANTHROPIC_MODEL`). Client parses markdown via `lib/roteiroParse.js` → `RoteiroItineraryView`.
+Implementation: `app/api/roteiro/route.js` (strict markdown system prompt, `max_tokens: 2400`, default model `claude-sonnet-4-5` or `ANTHROPIC_MODEL`). Client parses markdown via `lib/roteiroParse.js` → `RoteiroItineraryView`. IA observability via `lib/logIA.js`.
 
 ---
 
@@ -285,6 +286,7 @@ Claude pre-moderation for a newly submitted review. Called from the client after
 3. Parse JSON `{ sugestao, motivo }` from Claude → persist `sugestao_ia`.
 
 Uses `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`).
+Registra logs de moderação em `logs_ia` (feature `moderacao`) com latência, tokens e custo.
 
 ---
 
@@ -360,6 +362,8 @@ Full reference: [environment.md](./environment.md).
 - `LIMIT_REACHED` responses include `usage`; RPC JSON uses `resets_at`, client-normalized `usage` uses camelCase `resetsAt` / `msUntilReset`.
 - Roteiro generation uses a filtered place list (`lib/roteiroLugares.js`) to reduce tokens.
 - Search sends summarized place context (`lib/busca.js` → `buildLugarBuscaResumo`).
+- Anthropic prompt caching ativo (`anthropic-beta: prompt-caching-2024-07-31`) nas rotas de IA com `cache_control: { type: "ephemeral" }` em blocos estáticos.
+- Monitoramento de custo/latência por chamada via `lib/logIA.js` + tabela `logs_ia`; dashboard operacional em `/admin/ia`.
 
 ## Related docs
 
