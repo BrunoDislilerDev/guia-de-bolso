@@ -28,8 +28,8 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
       aria-label="Prova social"
     >
       <div className="landing-social-proof-ambient pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="landing-ambient-drift absolute -left-[20%] top-0 h-[50%] w-[50%] rounded-full bg-[#7fd4ae]/10 blur-[100px]" />
-        <div className="landing-ambient-drift-slow absolute -right-[10%] bottom-0 h-[40%] w-[45%] rounded-full bg-[#1a4a3a]/6 blur-[90px]" />
+        <div className="landing-ambient-drift absolute -left-[20%] h-[42%] w-[50%] rounded-full bg-[#7fd4ae]/10 blur-[100px]" />
+        <div className="landing-ambient-drift-slow absolute -right-[10%] h-[36%] w-[45%] rounded-full bg-[#1a4a3a]/6 blur-[90px]" />
       </div>
 
       <div className="relative mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:px-12">

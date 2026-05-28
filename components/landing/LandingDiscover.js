@@ -37,7 +37,7 @@ export default function LandingDiscover({ discoverShowcase = [], categorias, has
   return (
     <LandingDiscoverSection
       id={LANDING_SECTION_IDS.categorias}
-      className="landing-section-flow--canvas relative -mt-4 bg-transparent pt-8 sm:pt-12"
+      className="landing-section-flow--canvas relative z-[2] -mt-2 bg-transparent pt-10 sm:pt-14"
     >
       <LandingSectionHeader
         eyebrow="Experiências"

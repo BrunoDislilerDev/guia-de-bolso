@@ -170,7 +170,7 @@ function LandingHeroBody({
         <LandingAmbient variant="hero" className="opacity-35" lite={!richMotion} />
       ) : null}
 
-      <div className="relative mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
+      <div className="relative z-[3] mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
         <div className="grid flex-1 items-center gap-10 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">
           <TextWrap
             className="order-2 lg:order-1 landing-hero-content-block"
@@ -237,7 +237,7 @@ function LandingHeroBody({
 
             <StatsWrap
               {...motionChild}
-              className="mt-10 grid grid-cols-3 gap-3 border-t border-white/20 pt-8 sm:mt-14 sm:gap-4 sm:pt-9"
+              className="landing-hero-stats relative z-[1] mt-10 grid grid-cols-3 gap-3 border-t border-white/25 pt-8 sm:mt-14 sm:gap-4 sm:pt-9"
             >
               {heroStats.map((item) => (
                 <div
