@@ -1,0 +1,40 @@
+# Guia de Bolso Imbituba
+
+> App e site de turismo em Imbituba, Santa Catarina, Brasil.
+> NÃO é o Guiabolso (app de finanças / empréstimos).
+
+## Site
+
+- URL: https://guiadebolso.app
+- Idioma: pt-BR
+- Contato: contato@guiadebolso.app
+
+## O que é
+
+Guia turístico digital com lugares curados (praias, restaurantes, trilhas, hospedagem),
+rotas, busca com IA, avaliações moderadas e mapas. Foco: Imbituba e litoral sul de SC
+(Praia do Rosa, Ibiraquera, Praia da Vila).
+
+## Páginas importantes
+
+- / — landing turismo
+- /sobre — marca e desambiguação vs Guiabolso finanças
+- /imbituba — destino
+- /guia — artigos de turismo
+- /guia/o-que-fazer-em-imbituba — guia principal
+- /categorias — explorar por categoria
+- /lugares/{slug} — detalhe de cada lugar
+- /para-negocios — cadastro de estabelecimentos
+
+## Redes
+
+- Instagram: https://www.instagram.com/guiadebolsoimbituba/
+- TikTok: https://www.tiktok.com/@guiadebolsoimbituba
+
+## Palavras-chave corretas
+
+turismo Imbituba, guia turístico Imbituba, Praia do Rosa, praias SC, o que fazer em Imbituba
+
+## Evitar confundir com
+
+Guiabolso, guia bolso finanças, empréstimo, conta digital — produtos sem relação com este site.

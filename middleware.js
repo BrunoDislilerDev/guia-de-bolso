@@ -5,6 +5,18 @@ import {
   getRequestHostname,
   isMarketingHost,
 } from "@/lib/marketingHost";
+import { SITE_DOMAIN } from "@/lib/siteContact";
+
+/**
+ * @param {import('next/server').NextResponse} response
+ * @returns {import('next/server').NextResponse}
+ */
+function applyPreviewRobots(response) {
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  return response;
+}
 
 /**
  * Middleware: domínio de marketing (guiadebolso.app) só landing + legal; demais hosts = app completo.
@@ -14,19 +26,25 @@ import {
 export async function middleware(request) {
   const host = getRequestHostname(request);
 
+  if (host === `www.${SITE_DOMAIN}`) {
+    const apex = new URL(request.url);
+    apex.host = SITE_DOMAIN;
+    return applyPreviewRobots(NextResponse.redirect(apex, 308));
+  }
+
   if (isMarketingHost(host)) {
     const action = getMarketingRouteAction(request.nextUrl.pathname);
 
     if (action === "redirect-root") {
-      return NextResponse.redirect(new URL("/", request.url), 308);
+      return applyPreviewRobots(NextResponse.redirect(new URL("/", request.url), 308));
     }
     if (action === "rewrite-landing") {
-      return NextResponse.rewrite(new URL("/landing", request.url));
+      return applyPreviewRobots(NextResponse.rewrite(new URL("/landing", request.url)));
     }
     if (action === "redirect-home") {
-      return NextResponse.redirect(new URL("/", request.url), 307);
+      return applyPreviewRobots(NextResponse.redirect(new URL("/", request.url), 307));
     }
-    return NextResponse.next();
+    return applyPreviewRobots(NextResponse.next());
   }
 
   let supabaseResponse = NextResponse.next({ request });
@@ -53,6 +71,10 @@ export async function middleware(request) {
   );
 
   await supabase.auth.getUser();
+
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") {
+    supabaseResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
 
   return supabaseResponse;
 }

@@ -48,6 +48,12 @@ export default function GuiaIndexPage() {
           >
             Explorar lugares
           </Link>
+          <Link
+            href="/sobre"
+            className="rounded-xl bg-white py-3.5 text-center text-sm font-semibold text-[#1a4a3a] ring-1 ring-[#e8eeee]"
+          >
+            Sobre o Guia de Bolso
+          </Link>
         </div>
       </article>
     </div>

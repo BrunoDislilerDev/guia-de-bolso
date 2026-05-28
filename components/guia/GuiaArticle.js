@@ -1,6 +1,7 @@
 import Link from "next/link";
 import GuiaPlacesList from "@/components/guia/GuiaPlacesList";
 import GuiaRelatedNav from "@/components/guia/GuiaRelatedNav";
+import { mergeGuiaFaq } from "@/lib/seoBrand";
 
 /**
  * @typedef {import('@/lib/guiaCatalog').GuiaGuide} GuiaGuide
@@ -15,6 +16,8 @@ import GuiaRelatedNav from "@/components/guia/GuiaRelatedNav";
  * @returns {import('react').ReactElement}
  */
 export default function GuiaArticle({ guide, places = [] }) {
+  const faq = mergeGuiaFaq(guide.faq);
+
   return (
     <article className="mx-auto max-w-2xl px-6 py-10">
       <nav className="text-sm text-[#5a6b66]" aria-label="Breadcrumb">
@@ -66,11 +69,11 @@ export default function GuiaArticle({ guide, places = [] }) {
         />
       )}
 
-      {guide.faq && guide.faq.length > 0 && (
+      {faq.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-bold text-[#1a2e28]">Perguntas frequentes</h2>
           <dl className="mt-4 space-y-4">
-            {guide.faq.map((item) => (
+            {faq.map((item) => (
               <div key={item.question}>
                 <dt className="font-semibold text-[#1a2e28]">{item.question}</dt>
                 <dd className="mt-1 text-sm leading-relaxed text-[#5a6b66]">{item.answer}</dd>

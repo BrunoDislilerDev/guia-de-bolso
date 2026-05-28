@@ -22,7 +22,8 @@ export default function LandingFooter() {
         <div className="sm:col-span-2">
           <Logo size="md" showWordmark />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5c6f68]">
-            O guia oficial de Imbituba — curadoria local e tecnologia de confiança.
+            Guia de Bolso Imbituba — turismo local em SC. Não confundir com Guiabolso
+            (finanças).
           </p>
         </div>
 
@@ -47,6 +48,11 @@ export default function LandingFooter() {
             <li>
               <Link href="/guia/onde-comer-em-imbituba" className="text-[#5c6f68] hover:text-[#0d1f19]">
                 Onde comer
+              </Link>
+            </li>
+            <li>
+              <Link href="/sobre" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Sobre o guia
               </Link>
             </li>
             <li>
@@ -119,7 +125,7 @@ export default function LandingFooter() {
       </div>
 
       <p className="mx-auto mt-12 max-w-6xl px-5 text-center text-xs text-[#8a9b94] sm:px-8 lg:px-10">
-        © {new Date().getFullYear()} Guia de Bolso
+        © {new Date().getFullYear()} Guia de Bolso Imbituba
       </p>
     </footer>
   );
