@@ -119,9 +119,9 @@ function groupByDay(logs, days) {
 export default function AdminIAPage() {
   const { loading: authLoading } = useAdminAuth();
   const [loading, setLoading] = useState(true);
-  const [periodId, setPeriodId] = useState("30d");
+  const [periodId, setPeriodId] = useState("1d");
   const [feature, setFeature] = useState("all");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("BRL");
   const [page, setPage] = useState(1);
   const [expandedErrorId, setExpandedErrorId] = useState(null);
 
@@ -133,7 +133,7 @@ export default function AdminIAPage() {
   const [simBuscasDia, setSimBuscasDia] = useState(5);
   const [simRoteirosMes, setSimRoteirosMes] = useState(2);
 
-  const period = PERIOD_OPTIONS.find((p) => p.id === periodId) || PERIOD_OPTIONS[2];
+  const period = PERIOD_OPTIONS.find((p) => p.id === periodId) || PERIOD_OPTIONS[0];
 
   useEffect(() => {
     if (authLoading) return;

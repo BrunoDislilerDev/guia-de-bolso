@@ -80,6 +80,35 @@
     linear-gradient(180deg, rgba(247, 248, 247, 0.5) 0%, transparent 18%);
 }
 
+/* Vídeo hero — leitura premium com profundidade e atmosfera */
+.landing-cinematic-overlay-video {
+  background:
+    linear-gradient(
+      102deg,
+      rgba(7, 15, 12, 0.82) 0%,
+      rgba(7, 15, 12, 0.62) 35%,
+      rgba(7, 15, 12, 0.42) 58%,
+      rgba(7, 15, 12, 0.58) 100%
+    ),
+    linear-gradient(0deg, rgba(7, 15, 12, 0.5) 0%, transparent 34%),
+    linear-gradient(180deg, rgba(7, 15, 12, 0.38) 0%, transparent 22%);
+}
+
+.landing-hero-vignette {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 -140px 120px -90px rgba(7, 15, 12, 0.72),
+    inset 0 80px 120px -100px rgba(7, 15, 12, 0.45),
+    inset 0 0 180px rgba(7, 15, 12, 0.42);
+}
+
+.landing-hero-ambient {
+  background:
+    radial-gradient(circle at 78% 24%, rgba(127, 212, 174, 0.16), transparent 34%),
+    radial-gradient(circle at 38% 66%, rgba(65, 162, 120, 0.12), transparent 42%);
+  filter: blur(4px);
+}
+
 .landing-section-bridge {
   position: relative;
 }

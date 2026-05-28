@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingButton from "@/components/landing/LandingButton";
 import LandingHeroFloatingCards from "@/components/landing/LandingHeroFloatingCards";
@@ -39,15 +39,39 @@ export default function LandingHero({
   categorias = [],
   heroBackdrop = null,
 }) {
+  const HERO_VIDEO_URL =
+    "https://rsdjbqzjdyeaedyqwrvc.supabase.co/storage/v1/object/public/hero-video/202605281010.mp4";
   const ref = useRef(null);
+  const videoRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const textY = useTransform(scrollYProgress, [0, 1], [0, 56]);
   const phoneY = useTransform(scrollYProgress, [0, 1], [0, 28]);
   const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
+  const [useVideoBackground, setUseVideoBackground] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
 
   const heroImages = showcase.filter((p) => p.capa);
   const backdropUrl = heroBackdrop ?? heroImages[0]?.capa ?? null;
+  const heroPosterUrl = backdropUrl ?? heroImages[1]?.capa ?? null;
+
+  useEffect(() => {
+    const mediaReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mediaMobile = window.matchMedia("(max-width: 900px)").matches;
+    const saveData = navigator.connection?.saveData === true;
+    const shouldUseVideo = !mediaReduced && !mediaMobile && !saveData;
+    setUseVideoBackground(shouldUseVideo);
+  }, []);
+
+  useEffect(() => {
+    if (!useVideoBackground || videoFailed || !videoRef.current) return;
+    const playPromise = videoRef.current.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        setVideoFailed(true);
+      });
+    }
+  }, [useVideoBackground, videoFailed]);
 
   return (
     <section
@@ -55,29 +79,46 @@ export default function LandingHero({
       className={`relative overflow-x-clip ${LANDING.heroMinH} pt-[5.5rem] pb-20 sm:pt-32 sm:pb-28 lg:pb-32`}
       aria-labelledby="landing-hero-title"
     >
-      {backdropUrl ? (
+      {heroPosterUrl ? (
         <motion.div
           className="pointer-events-none absolute inset-0"
           style={{ y: bgY, scale: bgScale }}
           aria-hidden
         >
-          <Image
-            src={backdropUrl}
-            alt=""
-            fill
-            priority
-            className="object-cover object-[center_40%] saturate-[1.08] contrast-[1.03]"
-            sizes="100vw"
-          />
-          <div className="landing-cinematic-overlay absolute inset-0" />
-          <div className="absolute inset-0 bg-[#1a4a3a]/[0.07] mix-blend-multiply" />
+          {useVideoBackground && !videoFailed ? (
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover object-center saturate-[1.05] contrast-[1.02]"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroPosterUrl}
+              onError={() => setVideoFailed(true)}
+            >
+              <source src={HERO_VIDEO_URL} type="video/mp4" />
+            </video>
+          ) : (
+            <Image
+              src={heroPosterUrl}
+              alt=""
+              fill
+              priority
+              className="object-cover object-[center_40%] saturate-[1.06] contrast-[1.03]"
+              sizes="100vw"
+            />
+          )}
+          <div className="landing-cinematic-overlay-video absolute inset-0" />
+          <div className="landing-hero-vignette absolute inset-0" />
+          <div className="landing-hero-ambient absolute inset-0" />
           <div className="landing-noise absolute inset-0 opacity-25" />
         </motion.div>
       ) : (
         <LandingAmbient variant="hero" />
       )}
 
-      {!backdropUrl ? null : <LandingAmbient variant="hero" className="opacity-60" />}
+      {!heroPosterUrl ? null : <LandingAmbient variant="hero" className="opacity-35" />}
 
       <div className="relative mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
         <div className="grid flex-1 items-center gap-14 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">
@@ -90,7 +131,7 @@ export default function LandingHero({
           >
             <motion.p
               variants={fadeUpHero}
-              className="landing-glass inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-[12px] font-medium tracking-wide text-[#1a4a3a]"
+              className="landing-glass-dark inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-[12px] font-medium tracking-wide text-white"
             >
               {hasLiveData && heroImages.length > 0 ? (
                 <span className="flex -space-x-1.5" aria-hidden>
@@ -114,17 +155,17 @@ export default function LandingHero({
             <motion.h1
               id="landing-hero-title"
               variants={fadeUpHero}
-              className="landing-display mt-8 max-w-[12ch] text-[clamp(2.75rem,8vw,4.5rem)] font-semibold leading-[0.98] text-[#0a1612] xl:text-[4.75rem]"
+              className="landing-display mt-8 max-w-[12ch] text-[clamp(2.75rem,8vw,4.5rem)] font-semibold leading-[0.98] text-white xl:text-[4.75rem]"
             >
               <span className="block">{LANDING_HERO.line1}</span>
-              <span className="mt-1 block bg-gradient-to-br from-[#1a4a3a] via-[#2d6b54] to-[#0f2e24] bg-clip-text text-transparent">
+              <span className="mt-1 block bg-gradient-to-br from-[#dff8ea] via-[#9de3c2] to-[#6ec89d] bg-clip-text text-transparent">
                 {LANDING_HERO.line2}
               </span>
             </motion.h1>
 
             <motion.p
               variants={fadeUpHero}
-              className="mt-6 max-w-md text-lg leading-relaxed text-[#4a5c56] sm:text-xl sm:leading-relaxed"
+              className="mt-6 max-w-md text-lg leading-relaxed text-white/85 sm:text-xl sm:leading-relaxed"
             >
               {LANDING_HERO.subtitle}
             </motion.p>
@@ -148,7 +189,7 @@ export default function LandingHero({
 
             <motion.dl
               variants={fadeUpHero}
-              className="mt-14 grid grid-cols-3 gap-6 border-t border-[#1a4a3a]/10 pt-10 sm:gap-10"
+              className="mt-14 grid grid-cols-3 gap-6 border-t border-white/20 pt-10 sm:gap-10"
             >
               {[
                 { label: "Lugares", value: hasLiveData ? stats.totalLugares : "—" },
@@ -156,10 +197,10 @@ export default function LandingHero({
                 { label: "Parceiros", value: hasLiveData ? stats.parceirosCount : "—" },
               ].map((item) => (
                 <div key={item.label}>
-                  <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#7a8b85]">
+                  <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/60">
                     {item.label}
                   </dt>
-                  <dd className="landing-display mt-1 text-2xl font-semibold tabular-nums text-[#0a1612] sm:text-3xl">
+                  <dd className="landing-display mt-1 text-2xl font-semibold tabular-nums text-white sm:text-3xl">
                     {item.value}
                   </dd>
                 </div>
