@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { lugaresApiCacheHeaders } from "@/lib/apiCacheHeaders";
-import { queryLugaresAtivos, queryLugaresByIds } from "@/lib/lugaresQuery";
+import {
+  queryLugaresAtivos,
+  queryLugaresByIds,
+  queryLugaresForCategoria,
+} from "@/lib/lugaresQuery";
 import { fetchLugaresPopularesForClient } from "@/lib/lugaresPopulares";
 import { reportError } from "@/lib/observability";
 import { getAnonServerClient } from "@/lib/supabaseAnonServer";
-import {
-  filterLugaresByCategoria,
-  normalizeLugaresTaxonomia,
-} from "@/lib/lugarTaxonomia";
+import { normalizeLugaresTaxonomia } from "@/lib/lugarTaxonomia";
 import { buildApiErrorBody } from "@/lib/userMessages";
 
 function jsonCached(body, status = 200) {
@@ -71,18 +72,14 @@ export async function GET(request) {
   const categoria = searchParams.get("categoria")?.trim();
 
   if (categoria) {
-    const fetchLimit = Math.min(Math.max(limit * 4, 120), 250);
-    const { data, error } = await queryLugaresAtivos(supabase, { limit: fetchLimit });
+    const { data, error } = await queryLugaresForCategoria(supabase, categoria, limit);
 
     if (error) {
       reportError(error, { route: "GET /api/lugares" });
       return NextResponse.json(buildApiErrorBody("SERVER"), { status: 500 });
     }
 
-    const lugares = normalizeLugaresTaxonomia(
-      filterLugaresByCategoria(data, categoria).slice(0, limit)
-    );
-    return jsonCached({ lugares });
+    return jsonCached({ lugares: data });
   }
 
   const { data, error } = await queryLugaresAtivos(supabase, { limit });

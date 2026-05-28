@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import CategoriaPageClient from "@/components/categoria/CategoriaPageClient";
 import JsonLdScript from "@/components/seo/JsonLdScript";
 import { getCategoriaByNome, getCategoriaHref } from "@/lib/categorias";
-import { queryLugaresAtivos } from "@/lib/lugaresQuery";
+import { queryLugaresForCategoria } from "@/lib/lugaresQuery";
 import { buildCategoriaMetadata } from "@/lib/seo";
 import { buildCategoriaJsonLd } from "@/lib/seoJsonLd";
 import { createClient } from "@/lib/supabase/server";
@@ -51,7 +51,7 @@ export default async function CategoriaPage({ params }) {
   const supabase = await createClient();
 
   const [{ data: lugares, error: lugaresError }, { data: subcategorias }] = await Promise.all([
-    queryLugaresAtivos(supabase, { eq: { categoria }, limit: 100 }),
+    queryLugaresForCategoria(supabase, categoria, 100),
     supabase.from("subcategorias").select("*").eq("categoria", categoria).order("nome"),
   ]);
 

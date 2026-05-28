@@ -12,6 +12,10 @@ import { isSupabasePublicConfigured } from "@/lib/supabase/publicEnv";
 import { buildReportContext } from "@/lib/reportContext";
 import { createClient } from "@/lib/supabase";
 import { withDistanciaDinamica } from "@/lib/localizacao";
+import {
+  filterLugaresByCategoria,
+  normalizeLugaresTaxonomia,
+} from "@/lib/lugarTaxonomia";
 
 /**
  * Listagem por categoria — dados iniciais do servidor para SEO e primeiro paint.
@@ -105,15 +109,20 @@ export default function CategoriaPageClient({
     return () => clearTimeout(timer);
   }, [categoria]);
 
+  const lugaresNaCategoria = useMemo(
+    () => filterLugaresByCategoria(normalizeLugaresTaxonomia(lugares), categoria),
+    [lugares, categoria]
+  );
+
   const subcategoriasComLocais = useMemo(() => {
     const nomesEmUso = new Set(
-      lugares
+      lugaresNaCategoria
         .map((lugar) => lugar.subcategoria?.trim())
         .filter(Boolean)
     );
 
     return subcategorias.filter((item) => nomesEmUso.has(item.nome));
-  }, [lugares, subcategorias]);
+  }, [lugaresNaCategoria, subcategorias]);
 
   useEffect(() => {
     if (
@@ -126,8 +135,10 @@ export default function CategoriaPageClient({
 
   const lugaresFiltrados =
     subcategoriaSelecionada === "Todos"
-      ? lugares
-      : lugares.filter((lugar) => lugar.subcategoria === subcategoriaSelecionada);
+      ? lugaresNaCategoria
+      : lugaresNaCategoria.filter(
+          (lugar) => lugar.subcategoria === subcategoriaSelecionada
+        );
 
   return (
     <div className="min-h-screen bg-[#f0f4f3] text-[#1a2e28]">
