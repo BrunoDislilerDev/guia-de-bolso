@@ -21,6 +21,7 @@ import {
  * @param {import('@/lib/landingPageData').LandingPageData['stats']} [props.stats]
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} [props.places]
  * @param {string} [props.className]
+ * @param {boolean} [props.animateEntrance]
  * @returns {import('react').ReactElement}
  */
 export default function LandingPhoneMockup({
@@ -32,6 +33,7 @@ export default function LandingPhoneMockup({
   stats,
   places = [],
   className = "",
+  animateEntrance = true,
 }) {
   const outerWidth = PHONE_OUTER_WIDTH[size] ?? PHONE_OUTER_WIDTH.hero;
   const m = getLandingPhoneMetrics(outerWidth);
@@ -49,26 +51,52 @@ export default function LandingPhoneMockup({
       <LandingPhoneHomeScreen emAlta={alta} parceiros={parceiros} categorias={categorias} />
     );
 
+  const shell = (
+    <>
+      {animateEntrance ? (
+        <div
+          className="pointer-events-none absolute -bottom-4 left-1/2 -z-10 h-6 w-[55%] -translate-x-1/2 rounded-[100%] bg-black/20 blur-md"
+          aria-hidden
+        />
+      ) : (
+        <div
+          className="pointer-events-none absolute -bottom-3 left-1/2 -z-10 h-4 w-[50%] -translate-x-1/2 rounded-[100%] bg-black/12"
+          aria-hidden
+        />
+      )}
+      <LandingPhoneDeviceShell metrics={m}>{screenContent}</LandingPhoneDeviceShell>
+    </>
+  );
+
+  const boxStyle = {
+    width: m.outerWidth,
+    maxWidth: `min(${m.outerWidth}px, calc(100vw - 2rem))`,
+  };
+
+  if (!animateEntrance) {
+    return (
+      <div
+        className={`relative mx-auto shrink-0 ${className}`}
+        style={boxStyle}
+        role="img"
+        aria-label={ariaLabel}
+      >
+        {shell}
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className={`relative mx-auto shrink-0 ${className}`}
-      style={{
-        width: m.outerWidth,
-        maxWidth: `min(${m.outerWidth}px, calc(100vw - 2rem))`,
-      }}
+      style={boxStyle}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.75, ease: easePremium, delay: 0.08 }}
       role="img"
       aria-label={ariaLabel}
     >
-      {/* Sombra de contato no superfície */}
-      <div
-        className="pointer-events-none absolute -bottom-4 left-1/2 -z-10 h-6 w-[55%] -translate-x-1/2 rounded-[100%] bg-black/20 blur-md"
-        aria-hidden
-      />
-
-      <LandingPhoneDeviceShell metrics={m}>{screenContent}</LandingPhoneDeviceShell>
+      {shell}
     </motion.div>
   );
 }

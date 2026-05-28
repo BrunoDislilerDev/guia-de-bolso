@@ -5,12 +5,7 @@ import Image from "next/image";
 import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingPlaceCard from "@/components/landing/LandingPlaceCard";
 import { LandingSectionHeader } from "@/components/landing/LandingSection";
-import {
-  defaultViewport,
-  fadeUpCinematic,
-  scaleReveal,
-  staggerCinematic,
-} from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 import { LANDING_SECTION_IDS } from "@/lib/landingContent";
 
 /** @param {object} p */
@@ -37,6 +32,8 @@ function LandingDiscoverSection({ id, className, children }) {
  * @returns {import('react').ReactElement}
  */
 export default function LandingDiscover({ discoverShowcase = [], categorias, hasLiveData }) {
+  const { stagger, scaleReveal: scaleRevealVariant, viewport } = useLandingRevealMotion();
+
   return (
     <LandingDiscoverSection
       id={LANDING_SECTION_IDS.categorias}
@@ -57,8 +54,8 @@ export default function LandingDiscover({ discoverShowcase = [], categorias, has
           className="mt-16 flex gap-5 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory md:grid md:grid-cols-3 md:overflow-visible md:pb-0"
           initial="hidden"
           whileInView="visible"
-          viewport={defaultViewport}
-          variants={staggerCinematic}
+          viewport={viewport}
+          variants={stagger}
           role="list"
         >
           {discoverShowcase.map((lugar, i) => (
@@ -81,13 +78,13 @@ export default function LandingDiscover({ discoverShowcase = [], categorias, has
             role="list"
             initial="hidden"
             whileInView="visible"
-            viewport={defaultViewport}
-            variants={staggerCinematic}
+            viewport={viewport}
+            variants={stagger}
           >
             {categorias.slice(0, 8).map((cat) => (
               <motion.li
                 key={cat.nome}
-                variants={scaleReveal}
+                variants={scaleRevealVariant}
                 className="landing-card-hover group relative overflow-hidden rounded-2xl bg-white/70 p-4 ring-1 ring-[rgba(13,31,25,0.04)] backdrop-blur-md"
               >
                 {cat.capa && (

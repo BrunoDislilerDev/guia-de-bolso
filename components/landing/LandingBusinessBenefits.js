@@ -3,11 +3,7 @@
 import { motion } from "framer-motion";
 import LandingButton from "@/components/landing/LandingButton";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import {
-  defaultViewport,
-  fadeUpCinematic,
-  staggerCinematic,
-} from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 import {
   LANDING_BUSINESS_BENEFITS,
   LANDING_HERO,
@@ -20,6 +16,8 @@ import {
  * @returns {import('react').ReactElement}
  */
 export default function LandingBusinessBenefits() {
+  const { reveal, stagger, viewport } = useLandingRevealMotion();
+
   return (
     <LandingSection id={LANDING_SECTION_IDS.negocios} className="bg-[#0f2e24] text-white">
       <div className="grid gap-16 lg:grid-cols-2 lg:items-end">
@@ -47,13 +45,13 @@ export default function LandingBusinessBenefits() {
         role="list"
         initial="hidden"
         whileInView="visible"
-        viewport={defaultViewport}
-        variants={staggerCinematic}
+        viewport={viewport}
+        variants={stagger}
       >
         {LANDING_BUSINESS_BENEFITS.map((item) => (
           <motion.li
             key={item.title}
-            variants={fadeUpCinematic}
+            variants={reveal}
             className="landing-card-hover rounded-[1.35rem] border border-white/10 bg-white/[0.06] p-8 backdrop-blur-md"
           >
             <h3 className="font-display text-lg font-semibold text-white">{item.title}</h3>

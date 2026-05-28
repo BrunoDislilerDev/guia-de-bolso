@@ -13,6 +13,7 @@ import LandingPartners from "@/components/landing/LandingPartners";
 import LandingSocialProof from "@/components/landing/LandingSocialProof";
 import LandingTestimonials from "@/components/landing/LandingTestimonials";
 import LandingTouristBenefits from "@/components/landing/LandingTouristBenefits";
+import { useLandingMotion } from "@/components/landing/useLandingRichMotion";
 import { getLandingFallbackData } from "@/lib/landingPageData";
 
 /**
@@ -23,6 +24,7 @@ import { getLandingFallbackData } from "@/lib/landingPageData";
  */
 export default function LandingPageClient({ initialData }) {
   const data = initialData ?? getLandingFallbackData();
+  useLandingMotion();
 
   return (
     <>

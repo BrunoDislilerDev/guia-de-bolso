@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { defaultViewport, fadeUpCinematic } from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 import { LANDING } from "@/components/landing/landingTheme";
 
 /**
@@ -23,14 +23,47 @@ export function LandingSectionHeader({
 }) {
   const headerAlign = center ? "mx-auto max-w-3xl text-center" : "max-w-2xl";
   const subtitleAlign = center ? "mx-auto text-center" : "";
+  const { reveal, viewport, skipEntrance } = useLandingRevealMotion();
+
+  if (skipEntrance) {
+    return (
+      <header className={headerAlign}>
+        {eyebrow && (
+          <p
+            className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${
+              dark ? "text-[#7fd4ae]" : "text-[#1a4a3a]/65"
+            }`}
+          >
+            {eyebrow}
+          </p>
+        )}
+        <h2
+          className={`landing-display text-[clamp(1.875rem,5vw,3rem)] font-semibold leading-[1.08] sm:text-[2.75rem] lg:text-[3.25rem] ${
+            dark ? "text-white" : "text-[#0a1612]"
+          } ${eyebrow ? "mt-4" : ""}`}
+        >
+          {title}
+        </h2>
+        {subtitle && (
+          <p
+            className={`mt-5 max-w-xl text-base leading-relaxed text-[#4a5c56] sm:text-lg ${subtitleAlign} ${
+              dark ? "!text-white/70" : ""
+            }`}
+          >
+            {subtitle}
+          </p>
+        )}
+      </header>
+    );
+  }
 
   return (
     <motion.header
       className={headerAlign}
       initial="hidden"
       whileInView="visible"
-      viewport={defaultViewport}
-      variants={fadeUpCinematic}
+      viewport={viewport}
+      variants={reveal}
     >
       {eyebrow && (
         <p

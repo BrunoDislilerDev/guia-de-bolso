@@ -2,11 +2,7 @@
 
 import { motion } from "framer-motion";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import {
-  defaultViewport,
-  fadeUpCinematic,
-  staggerCinematic,
-} from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 import { LANDING_SECTION_IDS, LANDING_TESTIMONIALS } from "@/lib/landingContent";
 
 /**
@@ -16,6 +12,8 @@ import { LANDING_SECTION_IDS, LANDING_TESTIMONIALS } from "@/lib/landingContent"
  * @returns {import('react').ReactElement}
  */
 export default function LandingTestimonials({ stats }) {
+  const { reveal, stagger, viewport } = useLandingRevealMotion();
+
   return (
     <LandingSection id={LANDING_SECTION_IDS.depoimentos} tone="white" bridge={false}>
       <LandingSectionHeader
@@ -28,8 +26,8 @@ export default function LandingTestimonials({ stats }) {
         className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[#5d6d67]"
         initial="hidden"
         whileInView="visible"
-        viewport={defaultViewport}
-        variants={fadeUpCinematic}
+        viewport={viewport}
+        variants={reveal}
       >
         <span className="rounded-full bg-[#e8f2ee] px-3 py-1 font-semibold text-[#1a4a3a]">
           {stats?.avaliacoesCount || 0}+ avaliações aprovadas
@@ -43,13 +41,13 @@ export default function LandingTestimonials({ stats }) {
         role="list"
         initial="hidden"
         whileInView="visible"
-        viewport={defaultViewport}
-        variants={staggerCinematic}
+        viewport={viewport}
+        variants={stagger}
       >
         {LANDING_TESTIMONIALS.map((t) => (
           <motion.li
             key={t.name}
-            variants={fadeUpCinematic}
+            variants={reveal}
             className="landing-card-hover landing-fluid-panel flex flex-col rounded-[1.5rem] p-8"
           >
             <p className="flex-1 font-display text-lg font-medium leading-snug tracking-tight text-[#0d1f19]">

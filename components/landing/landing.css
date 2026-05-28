@@ -78,6 +78,89 @@
   }
 }
 
+/* Mobile — motion lite: menos blur, sem drift infinito, scroll mais fluido */
+.landing-motion-lite .landing-ambient-drift,
+.landing-motion-lite .landing-ambient-drift-slow {
+  animation: none;
+}
+
+.landing-motion-lite .landing-noise {
+  display: none;
+}
+
+.landing-motion-lite .landing-logo-rail-track {
+  animation: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.landing-motion-lite .landing-glass,
+.landing-motion-lite .landing-glass-dark,
+.landing-motion-lite .landing-fluid-panel,
+.landing-motion-lite .landing-surface-soft,
+.landing-motion-lite .landing-nav-hero,
+.landing-motion-lite .landing-nav-scrolled,
+.landing-motion-lite .landing-card-hover,
+.landing-motion-lite [class*="backdrop-blur"] {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.landing-motion-lite .landing-glass {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.landing-motion-lite .landing-glass-dark {
+  background: rgba(10, 22, 18, 0.78);
+}
+
+.landing-motion-lite .landing-fluid-panel {
+  background: #ffffff;
+}
+
+.landing-motion-lite .landing-nav-hero {
+  background: rgba(7, 15, 12, 0.55);
+}
+
+.landing-motion-lite .landing-nav-scrolled {
+  background: #f7f8f7;
+}
+
+.landing-motion-lite .landing-section-flow {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 520px;
+}
+
+.landing-motion-lite .landing-hero-video-grade {
+  filter: none;
+}
+
+.landing-motion-lite .landing-hero-video-grade video,
+.landing-motion-lite .landing-hero-video-grade img {
+  filter: none;
+}
+
+.landing-motion-lite .landing-social-proof-ambient,
+.landing-motion-lite .landing-final-cta-glow {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .landing-motion-lite [class*="blur-["] {
+    display: none;
+  }
+
+  .landing-motion-lite .landing-card-hover {
+    transition: none;
+  }
+
+  .landing-motion-lite .landing-card-hover:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
 .landing-hero-mesh {
   background:
     radial-gradient(ellipse 80% 60% at 20% 0%, rgba(127, 212, 174, 0.22), transparent 55%),

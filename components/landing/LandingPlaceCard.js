@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { hoverLift } from "@/components/landing/landingMotion";
+import { useLandingRichMotion } from "@/components/landing/useLandingRichMotion";
 import { getCategoriaByNome } from "@/lib/categorias";
 import { getStatusFuncionamento } from "@/lib/horarios";
-import { hoverLift, scaleIn } from "@/components/landing/landingMotion";
 
 /**
  * Card editorial de lugar.
@@ -15,17 +16,13 @@ import { hoverLift, scaleIn } from "@/components/landing/landingMotion";
  * @returns {import('react').ReactElement}
  */
 export default function LandingPlaceCard({ lugar, priority = false, className = "" }) {
+  const richMotion = useLandingRichMotion();
   const cat = getCategoriaByNome(lugar.categoria);
   const status = getStatusFuncionamento(lugar.horarios, lugar.mostrarHorarios);
+  const cardClass = `landing-card-hover group flex h-full flex-col overflow-hidden rounded-[1.35rem] bg-white/75 ring-1 ring-[rgba(13,31,25,0.04)] backdrop-blur-md ${className}`;
 
-  return (
-    <motion.article
-      initial="rest"
-      whileHover="hover"
-      animate="rest"
-      variants={{ ...scaleIn, ...hoverLift }}
-      className={`landing-card-hover group flex h-full flex-col overflow-hidden rounded-[1.35rem] bg-white/75 ring-1 ring-[rgba(13,31,25,0.04)] backdrop-blur-md ${className}`}
-    >
+  const inner = (
+    <>
       <div className="relative aspect-[5/4] overflow-hidden bg-[#e8f2ee]">
         {lugar.capa ? (
           <Image
@@ -33,7 +30,11 @@ export default function LandingPlaceCard({ lugar, priority = false, className = 
             alt={lugar.nome}
             fill
             sizes="(max-width: 768px) 88vw, 340px"
-            className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.025]"
+            className={`object-cover ${
+              richMotion
+                ? "transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.025]"
+                : ""
+            }`}
             priority={priority}
           />
         ) : (
@@ -70,6 +71,22 @@ export default function LandingPlaceCard({ lugar, priority = false, className = 
           )}
         </div>
       )}
+    </>
+  );
+
+  if (!richMotion) {
+    return <article className={cardClass}>{inner}</article>;
+  }
+
+  return (
+    <motion.article
+      initial="rest"
+      whileHover="hover"
+      animate="rest"
+      variants={hoverLift}
+      className={cardClass}
+    >
+      {inner}
     </motion.article>
   );
 }

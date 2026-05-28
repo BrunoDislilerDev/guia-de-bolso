@@ -1,13 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  defaultViewport,
-  fadeUp,
-  fadeUpCinematic,
-  staggerCinematic,
-  staggerContainer,
-} from "@/components/landing/landingMotion";
+import { fadeUp } from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 
 /**
  * Entrada suave ao entrar no viewport — reveal premium.
@@ -24,15 +19,16 @@ export default function LandingReveal({
   stagger = false,
   cinematic = false,
 }) {
-  const variants = cinematic ? fadeUpCinematic : fadeUp;
-  const staggerVariants = cinematic ? staggerCinematic : staggerContainer;
+  const { reveal, stagger, viewport } = useLandingRevealMotion();
+  const variants = cinematic ? reveal : fadeUp;
+  const staggerVariants = stagger;
 
   return (
     <motion.div
       className={className}
       initial="hidden"
       whileInView="visible"
-      viewport={defaultViewport}
+      viewport={viewport}
       variants={stagger ? staggerVariants : variants}
     >
       {children}

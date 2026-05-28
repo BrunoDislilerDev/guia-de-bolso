@@ -3,11 +3,7 @@
 import { motion } from "framer-motion";
 import { LandingSectionHeader } from "@/components/landing/LandingSection";
 import LandingSection from "@/components/landing/LandingSection";
-import {
-  defaultViewport,
-  fadeUpCinematic,
-  staggerCinematic,
-} from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 import { LANDING_SECTION_IDS, LANDING_STEPS } from "@/lib/landingContent";
 
 /**
@@ -15,6 +11,8 @@ import { LANDING_SECTION_IDS, LANDING_STEPS } from "@/lib/landingContent";
  * @returns {import('react').ReactElement}
  */
 export default function LandingHowItWorks() {
+  const { reveal, stagger, viewport } = useLandingRevealMotion();
+
   return (
     <LandingSection id={LANDING_SECTION_IDS.comoFunciona} tone="white" bridge={false}>
       <LandingSectionHeader
@@ -29,13 +27,13 @@ export default function LandingHowItWorks() {
         role="list"
         initial="hidden"
         whileInView="visible"
-        viewport={defaultViewport}
-        variants={staggerCinematic}
+        viewport={viewport}
+        variants={stagger}
       >
         {LANDING_STEPS.map((step) => (
           <motion.li
             key={step.step}
-            variants={fadeUpCinematic}
+            variants={reveal}
             className="landing-card-hover landing-fluid-panel relative rounded-[1.35rem] p-8 sm:p-9"
           >
             <span className="font-display text-sm font-semibold tracking-widest text-[#7fd4ae]">

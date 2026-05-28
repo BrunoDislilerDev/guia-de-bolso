@@ -7,7 +7,7 @@ import "@/components/landing/landing.css";
  */
 export default function LandingLayout({ children }) {
   return (
-    <div className="landing-root scroll-smooth antialiased [font-feature-settings:'kern'_1,'liga'_1,'cv01'_1]">
+    <div className="landing-root landing-motion-lite scroll-smooth antialiased [font-feature-settings:'kern'_1,'liga'_1,'cv01'_1]">
       {children}
     </div>
   );

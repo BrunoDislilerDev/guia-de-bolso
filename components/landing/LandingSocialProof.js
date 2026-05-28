@@ -2,11 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import {
-  defaultViewport,
-  fadeUpCinematic,
-  staggerCinematic,
-} from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 import { LANDING_TESTIMONIALS } from "@/lib/landingContent";
 
 /**
@@ -19,6 +15,7 @@ import { LANDING_TESTIMONIALS } from "@/lib/landingContent";
  * @returns {import('react').ReactElement|null}
  */
 export default function LandingSocialProof({ stats, parceiros = [], showcase = [], hasLiveData }) {
+  const { reveal, stagger, viewport } = useLandingRevealMotion();
   const featured = LANDING_TESTIMONIALS[0];
   const partnerNames = parceiros.map((p) => p.nome).filter(Boolean);
   const faces = showcase.filter((p) => p.capa).slice(0, 5);
@@ -30,7 +27,7 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
       className="landing-social-proof-band landing-section-flow relative z-[2] py-16 sm:py-20"
       aria-label="Prova social"
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <div className="landing-social-proof-ambient pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="landing-ambient-drift absolute -left-[20%] top-0 h-[50%] w-[50%] rounded-full bg-[#7fd4ae]/10 blur-[100px]" />
         <div className="landing-ambient-drift-slow absolute -right-[10%] bottom-0 h-[40%] w-[45%] rounded-full bg-[#1a4a3a]/6 blur-[90px]" />
       </div>
@@ -40,8 +37,8 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
           className="flex flex-col items-center text-center"
           initial="hidden"
           whileInView="visible"
-          viewport={defaultViewport}
-          variants={fadeUpCinematic}
+          viewport={viewport}
+          variants={reveal}
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1a4a3a]/60">
             Confiança local
@@ -55,15 +52,15 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
           className="mt-10 grid grid-cols-3 gap-4 sm:gap-8"
           initial="hidden"
           whileInView="visible"
-          viewport={defaultViewport}
-          variants={staggerCinematic}
+          viewport={viewport}
+          variants={stagger}
         >
           {[
             { label: "Lugares verificados", value: stats?.totalLugares || "—" },
             { label: "Parceiros oficiais", value: stats?.parceirosCount || "—" },
             { label: "Avaliações aprovadas", value: stats?.avaliacoesCount || "—" },
           ].map((item) => (
-            <motion.div key={item.label} variants={fadeUpCinematic} className="text-center">
+            <motion.div key={item.label} variants={reveal} className="text-center">
               <dd className="landing-display text-2xl font-semibold tabular-nums text-[#1a4a3a] sm:text-3xl">
                 {item.value}
               </dd>
@@ -79,8 +76,8 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
             className="mt-10 flex justify-center"
             initial="hidden"
             whileInView="visible"
-            viewport={defaultViewport}
-            variants={fadeUpCinematic}
+            viewport={viewport}
+            variants={reveal}
           >
             <div className="flex -space-x-2" aria-hidden>
               {faces.map((p) => (
@@ -112,8 +109,8 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
           className="landing-fluid-panel mx-auto mt-12 max-w-3xl rounded-[1.5rem] p-8 sm:p-10"
           initial="hidden"
           whileInView="visible"
-          viewport={defaultViewport}
-          variants={fadeUpCinematic}
+          viewport={viewport}
+          variants={reveal}
         >
           <p className="font-display text-lg font-medium leading-snug tracking-tight text-[#0a1612] sm:text-xl">
             &ldquo;{featured.quote}&rdquo;
@@ -135,13 +132,13 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
             role="list"
             initial="hidden"
             whileInView="visible"
-            viewport={defaultViewport}
-            variants={staggerCinematic}
+            viewport={viewport}
+            variants={stagger}
           >
             {parceiros.slice(0, 4).map((p) => (
               <motion.li
                 key={p.id}
-                variants={fadeUpCinematic}
+                variants={reveal}
                 className="flex w-[min(70vw,200px)] shrink-0 items-center gap-3 rounded-2xl bg-white/80 p-3 ring-1 ring-[rgba(13,31,25,0.05)] backdrop-blur-sm sm:w-auto"
               >
                 <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-[#e8f2ee]">

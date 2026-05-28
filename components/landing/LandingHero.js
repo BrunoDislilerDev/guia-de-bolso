@@ -99,6 +99,16 @@ function LandingHeroBody({
   const PhoneWrap = phoneStyle ? motion.div : "div";
   const AmbientWrap = ambientStyle ? motion.div : "div";
   const PhoneAnimator = animatePhone ? motion.div : "div";
+  const EyebrowTag = richMotion ? motion.p : "p";
+  const TitleTag = richMotion ? motion.h1 : "h1";
+  const SubtitleTag = richMotion ? motion.p : "p";
+  const CtaWrap = richMotion ? motion.div : "div";
+  const StatsWrap = richMotion ? motion.dl : "dl";
+  const motionChild = richMotion ? { variants: fadeUpHero } : {};
+  const textWrapMotion = richMotion
+    ? { initial: "hidden", animate: "visible", variants: staggerHero }
+    : {};
+  const phoneWrapMotion = richMotion ? { initial: "hidden", animate: "visible", variants: scaleIn } : {};
 
   return (
     <section
@@ -138,33 +148,37 @@ function LandingHeroBody({
           )}
           <div className="landing-cinematic-overlay-video absolute inset-0" />
           <div className="landing-hero-vignette absolute inset-0" />
-          <div className="landing-hero-rim-glow absolute inset-0" />
-          <AmbientWrap className="landing-hero-light-pass absolute inset-0" style={ambientStyle} />
-          <div className="landing-hero-ambient landing-ambient-drift absolute inset-0 opacity-90" />
+          {richMotion ? <div className="landing-hero-rim-glow absolute inset-0" /> : null}
+          {richMotion ? (
+            <AmbientWrap className="landing-hero-light-pass absolute inset-0" style={ambientStyle} />
+          ) : null}
+          {richMotion ? (
+            <div className="landing-hero-ambient landing-ambient-drift absolute inset-0 opacity-90" />
+          ) : null}
         </BgWrap>
       ) : (
-        <LandingAmbient variant="hero" />
+        <LandingAmbient variant="hero" lite={!richMotion} />
       )}
 
-      {heroPosterUrl ? (
+      {heroPosterUrl && richMotion ? (
         <div
           className="landing-noise landing-hero-film-grain pointer-events-none absolute inset-0 z-[1]"
           aria-hidden
         />
       ) : null}
-      {heroPosterUrl ? <LandingAmbient variant="hero" className="opacity-35" /> : null}
+      {heroPosterUrl ? (
+        <LandingAmbient variant="hero" className="opacity-35" lite={!richMotion} />
+      ) : null}
 
       <div className="relative mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
         <div className="grid flex-1 items-center gap-10 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">
           <TextWrap
             className="order-2 lg:order-1 landing-hero-content-block"
             style={textStyle}
-            initial="hidden"
-            animate="visible"
-            variants={staggerHero}
+            {...textWrapMotion}
           >
-            <motion.p
-              variants={fadeUpHero}
+            <EyebrowTag
+              {...motionChild}
               className="landing-glass-dark inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-[12px] font-medium tracking-wide text-white"
             >
               {hasLiveData && heroImages.length > 0 ? (
@@ -184,28 +198,28 @@ function LandingHeroBody({
                   ? `${stats.totalLugares}+ experiências · ${LANDING_HERO.eyebrow}`
                   : LANDING_HERO.eyebrow}
               </span>
-            </motion.p>
+            </EyebrowTag>
 
-            <motion.h1
+            <TitleTag
               id="landing-hero-title"
-              variants={fadeUpHero}
+              {...motionChild}
               className="landing-display mt-6 max-w-[12ch] text-[clamp(2.75rem,8vw,4.5rem)] font-semibold leading-[0.98] text-white lg:mt-8 xl:text-[4.75rem]"
             >
               <span className="block">{LANDING_HERO.line1}</span>
               <span className="mt-1 block bg-gradient-to-br from-[#dff8ea] via-[#9de3c2] to-[#6ec89d] bg-clip-text text-transparent">
                 {LANDING_HERO.line2}
               </span>
-            </motion.h1>
+            </TitleTag>
 
-            <motion.p
-              variants={fadeUpHero}
+            <SubtitleTag
+              {...motionChild}
               className="mt-5 max-w-md text-lg leading-relaxed text-white/85 sm:mt-6 sm:text-xl sm:leading-relaxed"
             >
               {LANDING_HERO.subtitle}
-            </motion.p>
+            </SubtitleTag>
 
-            <motion.div
-              variants={fadeUpHero}
+            <CtaWrap
+              {...motionChild}
               className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4"
             >
               <LandingButton href={`#${LANDING_SECTION_IDS.categorias}`} variant="primary" size="lg">
@@ -219,10 +233,10 @@ function LandingHeroBody({
               >
                 {LANDING_HERO.ctaBusiness}
               </LandingButton>
-            </motion.div>
+            </CtaWrap>
 
-            <motion.dl
-              variants={fadeUpHero}
+            <StatsWrap
+              {...motionChild}
               className="mt-10 grid grid-cols-3 gap-3 border-t border-white/20 pt-8 sm:mt-14 sm:gap-4 sm:pt-9"
             >
               {heroStats.map((item) => (
@@ -238,15 +252,13 @@ function LandingHeroBody({
                   </dd>
                 </div>
               ))}
-            </motion.dl>
+            </StatsWrap>
           </TextWrap>
 
           <PhoneWrap
             className="order-1 flex justify-center lg:order-2 lg:justify-end"
             style={phoneStyle}
-            initial="hidden"
-            animate="visible"
-            variants={scaleIn}
+            {...phoneWrapMotion}
           >
             <div className="relative">
               {richMotion ? <LandingHeroFloatingCards places={showcase} /> : null}
@@ -254,10 +266,12 @@ function LandingHeroBody({
                 className="landing-device-glow pointer-events-none absolute -inset-20 -z-10 sm:-inset-24"
                 aria-hidden
               />
-              <div
-                className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[70%] w-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7fd4ae]/15 blur-[60px]"
-                aria-hidden
-              />
+              {richMotion ? (
+                <div
+                  className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[70%] w-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7fd4ae]/15 blur-[60px]"
+                  aria-hidden
+                />
+              ) : null}
               <PhoneAnimator {...(animatePhone ? floatDevice : {})}>
                 <LandingPhoneMockup
                   screen="home"
@@ -265,6 +279,7 @@ function LandingHeroBody({
                   emAlta={showcase}
                   parceiros={parceiros}
                   categorias={categorias}
+                  animateEntrance={richMotion}
                   className="relative z-[1] drop-shadow-[0_40px_80px_rgba(7,15,12,0.28)]"
                 />
               </PhoneAnimator>

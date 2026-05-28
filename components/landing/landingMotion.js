@@ -7,6 +7,7 @@ export const easeCinematic = [0.19, 1, 0.22, 1];
 const transitionPremium = { duration: 0.95, ease: easePremium };
 const transitionHero = { duration: 1.15, ease: easeCinematic };
 const transitionReveal = { duration: 1.05, ease: easeCinematic };
+const transitionLite = { duration: 0.38, ease: easeOutSoft };
 
 export const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,6 +27,21 @@ export const fadeUpCinematic = {
     filter: "blur(0px)",
     transition: transitionReveal,
   },
+};
+
+/** Mobile — só opacity/translate, sem blur (GPU-friendly). */
+export const fadeUpLite = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: transitionLite,
+  },
+};
+
+export const fadeInstant = {
+  hidden: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 },
 };
 
 export const fadeUpHero = {
@@ -59,6 +75,13 @@ export const staggerCinematic = {
   },
 };
 
+export const staggerLite = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.05, delayChildren: 0.03 },
+  },
+};
+
 export const staggerHero = {
   hidden: {},
   visible: {
@@ -89,6 +112,15 @@ export const scaleReveal = {
     scale: 1,
     y: 0,
     transition: { duration: 1, ease: easeCinematic },
+  },
+};
+
+export const scaleRevealLite = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: transitionLite,
   },
 };
 
@@ -152,6 +184,13 @@ export const defaultViewport = {
   once: true,
   margin: "-64px 0px -64px 0px",
   amount: 0.12,
+};
+
+/** Viewport mais cedo no mobile — menos trabalho durante scroll rápido. */
+export const liteViewport = {
+  once: true,
+  margin: "0px 0px -8% 0px",
+  amount: 0.06,
 };
 
 /** @type {import('framer-motion').Transition} */

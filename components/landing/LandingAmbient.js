@@ -3,17 +3,22 @@
  * @param {object} props
  * @param {"hero"|"section"|"dark"} [props.variant]
  * @param {string} [props.className]
+ * @param {boolean} [props.lite]
  * @returns {import('react').ReactElement}
  */
-export default function LandingAmbient({ variant = "section", className = "" }) {
+export default function LandingAmbient({ variant = "section", className = "", lite = false }) {
   if (variant === "hero") {
     return (
       <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden>
         <div className="absolute inset-0 landing-hero-mesh" />
-        <div className="landing-ambient-drift absolute -left-[30%] top-[-20%] h-[85%] w-[75%] rounded-full bg-[#7fd4ae]/20 blur-[120px]" />
-        <div className="landing-ambient-drift-slow absolute -right-[15%] top-[10%] h-[60%] w-[55%] rounded-full bg-[#1a4a3a]/10 blur-[100px]" />
-        <div className="landing-ambient-drift absolute bottom-[-10%] left-[20%] h-[45%] w-[60%] rounded-full bg-[#7fd4ae]/10 blur-[90px]" />
-        <div className="landing-noise absolute inset-0" />
+        {!lite ? (
+          <>
+            <div className="landing-ambient-drift absolute -left-[30%] top-[-20%] h-[85%] w-[75%] rounded-full bg-[#7fd4ae]/20 blur-[120px]" />
+            <div className="landing-ambient-drift-slow absolute -right-[15%] top-[10%] h-[60%] w-[55%] rounded-full bg-[#1a4a3a]/10 blur-[100px]" />
+            <div className="landing-ambient-drift absolute bottom-[-10%] left-[20%] h-[45%] w-[60%] rounded-full bg-[#7fd4ae]/10 blur-[90px]" />
+            <div className="landing-noise absolute inset-0" />
+          </>
+        ) : null}
       </div>
     );
   }

@@ -2,11 +2,7 @@
 
 import { motion } from "framer-motion";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import {
-  defaultViewport,
-  fadeUpCinematic,
-  staggerCinematic,
-} from "@/components/landing/landingMotion";
+import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotion";
 import { LANDING_SECTION_IDS, LANDING_TOURIST_BENEFITS } from "@/lib/landingContent";
 
 /**
@@ -14,6 +10,8 @@ import { LANDING_SECTION_IDS, LANDING_TOURIST_BENEFITS } from "@/lib/landingCont
  * @returns {import('react').ReactElement}
  */
 export default function LandingTouristBenefits() {
+  const { reveal, stagger, viewport } = useLandingRevealMotion();
+
   return (
     <LandingSection id={LANDING_SECTION_IDS.turistas} tone="mist" bridge={false}>
       <LandingSectionHeader
@@ -28,13 +26,13 @@ export default function LandingTouristBenefits() {
         role="list"
         initial="hidden"
         whileInView="visible"
-        viewport={defaultViewport}
-        variants={staggerCinematic}
+        viewport={viewport}
+        variants={stagger}
       >
         {LANDING_TOURIST_BENEFITS.map((item) => (
           <motion.li
             key={item.title}
-            variants={fadeUpCinematic}
+            variants={reveal}
             className="landing-card-hover landing-fluid-panel p-8 sm:p-10"
           >
             <h3 className="font-display text-lg font-semibold tracking-tight text-[#0d1f19]">
