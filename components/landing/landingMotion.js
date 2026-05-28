@@ -1,10 +1,12 @@
-/** Motion — cinematográfico, discreto (Linear / Apple). */
+/** Motion — cinematográfico, discreto (Apple / Linear / Stripe). */
 export const easePremium = [0.16, 1, 0.3, 1];
 export const easeOutSoft = [0.22, 1, 0.36, 1];
 export const easeAmbient = [0.25, 0.1, 0.25, 1];
+export const easeCinematic = [0.19, 1, 0.22, 1];
 
 const transitionPremium = { duration: 0.95, ease: easePremium };
-const transitionHero = { duration: 1.15, ease: easePremium };
+const transitionHero = { duration: 1.15, ease: easeCinematic };
+const transitionReveal = { duration: 1.05, ease: easeCinematic };
 
 export const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -12,6 +14,17 @@ export const fadeUp = {
     opacity: 1,
     y: 0,
     transition: transitionPremium,
+  },
+};
+
+/** Reveal mais lento — seções editoriais. */
+export const fadeUpCinematic = {
+  hidden: { opacity: 0, y: 28, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: transitionReveal,
   },
 };
 
@@ -39,6 +52,13 @@ export const staggerContainer = {
   },
 };
 
+export const staggerCinematic = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.14, delayChildren: 0.12 },
+  },
+};
+
 export const staggerHero = {
   hidden: {},
   visible: {
@@ -62,12 +82,34 @@ export const scaleIn = {
   },
 };
 
+export const scaleReveal = {
+  hidden: { opacity: 0, scale: 0.96, y: 12 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 1, ease: easeCinematic },
+  },
+};
+
 /** Flutuação do device — amplitude mínima. */
 export const floatDevice = {
   animate: {
     y: [0, -6, 0],
     transition: {
       duration: 9,
+      repeat: Infinity,
+      ease: easeAmbient,
+    },
+  },
+};
+
+/** Ainda mais sutil — showcase secundário. */
+export const floatDeviceSoft = {
+  animate: {
+    y: [0, -4, 0],
+    transition: {
+      duration: 11,
       repeat: Infinity,
       ease: easeAmbient,
     },
@@ -97,10 +139,10 @@ export function floatCard(index = 0) {
 
 /** Hover sutil para cards e tiles. */
 export const hoverLift = {
-  rest: { y: 0 },
+  rest: { y: 0, scale: 1 },
   hover: {
-    y: -3,
-    scale: 1.005,
+    y: -4,
+    scale: 1.008,
     transition: { duration: 0.55, ease: easeOutSoft },
   },
 };
@@ -108,8 +150,8 @@ export const hoverLift = {
 /** @type {import('framer-motion').ViewportOptions} */
 export const defaultViewport = {
   once: true,
-  margin: "-48px 0px -48px 0px",
-  amount: 0.14,
+  margin: "-64px 0px -64px 0px",
+  amount: 0.12,
 };
 
 /** @type {import('framer-motion').Transition} */

@@ -20,12 +20,11 @@ export default function LandingPlaceCard({ lugar, priority = false, className = 
 
   return (
     <motion.article
-      variants={scaleIn}
       initial="rest"
       whileHover="hover"
       animate="rest"
       variants={{ ...scaleIn, ...hoverLift }}
-      className={`landing-card-hover group flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-white/90 ring-1 ring-[rgba(13,31,25,0.05)] backdrop-blur-sm ${className}`}
+      className={`landing-card-hover group flex h-full flex-col overflow-hidden rounded-[1.35rem] bg-white/75 ring-1 ring-[rgba(13,31,25,0.04)] backdrop-blur-md ${className}`}
     >
       <div className="relative aspect-[5/4] overflow-hidden bg-[#e8f2ee]">
         {lugar.capa ? (

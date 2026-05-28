@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test lib/*.test.js",
+    "icons": "node scripts/refresh-brand-icons.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

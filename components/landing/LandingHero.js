@@ -14,87 +14,108 @@ import {
   scaleIn,
   staggerHero,
 } from "@/components/landing/landingMotion";
+import { useLandingRichMotion } from "@/components/landing/useLandingRichMotion";
 import {
   LANDING_HERO,
   LANDING_SECTION_IDS,
   landingContactMailto,
 } from "@/lib/landingContent";
 
-/**
- * Hero cinematográfico — lifestyle, profundidade, mockup refinado.
- * @param {object} props
- * @param {import('@/lib/landingPageData').LandingPageData['stats']} props.stats
- * @param {boolean} props.hasLiveData
- * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.showcase
- * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.parceiros
- * @param {import('@/lib/landingPageData').LandingPageData['categorias']} props.categorias
- * @param {string|null} props.heroBackdrop
- * @returns {import('react').ReactElement}
- */
-export default function LandingHero({
-  stats,
-  hasLiveData,
-  showcase = [],
-  parceiros = [],
-  categorias = [],
-  heroBackdrop = null,
-}) {
-  const HERO_VIDEO_URL =
-    "https://rsdjbqzjdyeaedyqwrvc.supabase.co/storage/v1/object/public/hero-video/202605281010.mp4";
-  const ref = useRef(null);
-  const videoRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const textY = useTransform(scrollYProgress, [0, 1], [0, 56]);
-  const phoneY = useTransform(scrollYProgress, [0, 1], [0, 28]);
-  const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
-  const ambientY = useTransform(scrollYProgress, [0, 1], [0, -24]);
-  const [useVideoBackground, setUseVideoBackground] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
+const HERO_VIDEO_URL =
+  "https://rsdjbqzjdyeaedyqwrvc.supabase.co/storage/v1/object/public/hero-video/202605281010.mp4";
 
+/**
+ * @typedef {object} LandingHeroProps
+ * @property {import('@/lib/landingPageData').LandingPageData['stats']} stats
+ * @property {boolean} hasLiveData
+ * @property {import('@/lib/landingPageData').LandingLugarCard[]} [showcase]
+ * @property {import('@/lib/landingPageData').LandingLugarCard[]} [parceiros]
+ * @property {import('@/lib/landingPageData').LandingPageData['categorias']} [categorias]
+ * @property {string|null} [heroBackdrop]
+ * @property {boolean} richMotion
+ */
+
+/**
+ * @param {LandingHeroProps} props
+ */
+function useHeroMedia(showcase, heroBackdrop) {
   const heroImages = showcase.filter((p) => p.capa);
   const backdropUrl = heroBackdrop ?? heroImages[0]?.capa ?? null;
   const heroPosterUrl = backdropUrl ?? heroImages[1]?.capa ?? null;
-  const heroStats = [
-    { label: "Lugares", value: 18 },
-    { label: "Categorias", value: 4 },
-    { label: "Parceiros", value: 2 },
-  ];
+
+  const [useVideoBackground, setUseVideoBackground] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     const mediaReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const mediaMobile = window.matchMedia("(max-width: 900px)").matches;
+    const mediaMobile = window.matchMedia("(max-width: 1023px)").matches;
     const saveData = navigator.connection?.saveData === true;
-    const shouldUseVideo = !mediaReduced && !mediaMobile && !saveData;
-    setUseVideoBackground(shouldUseVideo);
+    setUseVideoBackground(!mediaReduced && !mediaMobile && !saveData);
   }, []);
 
   useEffect(() => {
     if (!useVideoBackground || videoFailed || !videoRef.current) return;
     const playPromise = videoRef.current.play();
     if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {
-        setVideoFailed(true);
-      });
+      playPromise.catch(() => setVideoFailed(true));
     }
   }, [useVideoBackground, videoFailed]);
 
+  return { heroImages, heroPosterUrl, useVideoBackground, videoFailed, videoRef };
+}
+
+/**
+ * @param {LandingHeroProps & { sectionRef?: import('react').RefObject<HTMLElement|null>, bgStyle?: object, textStyle?: object, phoneStyle?: object, ambientStyle?: object, animatePhone?: boolean }} props
+ */
+function LandingHeroBody({
+  stats,
+  hasLiveData,
+  showcase = [],
+  parceiros = [],
+  categorias = [],
+  heroBackdrop = null,
+  richMotion,
+  sectionRef,
+  bgStyle,
+  textStyle,
+  phoneStyle,
+  ambientStyle,
+  animatePhone = false,
+}) {
+  const { heroImages, heroPosterUrl, useVideoBackground, videoFailed, videoRef } = useHeroMedia(
+    showcase,
+    heroBackdrop
+  );
+
+  const heroStats = [
+    { label: "Lugares", value: hasLiveData ? stats.totalLugares : "—" },
+    { label: "Categorias", value: hasLiveData ? stats.categoriasComLugares : "—" },
+    { label: "Parceiros", value: hasLiveData ? stats.parceirosCount : "—" },
+  ];
+
+  const BgWrap = bgStyle ? motion.div : "div";
+  const TextWrap = textStyle ? motion.div : "div";
+  const PhoneWrap = phoneStyle ? motion.div : "div";
+  const AmbientWrap = ambientStyle ? motion.div : "div";
+  const PhoneAnimator = animatePhone ? motion.div : "div";
+
   return (
     <section
-      ref={ref}
-      className={`relative overflow-x-clip ${LANDING.heroMinH} pt-[5.5rem] pb-20 sm:pt-32 sm:pb-28 lg:pb-32`}
+      ref={sectionRef}
+      className={`relative overflow-x-clip ${LANDING.heroMinH} pt-[5.5rem] pb-16 sm:pt-32 sm:pb-24 lg:pb-32`}
       aria-labelledby="landing-hero-title"
     >
       {heroPosterUrl ? (
-        <motion.div
-          className="pointer-events-none absolute inset-0"
-          style={{ y: bgY, scale: bgScale }}
+        <BgWrap
+          className="landing-hero-video-grade pointer-events-none absolute inset-0"
+          style={bgStyle}
           aria-hidden
         >
           {useVideoBackground && !videoFailed ? (
             <video
               ref={videoRef}
-              className="landing-hero-video-frame h-full w-full object-cover object-center saturate-[1.04] contrast-[1.01]"
+              className="landing-hero-video-frame h-full w-full object-cover object-center"
               autoPlay
               muted
               loop
@@ -111,27 +132,33 @@ export default function LandingHero({
               alt=""
               fill
               priority
-              className="landing-hero-video-frame object-cover object-[center_40%] saturate-[1.04] contrast-[1.01]"
+              className="landing-hero-video-frame object-cover object-[center_40%]"
               sizes="100vw"
             />
           )}
           <div className="landing-cinematic-overlay-video absolute inset-0" />
           <div className="landing-hero-vignette absolute inset-0" />
-          <motion.div className="landing-hero-light-pass absolute inset-0" style={{ y: ambientY }} />
-          <div className="landing-hero-ambient absolute inset-0" />
-          <div className="landing-noise absolute inset-0 opacity-25" />
-        </motion.div>
+          <div className="landing-hero-rim-glow absolute inset-0" />
+          <AmbientWrap className="landing-hero-light-pass absolute inset-0" style={ambientStyle} />
+          <div className="landing-hero-ambient landing-ambient-drift absolute inset-0 opacity-90" />
+        </BgWrap>
       ) : (
         <LandingAmbient variant="hero" />
       )}
 
-      {!heroPosterUrl ? null : <LandingAmbient variant="hero" className="opacity-35" />}
+      {heroPosterUrl ? (
+        <div
+          className="landing-noise landing-hero-film-grain pointer-events-none absolute inset-0 z-[1]"
+          aria-hidden
+        />
+      ) : null}
+      {heroPosterUrl ? <LandingAmbient variant="hero" className="opacity-35" /> : null}
 
       <div className="relative mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
-        <div className="grid flex-1 items-center gap-14 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">
-          <motion.div
+        <div className="grid flex-1 items-center gap-10 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">
+          <TextWrap
             className="order-2 lg:order-1 landing-hero-content-block"
-            style={{ y: textY }}
+            style={textStyle}
             initial="hidden"
             animate="visible"
             variants={staggerHero}
@@ -162,7 +189,7 @@ export default function LandingHero({
             <motion.h1
               id="landing-hero-title"
               variants={fadeUpHero}
-              className="landing-display mt-8 max-w-[12ch] text-[clamp(2.75rem,8vw,4.5rem)] font-semibold leading-[0.98] text-white xl:text-[4.75rem]"
+              className="landing-display mt-6 max-w-[12ch] text-[clamp(2.75rem,8vw,4.5rem)] font-semibold leading-[0.98] text-white lg:mt-8 xl:text-[4.75rem]"
             >
               <span className="block">{LANDING_HERO.line1}</span>
               <span className="mt-1 block bg-gradient-to-br from-[#dff8ea] via-[#9de3c2] to-[#6ec89d] bg-clip-text text-transparent">
@@ -172,14 +199,14 @@ export default function LandingHero({
 
             <motion.p
               variants={fadeUpHero}
-              className="mt-6 max-w-md text-lg leading-relaxed text-white/85 sm:text-xl sm:leading-relaxed"
+              className="mt-5 max-w-md text-lg leading-relaxed text-white/85 sm:mt-6 sm:text-xl sm:leading-relaxed"
             >
               {LANDING_HERO.subtitle}
             </motion.p>
 
             <motion.div
               variants={fadeUpHero}
-              className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
+              className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4"
             >
               <LandingButton href={`#${LANDING_SECTION_IDS.categorias}`} variant="primary" size="lg">
                 {LANDING_HERO.ctaExplore}
@@ -196,33 +223,33 @@ export default function LandingHero({
 
             <motion.dl
               variants={fadeUpHero}
-              className="mt-14 grid grid-cols-3 gap-3 border-t border-white/20 pt-9 sm:gap-4"
+              className="mt-10 grid grid-cols-3 gap-3 border-t border-white/20 pt-8 sm:mt-14 sm:gap-4 sm:pt-9"
             >
               {heroStats.map((item) => (
                 <div
                   key={item.label}
-                  className="landing-hero-stat-card rounded-2xl px-4 py-3.5 sm:px-5 sm:py-4"
+                  className="landing-hero-stat-card rounded-2xl px-3 py-3 sm:px-5 sm:py-4"
                 >
-                  <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/64">
+                  <dt className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/64 sm:text-[11px]">
                     {item.label}
                   </dt>
-                  <dd className="landing-display mt-1.5 text-[1.9rem] font-semibold leading-none tabular-nums text-white sm:text-[2.3rem]">
+                  <dd className="landing-display mt-1 text-[1.5rem] font-semibold leading-none tabular-nums text-white sm:mt-1.5 sm:text-[2.3rem]">
                     {item.value}
                   </dd>
                 </div>
               ))}
             </motion.dl>
-          </motion.div>
+          </TextWrap>
 
-          <motion.div
+          <PhoneWrap
             className="order-1 flex justify-center lg:order-2 lg:justify-end"
-            style={{ y: phoneY }}
+            style={phoneStyle}
             initial="hidden"
             animate="visible"
             variants={scaleIn}
           >
             <div className="relative">
-              <LandingHeroFloatingCards places={showcase} />
+              {richMotion ? <LandingHeroFloatingCards places={showcase} /> : null}
               <div
                 className="landing-device-glow pointer-events-none absolute -inset-20 -z-10 sm:-inset-24"
                 aria-hidden
@@ -231,20 +258,73 @@ export default function LandingHero({
                 className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[70%] w-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7fd4ae]/15 blur-[60px]"
                 aria-hidden
               />
-              <motion.div {...floatDevice}>
+              <PhoneAnimator {...(animatePhone ? floatDevice : {})}>
                 <LandingPhoneMockup
                   screen="home"
                   size="hero"
                   emAlta={showcase}
                   parceiros={parceiros}
                   categorias={categorias}
-                  className="relative z-[1] [filter:drop-shadow(0_36px_72px_rgba(10,22,18,0.16))]"
+                  className="relative z-[1] drop-shadow-[0_40px_80px_rgba(7,15,12,0.28)]"
                 />
-              </motion.div>
+              </PhoneAnimator>
             </div>
-          </motion.div>
+          </PhoneWrap>
         </div>
       </div>
+
+      {heroPosterUrl ? <div className="landing-hero-bottom-bridge" aria-hidden /> : null}
     </section>
   );
+}
+
+/**
+ * @param {Omit<LandingHeroProps, 'richMotion'>} props
+ */
+function LandingHeroMobile(props) {
+  return <LandingHeroBody {...props} richMotion={false} />;
+}
+
+/**
+ * @param {Omit<LandingHeroProps, 'richMotion'>} props
+ */
+function LandingHeroDesktop(props) {
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+  const textY = useTransform(scrollYProgress, [0, 1], [0, 56]);
+  const phoneY = useTransform(scrollYProgress, [0, 1], [0, 28]);
+  const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
+  const ambientY = useTransform(scrollYProgress, [0, 1], [0, -24]);
+
+  return (
+    <LandingHeroBody
+      {...props}
+      sectionRef={sectionRef}
+      richMotion
+      bgStyle={{ y: bgY, scale: bgScale }}
+      textStyle={{ y: textY }}
+      phoneStyle={{ y: phoneY }}
+      ambientStyle={{ y: ambientY }}
+      animatePhone
+    />
+  );
+}
+
+/**
+ * Hero — sem parallax no mobile para scroll fluido.
+ * @param {Omit<LandingHeroProps, 'richMotion'>} props
+ * @returns {import('react').ReactElement}
+ */
+export default function LandingHero(props) {
+  const richMotion = useLandingRichMotion();
+
+  if (richMotion) {
+    return <LandingHeroDesktop {...props} />;
+  }
+
+  return <LandingHeroMobile {...props} />;
 }

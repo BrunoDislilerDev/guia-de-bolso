@@ -3,7 +3,11 @@
 import { motion } from "framer-motion";
 import { LandingSectionHeader } from "@/components/landing/LandingSection";
 import LandingSection from "@/components/landing/LandingSection";
-import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import {
+  defaultViewport,
+  fadeUpCinematic,
+  staggerCinematic,
+} from "@/components/landing/landingMotion";
 import { LANDING_SECTION_IDS, LANDING_STEPS } from "@/lib/landingContent";
 
 /**
@@ -12,7 +16,7 @@ import { LANDING_SECTION_IDS, LANDING_STEPS } from "@/lib/landingContent";
  */
 export default function LandingHowItWorks() {
   return (
-    <LandingSection id={LANDING_SECTION_IDS.comoFunciona} className="relative bg-white">
+    <LandingSection id={LANDING_SECTION_IDS.comoFunciona} tone="white" bridge={false}>
       <LandingSectionHeader
         eyebrow="Como funciona"
         title="Simples. Rápido. Local."
@@ -26,13 +30,13 @@ export default function LandingHowItWorks() {
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={staggerContainer}
+        variants={staggerCinematic}
       >
         {LANDING_STEPS.map((step) => (
           <motion.li
             key={step.step}
-            variants={fadeUp}
-            className="landing-card-hover landing-surface-soft relative rounded-[1.25rem] p-8"
+            variants={fadeUpCinematic}
+            className="landing-card-hover landing-fluid-panel relative rounded-[1.35rem] p-8 sm:p-9"
           >
             <span className="font-display text-sm font-semibold tracking-widest text-[#7fd4ae]">
               {step.step}

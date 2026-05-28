@@ -15,7 +15,7 @@ import {
 } from "@/lib/landingContent";
 
 /**
- * Navbar premium — shrink no scroll, glass refinado.
+ * Navbar premium — shrink no scroll, menu mobile opaco.
  * @returns {import('react').ReactElement}
  */
 export default function LandingNavbar() {
@@ -32,42 +32,46 @@ export default function LandingNavbar() {
     };
   }, [open]);
 
+  const barSolid = open || scrolled;
+  const overHero = !barSolid;
+
   return (
     <motion.header
       className="fixed inset-x-0 top-0 z-50"
       initial={false}
       animate={{
-        paddingTop: scrolled ? 0 : 4,
-        paddingBottom: scrolled ? 0 : 4,
+        paddingTop: barSolid ? 0 : 4,
+        paddingBottom: barSolid ? 0 : 4,
       }}
       transition={navbarTransition}
     >
       <motion.div
-        className={scrolled ? "landing-glass border-b border-[rgba(10,22,18,0.05)]" : ""}
-        animate={{
-          boxShadow: scrolled
-            ? "0 10px 38px rgba(10,22,18,0.07), inset 0 1px 0 rgba(255,255,255,0.9)"
-            : "0 0 0 rgba(0,0,0,0)",
-          backdropFilter: scrolled ? "blur(20px) saturate(1.08)" : "blur(8px) saturate(1.02)",
-        }}
+        className={
+          open
+            ? "landing-nav-bar-solid"
+            : overHero
+              ? "landing-nav-hero"
+              : "landing-nav-scrolled"
+        }
         transition={navbarTransition}
       >
         <motion.nav
-          className="mx-auto flex max-w-[76rem] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12"
+          className="relative z-[60] mx-auto flex max-w-[76rem] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12"
           aria-label="Principal"
-          animate={{ height: scrolled ? 56 : 66 }}
+          animate={{ height: barSolid ? 56 : 66 }}
           transition={navbarTransition}
         >
           <motion.div
-            animate={{ scale: scrolled ? 0.965 : 1, y: scrolled ? -0.5 : 0 }}
+            animate={{ scale: barSolid ? 0.965 : 1, y: barSolid ? -0.5 : 0 }}
             transition={navbarTransition}
           >
             <Link
               href="/"
               className="block rounded-xl transition-opacity hover:opacity-85 focus-visible:outline-none"
               aria-label="Guia de Bolso"
+              onClick={() => setOpen(false)}
             >
-              <Logo size="sm" showWordmark />
+              <Logo size="sm" showWordmark variant={overHero && !open ? "light" : "default"} />
             </Link>
           </motion.div>
 
@@ -76,7 +80,11 @@ export default function LandingNavbar() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="landing-link-underline text-[13px] font-medium text-[#4a5c56] transition-colors duration-300 hover:text-[#0a1612]"
+                  className={`landing-link-underline text-[13px] font-medium transition-colors duration-500 ${
+                    overHero
+                      ? "text-white/75 hover:text-white"
+                      : "text-[#4a5c56] hover:text-[#0a1612]"
+                  }`}
                 >
                   {link.label}
                 </a>
@@ -85,26 +93,54 @@ export default function LandingNavbar() {
           </ul>
 
           <div className="hidden items-center gap-2.5 sm:flex">
-            <LandingButton
-              href={`#${LANDING_SECTION_IDS.categorias}`}
-              variant="ghost"
-              size="md"
-            >
-              {LANDING_HERO.ctaExplore}
-            </LandingButton>
-            <LandingButton
-              href={landingContactMailto("Cadastro")}
-              variant="primary"
-              size="md"
-              external
-            >
-              {LANDING_HERO.ctaBusiness}
-            </LandingButton>
+            {overHero ? (
+              <>
+                <LandingButton
+                  href={`#${LANDING_SECTION_IDS.categorias}`}
+                  variant="secondary"
+                  size="md"
+                >
+                  {LANDING_HERO.ctaExplore}
+                </LandingButton>
+                <LandingButton
+                  href={landingContactMailto("Cadastro")}
+                  variant="primary"
+                  size="md"
+                  external
+                >
+                  {LANDING_HERO.ctaBusiness}
+                </LandingButton>
+              </>
+            ) : (
+              <>
+                <LandingButton
+                  href={`#${LANDING_SECTION_IDS.categorias}`}
+                  variant="ghost"
+                  size="md"
+                >
+                  {LANDING_HERO.ctaExplore}
+                </LandingButton>
+                <LandingButton
+                  href={landingContactMailto("Cadastro")}
+                  variant="primary"
+                  size="md"
+                  external
+                >
+                  {LANDING_HERO.ctaBusiness}
+                </LandingButton>
+              </>
+            )}
           </div>
 
           <button
             type="button"
-            className="landing-glass rounded-full p-2.5 text-[#0a1612] sm:hidden"
+            className={`rounded-full p-2.5 sm:hidden ${
+              open
+                ? "bg-[#e8eeec] text-[#0a1612]"
+                : overHero
+                  ? "bg-white/10 text-white backdrop-blur-md"
+                  : "landing-glass text-[#0a1612]"
+            }`}
             aria-expanded={open}
             aria-controls="landing-mobile-menu"
             aria-label={open ? "Fechar menu" : "Abrir menu"}
@@ -117,47 +153,62 @@ export default function LandingNavbar() {
 
       <AnimatePresence>
         {open ? (
-          <motion.div
-            id="landing-mobile-menu"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="landing-glass overflow-hidden border-t border-[rgba(10,22,18,0.06)] sm:hidden"
-          >
-            <ul className="flex flex-col gap-0.5 px-5 py-4" role="list">
-              {LANDING_NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    className="block rounded-2xl px-4 py-3.5 text-[15px] font-medium text-[#0a1612] transition-colors hover:bg-[#1a4a3a]/5"
+          <>
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="landing-mobile-menu-backdrop fixed inset-0 z-[45] sm:hidden"
+              aria-label="Fechar menu"
+              onClick={() => setOpen(false)}
+            />
+            <motion.div
+              id="landing-mobile-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu de navegação"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="landing-mobile-menu-panel fixed inset-x-0 top-[56px] z-[55] max-h-[calc(100dvh-56px)] overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden"
+            >
+              <ul className="flex flex-col gap-0.5 px-5 py-5" role="list">
+                {LANDING_NAV_LINKS.map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      className="block rounded-2xl px-4 py-3.5 text-[16px] font-medium text-[#0a1612] transition-colors active:bg-[#1a4a3a]/10"
+                      onClick={() => setOpen(false)}
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+                <li className="mt-3 grid gap-2 border-t border-[#1a4a3a]/12 pt-4">
+                  <LandingButton
+                    href={`#${LANDING_SECTION_IDS.categorias}`}
+                    variant="primary"
+                    className="w-full"
                     onClick={() => setOpen(false)}
                   >
-                    {link.label}
-                  </a>
+                    {LANDING_HERO.ctaExplore}
+                  </LandingButton>
+                  <LandingButton
+                    href={landingContactMailto("Cadastro")}
+                    variant="secondary"
+                    className="w-full"
+                    external
+                    onClick={() => setOpen(false)}
+                  >
+                    {LANDING_HERO.ctaBusiness}
+                  </LandingButton>
                 </li>
-              ))}
-              <li className="mt-3 grid gap-2 border-t border-[#1a4a3a]/8 pt-4">
-                <LandingButton
-                  href={`#${LANDING_SECTION_IDS.categorias}`}
-                  variant="primary"
-                  className="w-full"
-                  onClick={() => setOpen(false)}
-                >
-                  {LANDING_HERO.ctaExplore}
-                </LandingButton>
-                <LandingButton
-                  href={landingContactMailto("Cadastro")}
-                  variant="secondary"
-                  className="w-full"
-                  external
-                  onClick={() => setOpen(false)}
-                >
-                  {LANDING_HERO.ctaBusiness}
-                </LandingButton>
-              </li>
-            </ul>
-          </motion.div>
+              </ul>
+            </motion.div>
+          </>
         ) : null}
       </AnimatePresence>
     </motion.header>

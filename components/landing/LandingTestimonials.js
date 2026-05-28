@@ -2,7 +2,11 @@
 
 import { motion } from "framer-motion";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import {
+  defaultViewport,
+  fadeUpCinematic,
+  staggerCinematic,
+} from "@/components/landing/landingMotion";
 import { LANDING_SECTION_IDS, LANDING_TESTIMONIALS } from "@/lib/landingContent";
 
 /**
@@ -13,7 +17,7 @@ import { LANDING_SECTION_IDS, LANDING_TESTIMONIALS } from "@/lib/landingContent"
  */
 export default function LandingTestimonials({ stats }) {
   return (
-    <LandingSection id={LANDING_SECTION_IDS.depoimentos} className="bg-white">
+    <LandingSection id={LANDING_SECTION_IDS.depoimentos} tone="white" bridge={false}>
       <LandingSectionHeader
         eyebrow="Confiança"
         title="Vozes de quem vive Imbituba."
@@ -25,7 +29,7 @@ export default function LandingTestimonials({ stats }) {
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={fadeUp}
+        variants={fadeUpCinematic}
       >
         <span className="rounded-full bg-[#e8f2ee] px-3 py-1 font-semibold text-[#1a4a3a]">
           {stats?.avaliacoesCount || 0}+ avaliações aprovadas
@@ -40,13 +44,13 @@ export default function LandingTestimonials({ stats }) {
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={staggerContainer}
+        variants={staggerCinematic}
       >
         {LANDING_TESTIMONIALS.map((t) => (
           <motion.li
             key={t.name}
-            variants={fadeUp}
-            className="landing-card-hover landing-surface-soft flex flex-col rounded-[1.5rem] p-8"
+            variants={fadeUpCinematic}
+            className="landing-card-hover landing-fluid-panel flex flex-col rounded-[1.5rem] p-8"
           >
             <p className="flex-1 font-display text-lg font-medium leading-snug tracking-tight text-[#0d1f19]">
               &ldquo;{t.quote}&rdquo;

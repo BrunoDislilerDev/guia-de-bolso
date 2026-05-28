@@ -5,7 +5,12 @@ import Image from "next/image";
 import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingPlaceCard from "@/components/landing/LandingPlaceCard";
 import { LandingSectionHeader } from "@/components/landing/LandingSection";
-import { defaultViewport, scaleIn, staggerContainer } from "@/components/landing/landingMotion";
+import {
+  defaultViewport,
+  fadeUpCinematic,
+  scaleReveal,
+  staggerCinematic,
+} from "@/components/landing/landingMotion";
 import { LANDING_SECTION_IDS } from "@/lib/landingContent";
 
 /** @param {object} p */
@@ -33,7 +38,10 @@ function LandingDiscoverSection({ id, className, children }) {
  */
 export default function LandingDiscover({ discoverShowcase = [], categorias, hasLiveData }) {
   return (
-    <LandingDiscoverSection id={LANDING_SECTION_IDS.categorias} className="relative bg-[#f7f8f7]">
+    <LandingDiscoverSection
+      id={LANDING_SECTION_IDS.categorias}
+      className="landing-section-flow--canvas relative -mt-4 bg-transparent pt-8 sm:pt-12"
+    >
       <LandingSectionHeader
         eyebrow="Experiências"
         title="Lugares que valem o desvio."
@@ -50,7 +58,7 @@ export default function LandingDiscover({ discoverShowcase = [], categorias, has
           initial="hidden"
           whileInView="visible"
           viewport={defaultViewport}
-          variants={staggerContainer}
+          variants={staggerCinematic}
           role="list"
         >
           {discoverShowcase.map((lugar, i) => (
@@ -74,13 +82,13 @@ export default function LandingDiscover({ discoverShowcase = [], categorias, has
             initial="hidden"
             whileInView="visible"
             viewport={defaultViewport}
-            variants={staggerContainer}
+            variants={staggerCinematic}
           >
             {categorias.slice(0, 8).map((cat) => (
               <motion.li
                 key={cat.nome}
-                variants={scaleIn}
-                className="landing-card-hover group relative overflow-hidden rounded-2xl bg-white/85 p-4 ring-1 ring-[rgba(13,31,25,0.05)] backdrop-blur-sm"
+                variants={scaleReveal}
+                className="landing-card-hover group relative overflow-hidden rounded-2xl bg-white/70 p-4 ring-1 ring-[rgba(13,31,25,0.04)] backdrop-blur-md"
               >
                 {cat.capa && (
                   <div className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover:opacity-[0.18]">

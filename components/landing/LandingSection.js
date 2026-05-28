@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { fadeUp, defaultViewport } from "@/components/landing/landingMotion";
+import { defaultViewport, fadeUpCinematic } from "@/components/landing/landingMotion";
 import { LANDING } from "@/components/landing/landingTheme";
 
 /**
@@ -30,7 +30,7 @@ export function LandingSectionHeader({
       initial="hidden"
       whileInView="visible"
       viewport={defaultViewport}
-      variants={fadeUp}
+      variants={fadeUpCinematic}
     >
       {eyebrow && (
         <p
@@ -69,12 +69,38 @@ export function LandingSectionHeader({
  * @param {import('react').ReactNode} props.children
  * @returns {import('react').ReactElement}
  */
-export default function LandingSection({ id, className = "", children, bridge = true }) {
+/**
+ * @param {object} props
+ * @param {string} [props.id]
+ * @param {string} [props.className]
+ * @param {boolean} [props.bridge]
+ * @param {"canvas"|"white"|"mist"|"none"} [props.tone]
+ * @param {import('react').ReactNode} props.children
+ */
+export default function LandingSection({
+  id,
+  className = "",
+  children,
+  bridge = true,
+  tone = "none",
+}) {
+  const toneClass =
+    tone === "canvas"
+      ? "landing-section-flow landing-section-flow--canvas"
+      : tone === "white"
+        ? "landing-section-flow landing-section-flow--white"
+        : tone === "mist"
+          ? "landing-section-flow landing-section-flow--mist"
+          : "landing-section-flow";
+
   return (
     <section
       id={id}
-      className={`relative ${LANDING.sectionPy} ${bridge ? "landing-section-bridge" : ""} ${className}`.trim()}
+      className={`relative ${LANDING.sectionPy} ${bridge ? "landing-section-bridge" : ""} ${toneClass} ${className}`.trim()}
     >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="absolute left-1/2 top-0 h-px w-[min(100%,48rem)] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#1a4a3a]/8 to-transparent" />
+      </div>
       <div className="relative z-[1] mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:px-12">
         {children}
       </div>

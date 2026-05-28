@@ -3,7 +3,11 @@
 import { motion } from "framer-motion";
 import LandingButton from "@/components/landing/LandingButton";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import {
+  defaultViewport,
+  fadeUpCinematic,
+  staggerCinematic,
+} from "@/components/landing/landingMotion";
 import {
   LANDING_BUSINESS_BENEFITS,
   LANDING_HERO,
@@ -44,13 +48,13 @@ export default function LandingBusinessBenefits() {
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={staggerContainer}
+        variants={staggerCinematic}
       >
         {LANDING_BUSINESS_BENEFITS.map((item) => (
           <motion.li
             key={item.title}
-            variants={fadeUp}
-            className="rounded-[1.25rem] border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
+            variants={fadeUpCinematic}
+            className="landing-card-hover rounded-[1.35rem] border border-white/10 bg-white/[0.06] p-8 backdrop-blur-md"
           >
             <h3 className="font-display text-lg font-semibold text-white">{item.title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-white/65">{item.body}</p>

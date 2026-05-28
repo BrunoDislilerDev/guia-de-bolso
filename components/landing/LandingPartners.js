@@ -3,7 +3,11 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import {
+  defaultViewport,
+  fadeUpCinematic,
+  staggerCinematic,
+} from "@/components/landing/landingMotion";
 import { LANDING_SECTION_IDS } from "@/lib/landingContent";
 
 /**
@@ -18,7 +22,7 @@ export default function LandingPartners({ parceiros, stats }) {
   const partnerNames = parceiros.map((p) => p.nome).filter(Boolean);
 
   return (
-    <LandingSection id={LANDING_SECTION_IDS.parceiros} className="bg-[#fafaf9]">
+    <LandingSection id={LANDING_SECTION_IDS.parceiros} tone="canvas" bridge={false}>
       <LandingSectionHeader
         eyebrow="Parceiros"
         title="Parceiros que definem o padrão."
@@ -27,11 +31,11 @@ export default function LandingPartners({ parceiros, stats }) {
       />
 
       <motion.div
-        className="landing-surface-soft mt-10 rounded-2xl px-4 py-3"
+        className="landing-fluid-panel mt-10 rounded-2xl px-4 py-3"
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={fadeUp}
+        variants={fadeUpCinematic}
       >
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-[#5d6d67]">
           <span className="font-semibold text-[#1a4a3a]">
@@ -60,13 +64,13 @@ export default function LandingPartners({ parceiros, stats }) {
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={staggerContainer}
+        variants={staggerCinematic}
       >
         {parceiros.map((p) => (
           <motion.li
             key={p.id}
-            variants={fadeUp}
-            className="flex items-center gap-4 rounded-[1.25rem] bg-white p-4 ring-1 ring-[rgba(13,31,25,0.06)] transition-shadow hover:shadow-md"
+            variants={fadeUpCinematic}
+            className="landing-card-hover flex items-center gap-4 rounded-[1.35rem] bg-white/80 p-4 ring-1 ring-[rgba(13,31,25,0.05)] backdrop-blur-sm"
           >
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-[#e8f2ee]">
               {p.capa ? (

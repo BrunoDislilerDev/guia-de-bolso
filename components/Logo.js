@@ -1,5 +1,6 @@
-/** Caminho público do logo (SVG). */
+/** Caminho público do logo (SVG na UI; PNG para ícones do sistema). */
 export const LOGO_SRC = "/logo.svg";
+export const LOGO_PNG_SRC = "/logo.png";
 
 const SIZE_HEIGHT = {
   xs: 24,

@@ -22,5 +22,5 @@ export const LANDING = {
   radiusButton: "9999px",
   maxWidth: "76rem",
   sectionPy: "py-28 sm:py-36 lg:py-44",
-  heroMinH: "min-h-[92vh] sm:min-h-[88vh]",
+  heroMinH: "landing-hero-section min-h-0 lg:min-h-[88vh]",
 };

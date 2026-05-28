@@ -3,9 +3,14 @@
 import { motion } from "framer-motion";
 import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingPhoneMockup from "@/components/landing/LandingPhoneMockup";
-import { floatDevice } from "@/components/landing/landingMotion";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import { fadeUp, defaultViewport } from "@/components/landing/landingMotion";
+import {
+  defaultViewport,
+  fadeUpCinematic,
+  floatDevice,
+  floatDeviceSoft,
+} from "@/components/landing/landingMotion";
+import { useLandingRichMotion } from "@/components/landing/useLandingRichMotion";
 import { LANDING_SECTION_IDS } from "@/lib/landingContent";
 
 const APP_POINTS = [
@@ -23,8 +28,10 @@ const APP_POINTS = [
  * @returns {import('react').ReactElement}
  */
 export default function LandingAppShowcase({ categorias = [], stats }) {
+  const richMotion = useLandingRichMotion();
+
   return (
-    <LandingSection id={LANDING_SECTION_IDS.app} className="relative overflow-hidden bg-[#f7f8f7]">
+    <LandingSection id={LANDING_SECTION_IDS.app} tone="canvas" bridge={false} className="overflow-hidden">
       <LandingAmbient variant="section" />
       <div className="relative z-[1] grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
         <div>
@@ -40,7 +47,7 @@ export default function LandingAppShowcase({ categorias = [], stats }) {
             initial="hidden"
             whileInView="visible"
             viewport={defaultViewport}
-            variants={fadeUp}
+            variants={fadeUpCinematic}
           >
             {APP_POINTS.map((point) => (
               <li key={point} className="flex gap-3 text-[#5c6f68]">
@@ -57,8 +64,8 @@ export default function LandingAppShowcase({ categorias = [], stats }) {
             initial="hidden"
             whileInView="visible"
             viewport={defaultViewport}
-            variants={fadeUp}
-            className="mt-10 inline-flex rounded-full bg-[#e8f2ee] px-4 py-2 text-sm font-medium text-[#1a4a3a]"
+            variants={fadeUpCinematic}
+            className="mt-10 inline-flex rounded-full bg-[#e8f2ee]/90 px-4 py-2 text-sm font-medium text-[#1a4a3a] backdrop-blur-sm"
           >
             Lançamento nas lojas em breve
           </motion.p>
@@ -66,7 +73,7 @@ export default function LandingAppShowcase({ categorias = [], stats }) {
 
         <div className="relative flex justify-center lg:justify-end">
           <div className="landing-device-glow pointer-events-none absolute -inset-12" aria-hidden />
-          <motion.div {...floatDevice}>
+          <motion.div {...(richMotion ? floatDevice : floatDeviceSoft)}>
             <LandingPhoneMockup
               screen="explorar"
               size="showcase"

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingButton from "@/components/landing/LandingButton";
-import { fadeUp, defaultViewport } from "@/components/landing/landingMotion";
+import { defaultViewport, fadeUpCinematic } from "@/components/landing/landingMotion";
 import {
   LANDING_HERO,
   LANDING_SECTION_IDS,
@@ -25,12 +25,16 @@ export default function LandingFinalCta() {
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={fadeUp}
+        variants={fadeUpCinematic}
       >
         <div className="relative overflow-hidden rounded-[2rem] px-8 py-16 text-center sm:rounded-[2.5rem] sm:px-16 sm:py-24">
           <LandingAmbient variant="dark" className="rounded-[inherit]" />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(127,212,174,0.2),transparent_50%)]"
+            className="landing-ambient-drift pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(127,212,174,0.2),transparent_50%)]"
+            aria-hidden
+          />
+          <div
+            className="landing-ambient-drift-slow pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_100%,rgba(127,212,174,0.12),transparent_45%)]"
             aria-hidden
           />
 

@@ -10,6 +10,7 @@ import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
 import LandingMobileCta from "@/components/landing/LandingMobileCta";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import LandingPartners from "@/components/landing/LandingPartners";
+import LandingSocialProof from "@/components/landing/LandingSocialProof";
 import LandingTestimonials from "@/components/landing/LandingTestimonials";
 import LandingTouristBenefits from "@/components/landing/LandingTouristBenefits";
 import { getLandingFallbackData } from "@/lib/landingPageData";
@@ -34,6 +35,12 @@ export default function LandingPageClient({ initialData }) {
           parceiros={data.parceiros}
           categorias={data.categorias}
           heroBackdrop={data.heroBackdrop}
+        />
+        <LandingSocialProof
+          stats={data.stats}
+          parceiros={data.parceiros}
+          showcase={data.showcase}
+          hasLiveData={data.hasLiveData}
         />
         <LandingDiscover
           discoverShowcase={data.discoverShowcase}

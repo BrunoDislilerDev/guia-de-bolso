@@ -2,7 +2,11 @@
 
 import { motion } from "framer-motion";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
-import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import {
+  defaultViewport,
+  fadeUpCinematic,
+  staggerCinematic,
+} from "@/components/landing/landingMotion";
 import { LANDING_SECTION_IDS, LANDING_TOURIST_BENEFITS } from "@/lib/landingContent";
 
 /**
@@ -11,7 +15,7 @@ import { LANDING_SECTION_IDS, LANDING_TOURIST_BENEFITS } from "@/lib/landingCont
  */
 export default function LandingTouristBenefits() {
   return (
-    <LandingSection id={LANDING_SECTION_IDS.turistas} className="relative bg-white">
+    <LandingSection id={LANDING_SECTION_IDS.turistas} tone="mist" bridge={false}>
       <LandingSectionHeader
         eyebrow="Turistas"
         title="Explore como um local."
@@ -20,18 +24,18 @@ export default function LandingTouristBenefits() {
       />
 
       <motion.ul
-        className="landing-surface-soft mt-16 grid gap-px overflow-hidden rounded-[1.5rem] bg-[rgba(13,31,25,0.04)] sm:grid-cols-2"
+        className="mt-16 grid gap-4 sm:grid-cols-2 sm:gap-5"
         role="list"
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
-        variants={staggerContainer}
+        variants={staggerCinematic}
       >
         {LANDING_TOURIST_BENEFITS.map((item) => (
           <motion.li
             key={item.title}
-            variants={fadeUp}
-            className="landing-card-hover bg-white/80 p-8 backdrop-blur-sm sm:p-10"
+            variants={fadeUpCinematic}
+            className="landing-card-hover landing-fluid-panel p-8 sm:p-10"
           >
             <h3 className="font-display text-lg font-semibold tracking-tight text-[#0d1f19]">
               {item.title}
