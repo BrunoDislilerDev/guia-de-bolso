@@ -28,6 +28,7 @@ import {
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.showcase
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.parceiros
  * @param {import('@/lib/landingPageData').LandingPageData['categorias']} props.categorias
+ * @param {string|null} props.heroBackdrop
  * @returns {import('react').ReactElement}
  */
 export default function LandingHero({
@@ -36,6 +37,7 @@ export default function LandingHero({
   showcase = [],
   parceiros = [],
   categorias = [],
+  heroBackdrop = null,
 }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -45,7 +47,7 @@ export default function LandingHero({
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
 
   const heroImages = showcase.filter((p) => p.capa);
-  const heroBackdrop = heroImages[0]?.capa ?? null;
+  const backdropUrl = heroBackdrop ?? heroImages[0]?.capa ?? null;
 
   return (
     <section
@@ -53,18 +55,18 @@ export default function LandingHero({
       className={`relative overflow-x-clip ${LANDING.heroMinH} pt-[5.5rem] pb-20 sm:pt-32 sm:pb-28 lg:pb-32`}
       aria-labelledby="landing-hero-title"
     >
-      {heroBackdrop ? (
+      {backdropUrl ? (
         <motion.div
           className="pointer-events-none absolute inset-0"
           style={{ y: bgY, scale: bgScale }}
           aria-hidden
         >
           <Image
-            src={heroBackdrop}
+            src={backdropUrl}
             alt=""
             fill
             priority
-            className="object-cover object-[center_32%] saturate-[1.05] contrast-[1.02]"
+            className="object-cover object-[center_40%] saturate-[1.08] contrast-[1.03]"
             sizes="100vw"
           />
           <div className="landing-cinematic-overlay absolute inset-0" />
@@ -75,7 +77,7 @@ export default function LandingHero({
         <LandingAmbient variant="hero" />
       )}
 
-      {!heroBackdrop ? null : <LandingAmbient variant="hero" className="opacity-60" />}
+      {!backdropUrl ? null : <LandingAmbient variant="hero" className="opacity-60" />}
 
       <div className="relative mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
         <div className="grid flex-1 items-center gap-14 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">

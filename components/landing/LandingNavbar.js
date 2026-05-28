@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import LandingButton from "@/components/landing/LandingButton";
 import { IconClose, IconMenu } from "@/components/landing/LandingIcons";
 import Logo from "@/components/Logo";
+import { navbarTransition } from "@/components/landing/landingMotion";
 import {
   LANDING_HERO,
   LANDING_NAV_LINKS,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/landingContent";
 
 /**
- * Navbar premium — glass, dual CTA, motion suave.
+ * Navbar premium — shrink no scroll, glass refinado.
  * @returns {import('react').ReactElement}
  */
 export default function LandingNavbar() {
@@ -22,7 +23,7 @@ export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 16));
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 20));
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -32,32 +33,49 @@ export default function LandingNavbar() {
   }, [open]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
-      <div
-        className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          scrolled
-            ? "landing-glass border-b border-[rgba(10,22,18,0.06)] py-0 shadow-[0_8px_32px_rgba(10,22,18,0.04)]"
-            : "bg-transparent py-1"
-        }`}
+    <motion.header
+      className="fixed inset-x-0 top-0 z-50"
+      initial={false}
+      animate={{
+        paddingTop: scrolled ? 0 : 4,
+        paddingBottom: scrolled ? 0 : 4,
+      }}
+      transition={navbarTransition}
+    >
+      <motion.div
+        className={scrolled ? "landing-glass border-b border-[rgba(10,22,18,0.05)]" : ""}
+        animate={{
+          boxShadow: scrolled
+            ? "0 8px 32px rgba(10,22,18,0.05), inset 0 1px 0 rgba(255,255,255,0.85)"
+            : "0 0 0 rgba(0,0,0,0)",
+        }}
+        transition={navbarTransition}
       >
-        <nav
-          className="mx-auto flex h-[3.75rem] max-w-[76rem] items-center justify-between gap-4 px-5 sm:h-16 sm:px-8 lg:px-12"
+        <motion.nav
+          className="mx-auto flex max-w-[76rem] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12"
           aria-label="Principal"
+          animate={{ height: scrolled ? 56 : 64 }}
+          transition={navbarTransition}
         >
-          <Link
-            href="/"
-            className="rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-none"
-            aria-label="Guia de Bolso"
+          <motion.div
+            animate={{ scale: scrolled ? 0.96 : 1 }}
+            transition={navbarTransition}
           >
-            <Logo size="sm" showWordmark />
-          </Link>
+            <Link
+              href="/"
+              className="block rounded-xl transition-opacity hover:opacity-85 focus-visible:outline-none"
+              aria-label="Guia de Bolso"
+            >
+              <Logo size="sm" showWordmark />
+            </Link>
+          </motion.div>
 
           <ul className="hidden items-center gap-9 lg:flex" role="list">
             {LANDING_NAV_LINKS.map((link) => (
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="landing-link-underline text-[13px] font-medium text-[#4a5c56] transition-colors hover:text-[#0a1612]"
+                  className="landing-link-underline text-[13px] font-medium text-[#4a5c56] transition-colors duration-300 hover:text-[#0a1612]"
                 >
                   {link.label}
                 </a>
@@ -93,18 +111,18 @@ export default function LandingNavbar() {
           >
             {open ? <IconClose className="h-5 w-5" /> : <IconMenu className="h-5 w-5" />}
           </button>
-        </nav>
-      </div>
+        </motion.nav>
+      </motion.div>
 
       <AnimatePresence>
         {open ? (
           <motion.div
             id="landing-mobile-menu"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="landing-glass border-t border-[rgba(10,22,18,0.06)] sm:hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="landing-glass overflow-hidden border-t border-[rgba(10,22,18,0.06)] sm:hidden"
           >
             <ul className="flex flex-col gap-0.5 px-5 py-4" role="list">
               {LANDING_NAV_LINKS.map((link) => (
@@ -141,6 +159,6 @@ export default function LandingNavbar() {
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </header>
+    </motion.header>
   );
 }

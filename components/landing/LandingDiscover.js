@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingPlaceCard from "@/components/landing/LandingPlaceCard";
 import { LandingSectionHeader } from "@/components/landing/LandingSection";
 import { defaultViewport, scaleIn, staggerContainer } from "@/components/landing/landingMotion";
@@ -10,8 +11,14 @@ import { LANDING_SECTION_IDS } from "@/lib/landingContent";
 /** @param {object} p */
 function LandingDiscoverSection({ id, className, children }) {
   return (
-    <section id={id} className={`py-24 sm:py-32 lg:py-40 ${className}`}>
-      <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 lg:px-10">{children}</div>
+    <section
+      id={id}
+      className={`landing-section-bridge relative py-28 sm:py-36 lg:py-44 ${className}`}
+    >
+      <LandingAmbient variant="section" />
+      <div className="relative z-[1] mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:px-12">
+        {children}
+      </div>
     </section>
   );
 }
@@ -19,12 +26,12 @@ function LandingDiscoverSection({ id, className, children }) {
 /**
  * Experiências locais — dados reais.
  * @param {object} props
- * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.showcase
+ * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.discoverShowcase
  * @param {import('@/lib/landingPageData').LandingPageData['categorias']} props.categorias
  * @param {boolean} props.hasLiveData
  * @returns {import('react').ReactElement}
  */
-export default function LandingDiscover({ showcase, categorias, hasLiveData }) {
+export default function LandingDiscover({ discoverShowcase = [], categorias, hasLiveData }) {
   return (
     <LandingDiscoverSection id={LANDING_SECTION_IDS.categorias} className="relative bg-[#f7f8f7]">
       <LandingSectionHeader
@@ -37,7 +44,7 @@ export default function LandingDiscover({ showcase, categorias, hasLiveData }) {
         }
       />
 
-      {showcase.length > 0 && (
+      {discoverShowcase.length > 0 && (
         <motion.div
           className="mt-16 flex gap-5 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory md:grid md:grid-cols-3 md:overflow-visible md:pb-0"
           initial="hidden"
@@ -46,7 +53,7 @@ export default function LandingDiscover({ showcase, categorias, hasLiveData }) {
           variants={staggerContainer}
           role="list"
         >
-          {showcase.slice(0, 6).map((lugar, i) => (
+          {discoverShowcase.map((lugar, i) => (
             <div
               key={lugar.id}
               className="w-[min(88vw,320px)] shrink-0 snap-center md:w-auto"
@@ -73,7 +80,7 @@ export default function LandingDiscover({ showcase, categorias, hasLiveData }) {
               <motion.li
                 key={cat.nome}
                 variants={scaleIn}
-                className="group relative overflow-hidden rounded-2xl bg-white p-4 ring-1 ring-[rgba(13,31,25,0.06)] transition-shadow hover:shadow-md"
+                className="landing-card-hover group relative overflow-hidden rounded-2xl bg-white/85 p-4 ring-1 ring-[rgba(13,31,25,0.05)] backdrop-blur-sm"
               >
                 {cat.capa && (
                   <div className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover:opacity-[0.18]">

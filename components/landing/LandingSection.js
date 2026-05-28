@@ -21,11 +21,12 @@ export function LandingSectionHeader({
   center = false,
   dark = false,
 }) {
-  const align = center ? "mx-auto text-center" : "max-w-2xl";
+  const headerAlign = center ? "mx-auto max-w-3xl text-center" : "max-w-2xl";
+  const subtitleAlign = center ? "mx-auto text-center" : "";
 
   return (
     <motion.header
-      className={align}
+      className={headerAlign}
       initial="hidden"
       whileInView="visible"
       viewport={defaultViewport}
@@ -49,7 +50,7 @@ export function LandingSectionHeader({
       </h2>
       {subtitle && (
         <p
-          className={`mt-5 max-w-xl text-base leading-relaxed text-[#4a5c56] sm:text-lg ${
+          className={`mt-5 max-w-xl text-base leading-relaxed text-[#4a5c56] sm:text-lg ${subtitleAlign} ${
             dark ? "!text-white/70" : ""
           }`}
         >

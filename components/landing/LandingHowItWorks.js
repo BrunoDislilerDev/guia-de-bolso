@@ -32,7 +32,7 @@ export default function LandingHowItWorks() {
           <motion.li
             key={step.step}
             variants={fadeUp}
-            className="relative rounded-[1.25rem] bg-[#fafaf9] p-8 ring-1 ring-[rgba(13,31,25,0.05)]"
+            className="landing-card-hover landing-surface-soft relative rounded-[1.25rem] p-8"
           >
             <span className="font-display text-sm font-semibold tracking-widest text-[#7fd4ae]">
               {step.step}

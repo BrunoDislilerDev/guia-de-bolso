@@ -33,15 +33,16 @@ export default function LandingPageClient({ initialData }) {
           showcase={data.showcase}
           parceiros={data.parceiros}
           categorias={data.categorias}
+          heroBackdrop={data.heroBackdrop}
         />
         <LandingDiscover
-          showcase={data.showcase}
+          discoverShowcase={data.discoverShowcase}
           categorias={data.categorias}
           hasLiveData={data.hasLiveData}
         />
         <LandingHowItWorks />
         <LandingTouristBenefits />
-        <LandingAppShowcase rotas={data.rotas} />
+        <LandingAppShowcase categorias={data.categorias} stats={data.stats} />
         <LandingPartners parceiros={data.parceiros} />
         <LandingBusinessBenefits />
         <LandingTestimonials />

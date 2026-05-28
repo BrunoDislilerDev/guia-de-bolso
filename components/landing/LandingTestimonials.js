@@ -31,7 +31,7 @@ export default function LandingTestimonials() {
           <motion.li
             key={t.name}
             variants={fadeUp}
-            className="flex flex-col rounded-[1.25rem] bg-[#fafaf9] p-8 ring-1 ring-[rgba(13,31,25,0.05)]"
+            className="landing-card-hover landing-surface-soft flex flex-col rounded-[1.5rem] p-8"
           >
             <p className="flex-1 font-display text-lg font-medium leading-snug tracking-tight text-[#0d1f19]">
               &ldquo;{t.quote}&rdquo;

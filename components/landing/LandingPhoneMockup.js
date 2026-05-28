@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import LandingPhoneDeviceShell from "@/components/landing/LandingPhoneDeviceShell";
+import LandingPhoneExplorarScreen from "@/components/landing/LandingPhoneExplorarScreen";
 import LandingPhoneHomeScreen from "@/components/landing/LandingPhoneHomeScreen";
-import LandingPhoneRotasScreen from "@/components/landing/LandingPhoneRotasScreen";
 import { easePremium } from "@/components/landing/landingMotion";
 import {
   getLandingPhoneMetrics,
@@ -13,12 +13,12 @@ import {
 /**
  * Mockup de smartphone — chassi matte, proporção 19,5:9, punch-hole.
  * @param {object} props
- * @param {'home'|'rotas'} [props.screen]
+ * @param {'home'|'explorar'} [props.screen]
  * @param {'hero'|'showcase'} [props.size]
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} [props.emAlta]
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} [props.parceiros]
  * @param {import('@/lib/landingPageData').LandingPageData['categorias']} [props.categorias]
- * @param {import('@/lib/landingPageData').LandingRotaCard[]} [props.rotas]
+ * @param {import('@/lib/landingPageData').LandingPageData['stats']} [props.stats]
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} [props.places]
  * @param {string} [props.className]
  * @returns {import('react').ReactElement}
@@ -29,7 +29,7 @@ export default function LandingPhoneMockup({
   emAlta = [],
   parceiros = [],
   categorias = [],
-  rotas = [],
+  stats,
   places = [],
   className = "",
 }) {
@@ -38,13 +38,13 @@ export default function LandingPhoneMockup({
   const alta = emAlta.length > 0 ? emAlta : places;
 
   const ariaLabel =
-    screen === "rotas"
-      ? "Prévia da seção de rotas do Guia de Bolso em um smartphone"
+    screen === "explorar"
+      ? "Prévia da tela Explorar do Guia de Bolso em um smartphone"
       : "Prévia da home do Guia de Bolso em um smartphone";
 
   const screenContent =
-    screen === "rotas" ? (
-      <LandingPhoneRotasScreen rotas={rotas} />
+    screen === "explorar" ? (
+      <LandingPhoneExplorarScreen categorias={categorias} stats={stats} />
     ) : (
       <LandingPhoneHomeScreen emAlta={alta} parceiros={parceiros} categorias={categorias} />
     );

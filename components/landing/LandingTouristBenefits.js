@@ -20,7 +20,7 @@ export default function LandingTouristBenefits() {
       />
 
       <motion.ul
-        className="mt-16 grid gap-px overflow-hidden rounded-[1.25rem] bg-[rgba(13,31,25,0.06)] sm:grid-cols-2"
+        className="landing-surface-soft mt-16 grid gap-px overflow-hidden rounded-[1.5rem] bg-[rgba(13,31,25,0.04)] sm:grid-cols-2"
         role="list"
         initial="hidden"
         whileInView="visible"
@@ -31,7 +31,7 @@ export default function LandingTouristBenefits() {
           <motion.li
             key={item.title}
             variants={fadeUp}
-            className="bg-white p-8 sm:p-10"
+            className="landing-card-hover bg-white/80 p-8 backdrop-blur-sm sm:p-10"
           >
             <h3 className="font-display text-lg font-semibold tracking-tight text-[#0d1f19]">
               {item.title}

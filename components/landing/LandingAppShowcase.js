@@ -9,21 +9,20 @@ import { fadeUp, defaultViewport } from "@/components/landing/landingMotion";
 import { LANDING_SECTION_IDS } from "@/lib/landingContent";
 
 const APP_POINTS = [
-  "Busca inteligente com contexto local",
-  "Horários e status em tempo real",
-  "Mapas, rotas e favoritos",
-  "Interface pensada para o bolso",
+  "Categorias com fotos reais da cidade",
+  "Busca com IA e filtros por intenção",
+  "Destaques das mais visitadas",
+  "Tudo atualizado em tempo real",
 ];
 
 /**
- * Showcase do app — mockup + bullets.
+ * Showcase do app — mockup Explorar + bullets.
  * @param {object} props
- * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.showcase
- * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.parceiros
- * @param {import('@/lib/landingPageData').LandingRotaCard[]} props.rotas
+ * @param {import('@/lib/landingPageData').LandingPageData['categorias']} props.categorias
+ * @param {import('@/lib/landingPageData').LandingPageData['stats']} props.stats
  * @returns {import('react').ReactElement}
  */
-export default function LandingAppShowcase({ rotas = [] }) {
+export default function LandingAppShowcase({ categorias = [], stats }) {
   return (
     <LandingSection id={LANDING_SECTION_IDS.app} className="relative overflow-hidden bg-[#f7f8f7]">
       <LandingAmbient variant="section" />
@@ -31,8 +30,8 @@ export default function LandingAppShowcase({ rotas = [] }) {
         <div>
           <LandingSectionHeader
             eyebrow="O app"
-            title="Trilhas que contam histórias."
-            subtitle="Rotas curadas e roteiro com IA — planeje o dia inteiro em minutos."
+            title="Explore Imbituba por categoria."
+            subtitle="A mesma tela Explorar do app — praias, gastronomia, natureza e muito mais."
           />
 
           <motion.ul
@@ -68,7 +67,12 @@ export default function LandingAppShowcase({ rotas = [] }) {
         <div className="relative flex justify-center lg:justify-end">
           <div className="landing-device-glow pointer-events-none absolute -inset-12" aria-hidden />
           <motion.div {...floatDevice}>
-            <LandingPhoneMockup screen="rotas" size="showcase" rotas={rotas} />
+            <LandingPhoneMockup
+              screen="explorar"
+              size="showcase"
+              categorias={categorias}
+              stats={stats}
+            />
           </motion.div>
         </div>
       </div>
