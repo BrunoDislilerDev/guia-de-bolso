@@ -9,19 +9,18 @@ import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotio
  * @param {object} props
  * @param {import('react').ReactNode} props.children
  * @param {string} [props.className]
- * @param {boolean} [props.stagger]
+ * @param {boolean} [props.useStagger]
  * @param {boolean} [props.cinematic]
  * @returns {import('react').ReactElement}
  */
 export default function LandingReveal({
   children,
   className = "",
-  stagger = false,
+  useStagger = false,
   cinematic = false,
 }) {
-  const { reveal, stagger, viewport } = useLandingRevealMotion();
+  const { reveal, stagger: staggerVariants, viewport } = useLandingRevealMotion();
   const variants = cinematic ? reveal : fadeUp;
-  const staggerVariants = stagger;
 
   return (
     <motion.div
@@ -29,7 +28,7 @@ export default function LandingReveal({
       initial="hidden"
       whileInView="visible"
       viewport={viewport}
-      variants={stagger ? staggerVariants : variants}
+      variants={useStagger ? staggerVariants : variants}
     >
       {children}
     </motion.div>
