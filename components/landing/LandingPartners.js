@@ -19,7 +19,8 @@ export default function LandingPartners({ parceiros }) {
     <LandingSection id={LANDING_SECTION_IDS.parceiros} className="bg-[#fafaf9]">
       <LandingSectionHeader
         eyebrow="Parceiros"
-        title="Estabelecimentos que confiam no guia."
+        title="Parceiros que definem o padrão."
+        subtitle="Estabelecimentos verificados no guia oficial da cidade."
         center
       />
 

@@ -1,54 +1,61 @@
 "use client";
 
 import { motion } from "framer-motion";
+import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingButton from "@/components/landing/LandingButton";
 import { fadeUp, defaultViewport } from "@/components/landing/landingMotion";
 import {
+  LANDING_HERO,
   LANDING_SECTION_IDS,
   landingContactMailto,
 } from "@/lib/landingContent";
 
 /**
- * CTA final.
+ * CTA final — dual audience, visual cinematográfico.
  * @returns {import('react').ReactElement}
  */
 export default function LandingFinalCta() {
   return (
-    <section className="px-5 py-24 sm:px-8 sm:py-32 lg:px-10 lg:py-40" aria-labelledby="landing-final-cta">
+    <section
+      className="relative overflow-hidden px-5 py-28 sm:px-8 sm:py-36 lg:px-12 lg:py-44"
+      aria-labelledby="landing-final-cta"
+    >
       <motion.div
-        className="mx-auto max-w-4xl"
+        className="relative mx-auto max-w-[76rem]"
         initial="hidden"
         whileInView="visible"
         viewport={defaultViewport}
         variants={fadeUp}
       >
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#1a4a3a] px-8 py-16 text-center sm:px-16 sm:py-20">
+        <div className="relative overflow-hidden rounded-[2rem] px-8 py-16 text-center sm:rounded-[2.5rem] sm:px-16 sm:py-24">
+          <LandingAmbient variant="dark" className="rounded-[inherit]" />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(127,212,174,0.25),transparent_55%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(127,212,174,0.2),transparent_50%)]"
             aria-hidden
           />
 
           <h2
             id="landing-final-cta"
-            className="relative font-display text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl"
+            className="landing-display relative text-[clamp(2rem,5vw,3.25rem)] font-semibold leading-[1.08] text-white"
           >
-            Pronto para conhecer Imbituba como um local?
+            Sua próxima experiência em Imbituba começa aqui.
           </h2>
-          <p className="relative mx-auto mt-4 max-w-md text-base text-white/70 sm:text-lg">
-            Cadastre seu negócio ou acompanhe o lançamento do app nas lojas.
+          <p className="relative mx-auto mt-5 max-w-md text-base text-white/65 sm:text-lg">
+            Explore como visitante ou coloque seu negócio no mapa da cidade.
           </p>
 
-          <div className="relative mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <LandingButton href={`#${LANDING_SECTION_IDS.categorias}`} variant="secondary">
-              Ver categorias
+          <div className="relative mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:justify-center">
+            <LandingButton href={`#${LANDING_SECTION_IDS.categorias}`} variant="secondary" size="lg">
+              {LANDING_HERO.ctaExplore}
             </LandingButton>
             <LandingButton
-              href={landingContactMailto("Cadastrar negócio")}
+              href={landingContactMailto("Cadastrar meu negócio")}
               variant="primary"
+              size="lg"
               external
               className="!bg-white !text-[#1a4a3a] hover:!bg-[#f0f4f3]"
             >
-              Cadastrar meu negócio
+              {LANDING_HERO.ctaBusiness}
             </LandingButton>
           </div>
         </div>

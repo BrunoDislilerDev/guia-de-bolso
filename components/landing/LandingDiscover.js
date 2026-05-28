@@ -26,14 +26,14 @@ function LandingDiscoverSection({ id, className, children }) {
  */
 export default function LandingDiscover({ showcase, categorias, hasLiveData }) {
   return (
-    <LandingDiscoverSection id={LANDING_SECTION_IDS.categorias} className="bg-[#fafaf9]">
+    <LandingDiscoverSection id={LANDING_SECTION_IDS.categorias} className="relative bg-[#f7f8f7]">
       <LandingSectionHeader
-        eyebrow="Categorias"
-        title="Experiências locais, escolhidas com critério."
+        eyebrow="Experiências"
+        title="Lugares que valem o desvio."
         subtitle={
           hasLiveData
-            ? "Cada lugar passa por curadoria — do café da manhã ao pôr do sol na praia."
-            : "Em breve, os melhores endereços de Imbituba."
+            ? "Do pôr do sol na praia ao jantar especial — curados para Imbituba."
+            : "Em breve, os endereços essenciais da cidade."
         }
       />
 

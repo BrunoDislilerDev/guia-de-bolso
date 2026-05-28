@@ -40,18 +40,27 @@ export default function ImbitubaPage() {
           ))}
         </ul>
 
+        <p className="mt-6 text-sm leading-relaxed text-[#5a6b66]">
+          <Link
+            href="/guia/o-que-fazer-em-imbituba"
+            className="font-semibold text-[#1a4a3a] underline-offset-2 hover:underline"
+          >
+            O que fazer em Imbituba — guia completo
+          </Link>
+        </p>
+
         <div className="mt-10 flex flex-col gap-3">
           <Link
-            href="/"
+            href="/categorias"
             className="rounded-xl bg-[#1a4a3a] py-3.5 text-center text-sm font-semibold text-white"
           >
-            Abrir o guia
+            Explorar lugares
           </Link>
           <Link
-            href="/categorias"
+            href="/"
             className="rounded-xl bg-white py-3.5 text-center text-sm font-semibold text-[#1a4a3a] ring-1 ring-[#e8eeee]"
           >
-            Explorar categorias
+            Voltar ao início
           </Link>
         </div>
       </article>

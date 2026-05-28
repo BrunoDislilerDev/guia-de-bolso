@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
+import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingPhoneMockup from "@/components/landing/LandingPhoneMockup";
+import { floatDevice } from "@/components/landing/landingMotion";
 import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
 import { fadeUp, defaultViewport } from "@/components/landing/landingMotion";
 import { LANDING_SECTION_IDS } from "@/lib/landingContent";
@@ -23,13 +25,14 @@ const APP_POINTS = [
  */
 export default function LandingAppShowcase({ rotas = [] }) {
   return (
-    <LandingSection id={LANDING_SECTION_IDS.app} className="overflow-hidden bg-white">
-      <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
+    <LandingSection id={LANDING_SECTION_IDS.app} className="relative overflow-hidden bg-[#f7f8f7]">
+      <LandingAmbient variant="section" />
+      <div className="relative z-[1] grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
         <div>
           <LandingSectionHeader
             eyebrow="O app"
-            title="Rotas, trilhas e roteiros com IA."
-            subtitle="Catálogo curado e roteiro personalizado na mesma experiência."
+            title="Trilhas que contam histórias."
+            subtitle="Rotas curadas e roteiro com IA — planeje o dia inteiro em minutos."
           />
 
           <motion.ul
@@ -62,8 +65,11 @@ export default function LandingAppShowcase({ rotas = [] }) {
           </motion.p>
         </div>
 
-        <div className="flex justify-center lg:justify-end">
-          <LandingPhoneMockup screen="rotas" size="showcase" rotas={rotas} />
+        <div className="relative flex justify-center lg:justify-end">
+          <div className="landing-device-glow pointer-events-none absolute -inset-12" aria-hidden />
+          <motion.div {...floatDevice}>
+            <LandingPhoneMockup screen="rotas" size="showcase" rotas={rotas} />
+          </motion.div>
         </div>
       </div>
     </LandingSection>

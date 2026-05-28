@@ -11,10 +11,11 @@ import { LANDING_SECTION_IDS, LANDING_TOURIST_BENEFITS } from "@/lib/landingCont
  */
 export default function LandingTouristBenefits() {
   return (
-    <LandingSection id={LANDING_SECTION_IDS.turistas} className="bg-[#fafaf9]">
+    <LandingSection id={LANDING_SECTION_IDS.turistas} className="relative bg-white">
       <LandingSectionHeader
-        eyebrow="Para quem visita"
-        title="Conheça Imbituba com quem mora aqui."
+        eyebrow="Turistas"
+        title="Explore como um local."
+        subtitle="Menos busca, mais vivência — com informação que importa na hora."
         center
       />
 

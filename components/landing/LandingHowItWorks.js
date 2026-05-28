@@ -12,11 +12,11 @@ import { LANDING_SECTION_IDS, LANDING_STEPS } from "@/lib/landingContent";
  */
 export default function LandingHowItWorks() {
   return (
-    <LandingSection id={LANDING_SECTION_IDS.comoFunciona} className="bg-white">
+    <LandingSection id={LANDING_SECTION_IDS.comoFunciona} className="relative bg-white">
       <LandingSectionHeader
         eyebrow="Como funciona"
-        title="Três passos. Zero fricção."
-        subtitle="Do primeiro toque à descoberta do lugar certo."
+        title="Simples. Rápido. Local."
+        subtitle="Três passos até o lugar certo."
         center
       />
 

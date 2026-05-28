@@ -1,0 +1,103 @@
+/* Landing premium — tokens e utilitários cinematográficos */
+
+.landing-root {
+  --landing-bg: #f7f8f7;
+  --landing-bg-elevated: #ffffff;
+  --landing-ink: #0a1612;
+  --landing-ink-muted: #4a5c56;
+  --landing-ink-soft: #7a8b85;
+  --landing-primary: #1a4a3a;
+  --landing-primary-deep: #0f2e24;
+  --landing-mint: #7fd4ae;
+  --landing-glow: rgba(127, 212, 174, 0.45);
+  --landing-glass: rgba(255, 255, 255, 0.72);
+  --landing-glass-border: rgba(255, 255, 255, 0.65);
+  --landing-shadow-soft:
+    0 1px 2px rgba(10, 22, 18, 0.04), 0 8px 24px rgba(10, 22, 18, 0.06),
+    0 24px 48px rgba(10, 22, 18, 0.04);
+  --landing-shadow-device:
+    0 2px 4px rgba(0, 0, 0, 0.03), 0 12px 32px rgba(10, 22, 18, 0.08),
+    0 40px 80px rgba(10, 22, 18, 0.12);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  background: var(--landing-bg);
+  color: var(--landing-ink);
+}
+
+.landing-display {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.045em;
+}
+
+.landing-glass {
+  background: var(--landing-glass);
+  border: 1px solid var(--landing-glass-border);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(10, 22, 18, 0.04);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+
+.landing-glass-dark {
+  background: rgba(10, 22, 18, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(1.1);
+}
+
+.landing-hero-mesh {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(127, 212, 174, 0.22), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 20%, rgba(26, 74, 58, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(26, 74, 58, 0.08), transparent 45%),
+    var(--landing-bg);
+}
+
+.landing-section-fade {
+  background: linear-gradient(180deg, var(--landing-bg) 0%, #f4f6f5 50%, var(--landing-bg) 100%);
+}
+
+.landing-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+}
+
+.landing-device-glow {
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 45%,
+    var(--landing-glow) 0%,
+    rgba(127, 212, 174, 0.12) 40%,
+    transparent 70%
+  );
+}
+
+.landing-link-underline {
+  position: relative;
+}
+
+.landing-link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-root * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -18,12 +18,38 @@ export default function LandingFooter() {
       id={LANDING_SECTION_IDS.contato}
       className="border-t border-[rgba(13,31,25,0.06)] bg-[#fafaf9] py-16 sm:py-20"
     >
-      <div className="mx-auto grid max-w-6xl gap-12 px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-4 lg:px-10">
+      <div className="mx-auto grid max-w-6xl gap-12 px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-5 lg:px-10">
         <div className="sm:col-span-2">
           <Logo size="md" showWordmark />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5c6f68]">
             O guia oficial de Imbituba — curadoria local e tecnologia de confiança.
           </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#8a9b94]">Explorar</p>
+          <ul className="mt-4 space-y-2 text-sm" role="list">
+            <li>
+              <Link href="/guia/o-que-fazer-em-imbituba" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                O que fazer em Imbituba
+              </Link>
+            </li>
+            <li>
+              <Link href="/imbituba" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Sobre Imbituba
+              </Link>
+            </li>
+            <li>
+              <Link href="/categorias" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Categorias
+              </Link>
+            </li>
+            <li>
+              <Link href="/para-negocios" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Para negócios
+              </Link>
+            </li>
+          </ul>
         </div>
 
         <div>

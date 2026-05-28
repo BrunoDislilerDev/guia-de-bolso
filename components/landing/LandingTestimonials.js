@@ -12,7 +12,12 @@ import { LANDING_SECTION_IDS, LANDING_TESTIMONIALS } from "@/lib/landingContent"
 export default function LandingTestimonials() {
   return (
     <LandingSection id={LANDING_SECTION_IDS.depoimentos} className="bg-white">
-      <LandingSectionHeader eyebrow="Depoimentos" title="Quem usa, recomenda." center />
+      <LandingSectionHeader
+        eyebrow="Confiança"
+        title="Vozes de quem vive Imbituba."
+        subtitle="Turistas e negócios que já sentiram a diferença."
+        center
+      />
 
       <motion.ul
         className="mt-16 grid gap-6 md:grid-cols-3"

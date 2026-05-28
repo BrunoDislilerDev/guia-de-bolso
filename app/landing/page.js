@@ -1,5 +1,8 @@
 import LandingPageClient from "@/components/landing/LandingPageClient";
+import LandingSeoIntro from "@/components/landing/LandingSeoIntro";
+import JsonLdScript from "@/components/seo/JsonLdScript";
 import { fetchLandingPageData } from "@/lib/landingPageData";
+import { buildLandingJsonLd } from "@/lib/seoJsonLd";
 import { buildLandingMetadata } from "@/lib/seo";
 
 export const metadata = buildLandingMetadata();
@@ -11,5 +14,11 @@ export const metadata = buildLandingMetadata();
 export default async function LandingPage() {
   const initialData = await fetchLandingPageData();
 
-  return <LandingPageClient initialData={initialData} />;
+  return (
+    <>
+      <JsonLdScript data={buildLandingJsonLd()} />
+      <LandingSeoIntro />
+      <LandingPageClient initialData={initialData} />
+    </>
+  );
 }

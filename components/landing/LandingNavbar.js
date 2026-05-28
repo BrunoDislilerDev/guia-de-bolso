@@ -1,15 +1,20 @@
 "use client";
 
-import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import LandingButton from "@/components/landing/LandingButton";
 import { IconClose, IconMenu } from "@/components/landing/LandingIcons";
 import Logo from "@/components/Logo";
-import { LANDING_NAV_LINKS, landingContactMailto } from "@/lib/landingContent";
+import {
+  LANDING_HERO,
+  LANDING_NAV_LINKS,
+  LANDING_SECTION_IDS,
+  landingContactMailto,
+} from "@/lib/landingContent";
 
 /**
- * Navbar minimalista — glass ao rolar.
+ * Navbar premium — glass, dual CTA, motion suave.
  * @returns {import('react').ReactElement}
  */
 export default function LandingNavbar() {
@@ -17,7 +22,7 @@ export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 24));
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 16));
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -27,87 +32,109 @@ export default function LandingNavbar() {
   }, [open]);
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "border-b border-[rgba(13,31,25,0.06)] bg-[#fafaf9]/80 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset] backdrop-blur-xl"
-          : "bg-transparent"
-      }`}
-    >
-      <nav
-        className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:h-[4.25rem] sm:px-8 lg:px-10"
-        aria-label="Principal"
+    <header className="fixed inset-x-0 top-0 z-50">
+      <div
+        className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          scrolled
+            ? "landing-glass border-b border-[rgba(10,22,18,0.06)] py-0 shadow-[0_8px_32px_rgba(10,22,18,0.04)]"
+            : "bg-transparent py-1"
+        }`}
       >
-        <Link href="/" className="rounded-lg focus-visible:outline-none" aria-label="Guia de Bolso">
-          <Logo size="sm" showWordmark />
-        </Link>
-
-        <ul className="hidden items-center gap-10 md:flex" role="list">
-          {LANDING_NAV_LINKS.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                className="text-[13px] font-medium text-[#5c6f68] transition-colors hover:text-[#0d1f19]"
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <div className="hidden md:block">
-          <LandingButton
-            href={landingContactMailto("Cadastro")}
-            variant="primary"
-            size="md"
-            external
-          >
-            Cadastrar negócio
-          </LandingButton>
-        </div>
-
-        <button
-          type="button"
-          className="rounded-full p-2.5 text-[#0d1f19] md:hidden"
-          aria-expanded={open}
-          aria-controls="landing-mobile-menu"
-          aria-label={open ? "Fechar menu" : "Abrir menu"}
-          onClick={() => setOpen((v) => !v)}
+        <nav
+          className="mx-auto flex h-[3.75rem] max-w-[76rem] items-center justify-between gap-4 px-5 sm:h-16 sm:px-8 lg:px-12"
+          aria-label="Principal"
         >
-          {open ? <IconClose className="h-5 w-5" /> : <IconMenu className="h-5 w-5" />}
-        </button>
-      </nav>
+          <Link
+            href="/"
+            className="rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-none"
+            aria-label="Guia de Bolso"
+          >
+            <Logo size="sm" showWordmark />
+          </Link>
+
+          <ul className="hidden items-center gap-9 lg:flex" role="list">
+            {LANDING_NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  className="landing-link-underline text-[13px] font-medium text-[#4a5c56] transition-colors hover:text-[#0a1612]"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden items-center gap-2.5 sm:flex">
+            <LandingButton
+              href={`#${LANDING_SECTION_IDS.categorias}`}
+              variant="ghost"
+              size="md"
+            >
+              {LANDING_HERO.ctaExplore}
+            </LandingButton>
+            <LandingButton
+              href={landingContactMailto("Cadastro")}
+              variant="primary"
+              size="md"
+              external
+            >
+              {LANDING_HERO.ctaBusiness}
+            </LandingButton>
+          </div>
+
+          <button
+            type="button"
+            className="landing-glass rounded-full p-2.5 text-[#0a1612] sm:hidden"
+            aria-expanded={open}
+            aria-controls="landing-mobile-menu"
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <IconClose className="h-5 w-5" /> : <IconMenu className="h-5 w-5" />}
+          </button>
+        </nav>
+      </div>
 
       <AnimatePresence>
         {open ? (
           <motion.div
             id="landing-mobile-menu"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-[#1a4a3a]/8 bg-[#fafaf9]/95 backdrop-blur-xl md:hidden"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="landing-glass border-t border-[rgba(10,22,18,0.06)] sm:hidden"
           >
-            <ul className="flex flex-col gap-1 px-5 py-5" role="list">
+            <ul className="flex flex-col gap-0.5 px-5 py-4" role="list">
               {LANDING_NAV_LINKS.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    className="block rounded-2xl px-4 py-3.5 text-base font-medium text-[#0d1f19]"
+                    className="block rounded-2xl px-4 py-3.5 text-[15px] font-medium text-[#0a1612] transition-colors hover:bg-[#1a4a3a]/5"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
                   </a>
                 </li>
               ))}
-              <li className="pt-3">
+              <li className="mt-3 grid gap-2 border-t border-[#1a4a3a]/8 pt-4">
+                <LandingButton
+                  href={`#${LANDING_SECTION_IDS.categorias}`}
+                  variant="primary"
+                  className="w-full"
+                  onClick={() => setOpen(false)}
+                >
+                  {LANDING_HERO.ctaExplore}
+                </LandingButton>
                 <LandingButton
                   href={landingContactMailto("Cadastro")}
-                  variant="primary"
+                  variant="secondary"
                   className="w-full"
                   external
                   onClick={() => setOpen(false)}
                 >
-                  Cadastrar meu negócio
+                  {LANDING_HERO.ctaBusiness}
                 </LandingButton>
               </li>
             </ul>

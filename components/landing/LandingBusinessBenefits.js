@@ -6,6 +6,7 @@ import LandingSection, { LandingSectionHeader } from "@/components/landing/Landi
 import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
 import {
   LANDING_BUSINESS_BENEFITS,
+  LANDING_HERO,
   LANDING_SECTION_IDS,
   landingContactMailto,
 } from "@/lib/landingContent";
@@ -16,12 +17,12 @@ import {
  */
 export default function LandingBusinessBenefits() {
   return (
-    <LandingSection id={LANDING_SECTION_IDS.negocios} className="bg-[#0d1f19] text-white">
+    <LandingSection id={LANDING_SECTION_IDS.negocios} className="bg-[#0f2e24] text-white">
       <div className="grid gap-16 lg:grid-cols-2 lg:items-end">
         <LandingSectionHeader
           eyebrow="Para negócios"
-          title="Seu endereço no mapa de Imbituba."
-          subtitle="Alcance turistas no momento em que decidem onde ir na cidade."
+          title="Onde turistas decidem."
+          subtitle="Apareça no guia oficial quando a cidade está na mão deles."
           dark
         />
 
@@ -32,7 +33,7 @@ export default function LandingBusinessBenefits() {
             external
             className="!text-[#0d1f19]"
           >
-            Cadastrar meu negócio
+            {LANDING_HERO.ctaBusiness}
           </LandingButton>
         </div>
       </div>
