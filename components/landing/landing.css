@@ -72,6 +72,54 @@
   );
 }
 
+/* Foto hero — mais visível, grade cinematográfica */
+.landing-cinematic-overlay {
+  background:
+    linear-gradient(105deg, rgba(247, 248, 247, 0.94) 0%, rgba(247, 248, 247, 0.72) 38%, rgba(247, 248, 247, 0.35) 62%, rgba(247, 248, 247, 0.15) 100%),
+    linear-gradient(0deg, rgba(247, 248, 247, 1) 0%, transparent 28%),
+    linear-gradient(180deg, rgba(247, 248, 247, 0.5) 0%, transparent 18%);
+}
+
+.landing-section-bridge {
+  position: relative;
+}
+
+.landing-section-bridge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  width: min(92%, 42rem);
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(26, 74, 58, 0.14),
+    transparent
+  );
+}
+
+.landing-surface-soft {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--landing-shadow-soft);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.landing-card-hover {
+  transition:
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(10, 22, 18, 0.08);
+}
+
 .landing-link-underline {
   position: relative;
 }

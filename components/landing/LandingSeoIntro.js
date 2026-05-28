@@ -18,6 +18,8 @@ export default function LandingSeoIntro() {
         experiências curadas. Não tem relação com a empresa financeira Guiabolso.
       </p>
       <p>
+        <Link href="/guia">Guias de turismo</Link>
+        {" · "}
         <Link href="/guia/o-que-fazer-em-imbituba">O que fazer em Imbituba</Link>
         {" · "}
         <Link href="/imbituba">Sobre Imbituba</Link>

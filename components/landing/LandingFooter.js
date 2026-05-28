@@ -30,8 +30,23 @@ export default function LandingFooter() {
           <p className="text-xs font-semibold uppercase tracking-wider text-[#8a9b94]">Explorar</p>
           <ul className="mt-4 space-y-2 text-sm" role="list">
             <li>
+              <Link href="/guia" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Guias de turismo
+              </Link>
+            </li>
+            <li>
               <Link href="/guia/o-que-fazer-em-imbituba" className="text-[#5c6f68] hover:text-[#0d1f19]">
                 O que fazer em Imbituba
+              </Link>
+            </li>
+            <li>
+              <Link href="/guia/praia-do-rosa" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Praia do Rosa
+              </Link>
+            </li>
+            <li>
+              <Link href="/guia/onde-comer-em-imbituba" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Onde comer
               </Link>
             </li>
             <li>

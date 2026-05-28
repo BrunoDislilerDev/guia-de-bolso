@@ -68,10 +68,15 @@ export function LandingSectionHeader({
  * @param {import('react').ReactNode} props.children
  * @returns {import('react').ReactElement}
  */
-export default function LandingSection({ id, className = "", children }) {
+export default function LandingSection({ id, className = "", children, bridge = true }) {
   return (
-    <section id={id} className={`${LANDING.sectionPy} ${className}`.trim()}>
-      <div className="relative mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:px-12">{children}</div>
+    <section
+      id={id}
+      className={`relative ${LANDING.sectionPy} ${bridge ? "landing-section-bridge" : ""} ${className}`.trim()}
+    >
+      <div className="relative z-[1] mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:px-12">
+        {children}
+      </div>
     </section>
   );
 }

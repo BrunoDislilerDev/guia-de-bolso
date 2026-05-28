@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRef } from "react";
 import LandingAmbient from "@/components/landing/LandingAmbient";
 import LandingButton from "@/components/landing/LandingButton";
+import LandingHeroFloatingCards from "@/components/landing/LandingHeroFloatingCards";
 import LandingPhoneMockup from "@/components/landing/LandingPhoneMockup";
 import { LANDING } from "@/components/landing/landingTheme";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/lib/landingContent";
 
 /**
- * Hero cinematográfico — lifestyle, mockup Apple-grade, dual CTA.
+ * Hero cinematográfico — lifestyle, profundidade, mockup refinado.
  * @param {object} props
  * @param {import('@/lib/landingPageData').LandingPageData['stats']} props.stats
  * @param {boolean} props.hasLiveData
@@ -38,9 +39,10 @@ export default function LandingHero({
 }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const textY = useTransform(scrollYProgress, [0, 1], [0, 48]);
-  const phoneY = useTransform(scrollYProgress, [0, 1], [0, 24]);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.06]);
+  const textY = useTransform(scrollYProgress, [0, 1], [0, 56]);
+  const phoneY = useTransform(scrollYProgress, [0, 1], [0, 28]);
+  const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
 
   const heroImages = showcase.filter((p) => p.capa);
   const heroBackdrop = heroImages[0]?.capa ?? null;
@@ -52,22 +54,28 @@ export default function LandingHero({
       aria-labelledby="landing-hero-title"
     >
       {heroBackdrop ? (
-        <motion.div className="pointer-events-none absolute inset-0" style={{ scale: bgScale }} aria-hidden>
+        <motion.div
+          className="pointer-events-none absolute inset-0"
+          style={{ y: bgY, scale: bgScale }}
+          aria-hidden
+        >
           <Image
             src={heroBackdrop}
             alt=""
             fill
             priority
-            className="object-cover object-[center_35%]"
+            className="object-cover object-[center_32%] saturate-[1.05] contrast-[1.02]"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-[#f7f8f7]/88 sm:bg-[#f7f8f7]/82" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#f7f8f7] via-[#f7f8f7]/92 to-[#f7f8f7]/55 sm:via-[#f7f8f7]/75 sm:to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#f7f8f7] via-transparent to-[#f7f8f7]/40" />
+          <div className="landing-cinematic-overlay absolute inset-0" />
+          <div className="absolute inset-0 bg-[#1a4a3a]/[0.07] mix-blend-multiply" />
+          <div className="landing-noise absolute inset-0 opacity-25" />
         </motion.div>
-      ) : null}
+      ) : (
+        <LandingAmbient variant="hero" />
+      )}
 
-      <LandingAmbient variant="hero" />
+      {!heroBackdrop ? null : <LandingAmbient variant="hero" className="opacity-60" />}
 
       <div className="relative mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
         <div className="grid flex-1 items-center gap-14 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">
@@ -165,8 +173,13 @@ export default function LandingHero({
             variants={scaleIn}
           >
             <div className="relative">
+              <LandingHeroFloatingCards places={showcase} />
               <div
-                className="landing-device-glow pointer-events-none absolute -inset-16 -z-10 sm:-inset-20"
+                className="landing-device-glow pointer-events-none absolute -inset-20 -z-10 sm:-inset-24"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[70%] w-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7fd4ae]/15 blur-[60px]"
                 aria-hidden
               />
               <motion.div {...floatDevice}>
@@ -176,7 +189,7 @@ export default function LandingHero({
                   emAlta={showcase}
                   parceiros={parceiros}
                   categorias={categorias}
-                  className="[filter:drop-shadow(0_32px_64px_rgba(10,22,18,0.14))]"
+                  className="relative z-[1] [filter:drop-shadow(0_36px_72px_rgba(10,22,18,0.16))]"
                 />
               </motion.div>
             </div>
