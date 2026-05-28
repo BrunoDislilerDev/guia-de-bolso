@@ -25,8 +25,6 @@ import {
  * @param {boolean} props.overHero
  */
 function LandingNavbarLinks({ open, setOpen, overHero }) {
-  const barSolid = open || scrolled;
-
   return (
     <>
       <ul className="hidden items-center gap-9 lg:flex" role="list">
