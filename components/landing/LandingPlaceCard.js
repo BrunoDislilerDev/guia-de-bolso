@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { getCategoriaByNome } from "@/lib/categorias";
 import { getStatusFuncionamento } from "@/lib/horarios";
-import { scaleIn } from "@/components/landing/landingMotion";
+import { hoverLift, scaleIn } from "@/components/landing/landingMotion";
 
 /**
  * Card editorial de lugar.
@@ -21,7 +21,10 @@ export default function LandingPlaceCard({ lugar, priority = false, className = 
   return (
     <motion.article
       variants={scaleIn}
-      whileHover={{ y: -5, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } }}
+      initial="rest"
+      whileHover="hover"
+      animate="rest"
+      variants={{ ...scaleIn, ...hoverLift }}
       className={`landing-card-hover group flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-white/90 ring-1 ring-[rgba(13,31,25,0.05)] backdrop-blur-sm ${className}`}
     >
       <div className="relative aspect-[5/4] overflow-hidden bg-[#e8f2ee]">
@@ -31,7 +34,7 @@ export default function LandingPlaceCard({ lugar, priority = false, className = 
             alt={lugar.nome}
             fill
             sizes="(max-width: 768px) 88vw, 340px"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.025]"
             priority={priority}
           />
         ) : (

@@ -1,12 +1,13 @@
 /** Motion — cinematográfico, discreto (Linear / Apple). */
 export const easePremium = [0.16, 1, 0.3, 1];
 export const easeOutSoft = [0.22, 1, 0.36, 1];
+export const easeAmbient = [0.25, 0.1, 0.25, 1];
 
-const transitionPremium = { duration: 0.75, ease: easePremium };
-const transitionHero = { duration: 0.9, ease: easePremium };
+const transitionPremium = { duration: 0.95, ease: easePremium };
+const transitionHero = { duration: 1.15, ease: easePremium };
 
 export const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
@@ -15,7 +16,7 @@ export const fadeUp = {
 };
 
 export const fadeUpHero = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 28 },
   visible: {
     opacity: 1,
     y: 0,
@@ -27,21 +28,21 @@ export const fadeIn = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { duration: 0.65, ease: easePremium },
+    transition: { duration: 0.8, ease: easeAmbient },
   },
 };
 
 export const staggerContainer = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.09, delayChildren: 0.06 },
+    transition: { staggerChildren: 0.11, delayChildren: 0.08 },
   },
 };
 
 export const staggerHero = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.11, delayChildren: 0.12 },
+    transition: { staggerChildren: 0.13, delayChildren: 0.14 },
   },
 };
 
@@ -53,22 +54,22 @@ export const staggerSlow = {
 };
 
 export const scaleIn = {
-  hidden: { opacity: 0, scale: 0.96 },
+  hidden: { opacity: 0, scale: 0.975 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.8, ease: easePremium },
+    transition: { duration: 0.95, ease: easePremium },
   },
 };
 
 /** Flutuação do device — amplitude mínima. */
 export const floatDevice = {
   animate: {
-    y: [0, -7, 0],
+    y: [0, -6, 0],
     transition: {
-      duration: 7,
+      duration: 9,
       repeat: Infinity,
-      ease: "easeInOut",
+      ease: easeAmbient,
     },
   },
 };
@@ -82,12 +83,12 @@ export function floatCard(index = 0) {
   const delay = index * 0.8;
   return {
     animate: {
-      y: [0, index % 2 === 0 ? -6 : 6, 0],
-      rotate: [0, index % 2 === 0 ? 1.5 : -1.5, 0],
+      y: [0, index % 2 === 0 ? -4 : 4, 0],
+      rotate: [0, index % 2 === 0 ? 1 : -1, 0],
       transition: {
-        duration: 8 + index,
+        duration: 10 + index,
         repeat: Infinity,
-        ease: "easeInOut",
+        ease: easeAmbient,
         delay,
       },
     },
@@ -98,8 +99,9 @@ export function floatCard(index = 0) {
 export const hoverLift = {
   rest: { y: 0 },
   hover: {
-    y: -4,
-    transition: { duration: 0.4, ease: easeOutSoft },
+    y: -3,
+    scale: 1.005,
+    transition: { duration: 0.55, ease: easeOutSoft },
   },
 };
 
@@ -112,6 +114,6 @@ export const defaultViewport = {
 
 /** @type {import('framer-motion').Transition} */
 export const navbarTransition = {
-  duration: 0.45,
+  duration: 0.65,
   ease: easePremium,
 };

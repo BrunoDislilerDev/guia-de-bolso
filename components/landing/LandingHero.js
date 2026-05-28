@@ -48,12 +48,18 @@ export default function LandingHero({
   const phoneY = useTransform(scrollYProgress, [0, 1], [0, 28]);
   const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
+  const ambientY = useTransform(scrollYProgress, [0, 1], [0, -24]);
   const [useVideoBackground, setUseVideoBackground] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
   const heroImages = showcase.filter((p) => p.capa);
   const backdropUrl = heroBackdrop ?? heroImages[0]?.capa ?? null;
   const heroPosterUrl = backdropUrl ?? heroImages[1]?.capa ?? null;
+  const heroStats = [
+    { label: "Lugares", value: 18 },
+    { label: "Categorias", value: 4 },
+    { label: "Parceiros", value: 2 },
+  ];
 
   useEffect(() => {
     const mediaReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -88,7 +94,7 @@ export default function LandingHero({
           {useVideoBackground && !videoFailed ? (
             <video
               ref={videoRef}
-              className="h-full w-full object-cover object-center saturate-[1.05] contrast-[1.02]"
+              className="landing-hero-video-frame h-full w-full object-cover object-center saturate-[1.04] contrast-[1.01]"
               autoPlay
               muted
               loop
@@ -105,12 +111,13 @@ export default function LandingHero({
               alt=""
               fill
               priority
-              className="object-cover object-[center_40%] saturate-[1.06] contrast-[1.03]"
+              className="landing-hero-video-frame object-cover object-[center_40%] saturate-[1.04] contrast-[1.01]"
               sizes="100vw"
             />
           )}
           <div className="landing-cinematic-overlay-video absolute inset-0" />
           <div className="landing-hero-vignette absolute inset-0" />
+          <motion.div className="landing-hero-light-pass absolute inset-0" style={{ y: ambientY }} />
           <div className="landing-hero-ambient absolute inset-0" />
           <div className="landing-noise absolute inset-0 opacity-25" />
         </motion.div>
@@ -123,7 +130,7 @@ export default function LandingHero({
       <div className="relative mx-auto flex w-full max-w-[76rem] flex-col px-5 sm:px-8 lg:px-12">
         <div className="grid flex-1 items-center gap-14 lg:grid-cols-[1fr_minmax(0,300px)] lg:gap-12 xl:grid-cols-[1.05fr_minmax(0,320px)] xl:gap-16">
           <motion.div
-            className="order-2 lg:order-1"
+            className="order-2 lg:order-1 landing-hero-content-block"
             style={{ y: textY }}
             initial="hidden"
             animate="visible"
@@ -189,18 +196,17 @@ export default function LandingHero({
 
             <motion.dl
               variants={fadeUpHero}
-              className="mt-14 grid grid-cols-3 gap-6 border-t border-white/20 pt-10 sm:gap-10"
+              className="mt-14 grid grid-cols-3 gap-3 border-t border-white/20 pt-9 sm:gap-4"
             >
-              {[
-                { label: "Lugares", value: hasLiveData ? stats.totalLugares : "—" },
-                { label: "Categorias", value: hasLiveData ? stats.categoriasComLugares : "—" },
-                { label: "Parceiros", value: hasLiveData ? stats.parceirosCount : "—" },
-              ].map((item) => (
-                <div key={item.label}>
-                  <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/60">
+              {heroStats.map((item) => (
+                <div
+                  key={item.label}
+                  className="landing-hero-stat-card rounded-2xl px-4 py-3.5 sm:px-5 sm:py-4"
+                >
+                  <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/64">
                     {item.label}
                   </dt>
-                  <dd className="landing-display mt-1 text-2xl font-semibold tabular-nums text-white sm:text-3xl">
+                  <dd className="landing-display mt-1.5 text-[1.9rem] font-semibold leading-none tabular-nums text-white sm:text-[2.3rem]">
                     {item.value}
                   </dd>
                 </div>

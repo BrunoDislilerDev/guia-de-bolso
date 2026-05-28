@@ -43,9 +43,9 @@ export default function LandingPageClient({ initialData }) {
         <LandingHowItWorks />
         <LandingTouristBenefits />
         <LandingAppShowcase categorias={data.categorias} stats={data.stats} />
-        <LandingPartners parceiros={data.parceiros} />
+        <LandingPartners parceiros={data.parceiros} stats={data.stats} />
         <LandingBusinessBenefits />
-        <LandingTestimonials />
+        <LandingTestimonials stats={data.stats} />
         <LandingFinalCta />
       </main>
       <LandingFooter />

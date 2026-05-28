@@ -23,7 +23,7 @@ export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 20));
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 14));
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -46,19 +46,20 @@ export default function LandingNavbar() {
         className={scrolled ? "landing-glass border-b border-[rgba(10,22,18,0.05)]" : ""}
         animate={{
           boxShadow: scrolled
-            ? "0 8px 32px rgba(10,22,18,0.05), inset 0 1px 0 rgba(255,255,255,0.85)"
+            ? "0 10px 38px rgba(10,22,18,0.07), inset 0 1px 0 rgba(255,255,255,0.9)"
             : "0 0 0 rgba(0,0,0,0)",
+          backdropFilter: scrolled ? "blur(20px) saturate(1.08)" : "blur(8px) saturate(1.02)",
         }}
         transition={navbarTransition}
       >
         <motion.nav
           className="mx-auto flex max-w-[76rem] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12"
           aria-label="Principal"
-          animate={{ height: scrolled ? 56 : 64 }}
+          animate={{ height: scrolled ? 56 : 66 }}
           transition={navbarTransition}
         >
           <motion.div
-            animate={{ scale: scrolled ? 0.96 : 1 }}
+            animate={{ scale: scrolled ? 0.965 : 1, y: scrolled ? -0.5 : 0 }}
             transition={navbarTransition}
           >
             <Link

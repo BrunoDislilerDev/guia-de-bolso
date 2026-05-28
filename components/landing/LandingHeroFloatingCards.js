@@ -38,7 +38,7 @@ export default function LandingHeroFloatingCards({ places = [] }) {
             initial="hidden"
             animate="visible"
             variants={fadeUpHero}
-            transition={{ delay: 0.5 + i * 0.15 }}
+            transition={{ delay: 0.62 + i * 0.18 }}
             {...floatCard(i)}
             className={layout.className}
             style={{ rotate: layout.rotate }}
