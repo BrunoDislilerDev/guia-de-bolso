@@ -9,40 +9,32 @@ import {
 import { SITE_DOMAIN, SOCIAL_LINKS } from "@/lib/siteContact";
 
 const SOCIAL_LINKS_LIST = [
-  {
-    label: "Instagram do Guia de Bolso",
-    href: SOCIAL_LINKS.instagram,
-    Icon: IconInstagram,
-  },
-  {
-    label: "TikTok do Guia de Bolso",
-    href: SOCIAL_LINKS.tiktok,
-    Icon: IconTikTok,
-  },
+  { label: "Instagram do Guia de Bolso", href: SOCIAL_LINKS.instagram, Icon: IconInstagram },
+  { label: "TikTok do Guia de Bolso", href: SOCIAL_LINKS.tiktok, Icon: IconTikTok },
 ];
 
 /**
- * Rodapé da landing.
+ * Rodapé da landing — verde escuro.
  * @returns {import('react').ReactElement}
  */
 export default function LandingFooter() {
   return (
     <footer
       id={LANDING_SECTION_IDS.contato}
-      className="border-t border-[#0d5c7a]/10 bg-[#1a2e28] text-[#e8f4f8]"
+      className="border-t border-[#7fd4ae]/15 bg-[#071612] text-[#d4ede8]"
     >
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
           <div>
             <Logo size="md" variant="light" showWordmark />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#a8bdb8]">
-              Guia de Bolso é o app de descoberta local para Garopaba, Imbituba e região —
-              praias, gastronomia, serviços e rotas com curadoria catarinense.
+              Guia de Bolso — descoberta local entre Garopaba e Imbituba, com curadoria
+              catarinense e dados reais da região.
             </p>
-            <p className="mt-3 text-sm text-[#c8ddd8]">
+            <p className="mt-3 text-sm">
               <a
                 href={`https://${SITE_DOMAIN}`}
-                className="font-medium hover:text-white"
+                className="font-medium text-[#7fd4ae] hover:text-white"
                 rel="noopener noreferrer"
               >
                 {SITE_DOMAIN}
@@ -51,15 +43,12 @@ export default function LandingFooter() {
           </div>
 
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-white">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[#7fd4ae]">
               Legal e contato
             </h2>
             <ul className="mt-4 space-y-2 text-sm" role="list">
               <li>
-                <Link
-                  href="/termos"
-                  className="text-[#c8ddd8] transition-colors hover:text-white"
-                >
+                <Link href="/termos" className="text-[#c8ddd8] transition-colors hover:text-white">
                   Termos de Uso
                 </Link>
               </li>
@@ -76,20 +65,20 @@ export default function LandingFooter() {
                   href={landingContactMailto()}
                   className="inline-flex items-center gap-2 text-[#c8ddd8] transition-colors hover:text-white"
                 >
-                  <IconMail className="h-4 w-4" aria-hidden="true" />
+                  <IconMail className="h-4 w-4" aria-hidden />
                   Contato
                 </a>
               </li>
             </ul>
             <p className="mt-3 text-xs text-[#7a9a94]">
-              <a href={`mailto:${LANDING_CONTACT_EMAIL}`} className="hover:text-white">
+              <a href={`mailto:${LANDING_CONTACT_EMAIL}`} className="hover:text-[#7fd4ae]">
                 {LANDING_CONTACT_EMAIL}
               </a>
             </p>
           </div>
 
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-white">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[#7fd4ae]">
               Redes sociais
             </h2>
             <ul className="mt-4 flex gap-3" role="list" aria-label="Redes sociais">
@@ -99,10 +88,10 @@ export default function LandingFooter() {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex rounded-xl bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20"
+                    className="inline-flex rounded-xl bg-[#7fd4ae]/10 p-2.5 text-[#7fd4ae] transition-colors hover:bg-[#7fd4ae]/20 hover:text-white"
                     aria-label={label}
                   >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <Icon className="h-5 w-5" aria-hidden />
                   </a>
                 </li>
               ))}

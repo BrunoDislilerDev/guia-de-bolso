@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import SectionReveal from "@/components/landing/SectionReveal";
-import { easeOut } from "@/components/landing/landingMotion";
+import { easeOut, fadeUp, defaultViewport } from "@/components/landing/landingMotion";
 import {
   LANDING_SECTION_IDS,
   LANDING_STEPS_BUSINESS,
@@ -16,7 +16,7 @@ const TABS = [
 ];
 
 /**
- * Como funciona — tabs para negócios e usuários.
+ * Como funciona — tabs animados, verde.
  * @returns {import('react').ReactElement}
  */
 export default function LandingHowItWorks() {
@@ -24,22 +24,28 @@ export default function LandingHowItWorks() {
   const steps = active === "business" ? LANDING_STEPS_BUSINESS : LANDING_STEPS_USER;
 
   return (
-    <SectionReveal id={LANDING_SECTION_IDS.comoFunciona} className="py-20 sm:py-24">
+    <SectionReveal
+      id={LANDING_SECTION_IDS.comoFunciona}
+      className="bg-[#f0f4f3] py-20 sm:py-28"
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#0d5c7a]">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+          variants={fadeUp}
+          className="text-center"
+        >
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#1a4a3a]">
             Como funciona
           </p>
           <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-[#1a2e28] sm:text-4xl">
             Simples para todos
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base text-[#5a6b66]">
-            Escolha seu perfil e veja o passo a passo.
-          </p>
-        </div>
+        </motion.div>
 
         <div
-          className="mx-auto mt-10 flex max-w-md rounded-2xl bg-[#e8f4f8] p-1"
+          className="mx-auto mt-10 flex max-w-md rounded-2xl bg-white p-1 shadow-sm ring-1 ring-[#1a4a3a]/10"
           role="tablist"
           aria-label="Fluxo"
         >
@@ -53,10 +59,10 @@ export default function LandingHowItWorks() {
                 aria-selected={selected}
                 aria-controls={`panel-${tab.id}`}
                 id={`tab-${tab.id}`}
-                className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
+                className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
                   selected
-                    ? "bg-white text-[#0d5c7a] shadow-sm"
-                    : "text-[#5a6b66] hover:text-[#1a2e28]"
+                    ? "bg-[#1a4a3a] text-white shadow-md"
+                    : "text-[#5a6b66] hover:text-[#1a4a3a]"
                 }`}
                 onClick={() => setActive(tab.id)}
               >
@@ -73,20 +79,20 @@ export default function LandingHowItWorks() {
             role="tabpanel"
             aria-labelledby={`tab-${active}`}
             className="mt-12 grid gap-6 sm:grid-cols-3"
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3, ease: easeOut }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: easeOut }}
           >
-            {steps.map((step) => (
-              <li
+            {steps.map((step, i) => (
+              <motion.li
                 key={step.step}
-                className="relative rounded-2xl bg-white p-6 ring-1 ring-[#0d5c7a]/10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className="relative rounded-2xl bg-white p-6 ring-1 ring-[#1a4a3a]/8"
               >
-                <span
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#0d5c7a] to-[#2d6b52] text-lg font-bold text-white"
-                  aria-hidden="true"
-                >
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#1a4a3a] to-[#7fd4ae] text-lg font-bold text-white">
                   {step.step}
                 </span>
                 <h3 className="mt-4 font-display text-lg font-bold text-[#1a2e28]">
@@ -95,7 +101,7 @@ export default function LandingHowItWorks() {
                 <p className="mt-2 text-sm leading-relaxed text-[#5a6b66]">
                   {step.description}
                 </p>
-              </li>
+              </motion.li>
             ))}
           </motion.ol>
         </AnimatePresence>

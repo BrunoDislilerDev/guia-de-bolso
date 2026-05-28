@@ -1,71 +1,78 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import LandingButton from "@/components/landing/LandingButton";
-import { easeOut, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import LandingStatsBar from "@/components/landing/LandingStatsBar";
+import { fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import { LANDING } from "@/components/landing/landingTheme";
 import { LANDING_SECTION_IDS, landingContactMailto } from "@/lib/landingContent";
 
 /**
- * Hero da landing — gradiente litorâneo, sem imagens externas.
+ * Hero — verde escuro, stats dinâmicos, animações.
+ * @param {object} props
+ * @param {import('@/lib/landingPageData').LandingPageData['stats']} props.stats
+ * @param {boolean} props.hasLiveData
  * @returns {import('react').ReactElement}
  */
-export default function LandingHero() {
+export default function LandingHero({ stats, hasLiveData }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const yBg = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.4]);
+
   return (
     <section
-      className="relative overflow-hidden pt-28 pb-20 sm:pt-32 sm:pb-28"
+      ref={ref}
+      className="relative overflow-hidden pt-24 pb-16 sm:pt-28 sm:pb-20"
       aria-labelledby="landing-hero-title"
+      style={{ background: LANDING.gradientHero }}
     >
-      <div
-        className="pointer-events-none absolute inset-0 -z-10"
-        aria-hidden="true"
+      <motion.div
+        style={{ y: yBg, opacity }}
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#e8f4f8] via-[#f5ebe0] to-[#e2f0e8]" />
-        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#2d9cdb]/20 blur-3xl" />
-        <div className="absolute -left-16 bottom-0 h-72 w-72 rounded-full bg-[#7fd4ae]/25 blur-3xl" />
-        <div className="absolute right-1/4 top-1/3 h-48 w-48 rounded-full bg-[#c4a574]/20 blur-2xl" />
-        <svg
-          className="absolute bottom-0 left-0 right-0 text-[#0d5c7a]/8"
-          viewBox="0 0 1440 120"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            fill="currentColor"
-            d="M0,64 C240,120 480,0 720,48 C960,96 1200,32 1440,72 L1440,120 L0,120 Z"
-          />
-        </svg>
-      </div>
+        <div className="absolute -left-20 top-20 h-72 w-72 rounded-full bg-[#7fd4ae]/15 blur-3xl" />
+        <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-[#2d6b54]/40 blur-3xl" />
+        <motion.div
+          animate={{ y: [0, -12, 0], opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-[#7fd4ae]/10 blur-2xl"
+        />
+      </motion.div>
 
       <motion.div
-        className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8"
+        className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
         <motion.p
           variants={fadeUp}
-          className="text-xs font-bold uppercase tracking-[0.2em] text-[#0d5c7a]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#7fd4ae]/30 bg-[#7fd4ae]/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#7fd4ae]"
         >
-          Garopaba · Imbituba · Santa Catarina
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7fd4ae]" aria-hidden />
+          Garopaba · Imbituba · SC
         </motion.p>
 
         <motion.h1
           id="landing-hero-title"
           variants={fadeUp}
-          className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.1] tracking-tight text-[#1a2e28] sm:text-5xl lg:text-6xl"
+          className="mt-6 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl"
         >
-          O guia local que conecta{" "}
-          <span className="text-[#0d5c7a]">negócios</span> e{" "}
-          <span className="text-[#2d6b52]">quem explora</span> o litoral
+          O guia verde do litoral{" "}
+          <span className="bg-gradient-to-r from-[#7fd4ae] to-[#d4ede8] bg-clip-text text-transparent">
+            catarinense
+          </span>
         </motion.h1>
 
         <motion.p
           variants={fadeUp}
-          className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5a6b66] sm:text-xl"
+          className="mt-6 max-w-xl text-lg leading-relaxed text-[#d4ede8]/90 sm:text-xl"
         >
-          Guia de Bolso reúne praias, restaurantes, serviços e rotas da região — com
-          curadoria local, horários em tempo real e busca inteligente para turistas e
-          moradores.
+          Curadoria real de praias, gastronomia e serviços — para quem visita e para quem
+          empreende na região.
         </motion.p>
 
         <motion.div
@@ -74,38 +81,20 @@ export default function LandingHero() {
         >
           <LandingButton
             href={landingContactMailto("Quero cadastrar meu negócio")}
-            variant="primary"
+            variant="mint"
             external
           >
-            Quero Cadastrar meu Negócio
+            Cadastrar meu negócio
           </LandingButton>
-          <LandingButton href={`#${LANDING_SECTION_IDS.usuarios}`} variant="secondary">
-            Conhecer o app
+          <LandingButton href={`#${LANDING_SECTION_IDS.usuarios}`} variant="outlineLight">
+            Ver lugares do guia
           </LandingButton>
-        </motion.div>
-
-        <motion.div
-          variants={fadeUp}
-          className="mt-14 grid gap-4 sm:grid-cols-3"
-          transition={{ delay: 0.2, ease: easeOut }}
-        >
-          {[
-            { label: "Curadoria local", value: "Lugares verificados" },
-            { label: "Para negócios", value: "Cadastro gratuito" },
-            { label: "Para visitantes", value: "Busca e rotas" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl bg-white/60 px-4 py-3 ring-1 ring-[#0d5c7a]/10 backdrop-blur-sm"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#0d5c7a]">
-                {item.label}
-              </p>
-              <p className="mt-0.5 text-sm font-medium text-[#1a2e28]">{item.value}</p>
-            </div>
-          ))}
         </motion.div>
       </motion.div>
+
+      <div className="relative -mb-8 mt-14 sm:-mb-12 sm:mt-16">
+        <LandingStatsBar stats={stats} hasLiveData={hasLiveData} />
+      </div>
     </section>
   );
 }

@@ -4,5 +4,5 @@
  * @returns {import('react').ReactElement}
  */
 export default function LandingLayout({ children }) {
-  return <div className="scroll-smooth">{children}</div>;
+  return <div className="scroll-smooth antialiased">{children}</div>;
 }

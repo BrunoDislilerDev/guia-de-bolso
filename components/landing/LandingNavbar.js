@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import LandingButton from "@/components/landing/LandingButton";
@@ -9,19 +9,17 @@ import Logo from "@/components/Logo";
 import { LANDING_NAV_LINKS, landingContactMailto } from "@/lib/landingContent";
 
 /**
- * Navbar fixa da landing.
+ * Navbar fixa da landing — transparente no hero, sólida ao rolar.
  * @returns {import('react').ReactElement}
  */
 export default function LandingNavbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  useMotionValueEvent(scrollY, "change", (y) => {
+    setScrolled(y > 48);
+  });
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -30,14 +28,16 @@ export default function LandingNavbar() {
     };
   }, [open]);
 
+  const navClass = scrolled
+    ? "border-b border-[#1a4a3a]/10 bg-[#f0f4f3]/95 shadow-sm backdrop-blur-lg"
+    : "bg-transparent";
+
+  const linkClass = scrolled
+    ? "text-[#1a2e28]/80 hover:text-[#1a4a3a]"
+    : "text-white/85 hover:text-white";
+
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "border-b border-[#0d5c7a]/10 bg-[#f8fbfa]/90 shadow-sm backdrop-blur-md"
-          : "bg-transparent"
-      }`}
-    >
+    <header className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${navClass}`}>
       <nav
         className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8"
         aria-label="Principal"
@@ -45,18 +45,15 @@ export default function LandingNavbar() {
         <Link
           href="/"
           className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-none"
-          aria-label="Guia de Bolso — início da landing"
+          aria-label="Guia de Bolso — início"
         >
-          <Logo size="sm" showWordmark />
+          <Logo size="sm" variant={scrolled ? "default" : "light"} showWordmark />
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex" role="list">
           {LANDING_NAV_LINKS.map((link) => (
             <li key={link.href}>
-              <a
-                href={link.href}
-                className="text-sm font-medium text-[#1a2e28]/80 transition-colors hover:text-[#0d5c7a]"
-              >
+              <a href={link.href} className={`text-sm font-medium transition-colors ${linkClass}`}>
                 {link.label}
               </a>
             </li>
@@ -66,7 +63,7 @@ export default function LandingNavbar() {
         <div className="hidden md:block">
           <LandingButton
             href={landingContactMailto("Cadastro de estabelecimento")}
-            variant="primary"
+            variant={scrolled ? "primary" : "mint"}
             external
           >
             Cadastrar Estabelecimento
@@ -75,7 +72,7 @@ export default function LandingNavbar() {
 
         <button
           type="button"
-          className="inline-flex rounded-lg p-2 text-[#0d5c7a] md:hidden"
+          className={`inline-flex rounded-lg p-2 md:hidden ${scrolled ? "text-[#1a4a3a]" : "text-white"}`}
           aria-expanded={open}
           aria-controls="landing-mobile-menu"
           aria-label={open ? "Fechar menu" : "Abrir menu"}
@@ -92,8 +89,7 @@ export default function LandingNavbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden border-t border-[#0d5c7a]/10 bg-[#f8fbfa] md:hidden"
+            className="overflow-hidden border-t border-[#1a4a3a]/10 bg-[#f0f4f3] md:hidden"
           >
             <ul className="flex flex-col gap-1 px-4 py-4" role="list">
               {LANDING_NAV_LINKS.map((link) => (
