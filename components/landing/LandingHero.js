@@ -1,99 +1,146 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 import { useRef } from "react";
 import LandingButton from "@/components/landing/LandingButton";
-import LandingStatsBar from "@/components/landing/LandingStatsBar";
+import LandingPhoneMockup from "@/components/landing/LandingPhoneMockup";
 import { fadeUp, staggerContainer } from "@/components/landing/landingMotion";
-import { LANDING } from "@/components/landing/landingTheme";
-import { LANDING_SECTION_IDS, landingContactMailto } from "@/lib/landingContent";
+import {
+  LANDING_SECTION_IDS,
+  landingContactMailto,
+} from "@/lib/landingContent";
 
 /**
- * Hero — verde escuro, stats dinâmicos, animações.
+ * Hero premium — headline editorial, mockup iPhone, prova social.
  * @param {object} props
  * @param {import('@/lib/landingPageData').LandingPageData['stats']} props.stats
  * @param {boolean} props.hasLiveData
+ * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.showcase
+ * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.parceiros
+ * @param {import('@/lib/landingPageData').LandingPageData['categorias']} props.categorias
  * @returns {import('react').ReactElement}
  */
-export default function LandingHero({ stats, hasLiveData }) {
+export default function LandingHero({
+  stats,
+  hasLiveData,
+  showcase = [],
+  parceiros = [],
+  categorias = [],
+}) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const yBg = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.4]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 40]);
+
+  const heroImages = showcase.filter((p) => p.capa).slice(0, 3);
 
   return (
     <section
       ref={ref}
-      className="relative overflow-hidden pt-24 pb-16 sm:pt-28 sm:pb-20"
+      className="relative overflow-x-clip pt-28 pb-16 sm:pt-36 sm:pb-24 lg:pb-28"
       aria-labelledby="landing-hero-title"
-      style={{ background: LANDING.gradientHero }}
     >
-      <motion.div
-        style={{ y: yBg, opacity }}
-        className="pointer-events-none absolute inset-0"
-        aria-hidden
-      >
-        <div className="absolute -left-20 top-20 h-72 w-72 rounded-full bg-[#7fd4ae]/15 blur-3xl" />
-        <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-[#2d6b54]/40 blur-3xl" />
-        <motion.div
-          animate={{ y: [0, -12, 0], opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-[#7fd4ae]/10 blur-2xl"
-        />
-      </motion.div>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="absolute inset-0 bg-[#fafaf9]" />
+        <div className="absolute -left-[20%] top-0 h-[70%] w-[70%] rounded-full bg-[#7fd4ae]/12 blur-[100px]" />
+        <div className="absolute -right-[10%] bottom-0 h-[50%] w-[50%] rounded-full bg-[#1a4a3a]/6 blur-[80px]" />
+      </div>
 
-      <motion.div
-        className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8"
-        initial="hidden"
-        animate="visible"
-        variants={staggerContainer}
-      >
-        <motion.p
-          variants={fadeUp}
-          className="inline-flex items-center gap-2 rounded-full border border-[#7fd4ae]/30 bg-[#7fd4ae]/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#7fd4ae]"
-        >
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7fd4ae]" aria-hidden />
-          Garopaba · Imbituba · SC
-        </motion.p>
+      <div className="relative mx-auto max-w-6xl px-5 sm:px-8 lg:px-10">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          {/* iPhone — primeiro no mobile para aparecer acima da dobra */}
+          <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
+            <LandingPhoneMockup
+              screen="home"
+              size="hero"
+              emAlta={showcase}
+              parceiros={parceiros}
+              categorias={categorias}
+            />
+          </div>
 
-        <motion.h1
-          id="landing-hero-title"
-          variants={fadeUp}
-          className="mt-6 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl"
-        >
-          O guia verde do litoral{" "}
-          <span className="bg-gradient-to-r from-[#7fd4ae] to-[#d4ede8] bg-clip-text text-transparent">
-            catarinense
-          </span>
-        </motion.h1>
-
-        <motion.p
-          variants={fadeUp}
-          className="mt-6 max-w-xl text-lg leading-relaxed text-[#d4ede8]/90 sm:text-xl"
-        >
-          Curadoria real de praias, gastronomia e serviços — para quem visita e para quem
-          empreende na região.
-        </motion.p>
-
-        <motion.div
-          variants={fadeUp}
-          className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
-        >
-          <LandingButton
-            href={landingContactMailto("Quero cadastrar meu negócio")}
-            variant="mint"
-            external
+          {/* Texto */}
+          <motion.div
+            className="order-2 lg:order-1"
+            style={{ y }}
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
           >
-            Cadastrar meu negócio
-          </LandingButton>
-          <LandingButton href={`#${LANDING_SECTION_IDS.usuarios}`} variant="outlineLight">
-            Ver lugares do guia
-          </LandingButton>
-        </motion.div>
-      </motion.div>
+            {hasLiveData && stats.totalLugares > 0 && (
+              <motion.p
+                variants={fadeUp}
+                className="inline-flex items-center gap-2 rounded-full border border-[#1a4a3a]/10 bg-white/70 px-3.5 py-1.5 text-xs font-medium text-[#1a4a3a] shadow-sm backdrop-blur-md"
+              >
+                <span className="flex -space-x-1" aria-hidden>
+                  {heroImages.slice(0, 3).map((p) => (
+                    <span
+                      key={p.id}
+                      className="relative inline-block h-5 w-5 overflow-hidden rounded-full ring-2 ring-white"
+                    >
+                      {p.capa && (
+                        <Image src={p.capa} alt="" fill className="object-cover" sizes="20px" />
+                      )}
+                    </span>
+                  ))}
+                </span>
+                {stats.totalLugares}+ lugares curados · Imbituba, SC
+              </motion.p>
+            )}
 
-      <div className="relative -mb-8 mt-14 sm:-mb-12 sm:mt-16">
-        <LandingStatsBar stats={stats} hasLiveData={hasLiveData} />
+            <motion.h1
+              id="landing-hero-title"
+              variants={fadeUp}
+              className="mt-6 max-w-[14ch] font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.04em] text-[#0d1f19] sm:text-6xl lg:text-[4.25rem]"
+            >
+              Descubra Imbituba como um local.
+            </motion.h1>
+
+            <motion.p
+              variants={fadeUp}
+              className="mt-6 max-w-md text-lg leading-relaxed text-[#5c6f68] sm:text-xl"
+            >
+              O guia mais refinado de Imbituba — curadoria real, horários ao vivo e experiências
+              que valem o dia.
+            </motion.p>
+
+            <motion.div
+              variants={fadeUp}
+              className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center"
+            >
+              <LandingButton href={`#${LANDING_SECTION_IDS.categorias}`} variant="primary">
+                Ver categorias
+              </LandingButton>
+              <LandingButton
+                href={landingContactMailto("Cadastrar meu negócio")}
+                variant="secondary"
+                external
+              >
+                Cadastrar meu negócio
+              </LandingButton>
+            </motion.div>
+
+            <motion.dl
+              variants={fadeUp}
+              className="mt-14 flex flex-wrap gap-x-10 gap-y-4 border-t border-[#1a4a3a]/8 pt-8"
+            >
+              {[
+                { label: "Lugares", value: hasLiveData ? stats.totalLugares : "—" },
+                { label: "Categorias", value: hasLiveData ? stats.categoriasComLugares : "—" },
+                { label: "Parceiros", value: hasLiveData ? stats.parceirosCount : "—" },
+              ].map((item) => (
+                <div key={item.label}>
+                  <dt className="text-xs font-medium uppercase tracking-wider text-[#8a9b94]">
+                    {item.label}
+                  </dt>
+                  <dd className="mt-0.5 font-display text-2xl font-semibold tabular-nums tracking-tight text-[#0d1f19]">
+                    {item.value}
+                  </dd>
+                </div>
+              ))}
+            </motion.dl>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

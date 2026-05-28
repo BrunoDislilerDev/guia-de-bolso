@@ -2,12 +2,12 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import SectionReveal from "@/components/landing/SectionReveal";
-import { fadeUp, staggerContainer, defaultViewport } from "@/components/landing/landingMotion";
-import { getCategoriaByNome } from "@/lib/categorias";
+import LandingSection, { LandingSectionHeader } from "@/components/landing/LandingSection";
+import { defaultViewport, fadeUp, staggerContainer } from "@/components/landing/landingMotion";
+import { LANDING_SECTION_IDS } from "@/lib/landingContent";
 
 /**
- * Faixa de parceiros reais do banco.
+ * Parceiros reais — grid minimal.
  * @param {object} props
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.parceiros
  * @returns {import('react').ReactElement|null}
@@ -16,57 +16,43 @@ export default function LandingPartners({ parceiros }) {
   if (!parceiros?.length) return null;
 
   return (
-    <SectionReveal className="border-y border-[#1a4a3a]/8 bg-white py-14 sm:py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={defaultViewport}
-          variants={fadeUp}
-          className="text-center"
-        >
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#1a4a3a]">
-            Parceiros do guia
-          </p>
-          <h2 className="mt-2 font-display text-2xl font-bold text-[#1a2e28] sm:text-3xl">
-            Estabelecimentos verificados
-          </h2>
-        </motion.div>
+    <LandingSection id={LANDING_SECTION_IDS.parceiros} className="bg-[#fafaf9]">
+      <LandingSectionHeader
+        eyebrow="Parceiros"
+        title="Estabelecimentos que confiam no guia."
+        center
+      />
 
-        <motion.ul
-          className="mt-10 flex flex-wrap items-center justify-center gap-4"
-          role="list"
-          initial="hidden"
-          whileInView="visible"
-          viewport={defaultViewport}
-          variants={staggerContainer}
-        >
-          {parceiros.map((p) => {
-            const cat = getCategoriaByNome(p.categoria);
-            return (
-              <motion.li
-                key={p.id}
-                variants={fadeUp}
-                className="flex w-[min(100%,280px)] items-center gap-3 rounded-2xl bg-[#f0f4f3] px-4 py-3 ring-1 ring-[#1a4a3a]/10"
-              >
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#d4ede8]">
-                  {p.capa ? (
-                    <Image src={p.capa} alt="" fill className="object-cover" sizes="48px" />
-                  ) : (
-                    <span className="flex h-full items-center justify-center text-lg">
-                      {cat?.icone ?? "✓"}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0 text-left">
-                  <p className="truncate font-semibold text-[#1a2e28]">{p.nome}</p>
-                  <p className="text-xs text-[#5a6b66]">{p.categoria}</p>
-                </div>
-              </motion.li>
-            );
-          })}
-        </motion.ul>
-      </div>
-    </SectionReveal>
+      <motion.ul
+        className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        role="list"
+        initial="hidden"
+        whileInView="visible"
+        viewport={defaultViewport}
+        variants={staggerContainer}
+      >
+        {parceiros.map((p) => (
+          <motion.li
+            key={p.id}
+            variants={fadeUp}
+            className="flex items-center gap-4 rounded-[1.25rem] bg-white p-4 ring-1 ring-[rgba(13,31,25,0.06)] transition-shadow hover:shadow-md"
+          >
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-[#e8f2ee]">
+              {p.capa ? (
+                <Image src={p.capa} alt="" fill className="object-cover" sizes="56px" />
+              ) : (
+                <span className="flex h-full items-center justify-center text-lg text-[#1a4a3a]">
+                  ✓
+                </span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-medium text-[#0d1f19]">{p.nome}</p>
+              <p className="text-xs text-[#8a9b94]">{p.categoria}</p>
+            </div>
+          </motion.li>
+        ))}
+      </motion.ul>
+    </LandingSection>
   );
 }
