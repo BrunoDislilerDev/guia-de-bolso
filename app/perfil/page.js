@@ -27,6 +27,7 @@ import { SITE_CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/siteContact";
 import { usePremiumUsage } from "@/lib/usePremiumUsage";
 import { createClient } from "@/lib/supabase";
 import { useFeedback } from "@/components/FeedbackProvider";
+import { mapApiErrorResponse, USER_MESSAGES } from "@/lib/userMessages";
 import { registrarLog } from "@/lib/logs";
 
 /**
@@ -48,6 +49,7 @@ export default function PerfilPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const { usage: premiumUsage } = usePremiumUsage(user);
   const isPremium = isPremiumActive(perfil) || Boolean(premiumUsage?.premium);
@@ -142,16 +144,39 @@ export default function PerfilPage() {
 
   /** @returns {Promise<void>} */
   async function handleDeleteAccountRequest() {
-    const supabase = createClient();
-    await registrarLog(supabase, user, "deletou_conta");
-    await supabase.auth.signOut();
-    setUser(null);
-    setPerfil(null);
-    setFeedbackMessage(
-      "Exclusão solicitada. Saímos da sua conta por segurança."
-    );
-    setShowDeleteConfirm(false);
-    router.push("/");
+    if (!user || deletingAccount) return;
+
+    setDeletingAccount(true);
+    setFeedbackMessage("");
+
+    try {
+      const supabase = createClient();
+      await registrarLog(supabase, user, "deletou_conta");
+
+      const response = await fetch("/api/conta", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const mapped = mapApiErrorResponse(data, response.status);
+        setFeedbackMessage(mapped.message);
+        setDeletingAccount(false);
+        return;
+      }
+
+      await supabase.auth.signOut();
+      setUser(null);
+      setPerfil(null);
+      setShowDeleteConfirm(false);
+      setFeedbackMessage("");
+      router.push("/");
+    } catch {
+      setFeedbackMessage(USER_MESSAGES.NETWORK);
+      setDeletingAccount(false);
+    }
   }
 
   /**
@@ -378,14 +403,16 @@ export default function PerfilPage() {
         <button
           type="button"
           onClick={handleDeleteAccountRequest}
-          className="mt-5 w-full rounded-xl bg-[#d9534f] py-3.5 text-sm font-semibold text-white"
+          disabled={deletingAccount}
+          className="mt-5 w-full rounded-xl bg-[#d9534f] py-3.5 text-sm font-semibold text-white disabled:opacity-60"
         >
-          Excluir permanentemente
+          {deletingAccount ? "Excluindo conta…" : "Excluir permanentemente"}
         </button>
         <button
           type="button"
           onClick={() => setShowDeleteConfirm(false)}
-          className="mt-3 w-full rounded-xl bg-[#f0f4f3] py-3.5 text-sm font-semibold text-[#5a6b66]"
+          disabled={deletingAccount}
+          className="mt-3 w-full rounded-xl bg-[#f0f4f3] py-3.5 text-sm font-semibold text-[#5a6b66] disabled:opacity-60"
         >
           Cancelar
         </button>
