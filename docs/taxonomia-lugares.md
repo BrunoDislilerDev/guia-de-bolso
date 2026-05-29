@@ -18,9 +18,11 @@ Definidas em `supabase/taxonomia_lugares_cleanup.sql`.
 Praias · Trilhas · Cachoeiras · Mirantes · Lagoas · Parques · Piscinas naturais · Dunas · Ilhas
 
 ### Gastronomia
-Restaurantes · Cafés · Bares · Padarias · Sorveterias
+Restaurantes · Cafés · Bares · Padarias · Sorveterias · Empório Gourmet
 
 **Tags de tipo de comida (Restaurantes):** especialidade culinária — ex. Pizza, Sushi, Hambúrguer, Rodízio, Massas, Cozinha italiana/japonesa, Churrasco, Por kilo, Prato feito. Seed: `supabase/tags_gastronomia_tipos_comida.sql`. Tags genéricas (Frutos do mar, Comida local, Vegano/Vegetariano, Delivery) continuam válidas junto com as de especialidade (máx. 5 por lugar).
+
+**Tags de emporium (Empório Gourmet):** Vinhos, Delicatessen, Vinhos importados, Cervejas artesanais, Chocolates importados, Presentes sofisticados, Tábuas de frios, Degustação, Experiência gastronômica, etc. Seed: `supabase/tags_gastronomia_emporio_gourmet.sql`.
 
 ### Noite
 Bares · Baladas · Pubs
