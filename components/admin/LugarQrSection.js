@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { isParceiro } from "@/lib/lugarBadges";
 import { buildQrUrl, isLugarElegivelQr } from "@/lib/lugarQr";
-import { downloadQrPdf } from "@/lib/qrPdf";
+import { downloadQrPdf, QR_PDF_FORMAT_LIST } from "@/lib/qrPdf";
 import { getClientSiteUrl } from "@/lib/siteUrl";
 import { createClient } from "@/lib/supabase";
 
@@ -20,6 +20,7 @@ export default function LugarQrSection({ lugar, slugColumnReady = true }) {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState(false);
+  const [pdfFormat, setPdfFormat] = useState("mesa");
   const ehParceiro = isParceiro(lugar);
 
   const elegivel = isLugarElegivelQr(lugar);
@@ -37,7 +38,8 @@ export default function LugarQrSection({ lugar, slugColumnReady = true }) {
 
     QRCode.toDataURL(qrUrl, {
       width: 240,
-      margin: 1,
+      margin: 2,
+      errorCorrectionLevel: "H",
       color: { dark: "#1a4a3a", light: "#ffffff" },
     })
       .then((dataUrl) => {
@@ -96,9 +98,11 @@ export default function LugarQrSection({ lugar, slugColumnReady = true }) {
       await downloadQrPdf({
         nome: lugar.nome,
         categoria: lugar.categoria,
+        subcategoria: lugar.subcategoria,
         slug,
         siteUrl,
         ehParceiro,
+        format: pdfFormat,
       });
     } finally {
       setBaixando(false);
@@ -147,6 +151,27 @@ export default function LugarQrSection({ lugar, slugColumnReady = true }) {
               </p>
             </div>
 
+            <div>
+              <label
+                htmlFor="qr-pdf-format"
+                className="text-xs font-semibold uppercase tracking-wide text-[#5a6b66]"
+              >
+                Formato de impressão
+              </label>
+              <select
+                id="qr-pdf-format"
+                value={pdfFormat}
+                onChange={(event) => setPdfFormat(event.target.value)}
+                className="mt-1 w-full rounded-xl border border-[#e3e9e6] bg-white px-3 py-2.5 text-sm text-[#1a2e28] outline-none focus:border-[#1a4a3a] focus:ring-2 focus:ring-[#1a4a3a]/15"
+              >
+                {QR_PDF_FORMAT_LIST.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
@@ -161,7 +186,7 @@ export default function LugarQrSection({ lugar, slugColumnReady = true }) {
                 disabled={baixando}
                 className="rounded-xl bg-[#1a4a3a] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#153d30] disabled:opacity-60"
               >
-                {baixando ? "Gerando PDF…" : "Baixar PDF"}
+                {baixando ? "Gerando PDF…" : "Baixar PDF premium"}
               </button>
             </div>
           </div>
