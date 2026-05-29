@@ -14,6 +14,7 @@ const ACCEPT = "image/jpeg,image/png,image/webp";
  * @param {(files: File[]) => void} props.onAddFiles - Callback com arquivos filtrados aceitos.
  * @param {(id: string) => void} props.onRemove - Remove item pelo id.
  * @param {(id: string) => void} [props.onSetCover] - Move item para a primeira posição (capa).
+ * @param {(id: string, direction: -1|1) => void} [props.onMove] - Reordena item na galeria.
  * @param {boolean} [props.disabled=false] - Desabilita adicionar/remover durante save.
  * @param {string} [props.error=""] - Mensagem de erro abaixo do botão.
  * @returns {import("react").JSX.Element}
@@ -24,6 +25,7 @@ export default function PhotoUploader({
   onAddFiles,
   onRemove,
   onSetCover,
+  onMove,
   disabled = false,
   error = "",
 }) {
@@ -46,7 +48,7 @@ export default function PhotoUploader({
         <p className="text-sm font-semibold text-[#1a2e28]">{label}</p>
         {items.length > 0 && (
           <p className="text-xs text-[#5a6b66]">
-            A primeira foto é a capa. Toque em &quot;Usar como capa&quot; para trocar.
+            A primeira foto é a capa. Use as setas para reordenar ou &quot;Usar como capa&quot;.
           </p>
         )}
       </div>
@@ -77,17 +79,48 @@ export default function PhotoUploader({
                     Capa
                   </span>
                 ) : (
-                  onSetCover && (
+                  <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                    {index + 1}
+                  </span>
+                )}
+
+                <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-1">
+                  {onMove && items.length > 1 ? (
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        disabled={disabled || index === 0}
+                        onClick={() => onMove(item.id, -1)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/95 text-sm font-bold text-[#1a4a3a] shadow-sm backdrop-blur disabled:opacity-40"
+                        aria-label="Mover foto para a esquerda"
+                      >
+                        ←
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled || index === items.length - 1}
+                        onClick={() => onMove(item.id, 1)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/95 text-sm font-bold text-[#1a4a3a] shadow-sm backdrop-blur disabled:opacity-40"
+                        aria-label="Mover foto para a direita"
+                      >
+                        →
+                      </button>
+                    </div>
+                  ) : (
+                    <span />
+                  )}
+
+                  {!isCover && onSetCover && (
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={() => onSetCover(item.id)}
-                      className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/95 px-2 py-1.5 text-[11px] font-semibold text-[#1a4a3a] shadow-sm backdrop-blur disabled:opacity-50"
+                      className="rounded-lg bg-white/95 px-2 py-1.5 text-[10px] font-semibold text-[#1a4a3a] shadow-sm backdrop-blur disabled:opacity-50"
                     >
-                      Usar como capa
+                      Capa
                     </button>
-                  )
-                )}
+                  )}
+                </div>
 
                 <button
                   type="button"

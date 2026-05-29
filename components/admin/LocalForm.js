@@ -12,6 +12,7 @@ import {
   createPhotoItemFromFile,
   getPendingFilesFromPhotoItems,
   movePhotoItemToCover,
+  movePhotoItem,
   revokePhotoItemPreview,
 } from "@/lib/photoItems";
 import { createClient } from "@/lib/supabase";
@@ -250,6 +251,14 @@ export default function LocalForm({
 
   function setPhotoCover(id) {
     setPhotoItems((current) => movePhotoItemToCover(current, id));
+  }
+
+  /**
+   * @param {string} id
+   * @param {-1|1} direction
+   */
+  function reorderPhotoItem(id, direction) {
+    setPhotoItems((current) => movePhotoItem(current, id, direction));
   }
 
   /**
@@ -553,6 +562,7 @@ export default function LocalForm({
         onAddFiles={addPhotoFiles}
         onRemove={removePhotoItem}
         onSetCover={setPhotoCover}
+        onMove={reorderPhotoItem}
         disabled={saving}
         error={photoError}
       />
