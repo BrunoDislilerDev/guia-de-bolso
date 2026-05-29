@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import { isConteudoCuradoria, isParceiro } from "@/lib/lugarBadges";
 import { getCapaFromLugar } from "@/lib/fotos";
+import { getLugarPublicPath } from "@/lib/lugarPublicPath";
 import { createClient } from "@/lib/supabase";
 
 /** Categorias fixas do app (chips de filtro). */
@@ -184,7 +185,7 @@ function LugarCard({ lugar, onDeactivate }) {
           <div className="flex flex-wrap items-center gap-2">
             {ativo && (
               <Link
-                href={`/lugares/${lugar.id}`}
+                href={getLugarPublicPath(lugar)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-xl bg-[#f0f4f3] px-3 py-1.5 text-xs font-semibold text-[#1a4a3a] hover:bg-[#e3e9e6]"
