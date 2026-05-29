@@ -20,6 +20,8 @@ Praias · Trilhas · Cachoeiras · Mirantes · Lagoas · Parques · Piscinas nat
 ### Gastronomia
 Restaurantes · Cafés · Bares · Padarias · Sorveterias
 
+**Tags de tipo de comida (Restaurantes):** especialidade culinária — ex. Pizza, Sushi, Hambúrguer, Rodízio, Massas, Cozinha italiana/japonesa, Churrasco, Por kilo, Prato feito. Seed: `supabase/tags_gastronomia_tipos_comida.sql`. Tags genéricas (Frutos do mar, Comida local, Vegano/Vegetariano, Delivery) continuam válidas junto com as de especialidade (máx. 5 por lugar).
+
 ### Noite
 Bares · Baladas · Pubs
 
