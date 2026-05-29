@@ -8,9 +8,10 @@ import PerfilBottomSheet from "@/components/perfil/PerfilBottomSheet";
  * @param {boolean} props.isOpen
  * @param {() => void} props.onClose
  * @param {() => void} props.onConfirm
+ * @param {boolean} [props.confirming]
  * @returns {import("react").JSX.Element}
  */
-export default function PerfilLogoutSheet({ isOpen, onClose, onConfirm }) {
+export default function PerfilLogoutSheet({ isOpen, onClose, onConfirm, confirming = false }) {
   return (
     <PerfilBottomSheet isOpen={isOpen} onClose={onClose} title="Sair da conta">
       <div className="flex items-start gap-3 rounded-2xl bg-[#f7faf9] px-4 py-3 ring-1 ring-[#e8eeee]">
@@ -28,17 +29,21 @@ export default function PerfilLogoutSheet({ isOpen, onClose, onConfirm }) {
 
       <button
         type="button"
+        data-sheet-action="true"
         onClick={onClose}
-        className="mt-5 w-full min-h-[44px] rounded-xl bg-[#f0f4f3] py-3.5 text-sm font-semibold text-[#5a6b66] transition active:scale-[0.99]"
+        disabled={confirming}
+        className="mt-5 w-full min-h-[44px] rounded-xl bg-[#f0f4f3] py-3.5 text-sm font-semibold text-[#5a6b66] transition active:scale-[0.99] disabled:opacity-60"
       >
         Cancelar
       </button>
       <button
         type="button"
+        data-sheet-action="true"
         onClick={onConfirm}
-        className="mt-3 w-full min-h-[44px] rounded-xl border-2 border-red-200 bg-red-50 py-3.5 text-sm font-semibold text-red-800 transition active:scale-[0.99] hover:bg-red-100/80"
+        disabled={confirming}
+        className="mt-3 w-full min-h-[44px] rounded-xl border-2 border-red-200 bg-red-50 py-3.5 text-sm font-semibold text-red-800 transition active:scale-[0.99] hover:bg-red-100/80 disabled:opacity-60"
       >
-        Sair
+        {confirming ? "Saindo…" : "Sair"}
       </button>
     </PerfilBottomSheet>
   );

@@ -50,6 +50,7 @@ export default function PerfilPage() {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const { usage: premiumUsage } = usePremiumUsage(user);
   const isPremium = isPremiumActive(perfil) || Boolean(premiumUsage?.premium);
@@ -133,13 +134,46 @@ export default function PerfilPage() {
 
   /** @returns {Promise<void>} */
   async function handleLogout() {
-    const supabase = createClient();
-    await registrarLog(supabase, user, "logout");
-    await supabase.auth.signOut();
-    setUser(null);
-    setPerfil(null);
-    setShowLogoutConfirm(false);
-    router.push("/");
+    if (!user || loggingOut) return;
+
+    setLoggingOut(true);
+    setFeedbackMessage("");
+
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        const supabase = createClient();
+        if (!supabase) {
+          setFeedbackMessage("Não foi possível sair. Tente novamente.");
+          return;
+        }
+        await registrarLog(supabase, user, "logout");
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          setFeedbackMessage("Não foi possível sair. Tente novamente.");
+          return;
+        }
+      } else {
+        const supabase = createClient();
+        if (supabase) {
+          await supabase.auth.signOut();
+        }
+      }
+
+      setUser(null);
+      setPerfil(null);
+      setShowLogoutConfirm(false);
+      router.refresh();
+      router.push("/");
+    } catch {
+      setFeedbackMessage("Não foi possível sair. Tente novamente.");
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   /** @returns {Promise<void>} */
@@ -402,6 +436,7 @@ export default function PerfilPage() {
         </p>
         <button
           type="button"
+          data-sheet-action="true"
           onClick={handleDeleteAccountRequest}
           disabled={deletingAccount}
           className="mt-5 w-full rounded-xl bg-[#d9534f] py-3.5 text-sm font-semibold text-white disabled:opacity-60"
@@ -410,6 +445,7 @@ export default function PerfilPage() {
         </button>
         <button
           type="button"
+          data-sheet-action="true"
           onClick={() => setShowDeleteConfirm(false)}
           disabled={deletingAccount}
           className="mt-3 w-full rounded-xl bg-[#f0f4f3] py-3.5 text-sm font-semibold text-[#5a6b66] disabled:opacity-60"
@@ -420,8 +456,9 @@ export default function PerfilPage() {
 
       <PerfilLogoutSheet
         isOpen={showLogoutConfirm}
-        onClose={() => setShowLogoutConfirm(false)}
+        onClose={() => !loggingOut && setShowLogoutConfirm(false)}
         onConfirm={handleLogout}
+        confirming={loggingOut}
       />
 
       <PremiumPaywallSheet

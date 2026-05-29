@@ -6,7 +6,7 @@ import {
   getIniciaisAutor,
   getNomeAutorAvaliacao,
   getResumoNotas,
-  getSentimentoEmoji,
+  getNotaEmoji,
   parseAspectos,
 } from "@/lib/avaliacoes";
 
@@ -94,10 +94,10 @@ function AvaliacaoCard({ avaliacao }) {
             </div>
             <span
               className="shrink-0 text-base"
-              title={avaliacao.sentimento || "neutro"}
+              title={`${Number(avaliacao.nota) || 0} de 5 estrelas`}
               aria-hidden
             >
-              {getSentimentoEmoji(avaliacao.sentimento)}
+              {getNotaEmoji(avaliacao.nota)}
             </span>
           </div>
           <p className="mt-0.5 text-xs text-[#9aa8a3]">

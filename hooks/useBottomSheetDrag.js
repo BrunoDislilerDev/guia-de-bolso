@@ -4,6 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export const BOTTOM_SHEET_DRAG_CLOSE_PX = 110;
 export const BOTTOM_SHEET_DRAG_MAX_PX = 260;
+const INTERACTIVE_DRAG_BLOCK_SELECTOR =
+  "button, a, input, textarea, select, label, [role='button'], [data-sheet-action]";
+
+/**
+ * @param {EventTarget|null} target
+ * @returns {boolean}
+ */
+function isInteractiveDragTarget(target) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(target.closest(INTERACTIVE_DRAG_BLOCK_SELECTOR));
+}
 
 /**
  * Gestos de arrastar para baixo para fechar bottom sheets no mobile.
@@ -63,6 +74,7 @@ export function useBottomSheetDrag({ isOpen, onClose }) {
 
     function canStartDrag(target) {
       if (!(target instanceof Element)) return false;
+      if (isInteractiveDragTarget(target)) return false;
 
       const scrollTop = scrollAreaRef.current?.scrollTop ?? 0;
       const onHandle = Boolean(target.closest("[data-drag-handle='true']"));
