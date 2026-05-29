@@ -9,11 +9,23 @@ function assertSupabasePublicEnvForDeploy() {
   if (url && key) return;
 
   const message =
-    "Build bloqueado: defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY " +
-    "na Vercel (Settings → Environment Variables, Production + Preview) e rode o deploy de novo.";
+    "Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY " +
+    "na Vercel (Settings → Environment Variables).";
+
+  const isVercelProduction =
+    process.env.VERCEL === "1" && process.env.VERCEL_ENV === "production";
+
+  if (isVercelProduction) {
+    throw new Error(
+      `Build bloqueado (Production): ${message} Marque Production + Preview e redeploy.`
+    );
+  }
 
   if (process.env.VERCEL === "1") {
-    throw new Error(message);
+    console.warn(
+      `[next.config] Preview sem Supabase público — ${message} O app preview pode ficar sem dados até configurar Preview.`
+    );
+    return;
   }
 
   console.warn(`[next.config] ${message}`);
