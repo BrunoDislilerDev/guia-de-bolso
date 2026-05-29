@@ -38,6 +38,24 @@ Implementation: `app/api/health/route.js`.
 
 ---
 
+### `GET /api/cron/lugares-purge`
+
+Exclusão definitiva de lugares com `status = desativado` há **30+ dias** (calendário `America/Sao_Paulo`). Agendado na Vercel (`vercel.json`, 09:00 UTC).
+
+**Auth:** `Authorization: Bearer <CRON_SECRET>` ou header `x-cron-secret` (mesmo valor de `CRON_SECRET`).
+
+**Query:** `dryRun=1` — lista candidatos sem deletar.
+
+**Requires:** `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`.
+
+**Success (200):** `{ ok, hoje, dryRun, candidatos, excluidos, erros, idsExcluidos }`
+
+Alertas no admin (sino): 7–2 dias antes e no último dia — `lib/adminAlertas.js`, `lib/lugarPurge.js`.
+
+Implementation: `app/api/cron/lugares-purge/route.js`, `lib/purgeLugaresInativos.js`, migration `supabase/lugares_purge_inativos.sql`.
+
+---
+
 ### `GET /api/lugares`
 
 Public read of active places via server-side anon client (`getAnonServerClient`). Responses include CDN-friendly cache headers (`lib/apiCacheHeaders.js`).

@@ -16,7 +16,8 @@ Referência única para configuração local, Vercel e CI. Template versionado: 
 | `ANTHROPIC_MODEL` | Recomendado | Runtime server | Default no código: `claude-sonnet-4-5` |
 | `NEXT_PUBLIC_SITE_URL` | Opcional | Build | URL canônica (QR, links absolutos) |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Opcional | Build | Admin Places + mapa estático no detalhe |
-| `SUPABASE_SERVICE_ROLE_KEY` | Opcional | Runtime server | Guest feedback, logs QR — **nunca** `NEXT_PUBLIC_` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Opcional | Runtime server | Guest feedback, logs QR, cron purge — **nunca** `NEXT_PUBLIC_` |
+| `CRON_SECRET` | Opcional* | Runtime server | Protege `/api/cron/lugares-purge` (*obrigatório se cron Vercel ativo) |
 | `NEXT_PUBLIC_SENTRY_DSN` | Opcional | Build | Observabilidade (`lib/observability.js`) |
 | `NEXT_PUBLIC_OPENWEATHER_API_KEY` | Opcional | Build | Legado; clima principal usa Open-Meteo |
 
@@ -74,8 +75,15 @@ O projeto valida presença de `NEXT_PUBLIC_SUPABASE_*` no build (`next.config.mj
 - Bypassa RLS — uso mínimo:
   - `POST /api/feedback` para visitantes
   - `GET /q/[slug]` log `escaneou_qr`
+  - `GET /api/cron/lugares-purge` exclusão de locais inativos (30 dias)
 - Apenas em `app/api/**` ou Route Handlers isolados
 - **Nunca** importar em `"use client"`
+
+### `CRON_SECRET`
+
+- Protege `GET /api/cron/lugares-purge` (Vercel Cron envia `Authorization: Bearer <CRON_SECRET>`)
+- Obrigatório em **Production** se o cron estiver ativo (`vercel.json`)
+- Gere valor aleatório longo; não usar `NEXT_PUBLIC_`
 
 ### `NEXT_PUBLIC_SENTRY_DSN`
 

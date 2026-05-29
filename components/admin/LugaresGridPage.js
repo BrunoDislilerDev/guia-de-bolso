@@ -7,6 +7,10 @@ import AdminShell, { useAdminAuth } from "@/components/admin/AdminShell";
 import { isConteudoCuradoria, isParceiro } from "@/lib/lugarBadges";
 import { getCapaFromLugar } from "@/lib/fotos";
 import { getLugarPublicPath } from "@/lib/lugarPublicPath";
+import {
+  formatDiasRestantesExclusao,
+  getDiasRestantesExclusao,
+} from "@/lib/lugarPurge";
 import { createClient } from "@/lib/supabase";
 
 /** Categorias fixas do app (chips de filtro). */
@@ -115,6 +119,13 @@ function LugarCard({ lugar, onDeactivate }) {
   const categoriaClass = categoryStyles[lugar.categoria] || "bg-[#f0f4f3] text-[#1a4a3a]";
   const cidade = getCidade(lugar);
   const ativo = isAtivo(lugar);
+  const diasExclusao =
+    !ativo && lugar.desativado_em
+      ? getDiasRestantesExclusao(lugar.desativado_em)
+      : null;
+  const exclusaoLabel =
+    diasExclusao !== null ? formatDiasRestantesExclusao(diasExclusao) : null;
+
   const statusMeta =
     lugar.status === "em_analise"
       ? { label: "Em análise", className: "bg-amber-100 text-amber-800" }
@@ -176,11 +187,18 @@ function LugarCard({ lugar, onDeactivate }) {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#eef3f1] pt-3">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${statusMeta.className}`}
-          >
-            {statusMeta.label}
-          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <span
+              className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${statusMeta.className}`}
+            >
+              {statusMeta.label}
+            </span>
+            {exclusaoLabel && (
+              <span className="text-xs font-medium text-amber-800">
+                Exclusão definitiva {exclusaoLabel}
+              </span>
+            )}
+          </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {ativo && (
