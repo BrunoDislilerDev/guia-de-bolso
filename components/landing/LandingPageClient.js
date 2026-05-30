@@ -2,6 +2,8 @@
 
 import LandingAppShowcase from "@/components/landing/LandingAppShowcase";
 import LandingBusinessBenefits from "@/components/landing/LandingBusinessBenefits";
+import LandingBusinessShowcase from "@/components/landing/LandingBusinessShowcase";
+import LandingBusinessTestimonials from "@/components/landing/LandingBusinessTestimonials";
 import LandingDiscover from "@/components/landing/LandingDiscover";
 import LandingFinalCta from "@/components/landing/LandingFinalCta";
 import LandingFooter from "@/components/landing/LandingFooter";
@@ -53,7 +55,14 @@ export default function LandingPageClient({ initialData }) {
         <LandingTouristBenefits />
         <LandingAppShowcase categorias={data.categorias} stats={data.stats} />
         <LandingPartners parceiros={data.parceiros} stats={data.stats} />
-        <LandingBusinessBenefits />
+        <LandingBusinessShowcase
+          parceiros={data.parceiros}
+          showcase={data.showcase}
+          categorias={data.categorias}
+          stats={data.stats}
+        />
+        <LandingBusinessBenefits stats={data.stats} />
+        <LandingBusinessTestimonials />
         <LandingTestimonials stats={data.stats} />
         <LandingFinalCta />
       </main>

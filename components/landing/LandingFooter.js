@@ -28,6 +28,32 @@ export default function LandingFooter() {
         </div>
 
         <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#8a9b94]">Anunciantes</p>
+          <ul className="mt-4 space-y-2 text-sm" role="list">
+            <li>
+              <Link href="/para-negocios" className="font-medium text-[#1a4a3a] hover:text-[#0d1f19]">
+                Página para anunciantes
+              </Link>
+            </li>
+            <li>
+              <Link href="/para-negocios#planos" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Plano Parceiro
+              </Link>
+            </li>
+            <li>
+              <Link href="/para-negocios#curadoria" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Curadoria e rotas
+              </Link>
+            </li>
+            <li>
+              <Link href="/para-negocios#parceiros-ativos" className="text-[#5c6f68] hover:text-[#0d1f19]">
+                Parceiros ativos
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-[#8a9b94]">Explorar</p>
           <ul className="mt-4 space-y-2 text-sm" role="list">
             <li>
@@ -63,11 +89,6 @@ export default function LandingFooter() {
             <li>
               <Link href="/categorias" className="text-[#5c6f68] hover:text-[#0d1f19]">
                 Categorias
-              </Link>
-            </li>
-            <li>
-              <Link href="/para-negocios" className="text-[#5c6f68] hover:text-[#0d1f19]">
-                Para negócios
               </Link>
             </li>
           </ul>

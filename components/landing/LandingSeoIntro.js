@@ -28,7 +28,7 @@ export default function LandingSeoIntro() {
         {" · "}
         <Link href="/categorias">Explorar categorias</Link>
         {" · "}
-        <Link href="/para-negocios">Cadastrar negócio</Link>
+        <Link href="/para-negocios">Para anunciantes</Link>
       </p>
       <ul>
         {CATEGORIAS_EXPLORE.slice(0, 5).map((cat) => (

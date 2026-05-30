@@ -11,35 +11,47 @@ import {
   useLandingMotion,
   useLandingRichMotion,
 } from "@/components/landing/useLandingRichMotion";
-import {
-  LANDING_HERO,
-  LANDING_NAV_LINKS,
-  LANDING_SECTION_IDS,
-  landingContactMailto,
-} from "@/lib/landingContent";
+import { useLandingNav } from "@/hooks/useLandingNav";
+import { LANDING_HERO } from "@/lib/landingContent";
 
 /**
  * @param {object} props
  * @param {boolean} props.open
  * @param {() => void} props.setOpen
  * @param {boolean} props.overHero
+ * @param {{ label: string, href: string }[]} props.navItems
+ * @param {string} props.homePath
+ * @param {string} props.exploreHref
  */
-function LandingNavbarLinks({ open, setOpen, overHero }) {
+function LandingNavbarLinks({ open, setOpen, overHero, navItems, homePath, exploreHref }) {
   return (
     <>
       <ul className="hidden items-center gap-9 lg:flex" role="list">
-        {LANDING_NAV_LINKS.map((link) => (
+        {navItems.map((link) => (
           <li key={link.href}>
-            <a
-              href={link.href}
-              className={`landing-link-underline text-[13px] font-medium transition-colors duration-500 ${
-                overHero
-                  ? "text-white/75 hover:text-white"
-                  : "text-[#4a5c56] hover:text-[#0a1612]"
-              }`}
-            >
-              {link.label}
-            </a>
+            {link.href.startsWith("#") ? (
+              <a
+                href={link.href}
+                className={`landing-link-underline text-[13px] font-medium transition-colors duration-500 ${
+                  overHero
+                    ? "text-white/75 hover:text-white"
+                    : "text-[#4a5c56] hover:text-[#0a1612]"
+                }`}
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                href={link.href}
+                className={`landing-link-underline text-[13px] font-medium transition-colors duration-500 ${
+                  overHero
+                    ? "text-white/75 hover:text-white"
+                    : "text-[#4a5c56] hover:text-[#0a1612]"
+                }`}
+              >
+                {link.label}
+              </Link>
+            )}
           </li>
         ))}
       </ul>
@@ -47,33 +59,19 @@ function LandingNavbarLinks({ open, setOpen, overHero }) {
       <div className="hidden items-center gap-2.5 sm:flex">
         {overHero ? (
           <>
-            <LandingButton
-              href={`#${LANDING_SECTION_IDS.categorias}`}
-              variant="secondary"
-              size="md"
-            >
+            <LandingButton href={exploreHref} variant="secondary" size="md">
               {LANDING_HERO.ctaExplore}
             </LandingButton>
-            <LandingButton
-              href={landingContactMailto("Cadastro")}
-              variant="primary"
-              size="md"
-              external
-            >
+            <LandingButton href="/para-negocios" variant="primary" size="md">
               {LANDING_HERO.ctaBusiness}
             </LandingButton>
           </>
         ) : (
           <>
-            <LandingButton href={`#${LANDING_SECTION_IDS.categorias}`} variant="ghost" size="md">
+            <LandingButton href={exploreHref} variant="ghost" size="md">
               {LANDING_HERO.ctaExplore}
             </LandingButton>
-            <LandingButton
-              href={landingContactMailto("Cadastro")}
-              variant="primary"
-              size="md"
-              external
-            >
+            <LandingButton href="/para-negocios" variant="primary" size="md">
               {LANDING_HERO.ctaBusiness}
             </LandingButton>
           </>
@@ -100,6 +98,25 @@ function LandingNavbarLinks({ open, setOpen, overHero }) {
   );
 }
 
+function LandingMobileNavItem({ link, onNavigate }) {
+  const className =
+    "block rounded-2xl px-4 py-3.5 text-[16px] font-medium text-[#0a1612] transition-colors active:bg-[#1a4a3a]/10";
+
+  if (link.href.startsWith("#")) {
+    return (
+      <a href={link.href} className={className} onClick={onNavigate}>
+        {link.label}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={link.href} className={className} onClick={onNavigate}>
+      {link.label}
+    </Link>
+  );
+}
+
 /**
  * Navbar mobile — scroll com rAF, sem Framer no header (evita re-render por frame).
  * @returns {import('react').ReactElement}
@@ -107,6 +124,7 @@ function LandingNavbarLinks({ open, setOpen, overHero }) {
 function LandingNavbarLite() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { homePath, navItems, exploreHref } = useLandingNav();
 
   useEffect(() => {
     let raf = 0;
@@ -155,7 +173,7 @@ function LandingNavbarLite() {
         >
           <div style={{ transform: barSolid ? "scale(0.965)" : "scale(1)" }}>
             <Link
-              href="/"
+              href={homePath}
               className="block rounded-xl transition-opacity hover:opacity-85 focus-visible:outline-none"
               aria-label="Guia de Bolso"
               onClick={() => setOpen(false)}
@@ -164,7 +182,14 @@ function LandingNavbarLite() {
             </Link>
           </div>
 
-          <LandingNavbarLinks open={open} setOpen={setOpen} overHero={overHero} />
+          <LandingNavbarLinks
+            open={open}
+            setOpen={setOpen}
+            overHero={overHero}
+            navItems={navItems}
+            homePath={homePath}
+            exploreHref={exploreHref}
+          />
         </nav>
       </div>
 
@@ -193,20 +218,17 @@ function LandingNavbarLite() {
               className="landing-mobile-menu-panel fixed inset-x-0 top-[56px] z-[55] max-h-[calc(100dvh-56px)] overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden"
             >
               <ul className="flex flex-col gap-0.5 px-5 py-5" role="list">
-                {LANDING_NAV_LINKS.map((link) => (
+                {navItems.map((link) => (
                   <li key={link.href}>
-                    <a
-                      href={link.href}
-                      className="block rounded-2xl px-4 py-3.5 text-[16px] font-medium text-[#0a1612] transition-colors active:bg-[#1a4a3a]/10"
-                      onClick={() => setOpen(false)}
-                    >
-                      {link.label}
-                    </a>
+                    <LandingMobileNavItem
+                      link={link}
+                      onNavigate={() => setOpen(false)}
+                    />
                   </li>
                 ))}
                 <li className="mt-3 grid gap-2 border-t border-[#1a4a3a]/12 pt-4">
                   <LandingButton
-                    href={`#${LANDING_SECTION_IDS.categorias}`}
+                    href={exploreHref}
                     variant="primary"
                     className="w-full"
                     onClick={() => setOpen(false)}
@@ -214,10 +236,9 @@ function LandingNavbarLite() {
                     {LANDING_HERO.ctaExplore}
                   </LandingButton>
                   <LandingButton
-                    href={landingContactMailto("Cadastro")}
+                    href="/para-negocios"
                     variant="secondary"
                     className="w-full"
-                    external
                     onClick={() => setOpen(false)}
                   >
                     {LANDING_HERO.ctaBusiness}
@@ -239,6 +260,7 @@ function LandingNavbarLite() {
 function LandingNavbarRich() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { homePath, navItems, exploreHref } = useLandingNav();
 
   useEffect(() => {
     let raf = 0;
@@ -296,7 +318,7 @@ function LandingNavbarRich() {
             transition={navbarTransition}
           >
             <Link
-              href="/"
+              href={homePath}
               className="block rounded-xl transition-opacity hover:opacity-85 focus-visible:outline-none"
               aria-label="Guia de Bolso"
               onClick={() => setOpen(false)}
@@ -305,7 +327,14 @@ function LandingNavbarRich() {
             </Link>
           </motion.div>
 
-          <LandingNavbarLinks open={open} setOpen={setOpen} overHero={overHero} />
+          <LandingNavbarLinks
+            open={open}
+            setOpen={setOpen}
+            overHero={overHero}
+            navItems={navItems}
+            homePath={homePath}
+            exploreHref={exploreHref}
+          />
         </motion.nav>
       </motion.div>
 
@@ -334,20 +363,17 @@ function LandingNavbarRich() {
               className="landing-mobile-menu-panel fixed inset-x-0 top-[56px] z-[55] max-h-[calc(100dvh-56px)] overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden"
             >
               <ul className="flex flex-col gap-0.5 px-5 py-5" role="list">
-                {LANDING_NAV_LINKS.map((link) => (
+                {navItems.map((link) => (
                   <li key={link.href}>
-                    <a
-                      href={link.href}
-                      className="block rounded-2xl px-4 py-3.5 text-[16px] font-medium text-[#0a1612] transition-colors active:bg-[#1a4a3a]/10"
-                      onClick={() => setOpen(false)}
-                    >
-                      {link.label}
-                    </a>
+                    <LandingMobileNavItem
+                      link={link}
+                      onNavigate={() => setOpen(false)}
+                    />
                   </li>
                 ))}
                 <li className="mt-3 grid gap-2 border-t border-[#1a4a3a]/12 pt-4">
                   <LandingButton
-                    href={`#${LANDING_SECTION_IDS.categorias}`}
+                    href={exploreHref}
                     variant="primary"
                     className="w-full"
                     onClick={() => setOpen(false)}
@@ -355,10 +381,9 @@ function LandingNavbarRich() {
                     {LANDING_HERO.ctaExplore}
                   </LandingButton>
                   <LandingButton
-                    href={landingContactMailto("Cadastro")}
+                    href="/para-negocios"
                     variant="secondary"
                     className="w-full"
-                    external
                     onClick={() => setOpen(false)}
                   >
                     {LANDING_HERO.ctaBusiness}

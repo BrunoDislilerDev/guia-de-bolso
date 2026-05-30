@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import LandingPhoneDeviceShell from "@/components/landing/LandingPhoneDeviceShell";
+import LandingPhoneBuscaScreen from "@/components/landing/LandingPhoneBuscaScreen";
+import LandingPhoneDetalheScreen from "@/components/landing/LandingPhoneDetalheScreen";
 import LandingPhoneExplorarScreen from "@/components/landing/LandingPhoneExplorarScreen";
 import LandingPhoneHomeScreen from "@/components/landing/LandingPhoneHomeScreen";
 import { easePremium } from "@/components/landing/landingMotion";
@@ -13,7 +15,7 @@ import {
 /**
  * Mockup de smartphone — chassi matte, proporção 19,5:9, punch-hole.
  * @param {object} props
- * @param {'home'|'explorar'} [props.screen]
+ * @param {'home'|'explorar'|'detalhe'|'busca'} [props.screen]
  * @param {'hero'|'showcase'} [props.size]
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} [props.emAlta]
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} [props.parceiros]
@@ -39,17 +41,31 @@ export default function LandingPhoneMockup({
   const m = getLandingPhoneMetrics(outerWidth);
   const alta = emAlta.length > 0 ? emAlta : places;
 
-  const ariaLabel =
-    screen === "explorar"
-      ? "Prévia da tela Explorar do Guia de Bolso em um smartphone"
-      : "Prévia da home do Guia de Bolso em um smartphone";
+  const ariaLabels = {
+    explorar: "Prévia da tela Explorar do Guia de Bolso em um smartphone",
+    detalhe: "Prévia da página de detalhe de um parceiro no Guia de Bolso",
+    busca: "Prévia da busca com IA destacando um parceiro no Guia de Bolso",
+    home: "Prévia da home do Guia de Bolso em um smartphone",
+  };
+  const ariaLabel = ariaLabels[screen] ?? ariaLabels.home;
 
-  const screenContent =
-    screen === "explorar" ? (
-      <LandingPhoneExplorarScreen categorias={categorias} stats={stats} />
-    ) : (
+  const featuredParceiro =
+    parceiros.find((p) => p.capa) ?? alta.find((p) => p.ehParceiro && p.capa) ?? alta[0];
+
+  const screenContent = (() => {
+    if (screen === "explorar") {
+      return <LandingPhoneExplorarScreen categorias={categorias} stats={stats} />;
+    }
+    if (screen === "detalhe") {
+      return <LandingPhoneDetalheScreen lugar={featuredParceiro} />;
+    }
+    if (screen === "busca") {
+      return <LandingPhoneBuscaScreen lugar={featuredParceiro} />;
+    }
+    return (
       <LandingPhoneHomeScreen emAlta={alta} parceiros={parceiros} categorias={categorias} />
     );
+  })();
 
   const shell = (
     <>

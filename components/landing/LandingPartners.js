@@ -11,9 +11,16 @@ import { LANDING_SECTION_IDS } from "@/lib/landingContent";
  * @param {object} props
  * @param {import('@/lib/landingPageData').LandingLugarCard[]} props.parceiros
  * @param {import('@/lib/landingPageData').LandingPageData['stats']} [props.stats]
+ * @param {string} [props.title]
+ * @param {string} [props.subtitle]
  * @returns {import('react').ReactElement|null}
  */
-export default function LandingPartners({ parceiros, stats }) {
+export default function LandingPartners({
+  parceiros,
+  stats,
+  title = "Parceiros que definem o padrão.",
+  subtitle = "Estabelecimentos verificados no guia oficial da cidade.",
+}) {
   const { reveal, stagger, viewport } = useLandingRevealMotion();
 
   if (!parceiros?.length) return null;
@@ -23,8 +30,8 @@ export default function LandingPartners({ parceiros, stats }) {
     <LandingSection id={LANDING_SECTION_IDS.parceiros} tone="canvas" bridge={false}>
       <LandingSectionHeader
         eyebrow="Parceiros"
-        title="Parceiros que definem o padrão."
-        subtitle="Estabelecimentos verificados no guia oficial da cidade."
+        title={title}
+        subtitle={subtitle}
         center
       />
 
