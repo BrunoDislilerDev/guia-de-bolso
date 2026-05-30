@@ -6,7 +6,7 @@ import { useLandingRevealMotion } from "@/components/landing/useLandingRichMotio
 import { LANDING_SECTION_IDS, LANDING_TESTIMONIALS } from "@/lib/landingContent";
 
 /**
- * Depoimentos — editorial.
+ * Depoimentos — editorial, carrossel centralizado.
  * @param {object} props
  * @param {import('@/lib/landingPageData').LandingPageData['stats']} [props.stats]
  * @returns {import('react').ReactElement}
@@ -36,35 +36,41 @@ export default function LandingTestimonials({ stats }) {
         <span className="rounded-full bg-[#f3f6f5] px-3 py-1 font-medium">Base local em crescimento</span>
       </motion.div>
 
-      <motion.ul
-        className="mt-16 grid gap-6 md:grid-cols-3"
-        role="list"
+      <motion.div
+        className="landing-centered-rail mt-16"
         initial="hidden"
         whileInView="visible"
         viewport={viewport}
         variants={stagger}
       >
-        {LANDING_TESTIMONIALS.map((t) => (
-          <motion.li
-            key={t.name}
-            variants={reveal}
-            className="landing-card-hover landing-fluid-panel flex flex-col rounded-[1.5rem] p-8"
-          >
-            <p className="flex-1 font-display text-lg font-medium leading-snug tracking-tight text-[#0d1f19]">
-              &ldquo;{t.quote}&rdquo;
-            </p>
-            <footer className="mt-8 border-t border-[#1a4a3a]/8 pt-6">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1a4a3a]/55">
-                ★★★★★ avaliação verificada
-              </p>
-              <cite className="not-italic">
-                <span className="block text-sm font-semibold text-[#0d1f19]">{t.name}</span>
-                <span className="mt-0.5 block text-xs text-[#8a9b94]">{t.role}</span>
-              </cite>
-            </footer>
-          </motion.li>
-        ))}
-      </motion.ul>
+        <ul
+          className="landing-centered-rail__track landing-centered-rail__track--testimonials"
+          role="list"
+        >
+          {LANDING_TESTIMONIALS.map((t) => (
+            <motion.li
+              key={t.name}
+              variants={reveal}
+              className="landing-centered-rail__item"
+            >
+              <article className="landing-card-hover landing-fluid-panel flex h-full flex-col rounded-[1.5rem] p-8">
+                <p className="flex-1 font-display text-lg font-medium leading-snug tracking-tight text-[#0d1f19]">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <footer className="mt-8 border-t border-[#1a4a3a]/8 pt-6">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1a4a3a]/55">
+                    ★★★★★ avaliação verificada
+                  </p>
+                  <cite className="not-italic">
+                    <span className="block text-sm font-semibold text-[#0d1f19]">{t.name}</span>
+                    <span className="mt-0.5 block text-xs text-[#8a9b94]">{t.role}</span>
+                  </cite>
+                </footer>
+              </article>
+            </motion.li>
+          ))}
+        </ul>
+      </motion.div>
     </LandingSection>
   );
 }

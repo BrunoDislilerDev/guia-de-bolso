@@ -74,7 +74,7 @@ export default function LandingDiscover({ discoverShowcase = [], categorias, has
         <div className="mt-20">
           <p className="text-center text-sm font-medium text-[#8a9b94]">Por categoria</p>
           <motion.ul
-            className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4"
+            className="mt-8 grid grid-cols-2 justify-items-stretch gap-3 sm:grid-cols-4 sm:gap-4"
             role="list"
             initial="hidden"
             whileInView="visible"
@@ -85,12 +85,15 @@ export default function LandingDiscover({ discoverShowcase = [], categorias, has
               <motion.li
                 key={cat.nome}
                 variants={scaleRevealVariant}
-                className="landing-card-hover group relative overflow-hidden rounded-2xl bg-white/70 p-4 ring-1 ring-[rgba(13,31,25,0.04)] backdrop-blur-md"
+                className="landing-category-card landing-card-hover group relative overflow-hidden rounded-2xl bg-white/85 p-4 ring-1 ring-[rgba(13,31,25,0.04)] backdrop-blur-sm"
               >
                 {cat.capa && (
-                  <div className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover:opacity-[0.18]">
-                    <Image src={cat.capa} alt="" fill className="object-cover" sizes="200px" />
-                  </div>
+                  <>
+                    <div className="landing-category-card__media pointer-events-none absolute inset-0">
+                      <Image src={cat.capa} alt="" fill className="object-cover" sizes="200px" />
+                    </div>
+                    <div className="landing-category-card__scrim pointer-events-none absolute inset-0" />
+                  </>
                 )}
                 <span className="relative text-xl" aria-hidden>
                   {cat.icone}

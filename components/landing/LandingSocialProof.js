@@ -106,7 +106,7 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
         )}
 
         <motion.div
-          className="landing-fluid-panel mx-auto mt-12 max-w-3xl rounded-[1.5rem] p-8 sm:p-10"
+          className="landing-fluid-panel mx-auto mt-12 max-w-3xl rounded-[1.5rem] p-8 text-center sm:p-10"
           initial="hidden"
           whileInView="visible"
           viewport={viewport}
@@ -115,7 +115,7 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
           <p className="font-display text-lg font-medium leading-snug tracking-tight text-[#0a1612] sm:text-xl">
             &ldquo;{featured.quote}&rdquo;
           </p>
-          <footer className="mt-6 flex items-center justify-between gap-4 border-t border-[#1a4a3a]/8 pt-5">
+          <footer className="mt-6 flex flex-col items-center gap-4 border-t border-[#1a4a3a]/8 pt-5 sm:flex-row sm:justify-between">
             <cite className="not-italic">
               <span className="block text-sm font-semibold text-[#0d1f19]">{featured.name}</span>
               <span className="mt-0.5 block text-xs text-[#8a9b94]">{featured.role}</span>
@@ -127,36 +127,43 @@ export default function LandingSocialProof({ stats, parceiros = [], showcase = [
         </motion.div>
 
         {parceiros.length > 0 && (
-          <motion.ul
-            className="mt-10 flex gap-3 overflow-x-auto pb-2 scrollbar-hide sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0"
-            role="list"
+          <motion.div
+            className="landing-centered-rail mt-10"
             initial="hidden"
             whileInView="visible"
             viewport={viewport}
             variants={stagger}
           >
-            {parceiros.slice(0, 4).map((p) => (
-              <motion.li
-                key={p.id}
-                variants={reveal}
-                className="flex w-[min(70vw,200px)] shrink-0 items-center gap-3 rounded-2xl bg-white/80 p-3 ring-1 ring-[rgba(13,31,25,0.05)] backdrop-blur-sm sm:w-auto"
-              >
-                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-[#e8f2ee]">
-                  {p.capa ? (
-                    <Image src={p.capa} alt="" fill className="object-cover" sizes="44px" />
-                  ) : (
-                    <span className="flex h-full items-center justify-center text-sm text-[#1a4a3a]">
-                      ✓
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-[#0d1f19]">{p.nome}</p>
-                  <p className="truncate text-[10px] text-[#8a9b94]">{p.categoria}</p>
-                </div>
-              </motion.li>
-            ))}
-          </motion.ul>
+            <ul
+              className="landing-centered-rail__track landing-centered-rail__track--partners"
+              role="list"
+              aria-label="Parceiros em destaque"
+            >
+              {parceiros.map((p) => (
+                <motion.li
+                  key={p.id}
+                  variants={reveal}
+                  className="landing-centered-rail__item"
+                >
+                  <article className="flex h-full items-center gap-3 rounded-2xl bg-white/80 p-3 ring-1 ring-[rgba(13,31,25,0.05)]">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-[#e8f2ee]">
+                      {p.capa ? (
+                        <Image src={p.capa} alt="" fill className="object-cover" sizes="44px" />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-sm text-[#1a4a3a]">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-[#0d1f19]">{p.nome}</p>
+                      <p className="truncate text-[10px] text-[#8a9b94]">{p.categoria}</p>
+                    </div>
+                  </article>
+                </motion.li>
+              ))}
+            </ul>
+          </motion.div>
         )}
       </div>
     </section>
